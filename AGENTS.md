@@ -8,3 +8,10 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Application architecture
+- Use TanStack Router and validated URL search state for tabs, drawers, and dialogs; the platform requires this router and browser back should unwind UI state.
+- Load the public feed through TanStack Query with a server-function loader; public SSR must never require an account.
+- Keep marketplace data in Cloud with owner-scoped write policies; authenticated writes must use the caller's identity.
+- Bundle editorial media and icons locally; uploaded private storage media are served with signed URLs after matching published post paths.
+- Use manifest-only home-screen support; no offline service worker unless offline operation is explicitly requested.
