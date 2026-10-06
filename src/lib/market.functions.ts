@@ -26,13 +26,14 @@ export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
   if (uploaded.length) {
     // Only paths referenced by publicly readable posts can be signed here.
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const paths = [...new Set(uploaded.flatMap(p => [...p.media_urls,...(p.video_url ? [p.video_url]:[])]))];
+    const permitted = (post:typeof uploaded[number],path:string) => Boolean(post.user_id && path.startsWith(`${post.user_id}/`) && !path.includes('..'));
+    const paths = [...new Set(uploaded.flatMap(p => [...p.media_urls,...(p.video_url ? [p.video_url]:[])].filter(path => permitted(p,path))))];
     const {data:signed,error:signError} = await supabaseAdmin.storage.from('market-media').createSignedUrls(paths,3600);
     if(signError) throw new Error('게시물 사진을 불러오지 못했습니다.');
     const urls = new Map(signed?.map(s => [s.path,s.signedUrl]) || []);
     for(const post of uploaded) {
-      post.media_urls = post.media_urls.map(path => urls.get(path) || '');
-      if(post.video_url) post.video_url = urls.get(post.video_url) || null;
+      post.media_urls = post.media_urls.filter(path => permitted(post,path)).map(path => urls.get(path) || '').filter(Boolean);
+      if(post.video_url) post.video_url = permitted(post,post.video_url) ? urls.get(post.video_url) || null : null;
     }
   }
   // Editorial order is stable for the initial collection; new posts appear first.
