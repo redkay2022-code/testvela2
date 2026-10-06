@@ -23,7 +23,7 @@ export function LuxuryMarketplace({mode='home',children}:{mode?:View;children?:R
  useEffect(()=>setQuery(search.q || ''),[search.q]);
  useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(''),3500);return()=>clearTimeout(timer);},[toast]);
  const update=(values:Partial<typeof search>)=>void navigate({to:base,search:prev=>({...prev,...values}),resetScroll:false});
- const close=()=>{if(router.history.canGoBack()) router.history.back();else void navigate({to:base,search:prev=>({...prev,post:undefined,panel:undefined,menu:undefined,auth:undefined}),replace:true,resetScroll:false});};
+ const close=()=>void navigate({to:base,search:prev=>({...prev,...(search.auth?{auth:undefined}:search.menu?{menu:undefined}:search.panel?{panel:undefined}:{post:undefined})}),replace:true,resetScroll:false});
  let posts=all.filter(p=>!preview.hidden.includes(p.id)&&(!search.q||`${p.title} ${p.creator} ${p.factory} ${p.category}`.toLowerCase().includes(search.q.toLowerCase()))&&(!search.category||search.category==='All'||p.category===search.category||p.factory===search.category));
  if(search.tab==='following') posts=preview.following?posts.filter(p=>p.creator==='VS Watch Studio'):[];
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
