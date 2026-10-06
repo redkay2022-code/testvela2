@@ -1,24 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+import { Marketplace } from '@/components/marketplace';
+import { marketSearch, pageHead, postsQuery } from '@/lib/market';
 export const Route = createFileRoute("/")({
-  component: Index,
+  validateSearch: marketSearch,
+  loader: ({context}) => context.queryClient.ensureQueryData(postsQuery),
+  head: () => pageHead('오늘의 발견','좋아하는 순간과 물건을 발견하는 곳. 취향으로 연결되는 벨라마켓에서 새로운 일상을 만나보세요.'),
+  component: () => <Marketplace />,
 });
-
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
