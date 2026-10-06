@@ -4,6 +4,7 @@ import watch2 from '@/assets/watch-2.webp';
 import watch3 from '@/assets/watch-3.webp';
 import watch4 from '@/assets/watch-4.webp';
 import watch5 from '@/assets/watch-5.webp';
+import studioShort from '@/assets/studio-short.mp4';
 import { media } from './market-media';
 import type { Post } from './market';
 
@@ -20,7 +21,7 @@ export function luxuryPosts(posts:Post[]):LuxuryPost[] {
    creator:sample?'VS Watch Studio':post.creator,
    description:sample?'Precision in every detail. A 1:1 specification studio sample, individually inspected for finish, alignment and movement performance. Full inspection photos are available before shipping.':post.description,
    images:sample?[photo,watchImages[(i+5)%6] ?? photo,photo]:post.media_urls.length?post.media_urls:[media[post.image_key] || watch0],
-   video:post.video_url,short:sample?[3,5,8,11].includes(i):Boolean(post.video_url),
+    video:sample&&i===3?studioShort:post.video_url,short:sample?[3,5,8,11].includes(i):Boolean(post.video_url),
    price:sample?([480,365,520,680,445,480][i%6] ?? 480):post.price,
    factory:sample?(['VS Factory','PPF','3K','APS'][i%4] ?? 'VS Factory'):post.category,
    category:sample?(['Ready to Ship','Ready to Ship','Customizing','News'][i%4] ?? 'Ready to Ship'):post.category,
