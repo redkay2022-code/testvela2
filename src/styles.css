@@ -161,7 +161,7 @@
   --color-success: var(--success);
 }
 
-.market-shell { max-width: 1140px; margin-inline: auto; min-height: 100dvh; padding: 0 36px 125px; }
+.market-shell { max-width: 1140px; margin-inline: auto; min-height: 100dvh; padding: env(safe-area-inset-top,0px) 36px 125px; }
 .market-header { height: 100px; display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 24px; }
 .brand { display: inline-flex; align-items: baseline; gap: 11px; width: fit-content; }
 .brand-word { color: var(--primary); font-size: 30px; font-weight: 800; }
@@ -237,7 +237,7 @@
 .mobile-search {display:none;}
 .page-topline {font-size:24px;font-weight:750;margin:24px 0;}
 @media(max-width:640px) {
- .market-shell {padding:0 12px 110px;}
+ .market-shell {padding:env(safe-area-inset-top,0px) 12px 110px;}
  .market-header {height:70px;gap:8px;padding:0 4px;}
  .brand {gap:6px;}.brand-word {font-size:25px;}.brand-korean {font-size:10px;}
  .header-tools {gap:4px;}.header-search {display:none;}.mobile-search {display:flex;}
