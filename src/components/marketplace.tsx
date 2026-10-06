@@ -80,7 +80,7 @@ export function Marketplace({ mode = 'home' }: { mode?: Mode }) {
   if (sort === 'newest') filtered = [...filtered].sort((a,b) => b.created_at.localeCompare(a.created_at));
   const columns = [0,1,2].map(col => filtered.filter((_,i) => i%3 === col));
   const selected = posts.find(p => p.id === search.post);
-  const displayName = String(user?.user_metadata.display_name || user?.email?.split('@')[0] || 'vela member');
+  const displayName = String(user?.user_metadata['display_name'] || user?.email?.split('@')[0] || 'vela member');
 
   return <>
     <main className="market-shell">
@@ -171,8 +171,8 @@ function DetailDrawer({post,user,liked,onLike,onClose,requestAuth,notify}:{post:
   };
   return <Dialog.Root open onOpenChange={open => {if(!open) onClose();}}><Dialog.Portal>
     <Dialog.Overlay asChild><motion.div className="drawer-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}/></Dialog.Overlay>
-    <Dialog.Content asChild aria-describedby={undefined}><motion.div className="detail-drawer" style={{left:0,right:0,marginInline:'auto',transform:'none'}} initial={{y:reducedMotion?0:'100%'}} animate={{y:0}} exit={{y:reducedMotion?0:'100%'}} transition={{type:'spring',damping:32,stiffness:300}}>
-      <div className="drawer-top"><Button variant="ghost" size="icon" onClick={onClose} aria-label="게시물 닫기"><ArrowLeft/></Button><div className="creator"><img src={imageFor(post)} className="creator-avatar" width={21} height={21} alt=""/><span className="truncate text-sm text-foreground">{post.creator}</span></div><Button variant="ghost" size="icon" aria-label="공유" onClick={async () => {try{const url = window.location.href;if(navigator.share) await navigator.share({title:post.title,url});else {await navigator.clipboard.writeText(url);notify('링크를 복사했어요.');}}catch{/* Share cancellation is not an error. */}}><Share2/></Button></div>
+    <Dialog.Content asChild aria-describedby={undefined}><motion.div className="detail-drawer" initial={{y:reducedMotion?0:'100%'}} animate={{y:0}} exit={{y:reducedMotion?0:'100%'}} transition={{type:'spring',damping:32,stiffness:300}}>
+      <div className="drawer-top"><Button variant="ghost" size="icon" onClick={onClose} aria-label="게시물 닫기"><ArrowLeft/></Button><div className="creator"><img src={imageFor(post)} className="creator-avatar" width={21} height={21} alt=""/><span className="truncate text-sm text-foreground">{post.creator}</span></div><Button variant="ghost" size="icon" aria-label="공유" onClick={async () => {try{const url = window.location.href;if(navigator.share) await navigator.share({title:post.title,url});else {await navigator.clipboard.writeText(url);notify('링크를 복사했어요.');}}catch{/* Share cancellation is not an error. */}}}><Share2/></Button></div>
       <div className="drawer-body">
         <div ref={carousel} className="detail-carousel" onScroll={e => setSlide(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))}>{post.video_url ? <video src={post.video_url} poster={pictures[0]} controls playsInline preload="metadata"/> : pictures.map((src,i) => <img key={i} src={src} alt={`${post.title} ${i+1}`} width={512} height={768}/>)}</div>
         {pictures.length > 1 && <div className="flex items-center justify-center gap-3 py-2"><Button variant="ghost" size="icon" aria-label="이전 사진" disabled={slide === 0} onClick={() => carousel.current?.scrollBy({left:-(carousel.current?.clientWidth || 0),behavior:reducedMotion?'auto':'smooth'})}><ArrowLeft/></Button><span className="text-xs text-muted-foreground">{slide+1} / {pictures.length}</span><Button variant="ghost" size="icon" aria-label="다음 사진" disabled={slide >= pictures.length-1} onClick={() => carousel.current?.scrollBy({left:carousel.current?.clientWidth || 0,behavior:reducedMotion?'auto':'smooth'})}><ArrowRight/></Button></div>}
@@ -239,7 +239,7 @@ function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;requestAuth:
       }
       const imagePaths = uploaded.filter((_,i) => files[i].type.startsWith('image/'));
       const videoIndex = files.findIndex(f => f.type.startsWith('video/'));
-      const {error:saveError} = await supabase.from('posts').insert({user_id:user.id,title:title.trim(),description:description.trim(),category,creator:String(user.user_metadata.display_name || user.email?.split('@')[0] || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex]:null,price:product?Number(price):null});
+      const {error:saveError} = await supabase.from('posts').insert({user_id:user.id,title:title.trim(),description:description.trim(),category,creator:String(user.user_metadata['display_name'] || user.email?.split('@')[0] || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex]:null,price:product?Number(price):null});
       if(saveError) throw new Error('게시물을 저장하지 못했어요. 다시 시도해 주세요.');
       onPosted();
     } catch(err) {if(uploaded.length) await supabase.storage.from('market-media').remove(uploaded);setError(err instanceof Error?err.message:'잠시 후 다시 시도해 주세요.');}

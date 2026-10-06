@@ -215,7 +215,7 @@
 .nav-upload {margin:auto; border-radius:14px; width:49px; height:39px; background:var(--primary); color:var(--primary-foreground); display:grid;place-items:center;}
 .nav-upload svg {width:25px;height:25px;}
 .drawer-backdrop {position:fixed;inset:0;background:var(--overlay);z-index:50;}
-.detail-drawer {position:fixed;z-index:51;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:720px;height:94dvh;background:var(--background);border-radius:16px 16px 0 0;box-shadow:var(--drawer-shadow);display:flex;flex-direction:column;}
+.detail-drawer {position:fixed;z-index:51;bottom:0;left:0;right:0;margin-inline:auto;width:100%;max-width:720px;height:94dvh;background:var(--background);border-radius:16px 16px 0 0;box-shadow:var(--drawer-shadow);display:flex;flex-direction:column;}
 .drawer-top {display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:15px 20px;border-bottom:1px solid var(--border);}
 .drawer-body {overflow-y:auto;overscroll-behavior:contain;flex:1;}
 .detail-carousel {display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;background:var(--muted);}
