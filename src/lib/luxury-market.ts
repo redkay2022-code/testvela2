@@ -4,7 +4,7 @@ import watch2 from '@/assets/watch-2.webp';
 import watch3 from '@/assets/watch-3.webp';
 import watch4 from '@/assets/watch-4.webp';
 import watch5 from '@/assets/watch-5.webp';
-import studioShort from '@/assets/studio-short.mp4';
+import studioShort from '@/assets/studio-short.webm';
 import { media } from './market-media';
 import type { Post } from './market';
 
