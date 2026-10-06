@@ -14,7 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      comments: {
+        Row: {
+          body: string
+          created_at: string
+          creator: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          creator: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          creator?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          base_likes: number
+          category: string
+          created_at: string
+          creator: string
+          description: string
+          duration: string | null
+          id: string
+          image_key: string
+          media_urls: string[]
+          price: number | null
+          title: string
+          user_id: string | null
+          video_url: string | null
+        }
+        Insert: {
+          base_likes?: number
+          category?: string
+          created_at?: string
+          creator?: string
+          description?: string
+          duration?: string | null
+          id?: string
+          image_key: string
+          media_urls?: string[]
+          price?: number | null
+          title: string
+          user_id?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          base_likes?: number
+          category?: string
+          created_at?: string
+          creator?: string
+          description?: string
+          duration?: string | null
+          id?: string
+          image_key?: string
+          media_urls?: string[]
+          price?: number | null
+          title?: string
+          user_id?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
