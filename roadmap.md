@@ -1,4 +1,8 @@
 # velamarket
+- [ ] Apply exact Dark Luxury tokens and watch editorial feed
+- [ ] Add product carousel, follow/save/chat/cart and checkout preview
+- [ ] Add isolated buyer/seller/admin role previews and public store
+- [ ] Verify navigation, actions, history and small-screen layout
 - [x] Three-column feed, categories, search and market
 - [x] Detail drawer, carousel, likes and comments implemented
 - [x] Account and upload flows with private Cloud storage implemented
