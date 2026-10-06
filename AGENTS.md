@@ -15,3 +15,5 @@
 - Keep marketplace data in Cloud with owner-scoped write policies; authenticated writes must use the caller's identity.
 - Bundle editorial media and icons locally; uploaded private storage media are served with signed URLs after matching published post paths.
 - Use manifest-only home-screen support; no offline service worker unless offline operation is explicitly requested.
+- Isolate demo role previews and commerce/moderation actions in a shared React provider; they never grant Cloud privileges or change production rows.
+- Adapt existing editorial post IDs into a local luxury-watch sample collection without overwriting owner content; server-loaded published posts remain the source for real uploads.

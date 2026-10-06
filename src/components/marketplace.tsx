@@ -190,7 +190,7 @@ function SmallDialog({title,onClose,children}:{title:string;onClose:()=>void;chi
   return <Dialog.Root open onOpenChange={open => {if(!open) onClose();}}><Dialog.Portal><Dialog.Overlay className="drawer-backdrop auth-backdrop"/><Dialog.Content className="auth-dialog" aria-describedby={undefined}><div className="mb-5 grid grid-cols-[minmax(0,1fr)_auto] items-center"><Dialog.Title className="text-xl font-bold">{title}</Dialog.Title><Button variant="ghost" size="icon" aria-label="창 닫기" onClick={onClose}><X/></Button></div>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 
-function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=>void}) {
+export function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=>void}) {
   const [signup,setSignup] = useState(false);
   const [email,setEmail] = useState('');
   const [password,setPassword] = useState('');
@@ -210,7 +210,7 @@ function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=>void})
   return <SmallDialog title={signup?'취향이 만나는 시작':'다시 만나 반가워요'} onClose={onClose}>{sent ? <div className="py-5 text-center"><Check className="mx-auto mb-4 text-success" size={36}/><p className="font-medium">확인 이메일을 보냈어요</p><p className="mt-3 text-sm leading-6 text-muted-foreground">이메일에 있는 링크를 눌러 가입을 완료해 주세요.</p></div> : <form onSubmit={submit}>{signup && <><label className="form-label" htmlFor="name">닉네임</label><input id="name" className="form-input" required maxLength={40} value={name} onChange={e => setName(e.target.value)}/></>}<label className="form-label" htmlFor="email">이메일</label><input id="email" className="form-input" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)}/><label className="form-label" htmlFor="password">비밀번호</label><input id="password" className="form-input" type="password" autoComplete={signup?'new-password':'current-password'} minLength={8} required value={password} onChange={e => setPassword(e.target.value)}/>{error && <p role="alert" className="mt-4 text-xs leading-5 text-destructive">{error}</p>}<Button type="submit" className="mt-6 w-full" disabled={pending}>{pending?'연결 중…':signup?'회원가입':'로그인'}</Button><Button type="button" variant="link" className="mt-3 w-full text-xs" onClick={() => {setSignup(!signup);setError('');}}>{signup?'이미 계정이 있나요? 로그인':'처음인가요? 회원가입'}</Button></form>}</SmallDialog>;
 }
 
-function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;requestAuth:()=>void;onPosted:()=>void}) {
+export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;requestAuth:()=>void;onPosted:()=>void}) {
   const [files,setFiles] = useState<File[]>([]);
   const [previews,setPreviews] = useState<string[]>([]);
   const [title,setTitle] = useState('');
