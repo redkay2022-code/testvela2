@@ -22,6 +22,19 @@ function publicClient() {
 export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
   const { data, error } = await publicClient().from('posts').select('*').order('created_at', { ascending: false }).order('id');
   if (error) throw new Error('피드를 불러오지 못했습니다.');
+  const uploaded = data.filter(p => p.image_key === 'uploaded');
+  if (uploaded.length) {
+    // Only paths referenced by publicly readable posts can be signed here.
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const paths = [...new Set(uploaded.flatMap(p => [...p.media_urls,...(p.video_url ? [p.video_url]:[])]))];
+    const {data:signed,error:signError} = await supabaseAdmin.storage.from('market-media').createSignedUrls(paths,3600);
+    if(signError) throw new Error('게시물 사진을 불러오지 못했습니다.');
+    const urls = new Map(signed?.map(s => [s.path,s.signedUrl]) || []);
+    for(const post of uploaded) {
+      post.media_urls = post.media_urls.map(path => urls.get(path) || '');
+      if(post.video_url) post.video_url = urls.get(post.video_url) || null;
+    }
+  }
   // Editorial order is stable for the initial collection; new posts appear first.
   const order = ['sunny-room','daily-bag','matcha-day','linen-day','room-corner','tulips','blue-cup','sea-trip','film-camera','white-sneakers','cafe-corner','spring-walk'];
   return data.sort((a,b) => {
@@ -45,7 +58,9 @@ export const addComment = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ postId:z.string().max(100), body:z.string().trim().min(1).max(1000) }).parse(data))
   .handler(async ({data,context}) => {
-    const creator = String(context.claims.user_metadata?.display_name || context.claims.email?.split('@')[0] || 'vela member').slice(0,40);
+    const metadata = context.claims.user_metadata;
+    const name = metadata && typeof metadata === 'object' && 'display_name' in metadata ? metadata.display_name : undefined;
+    const creator = String(name || context.claims.email?.split('@')[0] || 'vela member').slice(0,40);
     const {error} = await context.supabase.from('comments').insert({post_id:data.postId,user_id:context.userId,creator,body:data.body});
     if(error) throw new Error('댓글을 저장하지 못했습니다.');
     return {ok:true};
