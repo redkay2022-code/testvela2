@@ -1,0 +1,3 @@
+## Marketplace presentation
+- Keep the admin presentation in a dedicated dashboard using validated search modules; live seller approvals remain authenticated server actions, while disconnected crypto and moderation operations are visibly non-production. Sample actions must not imply real transfers or privileges.
+- Keep production drawer links in a dedicated navigation component and reuse authenticated order boards for support so sample conversations never masquerade as support.
