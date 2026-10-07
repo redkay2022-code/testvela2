@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowLeft, Check, Heart, MessageCircle, Music2, Play, Plus, Share2, ShoppingBag, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, ChevronRight, Heart, MessageCircle, Play, Plus, Share2, ShoppingBag, X } from 'lucide-react';
+import { Link, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 import { ProductComments } from './product-comments';
 import { useMarketPreview } from './market-preview';
 import { dollars, type LuxuryPost } from '@/lib/luxury-market';
 import { SellerBadge, SellerRatings } from './reputation';
+import { ShortsGallery } from './shorts-gallery';
+import { marketSearch } from '@/lib/market';
 
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:()=>void; notify:(text:string)=>void };
 export function ShortsPlayer({posts,selectedId,sheet,user,close,closeSheet,change,openSheet,requestAuth,buy,notify}:Props) {
  const feed=useRef<HTMLDivElement>(null), initialized=useRef(false), activeId=useRef(selectedId);
- const [muted,setMuted]=useState(true),[active,setActive]=useState(selectedId);
+ const [active,setActive]=useState(selectedId);
  const reduced=useReducedMotion();
  const post=posts.find(p=>p.id===active) || posts[0];
  useEffect(()=>{activeId.current=selectedId;setActive(selectedId);const el=feed.current;const index=posts.findIndex(p=>p.id===selectedId);if(el&&index>=0){el.scrollTo({top:index*el.clientHeight,behavior:'instant'});initialized.current=true;}},[selectedId,posts.length]);
@@ -20,9 +23,8 @@ export function ShortsPlayer({posts,selectedId,sheet,user,close,closeSheet,chang
  return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Content asChild aria-describedby={undefined}><motion.div className="shorts-player" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
  <Dialog.Title className="sr-only">VELA Shorts</Dialog.Title>
   <div className={`shorts-snap ${sheet?'shorts-locked':''}`} ref={el=>{feed.current=el;if(el&&!initialized.current){initialized.current=true;const index=posts.findIndex(p=>p.id===selectedId);requestAnimationFrame(()=>el.scrollTo({top:Math.max(0,index)*el.clientHeight,behavior:'instant'}));}}} onScroll={e=>{if(sheet||!initialized.current)return;const el=e.currentTarget;const index=Math.round(el.scrollTop/el.clientHeight),next=posts[index];if(next&&Math.abs(el.scrollTop-index*el.clientHeight)<el.clientHeight*.35&&next.id!==activeId.current){activeId.current=next.id;setActive(next.id);change(next.id);}}} tabIndex={0} aria-label="Shorts video feed" onKeyDown={e=>{if(sheet)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();feed.current?.scrollBy({top:(e.key==='ArrowDown'?1:-1)*e.currentTarget.clientHeight,behavior:reduced?'instant':'smooth'});}}}>
- {posts.map(p=><ShortScene key={p.id} post={p} active={p.id===active} muted={muted} openSheet={openSheet} notify={notify}/>)}
+ {posts.map(p=><ShortScene key={p.id} post={p} active={p.id===active} muted openSheet={openSheet} notify={notify}/>)}
  </div>
- <header className="shorts-top"><Button variant="ghost" size="icon" aria-label="Close Shorts" onClick={close}><ArrowLeft/></Button><span>Shorts<span className="shorts-top-mark"> VELA</span></span><Button variant="ghost" size="icon" aria-label={muted?'Unmute video':'Mute video'} aria-pressed={!muted} onClick={()=>setMuted(m=>!m)}>{muted?<VolumeX/>:<Volume2/>}</Button></header>
  <AnimatePresence>{sheet&&<ShortSheet key={sheet} kind={sheet} close={closeSheet}>
  {sheet==='comments'?<ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>:<ProductSummary post={post} buy={buy} notify={notify}/>}
  </ShortSheet>}</AnimatePresence>
@@ -30,12 +32,11 @@ export function ShortsPlayer({posts,selectedId,sheet,user,close,closeSheet,chang
 }
 function ShortScene({post,active,muted,openSheet,notify}:{post:LuxuryPost;active:boolean;muted:boolean;openSheet:Props['openSheet'];notify:Props['notify']}) {
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
- const [expanded,setExpanded]=useState(false),[failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false);
+ const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false);
  const liked=preview.saved.includes(post.id);
  useEffect(()=>{const v=video.current;if(!v)return;v.muted=muted;let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,muted,post.video]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active}>
  {post.video&&!failed?<video ref={video} poster={post.images[0]} playsInline loop muted={muted} preload={active?'auto':'none'} onError={()=>setFailed(true)}><source src={post.video} type={post.videoFallback?"video/webm":undefined}/>{post.videoFallback&&<source src={post.videoFallback} type="video/mp4"/>}</video>:<img src={post.images[0]} alt={post.title}/>}
- <div className="shorts-shade"/>
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('Playback is unavailable on this device.'));}}><Play/> Play</Button>:<span>{failed?'Video unavailable · Cover preview':'Studio cover preview'}</span>}</div>}
  <aside className="shorts-actions" aria-label="Shorts actions">
  <Button variant="ghost" className="shorts-follow" aria-label={preview.following?'Unfollow creator':'Follow creator'} aria-pressed={preview.following} tabIndex={active?0:-1} onClick={preview.follow}><img src={post.images[0]} alt={post.creator}/><span>{preview.following?<Check size={12}/>:<Plus size={12}/>}</span></Button>
@@ -44,7 +45,6 @@ function ShortScene({post,active,muted,openSheet,notify}:{post:LuxuryPost;active
  <Button variant="goldOutline" className="shorts-details" aria-label="상세보기 · Product Details" tabIndex={active?0:-1} onClick={()=>openSheet('product')}><ShoppingBag/><span>상세보기</span></Button>
   <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="Share short" tabIndex={active?0:-1} onClick={async()=>{try{if(navigator.share)await navigator.share({title:post.title,url:window.location.href});else{await navigator.clipboard.writeText(window.location.href);notify('Short link copied');}}catch{/* Share dismissed */}}}><Share2/></Button><span>Share</span></div>
  </aside>
- <div className="shorts-info"><div className="shorts-creator"><strong>@{post.creator.replaceAll(' ','_')}</strong><SellerBadge reputation={post.reputation}/></div><h2>{post.title}</h2><div className="shorts-description"><p className={expanded?'expanded':''}>{post.description}</p><Button variant="ghost" size="sm" tabIndex={active?0:-1} onClick={()=>setExpanded(e=>!e)} aria-expanded={expanded}>{expanded?'less':'…more'}</Button></div><p className="shorts-tags">#{post.factory.replaceAll(' ','')} #Datejust #Shorts</p><div className="shorts-audio"><Music2 size={15}/><span>{post.sample?'Studio visual · Original audio (silent sample)':'Original audio'} · {post.creator}</span></div></div>
  </article>;
 }
 function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>void;children:React.ReactNode}) {
@@ -57,7 +57,8 @@ function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>v
 }
 function ProductSummary({post,buy,notify}:{post:LuxuryPost;buy:()=>void;notify:Props['notify']}) {
  const preview=useMarketPreview(),verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
- return <><div className="shorts-sheet-body">{post.price!==null&&<p className="lux-price">{dollars(post.price)}</p>}<div className="seller-name-line mt-4 text-xs"><span>{post.creator}</span><SellerBadge reputation={post.reputation}/></div><h2 className="mt-3 text-lg font-semibold">{post.title}</h2><div className="detail-tags">{verified&&<span>✓ VELA VERIFIED</span>}<span>{post.factory}</span><span>{post.category}</span></div><h3 className="mt-6 text-sm">스펙 정보 · Specifications</h3><dl className="lux-specs">{(post.sample?[
+ const location=useRouterState({select:s=>s.location}),search=marketSearch.parse(location.search);
+ return <><div className="shorts-sheet-seller"><img src={post.images[0]} alt={post.creator}/><div><strong>@{post.creator.replaceAll(' ','_')}</strong><SellerBadge reputation={post.reputation}/></div><Button asChild variant="goldOutline" size="sm"><Link to="/store" search={{role:search.role,seller:post.sample?undefined:post.source.user_id ?? post.creator,storeTab:'products'}} aria-label="Visit Seller Store">셀러샵<ChevronRight size={14}/></Link></Button></div><div className="shorts-sheet-body"><ShortsGallery key={post.id} images={post.images} title={post.title}/>{post.price!==null&&<p className="lux-price mt-4">{dollars(post.price)}</p>}<h2 className="mt-3 text-lg font-semibold">{post.title}</h2><div className="detail-tags">{verified&&<span>✓ VELA VERIFIED</span>}<span>{post.factory}</span><span>{post.category}</span></div><h3 className="mt-6 text-sm">스펙 정보 · Specifications</h3><dl className="lux-specs">{(post.sample?[
  ['Movement','Dandong VS3235 (72-hour power reserve)'],['Material','904L Stainless Steel'],['Proportion','1:1 Original Specs'],['Water Resistance','50m / 5ATM']
  ]:[['Specifications','Contact seller to confirm']]).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="mt-5 text-sm leading-7 text-muted-foreground">{post.description}</p><p className="mt-4 text-xs leading-6 text-primary">#{post.factory.replaceAll(' ','')} #Datejust #Shorts</p><SellerRatings reputation={post.reputation}/>{post.sample&&<p className="sample-notice">Studio sample · Specifications, verification and shopping are previews, not live claims.</p>}</div><footer className="shorts-sheet-buy"><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('Added to your sample shopping bag');}}>Add to Cart</Button><Button variant="gold" onClick={buy}>Buy Now</Button></footer></>;
 }
