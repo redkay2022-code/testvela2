@@ -30,6 +30,7 @@
 - Keep Home sub-topic selection in validated URL search state and filter the existing public feed; message navigation opens the existing isolated sample conversation without inventing unread data.
 - Keep the category picker and selected filter in validated URL search state; match multilingual category/brand aliases against existing listing content without inventing brand affiliations for editorial samples.
 - Build the public seller directory from visible feed listings grouped by stable seller identity; directory filters use validated URL search state and unknown live metrics remain unavailable.
+- Use insuredPurchase for mandatory delivery insurance and checkout totals; calculate on the seller item price, excluding the optional box, to keep displayed and submitted totals consistent.
 - Store all prices (item and Full Set Box) in base USD and convert only at display via src/lib/currency formatMoney; one stored currency keeps totals and fees consistent.
 - Translate commerce copy through src/lib/i18n dictionary t(); language and currency are detected on the device and re-render via the shared locale provider.
 - Translate on-screen UI via per-language dictionaries in src/locales applied by src/lib/dom-translate; commerce copy built in code uses src/lib/i18n t(). Live USD rates come from a cached server function with fixed fallback rates.

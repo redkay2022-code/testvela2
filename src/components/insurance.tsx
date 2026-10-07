@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { ChevronRight, ShieldCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { formatMoney, krwToUsd } from '@/lib/currency';
-import { insuranceFee, insuranceTiers, nextInsuranceTier, tierForSpend, tierInfo, type InsuranceTier } from '@/lib/insurance';
+import { insuredPurchase, insuranceFee, insuranceTiers, nextInsuranceTier, tierForSpend, tierInfo, type InsuranceTier } from '@/lib/insurance';
 
 type Role = 'buyer' | 'seller' | 'admin' | undefined;
 // No trusted spend history exists yet, so every account starts at the BRONZE baseline.
@@ -17,16 +17,13 @@ export function InsuranceTeaser({ price, format, role }: { price: number; format
   </div>;
 }
 
-export function InsuranceBreakdown({ price, box = 0, format, tier = 'bronze' }: { price: number; box?: number; format: (n: number) => string; tier?: InsuranceTier }) {
-  const baseTotal = price + box, fee = insuranceFee(baseTotal, tier), info = tierInfo(tier);
+export function InsuranceBreakdown({ price, box = 0, format }: { price: number; box?: number; format: (n: number) => string; tier?: InsuranceTier }) {
+  const { insurance, total } = insuredPurchase(price, box);
   return <dl className="insurance-breakdown" aria-label="Insurance fee breakdown">
     <div><dt>{t('productPrice')}</dt><dd>{format(price)}</dd></div>
     {box > 0 && <div><dt>{t('fullSetBox')}</dt><dd>+{format(box)}</dd></div>}
-    {box > 0 && <div><dt>{t('baseTotal')}</dt><dd>{format(baseTotal)}</dd></div>}
-    <div><dt>{t('insuranceFee')} (+10%)</dt><dd>+{format(fee.base)}</dd></div>
-    <div><dt>{t('tierDiscount',{tier:info.label})} (-{Math.round(info.discount * 100)}%)</dt><dd>-{format(fee.discount)}</dd></div>
-    <div className="insurance-total"><dt>{t('finalFee')}</dt><dd>{format(fee.final)}</dd></div>
-    <div className="insurance-total"><dt>{t('total')}</dt><dd>{format(baseTotal + fee.final)}</dd></div>
+    <div><dt>{t('deliveryInsurance')} (+10%)</dt><dd>+{format(insurance)}</dd></div>
+    <div className="insurance-total"><dt>{t('total')}</dt><dd>{format(total)}</dd></div>
   </dl>;
 }
 

@@ -28,6 +28,7 @@ import { matchesFeedCategory } from '@/lib/feed-categories';
 import { SellerDirectory } from './seller-directory';
 import { CurrencySelect } from './currency';
 import { t } from '@/lib/i18n';
+import { insuredPurchase } from '@/lib/insurance';
 import { InsuranceBanner, InsuranceBreakdown, InsuranceTeaser } from './insurance';
 import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
@@ -165,6 +166,6 @@ function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   <CryptoNetworkPicker value={network} onChange={setNetwork}/>
   <p className="my-5 text-xs leading-6 text-muted-foreground">{t('shippingNote')}</p>
   <Button variant="gold" className="w-full" type="submit">암호화폐로 결제하기<ArrowRight/></Button>
-  {deposit&&<CryptoDepositDialog network={network} usd={price+(box?boxPrice:0)} onClose={()=>setDeposit(false)} onSubmit={txid=>{setDeposit(false);preview.order(item);void createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:price+(box?boxPrice:0),seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid}).catch(console.error);onDone();}}/>}
+  {deposit&&<CryptoDepositDialog network={network} usd={insuredPurchase(price,box?boxPrice:0).total} onClose={()=>setDeposit(false)} onSubmit={txid=>{setDeposit(false);preview.order(item);void createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:insuredPurchase(price,box?boxPrice:0).total,seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid}).catch(console.error);onDone();}}/>}
  </form>;
 }
