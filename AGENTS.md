@@ -22,3 +22,6 @@
 - Keep full-screen search in validated URL search state and reuse the public feed data so device back dismisses search without a separate data source.
 - Derive seller reputation with shared pure threshold functions and local SVG emblems; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
 - Buyer membership is an explicit trusted tier, not inferred from client orders or metadata; use baseline Member when no earned membership is available.
+
+- Keep Shorts inspection lightboxing in validated URL search state above the sheet; preserve original uploaded image URLs and unwind browser back one layer at a time.
+- Resolve storefronts from the selected seller identity using public feed rows; never display sample reputation or reviews as another seller’s data.
