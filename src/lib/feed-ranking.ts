@@ -6,7 +6,7 @@ import { ratingAverage } from './reputation';
 export function trustScore(post: LuxuryPost, reviewCount: number): number {
   const rating = ratingAverage(post.reputation) ?? 0;
   const sales = Math.max(0, post.reputation.completedSales);
-  return rating * 20 + Math.min(sales, 200) * 0.25 + Math.min(reviewCount, 50) * 2;
+  return rating * 100 + Math.min(sales, 200) * 0.1 + Math.min(reviewCount, 50) * 0.2;
 }
 
 /** Orders posts by seller trust + review activity, keeping input order on ties. */
