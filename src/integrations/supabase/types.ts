@@ -317,6 +317,8 @@ export type Database = {
           id: string
           media_urls: string[]
           nickname: string
+          order_id: string | null
+          rating: number | null
           seller_id: string
           seller_name: string
           user_id: string
@@ -328,6 +330,8 @@ export type Database = {
           id?: string
           media_urls?: string[]
           nickname: string
+          order_id?: string | null
+          rating?: number | null
           seller_id: string
           seller_name: string
           user_id: string
@@ -339,6 +343,8 @@ export type Database = {
           id?: string
           media_urls?: string[]
           nickname?: string
+          order_id?: string | null
+          rating?: number | null
           seller_id?: string
           seller_name?: string
           user_id?: string
