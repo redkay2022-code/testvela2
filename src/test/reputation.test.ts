@@ -1,29 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { nextSellerTier, ratingAverage, sellerTier, type SellerReputation } from '@/lib/reputation';
-const rep = (rating: number, sales: number, approved = true): SellerReputation => ({ approved, ratings: [rating, rating, rating, rating], completedSales: sales });
-describe('seller reputation', () => {
-  it('starts every approved seller at Verified without a warning tier', () => {
-    expect(sellerTier(rep(0, 0))).toBe('standard');
-    expect(sellerTier(rep(4.99, 300, false))).toBeNull();
+import { nextSellerTier, sellerTier, type SellerReputation } from '@/lib/reputation';
+import { metricsFromOrders } from '@/lib/studio-metrics';
+const rep = (volumeUsd: number, sales: number, rating: number, disputeRate: number, approved = true): SellerReputation => ({ approved, ratings: [rating, rating, rating, rating], completedSales: sales, volumeUsd, disputeRate });
+describe('studio tiers', () => {
+  it('starts approved sellers at STANDARD and hides unapproved', () => {
+    expect(sellerTier(rep(0, 0, 0, 0))).toBe('standard');
+    expect(sellerTier(rep(1e6, 999, 5, 0, false))).toBeNull();
   });
-  it('requires both Master thresholds', () => {
-    expect(sellerTier(rep(4.8, 50))).toBe('master');
-    expect(sellerTier(rep(4.79, 50))).toBe('verified');
-    expect(sellerTier(rep(4.8, 49))).toBe('verified');
+  it('requires every threshold', () => {
+    expect(sellerTier(rep(10001, 10, 4.5, 2.9))).toBe('pro');
+    expect(sellerTier(rep(10000, 10, 4.5, 0))).toBe('standard');
+    expect(sellerTier(rep(50001, 50, 4.8, 0.9))).toBe('prime');
+    expect(sellerTier(rep(50001, 50, 4.8, 1))).toBe('pro');
+    expect(sellerTier(rep(150001, 150, 4.9, 0.4))).toBe('master');
   });
-  it('requires both Sovereign thresholds', () => {
-    expect(sellerTier(rep(4.95, 200))).toBe('sovereign');
-    expect(sellerTier(rep(4.94, 200))).toBe('master');
-    expect(sellerTier(rep(4.95, 199))).toBe('master');
+  it('honours admin override and tracks progress', () => {
+    expect(sellerTier({ ...rep(0, 0, 0, 0), override: 'prime' })).toBe('prime');
+    expect(nextSellerTier(rep(5000, 5, 4, 0))).toMatchObject({ tier: 'pro', volumeProgress: 50 });
+    expect(nextSellerTier(rep(200000, 200, 5, 0))).toBeNull();
   });
-  it('uses the unrounded mean of all four criteria', () => {
-    const reputation: SellerReputation = { approved: true, ratings: [4.8, 5, 4.7, 4.9], completedSales: 80 };
-    expect(ratingAverage(reputation)).toBeCloseTo(4.85);
-    expect(sellerTier(rep(4.949, 200))).toBe('master');
-  });
-  it('tracks both remaining criteria and stops at the top tier', () => {
-    expect(nextSellerTier(rep(4.8, 50))).toMatchObject({ tier: 'sovereign', rating: 4.95, sales: 200, salesProgress: 25 });
-    expect(nextSellerTier(rep(4.95, 200))).toBeNull();
-    expect(nextSellerTier(rep(5, 500, false))).toBeNull();
+  it('derives metrics from delivered orders', () => {
+    const m = metricsFromOrders([{ seller_id: 'a', amount_usd: '100', stage: 'delivered', dispute_opened_at: null }, { seller_id: 'a', amount_usd: 50, stage: 'shipped', dispute_opened_at: 'x' }]);
+    expect(m).toMatchObject({ volumeUsd: 100, completedSales: 1, disputes: 1, disputeRate: 50 });
   });
 });

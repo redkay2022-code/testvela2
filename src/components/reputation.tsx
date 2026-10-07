@@ -3,7 +3,7 @@ import { automatedTier, buyerLabels, nextSellerTier, ratingAverage, ratingCriter
 type Emblem = BuyerTier;
 export function LuxuryEmblem({ tier }: { tier: Emblem }) {
   return <svg viewBox="0 0 40 40" className={`luxury-emblem emblem-${tier}`} fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    tier === 'member' ? <><path className="emblem-field" d="m20 3 15 9v16l-15 9-15-9V12Z"/><path d="m20 8 11 6v12l-11 6-11-6V14Z"/><path d="m14 16 6 12 6-12"/></> :
+    {tier === 'member' ? <><path className="emblem-field" d="m20 3 15 9v16l-15 9-15-9V12Z"/><path d="m20 8 11 6v12l-11 6-11-6V14Z"/><path d="m14 16 6 12 6-12"/></> :
     tier === 'silver' ? <><path className="emblem-field" d="m20 3 16 17-16 17L4 20Z"/><path d="m20 9 10 11-10 11-10-11Z"/><path d="m20 14 5 6-5 6-5-6Z"/></> :
     tier === 'gold' ? <><circle className="emblem-field" cx="20" cy="20" r="16"/><circle cx="20" cy="20" r="12.5"/><path d="m20 10 4 6 6 4-6 4-4 6-4-6-6-4 6-4Z"/><path d="m20 16 4 4-4 4-4-4Z"/></> :
     <><path className="emblem-field" d="m20 3 15 9-3 17-12 8-12-8-3-17Z"/><path d="m20 8 10 12-10 13-10-13Z"/><path d="m10 20 10 4 10-4M20 8v25M7 10l5-2m16 0 5 2M9 30l-3-6m25 6 3-6"/><path d="m14 13 6 11 6-11"/></>}
