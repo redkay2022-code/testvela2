@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight, ShieldCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
