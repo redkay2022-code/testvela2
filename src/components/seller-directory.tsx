@@ -13,7 +13,7 @@ export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost
     <div className="section-heading"><h1>셀러 스토어</h1><span>{sellers.length} studios</span></div>
     <nav className="directory-filters" aria-label="Seller categories">{storeFilters.map(([id,label])=><Button asChild variant="ghost" className={`lux-chip ${category===id?'active':''}`} key={id}><Link to="/store" search={{role,storeCategory:id}} resetScroll={false} aria-current={category===id?'page':undefined}>{label}</Link></Button>)}</nav>
     <div className="directory-grid">{sellers.map(seller=>{
-      const following = seller.post.sample ? preview.following : preview.followedSellers.includes(seller.id);
+      const following = preview.isFollowing(seller.id);
       return <article className="directory-card" key={seller.id}>
         <div className="directory-identity" data-no-translate><img src={seller.post.images[0]} width={48} height={48} alt={seller.post.creator}/><div><h2>{seller.post.creator}</h2><SellerBadge reputation={seller.post.reputation}/></div></div>
         <p className="directory-bio">{seller.bio}</p>
