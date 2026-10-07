@@ -32,3 +32,4 @@
 - Store all prices (item and Full Set Box) in base USD and convert only at display via src/lib/currency formatMoney; one stored currency keeps totals and fees consistent.
 - Translate commerce copy through src/lib/i18n dictionary t(); language and currency are detected on the device and re-render via the shared locale provider.
 - Translate on-screen UI via per-language dictionaries in src/locales applied by src/lib/dom-translate; commerce copy built in code uses src/lib/i18n t(). Live USD rates come from a cached server function with fixed fallback rates.
+- Real roles live in public.user_roles checked via has_role(); seller approval and WeChat identity writes go through admin-verified server functions in src/lib/seller-accounts.functions.ts, never direct client writes.
