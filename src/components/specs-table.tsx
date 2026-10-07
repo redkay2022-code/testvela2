@@ -12,7 +12,7 @@ function labelFor(key: string) {
 }
 
 /** 공통 사양 표: seller-listings에서 저장한 specs(jsonb)를 라벨/값 2열 표로 렌더링한다.
- *  값이 하나도 없으면 fallback(에디토리ial 샘플용 기본 사양)을 대신 렌더링한다. */
+ *  값이 하나도 없으면 fallback(에디토리 샘플용 기본 사양)을 대신 렌더링한다. */
 export function SpecsTable({specs, fallback}: {specs: unknown; fallback?: React.ReactNode}) {
   let entries: [string, string][] = [];
   if (specs && typeof specs === 'object' && !Array.isArray(specs)) {
