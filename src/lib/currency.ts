@@ -3,8 +3,9 @@ export type Currency = 'USD' | 'KRW' | 'CNY' | 'EUR' | 'RUB' | 'JPY' | 'AED' | '
 export const BASE_CURRENCY: Currency = 'USD';
 export const currencies: readonly Currency[] = ['USD', 'KRW', 'CNY', 'EUR', 'RUB', 'JPY', 'AED', 'SAR'];
 export const currencyLabels: Record<Currency, string> = { USD: '$ USD', KRW: '₩ KRW', CNY: '¥ CNY', EUR: '€ EUR', RUB: '₽ RUB', JPY: '¥ JPY', AED: 'AED', SAR: 'SAR' };
-// Indicative reference rates (1 USD = x). Not a live market feed.
+// Fallback rates (1 USD = x); replaced by live rates once loaded.
 export const usdRates: Record<Currency, number> = { USD: 1, KRW: 1380, CNY: 7.2, EUR: 0.92, RUB: 90, JPY: 150, AED: 3.67, SAR: 3.75 };
+export function setUsdRates(next: Partial<Record<Currency, number>>) { for (const [k, v] of Object.entries(next)) if (isCurrency(k) && typeof v === 'number' && v > 0) usdRates[k] = v; usdRates.USD = 1; }
 const locales: Record<Currency, string> = { USD: 'en-US', KRW: 'ko-KR', CNY: 'zh-CN', EUR: 'de-DE', RUB: 'ru-RU', JPY: 'ja-JP', AED: 'en-AE', SAR: 'en-SA' };
 let active: Currency = 'USD';
 export const activeCurrency = () => active;
