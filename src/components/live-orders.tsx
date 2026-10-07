@@ -167,6 +167,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
   const orders = (q.data?.orders ?? []).filter(o => as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin)));
   const setStage = (id: string, stage: EscrowStage) => void supabase.from('orders').update({ stage }).eq('id', id);
   return <section className="escrow-board mb-6" aria-label="QC 게시판">
+    {reviewing && <ReviewModal orderId={reviewing} close={() => setReviewing(null)} requestAuth={() => setReviewing(null)} />}
     <div className="section-heading"><h2><MessageSquareText size={16} className="mr-1 inline" />QC 게시판</h2><span>실시간 저장</span></div>
     {!orders.length && <p className="py-6 text-center text-sm text-muted-foreground">{as === 'buyer' ? '결제한 실제 주문이 여기에 표시됩니다.' : '받은 실제 주문이 여기에 표시됩니다.'}</p>}
     {orders.map(o => {

@@ -48,12 +48,13 @@ export const listSellerApplications = createServerFn({ method: 'GET' })
     const { data, error } = await context.supabase.from('seller_applications').select('id, user_id, system_code, nickname, status, created_at').order('created_at', { ascending: false });
     if (error) throw new Error('Could not load applications.');
     const ids = data.map(a => a.user_id);
-    const [orders, overrides] = ids.length ? await Promise.all([
+    const [orders, overrides, reviews] = ids.length ? await Promise.all([
       context.supabase.from('orders').select('seller_id, amount_usd, stage, dispute_opened_at').in('seller_id', ids),
       context.supabase.from('seller_tier_overrides').select('seller_id, tier').in('seller_id', ids),
-    ]) : [{ data: [] }, { data: [] }];
-    const { metricsFromOrders } = await import('./studio-metrics');
-    return data.map(a => ({ ...a, metrics: metricsFromOrders((orders.data ?? []).filter(o => o.seller_id === a.user_id)), override: ((overrides.data ?? []).find(o => o.seller_id === a.user_id)?.tier ?? null) as 'standard' | 'pro' | 'prime' | 'master' | null }));
+      context.supabase.from('reviews').select('seller_id, rating').in('seller_id', ids).not('rating', 'is', null),
+    ]) : [{ data: [] }, { data: [] }, { data: [] }];
+    const { metricsFromOrders, ratingStats } = await import('./studio-metrics');
+    return data.map(a => ({ ...a, metrics: metricsFromOrders((orders.data ?? []).filter(o => o.seller_id === a.user_id)), rating: ratingStats((reviews.data ?? []).filter(r => r.seller_id === a.user_id).map(r => r.rating)), override: ((overrides.data ?? []).find(o => o.seller_id === a.user_id)?.tier ?? null) as 'standard' | 'pro' | 'prime' | 'master' | null }));
   });
 
 export const decideSellerApplication = createServerFn({ method: 'POST' })
