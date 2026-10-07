@@ -84,7 +84,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;ch
  {search.menu&&<Overlay title="velamarket" close={close} side><div className="menu-links">{[['/','Discover'],['/market','Watch collection'],['/store','VS Watch Studio'],['/me','My Vela']].map(([to,label])=><Button asChild variant="ghost" key={to}><Link to={to as '/'} search={{role:search.role}}>{label}<ChevronRight/></Link></Button>)}</div><div className="mt-8 border-t border-border pt-6"><span className="lux-eyebrow">VIEW AS · SAMPLE ACCOUNTS</span><RoleSwitcher/></div><p className="mt-8 text-xs leading-6 text-muted-foreground">벨라마켓 · A considered collection.</p></Overlay>}
  {search.post&&!selected&&<Overlay title="Product unavailable" close={close}><p className="py-6 text-sm text-muted-foreground">This listing is no longer available.</p></Overlay>}
  {search.auth&&<AuthDialog onClose={close} onSignedIn={close}/>}
- {search.panel&&<CommercePanel posts={all} onBuy={post=>update({post:post.id,panel:'checkout'})} panel={search.panel} selected={selected} close={close} onPanel={panel=>update({panel})} notify={setToast}/>}
+ {search.panel&&<CommercePanel posts={all} onBuy={post=>update({checkoutItem:post.id,panel:'checkout'})} panel={search.panel} selected={search.panel==='checkout'&&search.checkoutItem?all.find(post=>post.id===search.checkoutItem):selected} close={close} onPanel={panel=>update({panel})} notify={setToast}/>}
  {toast&&<div className="lux-toast" role="status"><Check size={16}/>{toast}</div>}
  </>;
 }
