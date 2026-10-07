@@ -670,3 +670,4 @@
 .lux-header-tabs {overflow-x:auto;overflow-y:hidden;justify-content:safe center;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .lux-header-tabs::-webkit-scrollbar {display:none;}
 @media(max-width:480px) {.lux-header-tabs,.red-home-header .lux-header-tabs {gap:10px;}.lux-header-tabs .lux-tab {font-size:11px;padding:0 1px;}}
+@media(max-width:400px) {.lux-header-tabs,.red-home-header .lux-header-tabs {gap:6px;}.lux-header-tabs .lux-tab,.red-home-header .lux-header-tabs .lux-tab {font-size:10.5px;padding:0;letter-spacing:-.01em;}.red-home-header .lux-tab.active::after {left:0;right:0;}}
