@@ -85,7 +85,10 @@ export type Database = {
           image_key: string
           media_urls: string[]
           price: number | null
+          specs: Json
+          status: string
           title: string
+          updated_at: string
           user_id: string | null
           video_url: string | null
         }
@@ -101,7 +104,10 @@ export type Database = {
           image_key: string
           media_urls?: string[]
           price?: number | null
+          specs?: Json
+          status?: string
           title: string
+          updated_at?: string
           user_id?: string | null
           video_url?: string | null
         }
@@ -117,7 +123,10 @@ export type Database = {
           image_key?: string
           media_urls?: string[]
           price?: number | null
+          specs?: Json
+          status?: string
           title?: string
+          updated_at?: string
           user_id?: string | null
           video_url?: string | null
         }
