@@ -26,7 +26,7 @@ import { CurrencySelect } from './currency';
 import { t } from '@/lib/i18n';
 import { InsuranceBanner, InsuranceBreakdown, InsuranceTeaser } from './insurance';
 import { ShoppingCollection } from './shopping-collection';
-import { sellerIdentity } from '@/lib/seller-directory';
+import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
 import { seedPosts } from '@/lib/seed-sellers';
 import { rankRecommended } from '@/lib/feed-ranking';
@@ -56,7 +56,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;ch
   const {data:reviewRows}=useQuery({queryKey:['review-counts'],queryFn:async()=>{const {data:rows}=await supabase.from('reviews').select('seller_id');return rows ?? [];},staleTime:30_000});
   const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
   if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts);
-  const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?(sellerIdentity(p)===search.seller):p.sample));
+  const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
  if(newest) posts=[...posts].reverse();
