@@ -1,4 +1,6 @@
 # velamarket
+- [ ] Add luxury seller/buyer badges and four-criteria ratings with next-tier progress
+- [ ] Verify badge thresholds, placement and narrow-screen layouts
 - [x] Verify single-row sticky navigation, narrow-screen spacing, tabs and full-screen search dismissal
 - [x] Add full-screen snap Shorts with active-only playback and floating controls
 - [x] Integrate product/comments sheets, shopping actions and layered browser-back dismissal
