@@ -1,3 +1,6 @@
+import type { LuxuryPost } from '@/lib/luxury-market';
+import { sellerMatches } from '@/lib/seller-directory';
+import { SellerBadge } from './reputation';
 import { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -26,13 +29,14 @@ async function loadReviews(sellerId?: string): Promise<Review[]> {
   return rows.map(r => ({ ...r, urls }));
 }
 
-export function ReviewList({ sellerId, role }: { sellerId?: string; role?: 'buyer' | 'seller' | 'admin' | undefined }) {
+export function ReviewList({ sellerId, role, posts }: { sellerId?: string; role?: 'buyer' | 'seller' | 'admin' | undefined; posts?: LuxuryPost[] }) {
+  const repFor = (id: string, name: string) => posts?.find(p => sellerMatches(p, id) || sellerMatches(p, name))?.reputation;
   const { data, isLoading } = useQuery({ queryKey: ['reviews', sellerId ?? 'all'], queryFn: () => loadReviews(sellerId) });
   if (isLoading) return <p className="py-8 text-center text-sm text-muted-foreground">리뷰를 불러오는 중…</p>;
   if (!data?.length) return <div className="lux-empty"><MessageSquareText/><h2>아직 고객 리뷰가 없습니다.</h2></div>;
   return <div className="mt-4 grid gap-4">{data.map(r => <article key={r.id} className="rounded-lg border border-border bg-card p-4">
     <div className="flex items-center justify-between gap-2 text-xs"><span className="flex items-center gap-1 font-semibold" data-no-translate>{r.nickname}<BadgeCheck size={14} className="text-primary" aria-label="인증 구매자"/></span><span className="text-muted-foreground">{formatDate(r.created_at)}</span></div>
-    <Link to="/store" search={{ role, seller: r.seller_id, storeTab: 'reviews' }} className="mt-2 inline-flex items-center gap-1 rounded-full border border-primary/50 px-3 py-1 text-xs text-primary" data-no-translate><Store size={12}/>구매처: {r.seller_name}</Link>
+    <Link to="/store" search={{ role, seller: r.seller_id, storeTab: 'reviews' }} className="mt-2 inline-flex items-center gap-1 rounded-full border border-primary/50 px-3 py-1 text-xs text-primary" data-no-translate><Store size={12}/>구매처: {r.seller_name}</Link>{(() => { const rep = repFor(r.seller_id, r.seller_name); return rep ? <span className="ml-2 align-middle"><SellerBadge reputation={rep}/></span> : null; })()}
     {r.video_url && r.urls[r.video_url] && <video src={r.urls[r.video_url]} className="mt-3 aspect-[9/16] max-h-96 w-full rounded-md bg-background object-cover" controls muted playsInline preload="metadata"/>}
     {r.media_urls.length > 0 && <div className="mt-3 grid grid-cols-3 gap-2">{r.media_urls.map(p => r.urls[p] && <img key={p} src={r.urls[p]} alt="리뷰 사진" className="aspect-square w-full rounded-md object-cover" loading="lazy"/>)}</div>}
     <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{r.body}</p>

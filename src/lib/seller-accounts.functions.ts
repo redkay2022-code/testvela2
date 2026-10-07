@@ -47,7 +47,13 @@ export const listSellerApplications = createServerFn({ method: 'GET' })
     await assertAdmin(context.supabase, context.userId);
     const { data, error } = await context.supabase.from('seller_applications').select('id, user_id, system_code, nickname, status, created_at').order('created_at', { ascending: false });
     if (error) throw new Error('Could not load applications.');
-    return data;
+    const ids = data.map(a => a.user_id);
+    const [orders, overrides] = ids.length ? await Promise.all([
+      context.supabase.from('orders').select('seller_id, amount_usd, stage, dispute_opened_at').in('seller_id', ids),
+      context.supabase.from('seller_tier_overrides').select('seller_id, tier').in('seller_id', ids),
+    ]) : [{ data: [] }, { data: [] }];
+    const { metricsFromOrders } = await import('./studio-metrics');
+    return data.map(a => ({ ...a, metrics: metricsFromOrders((orders.data ?? []).filter(o => o.seller_id === a.user_id)), override: ((overrides.data ?? []).find(o => o.seller_id === a.user_id)?.tier ?? null) as 'standard' | 'pro' | 'prime' | 'master' | null }));
   });
 
 export const decideSellerApplication = createServerFn({ method: 'POST' })
@@ -60,5 +66,16 @@ export const decideSellerApplication = createServerFn({ method: 'POST' })
     if (error || !app) throw new Error('Could not update application.');
     if (data.approve) await supabaseAdmin.from('user_roles').upsert({ user_id: app.user_id, role: 'seller' }, { onConflict: 'user_id,role', ignoreDuplicates: true });
     else await supabaseAdmin.from('user_roles').delete().eq('user_id', app.user_id).eq('role', 'seller');
+    return { ok: true };
+  });
+
+export const setSellerTierOverride = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(d => z.object({ sellerId: z.string().uuid(), tier: z.enum(['standard', 'pro', 'prime', 'master']).nullable() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const q = context.supabase.from('seller_tier_overrides');
+    const { error } = data.tier ? await q.upsert({ seller_id: data.sellerId, tier: data.tier, updated_by: context.userId, updated_at: new Date().toISOString() }) : await q.delete().eq('seller_id', data.sellerId);
+    if (error) throw new Error('Could not update tier.');
     return { ok: true };
   });

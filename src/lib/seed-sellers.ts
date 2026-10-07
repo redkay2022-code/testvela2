@@ -1,5 +1,5 @@
 import { watchImages, type LuxuryPost } from './luxury-market';
-import { unknownReputation } from './reputation';
+import { launchReputation } from './reputation';
 import type { Post } from './market';
 import shortMp4 from '@/assets/studio-short.mp4';
 import short5Mp4 from '@/assets/studio-short-5.mp4';
@@ -26,5 +26,5 @@ export const seedPosts: LuxuryPost[] = seedSellers.flatMap((seller, s) => [0, 1]
   const price = acc ? [90, 150, 220][s - 10]! + n * 20 : 380 + ((i * 47) % 420);
   const specs = { brand, model, movement, caseSize, waterResistance, material, glass: acc ? '—' : 'Sapphire', condition: 'New' };
   const source = { id: `seed-${i}`, user_id: null, title, description: '', creator: seller.name, category: cats[i % 4]!, image_key: '', media_urls: [], video_url: null, duration: null, price, base_likes: 40 + (i * 37) % 900, created_at: new Date(Date.UTC(2026, 9, 1) - i * 3600e3).toISOString(), box_price: acc ? null : 50, status: 'published', specs, updated_at: '' } satisfies Post;
-  return { id: source.id, source, sample: true, reputation: unknownReputation, title: `${brand === 'Custom' ? '' : brand + ' '}${title}`, description: `${seller.name}의 런칭 쇼케이스 상품입니다. 출고 전 상세 검수 사진을 제공합니다.`, creator: seller.name, images: [photo, watchImages[(i + 2) % 6]!, watchImages[(i + 4) % 6]!], video: video?.[0] ?? null, videoFallback: video?.[1], short: Boolean(video), price, boxPrice: source.box_price, factory: acc ? 'Accessory' : ['VS Factory','Clean','3K','APS'][i % 4]!, category: source.category, views: `${(1 + (i * 7) % 9)}.${i % 10}K`, likes: source.base_likes, verified: true };
+  return { id: source.id, source, sample: true, reputation: launchReputation, title: `${brand === 'Custom' ? '' : brand + ' '}${title}`, description: `${seller.name}의 런칭 쇼케이스 상품입니다. 출고 전 상세 검수 사진을 제공합니다.`, creator: seller.name, images: [photo, watchImages[(i + 2) % 6]!, watchImages[(i + 4) % 6]!], video: video?.[0] ?? null, videoFallback: video?.[1], short: Boolean(video), price, boxPrice: source.box_price, factory: acc ? 'Accessory' : ['VS Factory','Clean','3K','APS'][i % 4]!, category: source.category, views: `${(1 + (i * 7) % 9)}.${i % 10}K`, likes: source.base_likes, verified: true };
 }));
