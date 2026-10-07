@@ -215,12 +215,25 @@ export function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=
   return <SmallDialog title={signup?'Create your account':'Welcome back'} onClose={onClose}><form onSubmit={submit}>{signup && <><label className="form-label" htmlFor="name">Display nickname</label><input id="name" className="form-input" required maxLength={30} value={name} onChange={e => setName(e.target.value)}/></>}<label className="form-label" htmlFor="phone">Phone number</label><input id="phone" className="form-input" type="tel" autoComplete="tel" placeholder="+86 138 0000 0000" required value={phone} onChange={e => setPhone(e.target.value)}/><label className="form-label" htmlFor="password">Password</label><input id="password" className="form-input" type="password" autoComplete={signup?'new-password':'current-password'} minLength={8} required value={password} onChange={e => setPassword(e.target.value)}/><p className="mt-3 flex items-start gap-2 text-xs leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#D4AF37]"/>Your phone number and personal identity are never saved in plain text. They are immediately converted into a secure, one-way encrypted hash code (SHA-256) to protect your privacy completely.</p>{error && <p role="alert" className="mt-4 text-xs leading-5 text-destructive">{error}</p>}<Button type="submit" className="mt-6 w-full" disabled={pending}>{pending?'Connecting…':signup?'Sign up':'Sign in'}</Button><Button type="button" variant="link" className="mt-3 w-full text-xs" onClick={() => {setSignup(!signup);setError('');}}>{signup?'Already have an account? Sign in':'New here? Sign up'}</Button></form></SmallDialog>;
 }
 
+const uploadCategories = ['커스텀제작', '공장 생산', '제작 과정', '기타'];
+const uploadSpecFields: [string,string,string][] = [
+  ['brand','브랜드','예: Rolex'],
+  ['model','모델','예: Submariner 126610LN'],
+  ['material','케이스 소재','예: 904L 스틸'],
+  ['movement','무브먼트','예: 3235 · 72시간'],
+  ['caseSize','다이암터','예: 41mm'],
+  ['waterResistance','방수','예: 50m / 5ATM'],
+  ['glass','글라스/크리스탈','예: 사파이어 크리스탈'],
+  ['condition','상태','예: S급 · 98%'],
+];
+
 export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;requestAuth:()=>void;onPosted:()=>void}) {
   const [files,setFiles] = useState<File[]>([]);
   const [previews,setPreviews] = useState<string[]>([]);
   const [title,setTitle] = useState('');
   const [description,setDescription] = useState('');
-  const [category,setCategory] = useState('일상');
+  const [category,setCategory] = useState('커스텀제작');
+  const [specs,setSpecs] = useState<Record<string,string>>({});
   const [product,setProduct] = useState(false);
   const [price,setPrice] = useState('');
   const [boxPrice,setBoxPrice] = useState('');
