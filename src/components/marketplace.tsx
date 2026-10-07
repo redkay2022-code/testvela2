@@ -14,6 +14,7 @@ import { categories, media, priceLabel } from '@/lib/market-media';
 import { marketSearch, paths, postsQuery, type Mode, type Post } from '@/lib/market';
 import { addComment, getComments, setLike } from '@/lib/market.functions';
 import { signInWithPhone, signUpWithPhone } from '@/lib/phone-auth.functions';
+import { uploadAvatar } from '@/lib/avatar';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 import { SpecsTable } from './specs-table';
 
@@ -203,6 +204,9 @@ export function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=
   const phone = toE164(country, localPhone);
   const [password,setPassword] = useState('');
   const [name,setName] = useState('');
+  const [avatar,setAvatar] = useState<File|null>(null);
+  const [avatarPreview,setAvatarPreview] = useState('');
+  useEffect(() => { if(!avatar) {setAvatarPreview('');return;} const u = URL.createObjectURL(avatar); setAvatarPreview(u); return () => URL.revokeObjectURL(u); },[avatar]);
   const [error,setError] = useState('');
   const [pending,setPending] = useState(false);
   const signUpFn = useServerFn(signUpWithPhone), signInFn = useServerFn(signInWithPhone);
@@ -212,6 +216,10 @@ export function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=
       const tokens = signup ? await signUpFn({data:{phone,password,nickname:name}}) : await signInFn({data:{phone,password}});
       const { error: sErr } = await supabase.auth.setSession(tokens);
       if (sErr) throw sErr;
+      if (signup && avatar) {
+        const { data: uData } = await supabase.auth.getUser();
+        if (uData.user) await uploadAvatar(uData.user.id, avatar);
+      }
       onSignedIn();
     }catch (err) {setError(err instanceof Error && err.message ? err.message : 'Could not connect. Please try again.');}
     finally {setPending(false);}
