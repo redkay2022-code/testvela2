@@ -52,7 +52,7 @@ export const listSellerApplications = createServerFn({ method: 'GET' })
       context.supabase.from('orders').select('seller_id, amount_usd, stage, dispute_opened_at').in('seller_id', ids),
       context.supabase.from('seller_tier_overrides').select('seller_id, tier').in('seller_id', ids),
     ]) : [{ data: [] }, { data: [] }];
-    const { metricsFromOrders } = await import('./studio-tier');
+    const { metricsFromOrders } = await import('./studio-metrics');
     return data.map(a => ({ ...a, metrics: metricsFromOrders((orders.data ?? []).filter(o => o.seller_id === a.user_id)), override: ((overrides.data ?? []).find(o => o.seller_id === a.user_id)?.tier ?? null) as 'standard' | 'pro' | 'prime' | 'master' | null }));
   });
 
