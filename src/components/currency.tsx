@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { currencies, currencyLabels, isCurrency, setActiveCurrency, type Currency } from '@/lib/currency';
+import { getUsdRates } from '@/lib/rates.functions';
+import { applyDomTranslation } from '@/lib/dom-translate';
+import { setUsdRates } from '@/lib/currency';
 import { defaultCurrency, detectLocale, isLang, langLabels, langs, setActiveLang, t, type Lang } from '@/lib/i18n';
 
 const CUR_KEY = 'vela-currency', LANG_KEY = 'vela-lang';
@@ -9,13 +12,15 @@ const LocaleCtx = createContext<Ctx>({ currency: 'USD', lang: 'en', setCurrency:
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currency, setCur] = useState<Currency>('USD');
   const [lang, setL] = useState<Lang>('en');
+  const [ratesAt, setRatesAt] = useState('');
+  useEffect(() => { void getUsdRates().then(r => { if (r) { setUsdRates(r.rates); setRatesAt(r.updated); } }).catch(() => {}); }, []);
   useEffect(() => {
     const detected = detectLocale(Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.languages ?? [navigator.language]);
     const savedLang = localStorage.getItem(LANG_KEY), savedCur = localStorage.getItem(CUR_KEY);
     setL(isLang(savedLang) ? savedLang : detected.lang);
     setCur(isCurrency(savedCur) ? savedCur : detected.currency);
   }, []);
-  useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; }, [lang]);
+  useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; void applyDomTranslation(lang); }, [lang]);
   const setCurrency = (c: Currency) => { localStorage.setItem(CUR_KEY, c); setCur(c); };
   const setLang = (l: Lang) => {
     localStorage.setItem(LANG_KEY, l); setL(l);
@@ -23,7 +28,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   };
   setActiveCurrency(currency); setActiveLang(lang);
   // Re-key so every formatter and translated string re-renders in the chosen locale.
-  return <LocaleCtx.Provider value={{ currency, lang, setCurrency, setLang }}><div key={`${lang}-${currency}`} style={{ display: 'contents' }}>{children}</div></LocaleCtx.Provider>;
+  return <LocaleCtx.Provider value={{ currency, lang, setCurrency, setLang }}><div key={`${lang}-${currency}-${ratesAt}`} style={{ display: 'contents' }}>{children}</div></LocaleCtx.Provider>;
 }
 export const useCurrency = () => useContext(LocaleCtx);
 
