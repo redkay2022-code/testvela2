@@ -15,7 +15,7 @@ export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost
     <div className="directory-grid">{sellers.map(seller=>{
       const following = seller.post.sample ? preview.following : preview.followedSellers.includes(seller.id);
       return <article className="directory-card" key={seller.id}>
-        <div className="directory-identity"><img src={seller.post.images[0]} width={48} height={48} alt={seller.post.creator}/><div><h2>{seller.post.creator}</h2><SellerBadge reputation={seller.post.reputation}/></div></div>
+        <div className="directory-identity" data-no-translate><img src={seller.post.images[0]} width={48} height={48} alt={seller.post.creator}/><div><h2>{seller.post.creator}</h2><SellerBadge reputation={seller.post.reputation}/></div></div>
         <p className="directory-bio">{seller.bio}</p>
         {seller.post.sample&&<span className="directory-sample">Sample studio · Sample metrics</span>}
         <div className="directory-metrics"><span><Star size={13}/><strong>{seller.rating?.toFixed(2) ?? '—'}</strong> Rating</span><span><strong>{seller.reviews ?? '—'}</strong> Reviews</span><span><strong>{seller.followers===null?'—':new Intl.NumberFormat('en',{notation:'compact'}).format(seller.followers+(following?1:0))}</strong> Followers</span></div>
