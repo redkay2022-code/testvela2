@@ -20,10 +20,10 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 const LETTERS = /\p{L}{2,}/u;
 const skipMachine = (el: Element | null) => !!el?.closest('[data-no-translate],[contenteditable],.lux-lang-menu');
 
-function loadMachine(l: Lang) {
-  if (machine[l]) return machine[l];
-  try { machine[l] = JSON.parse(localStorage.getItem(`vela-mt-${l}`) ?? '{}'); } catch { machine[l] = {}; }
-  return machine[l];
+function loadMachine(l: Lang): Record<string, string> {
+  const hit = machine[l]; if (hit) return hit;
+  let m: Record<string, string> = {}; try { m = JSON.parse(localStorage.getItem(`vela-mt-${l}`) ?? "{}"); } catch { /* ignore */ }
+  machine[l] = m; return m;
 }
 function saveMachine(l: Lang) { try { localStorage.setItem(`vela-mt-${l}`, JSON.stringify(machine[l])); } catch { /* storage full */ } }
 
