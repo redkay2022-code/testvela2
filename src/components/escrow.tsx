@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { ReviewModal } from './customer-reviews';
 import { Camera, Check, Lock, MapPin, Package, ShieldCheck, Truck, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { dollars } from '@/lib/luxury-market';
@@ -33,7 +35,7 @@ function RequestDialog({o,close}:{o:PreviewOrder;close:()=>void}){
 }
 
 export function BuyerOrderBoard(){
- const p=useMarketPreview();const [asking,setAsking]=useState<string|null>(null);
+ const p=useMarketPreview();const [asking,setAsking]=useState<string|null>(null);const [reviewing,setReviewing]=useState<string|null>(null);const navigate=useNavigate();
  if(!p.orders.length)return <p className="py-10 text-center text-muted-foreground">No orders yet.</p>;
  return <div className="escrow-board"><p className="sample-notice">Sample escrow orders · no real payment is held</p>{p.orders.map(o=><article className="escrow-order" key={o.id}><OrderHead o={o}/><EscrowTimeline stage={o.stage}/>
   {o.notices[0]&&<p className="escrow-notice" role="status">{o.notices[0]}</p>}
@@ -41,9 +43,10 @@ export function BuyerOrderBoard(){
   {o.qcMedia.length>0&&['qc_done','qc_requested'].includes(o.stage)&&<><h4 className="escrow-sub"><Camera size={14}/> Seller QC gallery · {o.qcMedia.length} files</h4><MediaGrid media={o.qcMedia}/></>}
   {o.stage==='qc_done'&&(asking===o.id?<RequestDialog o={o} close={()=>setAsking(null)}/>:<div className="escrow-actions"><Button variant="gold" onClick={()=>p.setStage(o.id,'shipping_prep','QC approved by buyer · seller preparing shipment')}><Check/>Approve QC (OK) · 검수 승인</Button><Button variant="goldOutline" onClick={()=>setAsking(o.id)}><Camera/>Request Additional Photos · 추가 사진 요청</Button></div>)}
   {o.tracking&&<div className="tracking-widget"><Truck className="text-primary"/><div><span>Courier</span><strong>{o.tracking.courier}</strong></div><div><span>Tracking number</span><strong>{o.tracking.number}</strong></div><div><span><MapPin size={10} className="inline"/> Current location</span><strong>{o.tracking.location}</strong></div><small>Seller-entered sample status · live courier feed not connected</small></div>}
-  {o.stage==='shipped'&&<Button variant="gold" className="w-full" onClick={()=>p.confirmDelivery(o.id)}><ShieldCheck/>Confirm Delivery · 수령 확인 및 구매 확정</Button>}
+  {o.stage==='shipped'&&<Button variant="gold" className="w-full" onClick={()=>{p.confirmDelivery(o.id);setReviewing(o.id);}}><ShieldCheck/>Confirm Delivery · 수령 확인 및 구매 확정</Button>}
   {o.stage==='delivered'&&<p className="escrow-done"><Check size={14}/> Purchase confirmed · escrow released to the seller (sample).</p>}
- </article>)}</div>;
+  {o.stage==='delivered'&&!o.reviewed&&<Button variant="goldOutline" className="mt-3 w-full" onClick={()=>setReviewing(o.id)}>리뷰 쓰기</Button>}
+ </article>)}{reviewing&&<ReviewModal orderId={reviewing} close={()=>setReviewing(null)} requestAuth={()=>void navigate({to:'.',search:(prev:Record<string,unknown>)=>({...prev,auth:true})} as never)}/>}</div>;
 }
 
 function QcUpload({o,supplement}:{o:PreviewOrder;supplement:boolean}){
