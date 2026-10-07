@@ -44,3 +44,4 @@
 - [ ] Connect 17TRACK key for live courier tracking (waiting on user)
 ## My VELA profile
 - [x] Enlarge the My VELA profile photo (96px desktop, 78px phones) and move the buyer tier badge inline beside the nickname; verified at 369 and 1280 widths with no overflow or page errors
+- [x] Tighten My VELA vertical rhythm: title 20px phones / 23px desktop, heading-profile 8px, profile-activity 14px, band paddings 12-18px; verified at 369 and 1280 widths with no overflow or page errors
