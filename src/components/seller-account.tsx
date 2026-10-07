@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
-import { Check, ShieldCheck, X } from 'lucide-react';
+import { Check, ShieldCheck, User, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { decideSellerApplication, getMyAccount, listSellerApplications, submitSellerApplication, updateNickname } from '@/lib/seller-accounts.functions';
