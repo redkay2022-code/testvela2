@@ -5,7 +5,7 @@ import {Check,ChevronDown,X} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {categoryGroups,categoryLabel,primaryCategories} from '@/lib/feed-categories';
 
-export function FeedCategoryPicker({selected='recommend',open,onOpen,onClose,onSelect}:{selected?:string;open:boolean;onOpen:()=>void;onClose:()=>void;onSelect:(id:string)=>void}){
+export function FeedCategoryPicker({selected='recommend',open,onOpen,onClose,onSelect}:{selected?:string|undefined;open:boolean;onOpen:()=>void;onClose:()=>void;onSelect:(id:string)=>void}){
  const reduced=useReducedMotion(),bar=useRef<HTMLDivElement>(null);
  const chips:readonly (readonly [string,string])[]=primaryCategories.some(item=>item[0]===selected)?primaryCategories:[...primaryCategories,[selected,categoryLabel(selected)]];
  useEffect(()=>{bar.current?.querySelector('[aria-pressed="true"]')?.scrollIntoView({block:'nearest',inline:'nearest',behavior:reduced?'auto':'smooth'});},[selected,reduced]);
