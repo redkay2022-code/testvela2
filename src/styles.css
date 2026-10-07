@@ -665,7 +665,12 @@
  .shorts-product-overlay {bottom:calc(66px + env(safe-area-inset-bottom));}.shorts-title-row {margin-top:8px;}.shorts-product-description {margin-top:4px;}.shorts-product-description p {-webkit-line-clamp:1;}.shorts-purchase-row {margin-top:4px;}.shorts-bottom-bar {min-height:62px;padding-block:6px;}
 }
 
-.shorts-view-details {height:30px;padding:0 2px;background:transparent;color:var(--soft-gold);font-size:12px;gap:2px;white-space:nowrap;}
+.shorts-view-details {height:44px;padding:0 18px;gap:5px;border:1px solid var(--primary);border-radius:999px;background:var(--gold-gradient);color:var(--primary-foreground);font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap;text-shadow:none;box-shadow:0 6px 22px color-mix(in oklab,var(--primary) 38%,transparent);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;animation:shorts-details-glow 2.8s ease-in-out infinite;}
+.shorts-view-details svg {width:18px;height:18px;}
+.shorts-view-details:hover {filter:brightness(1.08);}
+.shorts-view-details:active {transform:scale(.96);}
+@keyframes shorts-details-glow {0%,100% {box-shadow:0 6px 22px color-mix(in oklab,var(--primary) 30%,transparent);}50% {box-shadow:0 8px 32px color-mix(in oklab,var(--primary) 60%,transparent);}}
+@media(prefers-reduced-motion:reduce) {.shorts-view-details {animation:none;}}
 /* Keep all header feed tabs (incl. 리뷰) reachable on narrow screens and long translations */
 .lux-header-tabs {overflow-x:auto;overflow-y:hidden;justify-content:safe center;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
 .lux-header-tabs::-webkit-scrollbar {display:none;}
