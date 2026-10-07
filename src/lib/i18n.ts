@@ -78,3 +78,21 @@ export function setActiveLang(l: Lang) { active = l; }
 export function t(key: DictKey, vars: Record<string, string> = {}, lang: Lang = active) {
   return Object.entries(vars).reduce((s, [k, v]) => s.replace(`{${k}}`, v), dict[key][lang] || dict[key].en);
 }
+
+const locales: Record<Lang, string> = { en: 'en-US', ko: 'ko-KR', zh: 'zh-CN', ja: 'ja-JP', it: 'it-IT', fr: 'fr-FR', de: 'de-DE', nl: 'nl-NL', ru: 'ru-RU', la: 'la', ar: 'ar' };
+const loc = (l: Lang) => (l === 'la' ? 'it-IT' : locales[l]);
+/** Localized calendar date, e.g. 2026. 10. 7. / 07.10.2026 / Oct 7, 2026. */
+export function formatDate(value: string | number | Date, lang: Lang = active) {
+  return new Intl.DateTimeFormat(loc(lang), { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(value));
+}
+/** Localized relative time ("3 hours ago", "3시간 전"); older than 30 days falls back to formatDate. */
+export function timeAgo(value: string | number | Date, lang: Lang = active, now = Date.now()) {
+  const sec = Math.round((new Date(value).getTime() - now) / 1000);
+  const abs = Math.abs(sec);
+  if (abs > 2_592_000) return formatDate(value, lang);
+  const rtf = new Intl.RelativeTimeFormat(loc(lang), { numeric: 'auto' });
+  if (abs < 60) return rtf.format(sec, 'second');
+  if (abs < 3600) return rtf.format(Math.round(sec / 60), 'minute');
+  if (abs < 86400) return rtf.format(Math.round(sec / 3600), 'hour');
+  return rtf.format(Math.round(sec / 86400), 'day');
+}
