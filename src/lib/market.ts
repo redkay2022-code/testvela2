@@ -11,7 +11,7 @@ export const marketSearch = z.object({
    panel:z.enum(['chat','cart','checkout','settings','apply','orders']).optional(), checkoutItem:z.string().optional(),
     storeTab:z.enum(['products','shorts','reviews']).optional(), seller:z.string().optional(), storeCategory:z.enum(['all','watches','accessories','custom','solid-gold','top']).optional(),
   section:z.enum(['sellers','verification','moderation','settlements','overview','orders','earnings']).optional(),
-   post:z.string().optional(), shorts:z.string().optional(), shortSheet:z.enum(['product','comments']).optional(), shortPhoto:z.number().int().min(0).max(14).optional(), auth:z.boolean().optional(), notice:z.boolean().optional(),
+   post:z.string().optional(), shorts:z.string().optional(), shortTab:z.enum(['following','recommend']).optional(), shortSheet:z.enum(['product','comments']).optional(), shortPhoto:z.number().int().min(0).max(14).optional(), auth:z.boolean().optional(), notice:z.boolean().optional(),
   feedTopic:z.enum(['recommend','videos','trend','live','football','VS Factory','PPF','3K','APS']).optional(),
   category:z.string().optional(), q:z.string().optional(), tab:z.enum(['discover','following','nearby','likes','posts']).optional(),
 });

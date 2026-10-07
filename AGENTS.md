@@ -19,6 +19,7 @@
 - Adapt existing editorial post IDs into a local luxury-watch sample collection without overwriting owner content; server-loaded published posts remain the source for real uploads.
 - Keep live account comments separate from simulated shopping state; reuse authenticated server functions for persistent comment writes.
 - Represent Shorts in the /shorts/$id leaf route with nested sheets in validated search state; replace the active ID during vertical swipes so browser back exits instead of replaying swipe history.
+- Keep Shorts Following/Recommended selection in its own validated search field and reuse ProductComments for inline submission; this isolates Shorts filters from Home and preserves authenticated comment writes.
 - Keep full-screen search in validated URL search state and reuse the public feed data so device back dismisses search without a separate data source.
 - Derive seller reputation with shared pure threshold functions and local SVG emblems; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
 - Buyer membership is an explicit trusted tier, not inferred from client orders or metadata; use baseline Member when no earned membership is available.
