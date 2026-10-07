@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Search, Share2, Star, UserRound, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Search, Share2, Star, Tag, UserRound, X } from 'lucide-react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
@@ -51,6 +51,10 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
 }
 function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
+ const videoTags=(Array.isArray(post.source?.video_tags)?post.source.video_tags:[]) as {postId:string;title:string;at:number}[];
+ const [clock,setClock]=useState(0);
+ useEffect(()=>{const v=video.current;if(!v||!videoTags.length)return;const on=()=>setClock(v.currentTime);v.addEventListener('timeupdate',on);return()=>v.removeEventListener('timeupdate',on);},[videoTags.length]);
+ const shownTag=videoTags.find(tg=>clock>=tg.at&&clock<=tg.at+3);
  const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false);
  const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
  const following=preview.isFollowing(identity);
@@ -61,6 +65,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  {post.video&&!failed?<video ref={video} playsInline loop muted preload={active?'auto':'none'} onError={()=>setFailed(true)}><source src={post.video} type={post.videoFallback?'video/webm':undefined}/>{post.videoFallback&&<source src={post.videoFallback} type="video/mp4"/>}</video>:<img src={post.images[0]} alt={post.title}/>}
  <div className="shorts-shade"/>
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
+ {shownTag&&<Link to="/" search={{post:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>}
  <div className="shorts-product-overlay">
  <div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
  <div className="shorts-seller-row">

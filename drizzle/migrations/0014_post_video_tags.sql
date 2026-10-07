@@ -1,0 +1,1 @@
+ALTER TABLE public.posts ADD COLUMN video_tags jsonb NOT NULL DEFAULT '[]'::jsonb;
