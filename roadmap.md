@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Redesign Home with 48px/36px dual header, scrolling sub-tabs, two-column clean cards and 56px navigation; verify filters, Shorts return and browser Back
 - [x] Restore Shorts exit control and swipe-right, move playback to its own route, and verify Home default, feed/store entry, direct refresh and layered browser Back
 - [x] Simplify Shorts to right-side actions only and add QC gallery/lightbox and seller-store routing
 - [x] Verify gallery navigation, layered back dismissal, playback, mobile layout, seller navigation and 15-photo selection (live upload remains unverified)
