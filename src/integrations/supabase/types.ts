@@ -157,10 +157,13 @@ export type Database = {
           buyer_id: string
           courier: string | null
           created_at: string
+          dispute_open: boolean
+          dispute_opened_at: string | null
           id: string
           image_url: string | null
           network: string | null
           order_no: string
+          payment_verified_at: string | null
           post_id: string | null
           seller_id: string | null
           seller_name: string
@@ -177,10 +180,13 @@ export type Database = {
           buyer_id: string
           courier?: string | null
           created_at?: string
+          dispute_open?: boolean
+          dispute_opened_at?: string | null
           id?: string
           image_url?: string | null
           network?: string | null
           order_no?: string
+          payment_verified_at?: string | null
           post_id?: string | null
           seller_id?: string | null
           seller_name?: string
@@ -197,10 +203,13 @@ export type Database = {
           buyer_id?: string
           courier?: string | null
           created_at?: string
+          dispute_open?: boolean
+          dispute_opened_at?: string | null
           id?: string
           image_url?: string | null
           network?: string | null
           order_no?: string
+          payment_verified_at?: string | null
           post_id?: string | null
           seller_id?: string | null
           seller_name?: string
