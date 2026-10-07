@@ -18,7 +18,7 @@ export const watchImages = [watch0,watch1,watch2,watch3,watch4,watch5];
 export const luxuryCategories = ['All','News','Ready to Ship','Customizing','VS Factory','3K','APS','PPF'];
 const ids = ['sunny-room','daily-bag','matcha-day','linen-day','room-corner','tulips','blue-cup','sea-trip','film-camera','white-sneakers','cafe-corner','spring-walk'];
 const titles = ['The everyday diver. An extraordinary detail.','A quieter kind of statement.','Green dial, perfect proportions.','Inside the movement: every second matters.','The blue dial you keep coming back to.','On the bench. Behind the craft.','Steel, sapphire and a timeless silhouette.','A closer look at the classic dress watch.','Fresh from the studio: the green collection.','Rose gold. Open heart.','Blue hour, on your wrist.','A final inspection before it’s yours.'];
-export type LuxuryPost = {id:string;title:string;description:string;creator:string;images:string[];video:string|null;videoFallback?:string|undefined;short:boolean;price:number|null;factory:string;category:string;views:string;likes:number;verified:boolean;sample:boolean;source:Post;reputation:SellerReputation};
+export type LuxuryPost = {id:string;title:string;description:string;creator:string;images:string[];video:string|null;videoFallback?:string|undefined;short:boolean;price:number|null;boxPrice:number|null;factory:string;category:string;views:string;likes:number;verified:boolean;sample:boolean;source:Post;reputation:SellerReputation};
 export function luxuryPosts(posts:Post[]):LuxuryPost[] {
  return posts.map(post => {
   const index=ids.indexOf(post.id), sample=index>=0, i=sample?index:0;
@@ -29,6 +29,7 @@ export function luxuryPosts(posts:Post[]):LuxuryPost[] {
    images:sample?[photo,watchImages[(i+5)%6] ?? photo,photo]:post.media_urls.length?post.media_urls:[media[post.image_key] || watch0],
     video:sample&&[3,5,8,11].includes(i)?(i===3?studioShort:i===8?studioShort2:studioShort5):post.video_url,short:sample?[3,5,8,11].includes(i):Boolean(post.video_url),
    videoFallback:sample&&[3,5,8,11].includes(i)?(i===3?shortMp4:i===8?short2Mp4:short5Mp4):undefined,
+   boxPrice:sample?50:(post.box_price ?? null),
    price:sample?([480,365,520,680,445,480][i%6] ?? 480):post.price,
    factory:sample?(['VS Factory','PPF','3K','APS'][i%4] ?? 'VS Factory'):post.category,
    category:sample?(['Ready to Ship','Ready to Ship','Customizing','News'][i%4] ?? 'Ready to Ship'):post.category,

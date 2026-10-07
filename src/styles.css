@@ -599,3 +599,5 @@
 .tier-table td{padding:8px 4px;border-bottom:1px solid var(--border)}
 .tier-table tr.current td{color:var(--foreground);background:color-mix(in oklab,var(--primary) 8%,transparent)}
 .tier-note{margin-top:10px;font-size:11px;line-height:1.6;color:var(--muted-foreground)}
+.box-option{margin-top:14px;display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid color-mix(in oklab,var(--primary) 45%,transparent);border-radius:12px;font-size:13px;cursor:pointer}
+.box-option span{flex:1}.box-option strong{color:var(--primary)}
