@@ -6,7 +6,10 @@ import { useNavigate } from '@tanstack/react-router';
 import { Check, ShieldCheck, UserRound, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
-import { decideSellerApplication, getMyAccount, listSellerApplications, submitSellerApplication, updateNickname } from '@/lib/seller-accounts.functions';
+import { decideSellerApplication, getMyAccount, listSellerApplications, setSellerTierOverride, submitSellerApplication, updateNickname } from '@/lib/seller-accounts.functions';
+import { automatedTier, sellerTiers, studioNames, type SellerTier } from '@/lib/reputation';
+import { liveReputation } from '@/lib/studio-metrics';
+import { StudioTierBadge } from './reputation';
 import { uploadAvatar, useAvatarUrl } from '@/lib/avatar';
 
 export function useMyAccount(user: User | null) {
@@ -69,7 +72,7 @@ export function SellerOnboarding() {
 const statusLabel: Record<string, string> = { pending: '검토 대기', approved: '승인됨', rejected: '거절됨' };
 
 export function AdminApplications() {
-  const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication);
+  const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication), setTier = useServerFn(setSellerTierOverride);
   const { data, error, isLoading } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false, refetchInterval: 30000 });
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const [busy, setBusy] = useState<string | null>(null); const [msg, setMsg] = useState('');
@@ -92,6 +95,11 @@ export function AdminApplications() {
       <div className="record-actions">
         {a.status !== 'approved' && <Button variant="goldOutline" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, true, name)}><Check/>승인</Button>}
         {a.status !== 'rejected' && <Button variant="ghost" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, false, name)}><X/>{a.status === 'approved' ? '권한 해제' : '거절'}</Button>}
-      </div></div>; })}</div>}
+      </div>
+      {a.status === 'approved' && (() => { const m = a.metrics, auto = automatedTier(liveReputation(m, null)) ?? 'standard', cur = a.override ?? auto; return <div className="col-span-full mt-2 grid w-full gap-2 rounded-md border border-border p-3 text-xs" style={{ gridColumn: '1 / -1' }}>
+        <div className="flex flex-wrap items-center gap-2"><StudioTierBadge tier={cur}/><span className="text-muted-foreground">자동 등급: {studioNames[auto]}{a.override ? ' · 수동 지정 적용 중' : ''}</span></div>
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4"><span>가상화폐 매출 <strong>${Math.round(m.volumeUsd).toLocaleString('en-US')}</strong></span><span>완료 주문 <strong>{m.completedSales}</strong></span><span>평점 <strong>—</strong></span><span>분쟁 <strong>{m.disputes}/{m.totalOrders} ({m.disputeRate.toFixed(1)}%)</strong></span></div>
+        <label className="flex items-center gap-2">수동 등급 지정<select aria-label="수동 등급 지정" className="rounded-md border border-border bg-background px-2 py-1" value={a.override ?? ''} disabled={busy === a.id} onChange={async e => { const v = (e.target.value || null) as SellerTier | null; setBusy(a.id); try { await setTier({ data: { sellerId: a.user_id, tier: v } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); setMsg(`${name} · ${v ? studioNames[v] + '(으)로 수동 지정했습니다.' : '자동 등급으로 되돌렸습니다.'}`); } catch (er) { setMsg(er instanceof Error ? er.message : '등급을 변경하지 못했습니다.'); } finally { setBusy(null); } }}><option value="">자동 (기준에 따라)</option>{sellerTiers.map(t => <option key={t} value={t}>{studioNames[t]}</option>)}</select></label>
+      </div>; })()}</div>; })}</div>}
   </div>;
 }
