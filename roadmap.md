@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Restore Shorts exit control and swipe-right, move playback to its own route, and verify home/default and browser back
 - [x] Simplify Shorts to right-side actions only and add QC gallery/lightbox and seller-store routing
 - [x] Verify gallery navigation, layered back dismissal, playback, mobile layout, seller navigation and 15-photo selection (live upload remains unverified)
 - [x] Add luxury seller/buyer badges and four-criteria ratings with next-tier progress (sample reputation; unknown live sellers remain unbadged)
