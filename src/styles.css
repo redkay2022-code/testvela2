@@ -654,15 +654,18 @@
 @media(max-width:720px) {
  .shorts-floating-header {padding-inline:12px;gap:0;}.shorts-feed-tabs {gap:12px;padding-left:0;}.shorts-feed-tabs button {font-size:12px;}.shorts-floating-header {grid-template-columns:44px minmax(0,1fr) 72px;}.shorts-header-tools>button {width:36px;}
  .shorts-product-overlay {left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));}.shorts-title-row h2 {font-size:15px;}
+ .shorts-view-details {height:40px;padding:0 15px;font-size:13px;}.shorts-view-details svg {width:16px;height:16px;}
  .shorts-bottom-bar {min-height:72px;padding-block:8px;padding-inline:16px;gap:12px;}.shorts-bottom-actions {gap:5px;}.shorts-bottom-actions .shorts-action {min-width:36px;}.shorts-bottom-actions .shorts-action button {width:36px;}
 }
 @media(max-width:360px) {
  .shorts-floating-header {padding-inline:8px;}.shorts-feed-tabs {gap:12px;}.shorts-feed-tabs button {font-size:11px;}
  .shorts-product-overlay {left:12px;right:12px;}.shorts-purchase-row {gap:6px;}.shorts-usd-price {font-size:20px;}.shorts-purchase-row>button {font-size:11px;padding-inline:8px;}
+ .shorts-view-details {height:36px;padding:0 12px;font-size:12px;}.shorts-view-details svg {width:15px;height:15px;}
  .shorts-bottom-bar {padding-inline:12px;gap:6px;}.shorts-bottom-actions {gap:0;}.shorts-comment-form input {padding-inline:6px;font-size:11px;}
 }
 @media(max-height:650px) {
  .shorts-product-overlay {bottom:calc(66px + env(safe-area-inset-bottom));}.shorts-title-row {margin-top:8px;}.shorts-product-description {margin-top:4px;}.shorts-product-description p {-webkit-line-clamp:1;}.shorts-purchase-row {margin-top:4px;}.shorts-bottom-bar {min-height:62px;padding-block:6px;}
+ .shorts-view-details {height:38px;padding:0 14px;font-size:12.5px;}
 }
 
 .shorts-view-details {height:44px;padding:0 18px;gap:5px;border:1px solid var(--primary);border-radius:999px;background:var(--gold-gradient);color:var(--primary-foreground);font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap;text-shadow:none;box-shadow:0 6px 22px color-mix(in oklab,var(--primary) 38%,transparent);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;animation:shorts-details-glow 2.8s ease-in-out infinite;}
