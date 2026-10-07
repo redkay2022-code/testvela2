@@ -6,19 +6,24 @@ import { useMarketPreview } from './market-preview';
 import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/i18n';
+import { sellerKey } from '@/lib/seller-directory';
 
 const BUCKET = 'review-media';
 type Review = { id: string; nickname: string; seller_id: string; seller_name: string; body: string; media_urls: string[]; video_url: string | null; created_at: string; urls: Record<string, string> };
 
 async function loadReviews(sellerId?: string): Promise<Review[]> {
-  let q = supabase.from('reviews').select('id,nickname,seller_id,seller_name,body,media_urls,video_url,created_at').order('created_at', { ascending: false }).limit(60);
-  if (sellerId) q = q.eq('seller_id', sellerId);
-  const { data, error } = await q;
-  if (error) throw error;
-  const paths = (data ?? []).flatMap(r => [...r.media_urls, ...(r.video_url ? [r.video_url] : [])]);
+  const columns = 'id,nickname,seller_id,seller_name,body,media_urls,video_url,created_at';
+  const query = () => supabase.from('reviews').select(columns).order('created_at', { ascending: false }).limit(60);
+  const quoted = sellerId ? `"${sellerId.replace(/["\\]/g, '\\$&')}"` : '';
+  let result = sellerId ? await query().or(`seller_id.eq.${quoted},seller_name.eq.${quoted}`) : await query();
+  if (result.error && sellerId) result = await query().eq('seller_id', sellerId);
+  if (result.error) throw result.error;
+  const key = sellerKey(sellerId ?? '');
+  const rows = (result.data ?? []).filter(r => !sellerId || r.seller_id === sellerId || sellerKey(r.seller_id) === key || sellerKey(r.seller_name) === key);
+  const paths = rows.flatMap(r => [...r.media_urls, ...(r.video_url ? [r.video_url] : [])]);
   const urls: Record<string, string> = {};
   if (paths.length) { const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600); signed?.forEach(s => { if (s.path && s.signedUrl) urls[s.path] = s.signedUrl; }); }
-  return (data ?? []).map(r => ({ ...r, urls }));
+  return rows.map(r => ({ ...r, urls }));
 }
 
 export function ReviewList({ sellerId, role }: { sellerId?: string; role?: 'buyer' | 'seller' | 'admin' | undefined }) {

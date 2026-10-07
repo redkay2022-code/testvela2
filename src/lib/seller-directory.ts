@@ -5,6 +5,11 @@ import { ratingAverage } from './reputation';
 export const storeFilters = [['all','전체'],['watches','시계 전문'],['accessories','주얼리/악세사리'],['custom','커스텀'],['solid-gold','18K 골드'],['top','인기 셀러']] as const;
 export type StoreCategory = typeof storeFilters[number][0];
 export const sellerIdentity = (post: LuxuryPost) => post.sample ? post.creator : post.source.user_id ?? post.creator;
+export const sellerKey = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+export const sellerMatches = (post: LuxuryPost, seller: string) => {
+  const target = sellerKey(seller);
+  return [sellerIdentity(post), post.creator].some(value => value === seller || sellerKey(value) === target);
+};
 export type DirectorySeller = { id: string; post: LuxuryPost; items: LuxuryPost[]; rating: number | null; bio: string; reviews: number | null; followers: number | null };
 export function directorySellers(posts: LuxuryPost[]): DirectorySeller[] {
   const groups = new Map<string, LuxuryPost[]>();
