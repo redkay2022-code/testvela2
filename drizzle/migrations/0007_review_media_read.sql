@@ -1,0 +1,1 @@
+CREATE POLICY "Review media read" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id='review-media' AND EXISTS (SELECT 1 FROM public.reviews r WHERE name = ANY(r.media_urls) OR name = r.video_url) OR (bucket_id='review-media' AND (storage.foldername(name))[1] = auth.uid()::text));

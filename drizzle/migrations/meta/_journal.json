@@ -50,6 +50,13 @@
       "when": 1791397914690,
       "tag": "0006_customer_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791397935398,
+      "tag": "0007_review_media_read",
+      "breakpoints": true
     }
   ]
 }
