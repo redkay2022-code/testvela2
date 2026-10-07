@@ -1,4 +1,5 @@
 # velamarket
+- [x] Redesign Shorts floating header, seller/product overlays, USD purchase row, quick comments and separate bottom-right actions; verified active-only playback, saved comments, sheets, navigation and narrow-screen layouts
 - [x] Role-based cart/upload center navigation and seller directory; verified saved-to-cart checkout, six filters, reload, follows, store readback, browser Back and narrow-screen layout; 30 tests pass (existing sample commerce/follows retained)
 - [x] Restore VELA top row, add quick-category bar and expandable category/brand sheet; verified all 20 choices, filtering, refresh persistence, browser Back and 320px–1280px layouts
 - [x] Redesign Home with 48px/36px dual header, scrolling sub-tabs, two-column clean cards and 56px navigation; verified filters, Shorts return, browser Back and 320px/369px/1280px layouts (messages remain an existing sample conversation; no fabricated unread count)
