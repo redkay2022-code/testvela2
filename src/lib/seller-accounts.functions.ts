@@ -2,42 +2,36 @@ import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 
-/** Signed-in user's roles, WeChat verification and seller application. */
+/** Signed-in user's roles, anonymous profile and seller application. */
 export const getMyAccount = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [roles, wechat, app] = await Promise.all([
+    const [roles, profile, app] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId),
-      supabase.from('wechat_identities').select('*').eq('user_id', userId).maybeSingle(),
-      supabase.from('seller_applications').select('*').eq('user_id', userId).maybeSingle(),
+      supabase.from('profiles').select('system_code, nickname').eq('user_id', userId).maybeSingle(),
+      supabase.from('seller_applications').select('id, status, nickname, system_code, created_at').eq('user_id', userId).maybeSingle(),
     ]);
-    return { roles: (roles.data ?? []).map(r => r.role), wechat: wechat.data, application: app.data };
+    return { roles: (roles.data ?? []).map(r => r.role), profile: profile.data, application: app.data };
   });
 
-/**
- * Sample WeChat verification until WeChat Open Platform keys are configured.
- * Real sign-in will replace this with the OAuth result; rows stay flagged is_sample.
- */
-export const verifyWechatSample = createServerFn({ method: 'POST' })
+export const updateNickname = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator(d => z.object({ nickname: z.string().trim().min(1).max(40), phone: z.string().trim().regex(/^\+?[0-9 -]{6,20}$/) }).parse(d))
+  .inputValidator(d => z.object({ nickname: z.string().trim().min(1).max(30) }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const row = { user_id: context.userId, wechat_id: `wxid_sample_${context.userId.slice(0, 8)}`, nickname: data.nickname, phone: data.phone, avatar_url: null, is_sample: true, verified_at: new Date().toISOString() };
-    const { error } = await supabaseAdmin.from('wechat_identities').upsert(row);
-    if (error) throw new Error('Verification failed. Please try again.');
-    return row;
+    const { error } = await context.supabase.from('profiles').update({ nickname: data.nickname }).eq('user_id', context.userId);
+    if (error) throw new Error('Nickname could not be saved.');
+    return { ok: true };
   });
 
+/** No personal info: the request carries only the account code and current nickname. */
 export const submitSellerApplication = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator(d => z.object({ studio_name: z.string().trim().min(1).max(80), region: z.string().trim().min(1).max(80), bio: z.string().trim().max(1000) }).parse(d))
-  .handler(async ({ context, data }) => {
-    const { data: wx } = await context.supabase.from('wechat_identities').select('*').eq('user_id', context.userId).maybeSingle();
-    if (!wx) throw new Error('Verify your WeChat identity first.');
+  .handler(async ({ context }) => {
+    const { data: profile } = await context.supabase.from('profiles').select('system_code, nickname').eq('user_id', context.userId).maybeSingle();
+    if (!profile) throw new Error('Your account profile is missing.');
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const { error } = await supabaseAdmin.from('seller_applications').upsert({ user_id: context.userId, ...data, wechat_id: wx.wechat_id, wechat_nickname: wx.nickname, wechat_avatar: wx.avatar_url, wechat_phone: wx.phone, status: 'pending', reviewed_at: null }, { onConflict: 'user_id' });
+    const { error } = await supabaseAdmin.from('seller_applications').upsert({ user_id: context.userId, system_code: profile.system_code, nickname: profile.nickname, studio_name: profile.nickname, region: '', bio: '', wechat_id: '', wechat_nickname: '', wechat_avatar: null, wechat_phone: null, status: 'pending', reviewed_at: null }, { onConflict: 'user_id' });
     if (error) throw new Error('Application could not be submitted.');
     return { ok: true };
   });
@@ -51,7 +45,7 @@ export const listSellerApplications = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { data, error } = await context.supabase.from('seller_applications').select('*').order('created_at', { ascending: false });
+    const { data, error } = await context.supabase.from('seller_applications').select('id, user_id, system_code, nickname, status, created_at').order('created_at', { ascending: false });
     if (error) throw new Error('Could not load applications.');
     return data;
   });
