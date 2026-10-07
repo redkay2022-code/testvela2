@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight, ShieldCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
@@ -29,12 +30,21 @@ export function InsuranceBreakdown({ price, box = 0, format }: { price: number; 
 
 export function TierBenefits() {
   const current = tierForSpend(VERIFIED_SPEND), next = nextInsuranceTier(VERIFIED_SPEND);
+  const [tab, setTab] = useState<InsuranceTier>(current.id);
+  const tier = tierInfo(tab);
   return <section className="tier-benefits" aria-label={t('tierTitle')}>
     <div className="section-heading"><h2>{t('tierTitle')}</h2><span className={`tier-pill tier-${current.id}`}>{current.label}</span></div>
     {next && <div className="tier-next"><div><span>{t('nextTier',{tier:next.tier.label})}</span><span>{t('remaining',{x:formatMoney(krwToUsd(next.remaining))})}</span></div><progress max={100} value={next.progress} aria-label="Progress to next tier"/></div>}
-    <table className="tier-table"><thead><tr><th>{t('colTier')}</th><th>{t('colReq')}</th><th>{t('colFee')}</th><th>{t('colPerk')}</th></tr></thead><tbody>
-      {insuranceTiers.map(tier => <tr key={tier.id} className={tier.id === current.id ? 'current' : ''}><td><span className={`tier-pill tier-${tier.id}`}>{tier.label}</span></td><td>{tier.threshold ? t('over',{x:formatMoney(krwToUsd(tier.threshold))}) : t('basic')}</td><td>{Math.round(tier.rate * 100)}%{tier.discount ? <small> (-{Math.round(tier.discount * 100)}%)</small> : null}</td><td>{t(perkKeys[tier.id])}</td></tr>)}
-    </tbody></table>
+    <div className="tier-tabs" role="tablist" aria-label={t('tierTitle')}>
+      {insuranceTiers.map(ti => <button key={ti.id} type="button" role="tab" aria-selected={tab === ti.id} className={`tier-tab${tab === ti.id ? ' active' : ''}`} onClick={() => setTab(ti.id)}><span className={`tier-pill tier-${ti.id}`}>{ti.label}</span>{ti.id === current.id && <small>{t('currentTier')}</small>}</button>)}
+    </div>
+    <div className="tier-tab-panel" role="tabpanel">
+      <dl className="tier-tab-facts">
+        <div><dt>{t('colReq')}</dt><dd>{tier.threshold ? t('over',{x:formatMoney(krwToUsd(tier.threshold))}) : t('basic')}</dd></div>
+        <div><dt>{t('colFee')}</dt><dd>{Math.round(tier.rate * 100)}%{tier.discount ? <small> (-{Math.round(tier.discount * 100)}%)</small> : null}</dd></div>
+      </dl>
+      <p className="tier-tab-perk">{t(perkKeys[tier.id])}</p>
+    </div>
     <p className="tier-note">{t('tierNote')}</p>
   </section>;
 }
