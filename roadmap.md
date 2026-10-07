@@ -1,5 +1,5 @@
 # velamarket
-- [ ] Unify video/photo product details, set video sheet to 80dvh and add product-specific Q&A at the left of shopping actions; verify opening, history, purchase and authenticated posting.
+- [x] Unify video/photo product details, set video sheet to 80dvh and add product-specific Q&A at the left of shopping actions; verified opening, history, checkout and authenticated posting/reload, plus 320/390/707px layouts without page errors; 13 focused tests pass. Temporary test questions removed.
 - [x] Replace hamburger navigation with production sections, collection/order/help links and USD/USDT/language preferences; remove drawer sample roles. Verified nine links, watch/accessory filters, help pages, preferences persistence and 369px drawer (no overflow/page errors); 13 focused tests pass. Live 17TRACK API remains awaiting configuration.
 - [x] Simplify Admin to five crypto/privacy modules and four metrics; verified all tabs, 13 seed sellers, sample approval/hold toggles, three live reviews and 369px layout with no overflow/errors. Existing authenticated application read succeeds (empty queue); real crypto verification/payouts remain disconnected.
 - [x] Make each review's 구매처 open that seller's storefront with its products and customer reviews (canonical seller key + slug-tolerant matching); verified both sample sellers end to end with no page errors
