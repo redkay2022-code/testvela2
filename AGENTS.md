@@ -25,7 +25,7 @@
 - Buyer membership is an explicit trusted tier, not inferred from client orders or metadata; use baseline Member when no earned membership is available.
 
 - Keep Shorts inspection lightboxing in validated URL search state above the sheet; preserve original uploaded image URLs and unwind browser back one layer at a time.
-- Resolve storefronts from the selected seller identity using public feed rows; never display sample reputation or reviews as another seller’s data.
+- Resolve storefronts from the selected seller identity using public feed rows, matching identity, creator name and slug-insensitive keys so a review's 구매처 link always opens that seller's store; store reviews under the same canonical seller identity and never display sample reputation or reviews as another seller’s data.
 
 - Keep Home sub-topic selection in validated URL search state and filter the existing public feed; message navigation opens the existing isolated sample conversation without inventing unread data.
 - Keep the category picker and selected filter in validated URL search state; match multilingual category/brand aliases against existing listing content without inventing brand affiliations for editorial samples.
