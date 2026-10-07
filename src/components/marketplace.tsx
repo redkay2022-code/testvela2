@@ -144,7 +144,7 @@ function PostCard({post,path,liked,onLike,search}:{post:Post;path:typeof paths[M
   const shape = ['life-0','life-4','discover-1','discover-2'].includes(post.image_key) ? 'tall' : ['life-2','life-3','discover-0','discover-3'].includes(post.image_key) ? 'landscape' : 'medium';
   return <article className="post-card">
     <Link to={path} search={{...search,post:post.id}} resetScroll={false} className="post-open" aria-label={post.title}>
-      {post.video_url ? <video src={post.video_url} poster={imageFor(post)} autoPlay muted loop playsInline preload="metadata" className={`post-photo ${post.media_urls.length ? '' : shape}`} aria-label={`${post.title} 영상`}/> : <img src={imageFor(post)} alt={post.title} width={512} height={768} loading={['sunny-room','daily-bag','matcha-day'].includes(post.id) ? 'eager':'lazy'} className={`post-photo ${post.media_urls.length ? '' : shape}`}/>} 
+      {post.video_url ? <video src={post.video_url} autoPlay muted loop playsInline preload="auto" className={`post-photo ${post.media_urls.length ? '' : shape}`} aria-label={`${post.title} 영상`}/> : <img src={imageFor(post)} alt={post.title} width={512} height={768} loading={['sunny-room','daily-bag','matcha-day'].includes(post.id) ? 'eager':'lazy'} className={`post-photo ${post.media_urls.length ? '' : shape}`}/>} 
       {post.duration && <span className="video-label"><span className="text-[9px]">▷</span>{post.duration}</span>}
       {post.price !== null && <span className="product-label"><ShoppingBag size={11}/>마켓</span>}
     </Link>
