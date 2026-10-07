@@ -16,13 +16,15 @@ import { ProductComments } from './product-comments';
 import { ShortsPlayer } from './shorts-player';
 import { BuyerBadge, SellerBadge, SellerRatings } from './reputation';
 import { studioReputation, type BuyerTier } from '@/lib/reputation';
+import { FeedCategoryPicker } from './feed-category-picker';
+import { matchesFeedCategory } from '@/lib/feed-categories';
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;children?:React.ReactNode;shortsId?:string}) {
  const {data}=useSuspenseQuery(postsQuery); const all=luxuryPosts(data); const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
  const navigate=useNavigate(),router=useRouter(); const base=mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
-  const sheetPushed=useRef(false),searchPushed=useRef(false);
+  const sheetPushed=useRef(false),searchPushed=useRef(false),categoriesPushed=useRef(false);
  const [query,setQuery]=useState(search.q || ''),[toast,setToast]=useState(''),[user,setUser]=useState<AuthUser|null>(null),[newest,setNewest]=useState(false);
  useEffect(()=>{const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user || null));return ()=>subscription.unsubscribe();},[]);
  useEffect(()=>{if(!search.shortSheet)sheetPushed.current=false;},[search.shortSheet]);
@@ -30,6 +32,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;ch
  useEffect(()=>setQuery(search.q || ''),[search.q]);
  useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(''),3500);return()=>clearTimeout(timer);},[toast]);
  const update=(values:Partial<typeof search>)=>{if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,...values}),resetScroll:false});else void navigate({to:base,search:prev=>({...prev,...values}),resetScroll:false});};
+  const closeCategories=()=>{if(categoriesPushed.current){categoriesPushed.current=false;router.history.back();}else void navigate({to:'/',search:prev=>({...prev,categoriesOpen:undefined}),replace:true,resetScroll:false});};
+  const selectCategory=(id:string)=>{categoriesPushed.current=false;void navigate({to:'/',search:prev=>({...prev,feedCategory:id==='recommend'?undefined:id,categoriesOpen:undefined,category:undefined,feedTopic:undefined}),replace:Boolean(search.categoriesOpen),resetScroll:false});};
   const closeSearch=()=>{if(searchPushed.current){searchPushed.current=false;router.history.back();}else void navigate({to:base,search:prev=>({...prev,searchOpen:undefined}),replace:true,resetScroll:false});};
  const close=()=>{if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,auth:undefined,panel:undefined}),replace:true,resetScroll:false});else void navigate({to:base,search:prev=>({...prev,...(search.auth?{auth:undefined}:search.menu?{menu:undefined}:search.panel?{panel:undefined}:{post:undefined})}),replace:true,resetScroll:false});};
  let posts=all.filter(p=>!preview.hidden.includes(p.id)&&(!search.q||`${p.title} ${p.creator} ${p.factory} ${p.category}`.toLowerCase().includes(search.q.toLowerCase()))&&(!search.category||search.category==='All'||p.category===search.category||p.factory===search.category));
@@ -39,21 +43,18 @@ export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;ch
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
  if(newest) posts=[...posts].reverse();
  const cleanHome=mode==='home'&&!shortsId;
- if(cleanHome&&search.feedTopic==='videos')posts=posts.filter(p=>p.short);
- if(cleanHome&&search.feedTopic==='trend')posts=[...posts].sort((a,b)=>b.likes-a.likes);
- if(cleanHome&&search.feedTopic==='live')posts=[];
- if(cleanHome&&search.feedTopic==='football')posts=posts.filter(p=>/축구|football|soccer/i.test(`${p.title} ${p.description}`));
+ if(cleanHome)posts=posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
  const selected=all.find(p=>p.id===(shortsId || search.post));
  const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
  return <>
  <header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <div className="lux-header-inner">
   <Button variant="ghost" size="icon" aria-label="Open menu" onClick={()=>update({menu:true})}><Menu/></Button>
-    {!cleanHome&&<Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>}
-    <nav className="lux-header-tabs" aria-label="Feed tabs">{(cleanHome?[['following','팔로잉'],['discover','발견'],['nearby','주변']]:[['following','Following'],['discover','For You']]).map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,tab:tab as 'following'|'discover'|'nearby'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false}>{label}{cleanHome&&tab==='following'&&<span className="red-notification-dot" aria-hidden="true"/>}</Link></Button>)}</nav>
+    <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>
+    <nav className="lux-header-tabs" aria-label="Feed tabs">{[['following','Following'],['discover','For You']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,feedCategory:search.feedCategory,tab:tab as 'following'|'discover'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false}>{label}</Link></Button>)}</nav>
    <Button variant="ghost" size="icon" aria-label="Open search" onClick={()=>{searchPushed.current=true;update({searchOpen:true});}}><Search/></Button>
   </div>
-   {cleanHome&&<nav className="red-home-subtabs" aria-label="Home categories">{(['recommend','videos','trend','live','football','VS Factory','PPF','3K','APS'] as const).map(topic=><Button asChild variant="ghost" key={topic} className={`red-home-subtab ${(search.feedTopic || 'recommend')===topic?'active':''}`}><Link to="/" search={prev=>({...prev,feedTopic:topic==='recommend'?undefined:topic,category:['VS Factory','PPF','3K','APS'].includes(topic)?topic:undefined})} aria-current={(search.feedTopic || 'recommend')===topic?'page':undefined} resetScroll={false}>{({recommend:'추천',videos:'동영상',trend:'Trend',live:'라이브 방송',football:'축구'} as Record<string,string>)[topic] || topic}</Link></Button>)}</nav>}
+   {cleanHome&&<FeedCategoryPicker selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
  </header>
   <main className={`lux-shell ${cleanHome?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`}>
  {(mode==='explore'||mode==='market')&&<>

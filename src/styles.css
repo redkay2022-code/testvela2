@@ -478,18 +478,18 @@
 
 /* RED-inspired home: compact chrome, unframed two-column editorial feed. */
 :root,.dark {--notification:oklch(0.63 0.23 25);}
-.red-home-header {position:fixed;inset:0 0 auto;height:84px;border-bottom:0;}
-.red-home-header .lux-header-inner {height:48px;max-width:800px;grid-template-columns:32px minmax(0,1fr) 32px;gap:8px;padding-inline:16px;}
-.red-home-header .lux-header-tabs {height:48px;gap:28px;}
-.red-home-header .lux-header-tabs .lux-tab {height:48px;font-size:15px;padding:0 3px;color:var(--muted-foreground);}
+.red-home-header {position:fixed;inset:0 0 auto;height:92px;border-bottom:0;}
+.red-home-header .lux-header-inner {height:56px;max-width:800px;grid-template-columns:32px auto minmax(0,1fr) 32px;gap:8px;padding-inline:16px;}
+.red-home-header .lux-header-tabs {height:56px;gap:20px;}
+.red-home-header .lux-header-tabs .lux-tab {height:56px;font-size:13px;padding:0 3px;color:var(--muted-foreground);}
 .red-home-header .lux-header-tabs .lux-tab.active {color:var(--foreground);}
 .red-home-header .lux-tab.active::after {left:8px;right:8px;bottom:3px;height:3px;border-radius:2px;}
 .red-notification-dot {position:absolute;top:10px;right:-3px;width:5px;height:5px;border-radius:50%;background:var(--notification);}
 .red-home-subtabs {display:flex;align-items:center;gap:22px;max-width:800px;margin:auto;height:36px;padding:0 16px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;}
 .red-home-subtabs::-webkit-scrollbar {display:none;}
 .red-home-subtab {height:36px;flex-shrink:0;font-size:12px;font-weight:500;padding:0;border-radius:0;color:var(--muted-foreground);}
-.red-home-subtab.active {color:var(--foreground);font-weight:700;background:transparent;}
-.red-home-shell {max-width:800px;min-height:100dvh;padding:92px 8px calc(72px + env(safe-area-inset-bottom));}
+.red-home-subtab.active {color:var(--primary);font-weight:700;background:transparent;}
+.red-home-shell {max-width:800px;min-height:100dvh;padding:100px 8px calc(72px + env(safe-area-inset-bottom));}
 .red-home-waterfall {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 .red-home-waterfall .lux-column {gap:8px;}
 .red-home-waterfall .lux-post {border:0;border-radius:8px;}
@@ -512,3 +512,17 @@
  .red-home-waterfall .lux-heart {font-size:9px;}
  .red-home-waterfall .lux-post-copy {padding-inline:7px;}
 }
+
+.vela-category-row {display:flex;max-width:800px;height:36px;margin:auto;padding-right:8px;}
+.vela-category-row .red-home-subtabs {flex:1;min-width:0;margin:0;gap:22px;padding-right:8px;}
+.vela-category-expand {height:36px;width:36px;flex-shrink:0;border-radius:0;background:var(--header-surface);border-left:1px solid var(--border);}
+.vela-category-expand svg {width:18px;height:18px;}
+.vela-category-sheet {position:fixed;z-index:71;bottom:0;left:0;right:0;max-width:800px;margin:auto;background:var(--background);border:1px solid var(--border);border-radius:8px 8px 0 0;max-height:calc(100dvh - 100px);overflow:auto;padding:16px 20px max(24px,env(safe-area-inset-bottom));box-shadow:var(--drawer-shadow);}
+.vela-category-sheet-header {display:flex;align-items:center;justify-content:space-between;font-size:17px;font-weight:700;}
+.vela-category-group {padding:16px 0;border-top:1px solid var(--border);}
+.vela-category-group h2 {font-size:12px;font-weight:600;color:var(--muted-foreground);margin-bottom:12px;}
+.vela-category-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.vela-category-grid button {height:auto;min-height:40px;padding:8px 6px;white-space:normal;font-size:12px;line-height:1.5;background:var(--card);border:1px solid var(--border);border-radius:4px;}
+.vela-category-grid button.active {color:var(--primary);border-color:var(--gold-border);background:var(--accent);}
+@media(max-width:480px) {.red-home-header .lux-header-inner {gap:6px;padding-inline:12px;}.red-home-header .lux-header-tabs {gap:12px;}.red-home-header .lux-header-tabs .lux-tab {font-size:12px;}.vela-category-sheet {padding-inline:12px;}}
+@media(max-width:360px) {.red-home-header .lux-header-inner {gap:4px;padding-inline:8px;}.red-home-header .lux-header-tabs {gap:8px;}.red-home-header .lux-header-tabs .lux-tab {font-size:11px;}.vela-category-grid button {font-size:11px;}}
