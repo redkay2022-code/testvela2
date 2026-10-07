@@ -123,15 +123,41 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          nickname: string
+          phone_hash: string
+          system_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          nickname: string
+          phone_hash: string
+          system_code: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          nickname?: string
+          phone_hash?: string
+          system_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       seller_applications: {
         Row: {
           bio: string
           created_at: string
           id: string
+          nickname: string | null
           region: string
           reviewed_at: string | null
           status: string
           studio_name: string
+          system_code: string | null
           user_id: string
           wechat_avatar: string | null
           wechat_id: string
@@ -142,24 +168,28 @@ export type Database = {
           bio?: string
           created_at?: string
           id?: string
-          region: string
+          nickname?: string | null
+          region?: string
           reviewed_at?: string | null
           status?: string
-          studio_name: string
+          studio_name?: string
+          system_code?: string | null
           user_id: string
           wechat_avatar?: string | null
-          wechat_id: string
-          wechat_nickname: string
+          wechat_id?: string
+          wechat_nickname?: string
           wechat_phone?: string | null
         }
         Update: {
           bio?: string
           created_at?: string
           id?: string
+          nickname?: string | null
           region?: string
           reviewed_at?: string | null
           status?: string
           studio_name?: string
+          system_code?: string | null
           user_id?: string
           wechat_avatar?: string | null
           wechat_id?: string
