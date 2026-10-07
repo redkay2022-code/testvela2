@@ -2,7 +2,7 @@ import { SellerOnboarding } from './seller-account';
 import { BuyerOrderBoard, EscrowGuarantee } from './escrow';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronRight, Compass, Eye, Heart, Home, Menu, MessageCircle, Play, Plus, Search, Share2, ShieldCheck, ShoppingBag, SlidersHorizontal, Store, User, X } from 'lucide-react';
@@ -35,6 +35,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;ch
   const sheetPushed=useRef(false),searchPushed=useRef(false),categoriesPushed=useRef(false);
  const [query,setQuery]=useState(search.q || ''),[toast,setToast]=useState(''),[user,setUser]=useState<AuthUser|null>(null),[newest,setNewest]=useState(false);
  useEffect(()=>{const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user || null));return ()=>subscription.unsubscribe();},[]);
+ const queryClient=useQueryClient();
+ useEffect(()=>{const channel=supabase.channel('posts-live').on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>{void queryClient.invalidateQueries({queryKey:['posts']});}).subscribe();return()=>{void supabase.removeChannel(channel);};},[queryClient]);
  useEffect(()=>{if(!search.shortSheet)sheetPushed.current=false;},[search.shortSheet]);
   useEffect(()=>{if(!search.searchOpen)searchPushed.current=false;},[search.searchOpen]);
  useEffect(()=>setQuery(search.q || ''),[search.q]);
