@@ -51,7 +51,7 @@ export function TierBenefits() {
     </div>
     <div className="tier-tab-panel" role="tabpanel">
       <dl className="tier-tab-facts">
-        <div><dt>{t('colReq')}</dt><dd>{tier.threshold ? `${formatMoney(tier.threshold + 1)} ~ ${(() => { const n = insuranceTiers[insuranceTiers.indexOf(tier) + 1]; return n ? formatMoney(n.threshold) : '' })()}` : `${t('basic')} · ${formatMoney(0)} ~ ${formatMoney(insuranceTiers[1].threshold)}`}</dd></div>
+        <div><dt>{t('colReq')}</dt><dd>{tier.threshold ? (() => { const n = insuranceTiers[insuranceTiers.indexOf(tier) + 1]; return n ? `${formatMoney(tier.threshold + 1)} ~ ${formatMoney(n.threshold)}` : `${formatMoney(tier.threshold + 1)}+`; })() : `${t('basic')} · ${formatMoney(0)} ~ ${formatMoney(insuranceTiers[1].threshold)}`}</dd></div>
         <div><dt>{t('colFee')}</dt><dd>{Math.round(tier.rate * 100)}%{tier.discount ? <small> (-{Math.round(tier.discount * 100)}%)</small> : null}</dd></div>
       </dl>
       <p className="tier-tab-perk">{t(perkKeys[tier.id])}</p>

@@ -15,10 +15,10 @@ export function tierForSpend(spend: number): InsuranceTierInfo {
   return current;
 }
 export function nextInsuranceTier(spend: number) {
-  const idx = insuranceTiers.indexOf(tierForSpend(spend));
+  const cur = tierForSpend(spend), idx = insuranceTiers.indexOf(cur);
   const next = insuranceTiers[idx + 1];
   if (!next) return null;
-  return { tier: next, remaining: Math.max(0, next.threshold - spend), progress: Math.min(100, Math.max(0, (spend - insuranceTiers[idx].threshold) / (next.threshold - insuranceTiers[idx].threshold)) * 100) };
+  return { tier: next, remaining: Math.max(0, next.threshold - spend), progress: Math.min(100, Math.max(0, (spend - cur.threshold) / (next.threshold - cur.threshold)) * 100) };
 }
 export function insuranceFee(price: number, tier: InsuranceTier = 'bronze') {
   const base = Math.round(price * BASE_FEE_RATE);
