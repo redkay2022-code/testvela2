@@ -22,7 +22,7 @@ const usd=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',curre
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean)=>void; notify:(text:string)=>void };
 export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onSearch,user,close,closeSheet,change,openSheet,requestAuth,buy,notify}:Props) {
  const preview=useMarketPreview();
- const posts=shortTab==='following'?allPosts.filter(p=>preview.followedSellers.includes(sellerIdentity(p))||(p.sample&&preview.following)):allPosts;
+ const posts=shortTab==='following'?allPosts.filter(p=>preview.isFollowing(sellerIdentity(p))):allPosts;
  const feed=useRef<HTMLDivElement>(null), activeId=useRef(selectedId), syncing=useRef(true);
  const touch=useRef<{x:number;y:number}|null>(null);
  const [active,setActive]=useState(selectedId);
@@ -52,7 +52,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false);
  const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
- const following=post.sample?preview.following:preview.followedSellers.includes(identity);
+ const following=preview.isFollowing(identity);
  const read=useServerFn(getComments);
  const {data:comments}=useQuery({queryKey:['comments',post.id],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
  useEffect(()=>{const v=video.current;if(!v)return;v.muted=true;let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,post.video]);
