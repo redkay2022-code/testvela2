@@ -281,14 +281,12 @@
 .gold-action {background:var(--gold-gradient);}
 .lux-shell {max-width:1160px;margin:auto;padding:0 40px 130px;min-height:100dvh;}
 .lux-header {height:56px;position:sticky;top:0;z-index:50;background:var(--header-surface);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
-.lux-header-inner {height:100%;max-width:1112px;margin:auto;padding:0 16px;display:grid;grid-template-columns:32px auto minmax(0,1fr) 32px;align-items:center;gap:12px;}
+.lux-header-inner {height:100%;max-width:1112px;margin:auto;padding:0 16px;display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;gap:12px;}
 .lux-header-inner>button {width:32px;height:40px;padding:0;flex-shrink:0;}.lux-header-inner>button svg {width:20px;height:20px;}
-.lux-brand {display:flex;align-items:center;min-width:0;white-space:nowrap;font-size:20px;font-weight:750;letter-spacing:0;color:var(--primary);}
-.brand-full {display:flex;align-items:center;gap:8px;}.brand-compact {display:none;}
-.brand-symbol {font-family:Georgia,serif;font-size:26px;font-weight:400;padding-right:8px;border-right:1px solid var(--gold-border);}
+.lux-brand {display:flex;align-items:center;min-width:0;white-space:nowrap;font-size:19px;font-weight:800;letter-spacing:0.1em;color:var(--foreground);text-transform:uppercase;}
 .lux-header-tabs {display:flex;align-items:center;justify-content:center;gap:28px;height:55px;min-width:0;}
-.lux-header-tabs .lux-tab {height:55px;font-size:13px;white-space:nowrap;padding:0 4px;flex-shrink:0;transition:color .2s ease;}
-.lux-header-tabs .lux-tab.active {color:var(--foreground);}.lux-header-tabs .lux-tab.active::after {bottom:0;}
+.lux-header-tabs .lux-tab {height:55px;font-size:13px;font-weight:500;color:#A0A0AB;white-space:nowrap;padding:0 4px;flex-shrink:0;transition:color .2s ease;}
+.lux-header-tabs .lux-tab.active {color:#FFFFFF;font-weight:700;}.lux-header-tabs .lux-tab.active::after {bottom:0;}
 .lux-feed-transition {animation:lux-feed-enter .2s ease-out;}
 @keyframes lux-feed-enter {from {opacity:.45;}to {opacity:1;}}
 .lux-search-overlay {position:fixed;inset:0;z-index:71;background:var(--background);overflow-y:auto;overscroll-behavior:contain;}
