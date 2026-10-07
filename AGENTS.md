@@ -19,3 +19,4 @@
 - Adapt existing editorial post IDs into a local luxury-watch sample collection without overwriting owner content; server-loaded published posts remain the source for real uploads.
 - Keep live account comments separate from simulated shopping state; reuse authenticated server functions for persistent comment writes.
 - Represent the Shorts player and its nested sheets in URL search state; replacing only the active short keeps swipe navigation out of the back stack.
+- Keep full-screen search in validated URL search state and reuse the public feed data so device back dismisses search without a separate data source.
