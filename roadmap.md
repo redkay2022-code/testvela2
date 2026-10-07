@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Restore VELA top row, add quick-category bar and expandable category/brand sheet, verify filtering and browser Back
 - [x] Redesign Home with 48px/36px dual header, scrolling sub-tabs, two-column clean cards and 56px navigation; verified filters, Shorts return, browser Back and 320px/369px/1280px layouts (messages remain an existing sample conversation; no fabricated unread count)
 - [x] Restore Shorts exit control and swipe-right, move playback to its own route, and verify Home default, feed/store entry, direct refresh and layered browser Back
 - [x] Simplify Shorts to right-side actions only and add QC gallery/lightbox and seller-store routing
