@@ -60,12 +60,32 @@ export function SellerOnboarding() {
   </div>;
 }
 
+const statusLabel: Record<string, string> = { pending: '검토 대기', approved: '승인됨', rejected: '거절됨' };
+
 export function AdminApplications() {
   const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication);
-  const { data, error, isLoading } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false });
+  const { data, error, isLoading } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false, refetchInterval: 30000 });
+  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
+  const [busy, setBusy] = useState<string | null>(null); const [msg, setMsg] = useState('');
   if (isLoading) return <p className="text-sm text-muted-foreground">판매자 신청을 불러오는 중…</p>;
   if (error) return <p className="text-sm text-muted-foreground">실제 신청은 관리자 계정으로 로그인한 후 확인할 수 있습니다.</p>;
-  if (!data?.length) return <p className="text-sm text-muted-foreground">접수된 판매자 신청이 없습니다.</p>;
-  return <div className="management-list">{data.map(a => <div className="management-row" key={a.id}><div className="studio-initial">{(a.nickname ?? '?')[0]}</div><div><strong data-no-translate>{a.nickname ?? 'Member'}</strong><small data-no-translate>#{a.system_code ?? '—'}</small></div><span className="record-status">{a.status}</span>
-    {a.status === 'pending' && <div className="record-actions"><Button variant="goldOutline" size="sm" onClick={() => void decide({ data: { id: a.id, approve: true } }).then(() => qc.invalidateQueries({ queryKey: ['seller-applications'] }))}><Check/>승인</Button><Button variant="ghost" size="sm" onClick={() => void decide({ data: { id: a.id, approve: false } }).then(() => qc.invalidateQueries({ queryKey: ['seller-applications'] }))}><X/>거절</Button></div>}</div>)}</div>;
+  const rows = data ?? [];
+  const count = (s: string) => rows.filter(a => a.status === s).length;
+  const shown = filter === 'all' ? rows : rows.filter(a => a.status === filter);
+  const act = async (id: string, approve: boolean, name: string) => {
+    if (!approve && !confirm(`${name} 님의 판매자 권한을 거절/해제할까요?`)) return;
+    setBusy(id); setMsg('');
+    try { await decide({ data: { id, approve } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); setMsg(`${name} · ${approve ? '승인 완료 — 판매자 권한이 부여되었습니다.' : '거절 처리 — 판매자 권한이 해제되었습니다.'}`); }
+    catch (e) { setMsg(e instanceof Error ? e.message : '처리하지 못했습니다.'); } finally { setBusy(null); }
+  };
+  return <div>
+    <div className="flex flex-wrap gap-2 py-3">{([['pending', '대기'], ['approved', '승인'], ['rejected', '거절'], ['all', '전체']] as const).map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? 'goldOutline' : 'ghost'} onClick={() => setFilter(k)}>{l} {k === 'all' ? rows.length : count(k)}</Button>)}</div>
+    {msg && <p role="status" className="mb-2 text-sm text-primary">{msg}</p>}
+    {!shown.length ? <p className="text-sm text-muted-foreground">{filter === 'pending' ? '검토 대기 중인 신청이 없습니다.' : '해당하는 신청이 없습니다.'}</p> :
+    <div className="management-list">{shown.map(a => { const name = a.nickname ?? 'Member'; return <div className="management-row" key={a.id}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small></div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
+      <div className="record-actions">
+        {a.status !== 'approved' && <Button variant="goldOutline" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, true, name)}><Check/>승인</Button>}
+        {a.status !== 'rejected' && <Button variant="ghost" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, false, name)}><X/>{a.status === 'approved' ? '권한 해제' : '거절'}</Button>}
+      </div></div>; })}</div>}
+  </div>;
 }
