@@ -24,23 +24,22 @@ export function AdminToggle({ user, role }: { user: User | null; role: string })
 }
 
 /** Editable display nickname plus the anonymous system code. */
-export function NicknameEditor({ user }: { user: User | null }) {
+export function NicknameEditor({ user, unframed = false }: { user: User | null; unframed?: boolean }) {
   const { data } = useMyAccount(user); const qc = useQueryClient(); const save = useServerFn(updateNickname);
   const [value, setValue] = useState(''); const [msg, setMsg] = useState('');
   const avatarUrl = useAvatarUrl(data?.profile?.avatar_url);
   useEffect(() => { if (data?.profile) setValue(data.profile.nickname); }, [data?.profile]);
   if (!data?.profile || !user) return null;
-  return <form className="seller-flow-card" onSubmit={async e => { e.preventDefault(); setMsg(''); try { await save({ data: { nickname: value } }); await qc.invalidateQueries({ queryKey: ['my-account'] }); setMsg('Saved'); } catch (err) { setMsg(err instanceof Error ? err.message : 'Could not save'); } }}>
-    <span className="lux-eyebrow">ACCOUNT</span>
+  return <form className={unframed ? 'py-4' : 'seller-flow-card'} onSubmit={async e => { e.preventDefault(); setMsg(''); try { await save({ data: { nickname: value } }); await qc.invalidateQueries({ queryKey: ['my-account'] }); setMsg('저장했습니다'); } catch (err) { setMsg(err instanceof Error ? err.message : 'Could not save'); } }}>
     <label className="mt-3 flex cursor-pointer items-center gap-3">
       <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-input bg-muted">{avatarUrl ? <img src={avatarUrl} alt="프로필 사진" className="size-full object-cover" /> : <UserRound size={22} className="text-muted-foreground" />}</span>
       <span className="text-sm text-muted-foreground">프로필 사진 변경 (5MB 이하)</span>
       <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" aria-label="프로필 사진 변경" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; setMsg(''); try { await uploadAvatar(user.id, f); await qc.invalidateQueries({ queryKey: ['my-account'] }); setMsg('Saved'); } catch (err) { setMsg(err instanceof Error ? err.message : 'Could not save'); } }} />
     </label>
     <p className="mt-2 text-sm text-muted-foreground">System ID <strong className="text-foreground" data-no-translate>#{data.profile.system_code}</strong></p>
-    <label className="form-label" htmlFor="nick-edit">Display nickname</label>
+    <label className="form-label" htmlFor="nick-edit">닉네임</label>
     <input id="nick-edit" className="form-input" required maxLength={30} value={value} onChange={e => setValue(e.target.value)} />
-    <Button variant="goldOutline" size="sm" className="mt-3">Save nickname</Button>{msg && <small className="ml-3 text-muted-foreground">{msg}</small>}
+    <Button variant="goldOutline" size="sm" className="mt-3">프로필 저장</Button>{msg && <small role="status" className="ml-3 text-muted-foreground">{msg}</small>}
   </form>;
 }
 

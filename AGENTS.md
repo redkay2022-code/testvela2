@@ -39,6 +39,6 @@
 
 - Real orders, QC media and the buyer/seller QC board live in Cloud (orders, order_qc_media, order_messages, private qc-media bucket); a database trigger enforces role-based stage changes and the 9-photo + 1-video QC minimum so clients cannot skip steps. Live courier status comes from 17TRACK via a cached authenticated server function (TRACK17_API_KEY).
 
-- Route help/privacy to public leaf pages; component presentation rules are in src/components/AGENTS.md.
+- Help/privacy use public leaves; profile/shipping use URL-tabbed settings. Presentation: src/components/AGENTS.md.
 - Keep collection and watch-type filters in validated search state and derive types from existing listing content/specs without assigning unknown types.
 - USDT display estimates USD parity; keep stored prices and payment networks unchanged.
