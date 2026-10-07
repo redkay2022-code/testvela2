@@ -38,6 +38,11 @@ export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;ch
   if(mode==='store')posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
  if(newest) posts=[...posts].reverse();
+ const cleanHome=mode==='home'&&!shortsId;
+ if(cleanHome&&search.feedTopic==='videos')posts=posts.filter(p=>p.short);
+ if(cleanHome&&search.feedTopic==='trend')posts=[...posts].sort((a,b)=>b.likes-a.likes);
+ if(cleanHome&&search.feedTopic==='live')posts=[];
+ if(cleanHome&&search.feedTopic==='football')posts=posts.filter(p=>/축구|football|soccer/i.test(`${p.title} ${p.description}`));
  const selected=all.find(p=>p.id===(shortsId || search.post));
  const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
  return <>
