@@ -33,13 +33,14 @@ export function detectPhoneCountry(): string {
     const [lang, region] = tag.split('-');
     const r = region?.toUpperCase();
     if (r && PHONE_COUNTRIES.some(c => c.iso === r)) return r;
-    if (lang && LANG_DEFAULT[lang.toLowerCase()]) return LANG_DEFAULT[lang.toLowerCase()];
+    const d = lang ? LANG_DEFAULT[lang.toLowerCase()] : undefined;
+    if (d) return d;
   }
   return 'KR';
 }
 
 /** Build E.164: drop a leading trunk 0 from the local number. */
 export function toE164(iso: string, local: string) {
-  const c = PHONE_COUNTRIES.find(x => x.iso === iso) ?? PHONE_COUNTRIES[0];
+  const c = PHONE_COUNTRIES.find(x => x.iso === iso) ?? PHONE_COUNTRIES[0]!;
   return `+${c.dial}${local.replace(/\D/g, '').replace(/^0+/, '')}`;
 }
