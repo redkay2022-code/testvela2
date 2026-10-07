@@ -9,7 +9,7 @@ export const paths = { home:'/', explore:'/explore', market:'/market', me:'/me',
 export const marketSearch = z.object({
   role:z.enum(['buyer','seller','admin']).optional(), menu:z.boolean().optional(), searchOpen:z.boolean().optional(), categoriesOpen:z.boolean().optional(), feedCategory:z.string().optional(),
   panel:z.enum(['chat','cart','checkout','settings','apply','orders']).optional(),
-   storeTab:z.enum(['products','shorts','reviews']).optional(), seller:z.string().optional(),
+    storeTab:z.enum(['products','shorts','reviews']).optional(), seller:z.string().optional(), storeCategory:z.enum(['all','watches','accessories','custom','solid-gold','top']).optional(),
   section:z.enum(['sellers','verification','moderation','settlements','overview','orders','earnings']).optional(),
    post:z.string().optional(), shorts:z.string().optional(), shortSheet:z.enum(['product','comments']).optional(), shortPhoto:z.number().int().min(0).max(14).optional(), auth:z.boolean().optional(), notice:z.boolean().optional(),
   feedTopic:z.enum(['recommend','videos','trend','live','football','VS Factory','PPF','3K','APS']).optional(),
