@@ -1,5 +1,5 @@
 import { EscrowGuarantee } from './escrow';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
@@ -29,6 +29,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  const reduced=useReducedMotion();
  const post=posts.find(p=>p.id===active) || posts[0];
  const ids=posts.map(p=>p.id).join('|');
+ const mountFeed=useCallback((el:HTMLDivElement|null)=>{feed.current=el;if(!el)return;syncing.current=true;const index=Math.max(0,ids.split('|').indexOf(selectedId));requestAnimationFrame(()=>{el.scrollTo({top:index*el.clientHeight,behavior:'instant'});requestAnimationFrame(()=>{syncing.current=false;});});},[selectedId,ids]);
  useEffect(()=>{syncing.current=true;const index=posts.findIndex(p=>p.id===selectedId);const next=posts[Math.max(0,index)];if(!next)return;activeId.current=next.id;setActive(next.id);feed.current?.scrollTo({top:Math.max(0,index)*(feed.current?.clientHeight || 0),behavior:'instant'});if(next.id!==selectedId)change(next.id);const frame=requestAnimationFrame(()=>{syncing.current=false;});return()=>cancelAnimationFrame(frame);},[selectedId,ids]);
  const share=async()=>{if(!post)return;try{if(navigator.share)await navigator.share({title:post.title,url:window.location.href});else{await navigator.clipboard.writeText(window.location.href);notify('숏폼 링크를 복사했습니다.');}}catch{/* Share dismissed */}};
  return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Content asChild aria-describedby={undefined}><motion.div className="shorts-player" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onTouchStart={e=>{if(sheet||e.touches.length!==1||(e.target instanceof Element&&e.target.closest('button,a,input,form')))return;const t=e.touches[0];if(t)touch.current={x:t.clientX,y:t.clientY};}} onTouchCancel={()=>{touch.current=null;}} onTouchEnd={e=>{const start=touch.current;touch.current=null;const end=e.changedTouches[0];if(!sheet&&start&&end){const dx=end.clientX-start.x,dy=end.clientY-start.y;if(dx>80&&dx>Math.abs(dy)*1.5)close();}}}>
@@ -38,7 +39,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  <nav className="shorts-feed-tabs" aria-label="숏폼 피드 선택">{([['following','팔로잉'],['recommend','추천']] as const).map(([tab,label])=><Button key={tab} variant="ghost" aria-pressed={shortTab===tab} onClick={()=>onTab(tab)}>{label}</Button>)}</nav>
  <div className="shorts-header-tools"><Button variant="ghost" size="icon" aria-label="Open search" title="검색" onClick={onSearch}><Search/></Button><Button variant="ghost" size="icon" aria-label="Share short" title="공유" onClick={share}><Share2/></Button></div>
  </header>
- <div className={`shorts-snap ${sheet?'shorts-locked':''}`} ref={feed} onScroll={e=>{if(sheet||syncing.current)return;const el=e.currentTarget;const index=Math.round(el.scrollTop/el.clientHeight),next=posts[index];if(next&&Math.abs(el.scrollTop-index*el.clientHeight)<el.clientHeight*.35&&next.id!==activeId.current){activeId.current=next.id;setActive(next.id);change(next.id);}}} tabIndex={0} aria-label="Shorts video feed" onKeyDown={e=>{if(sheet)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();feed.current?.scrollBy({top:(e.key==='ArrowDown'?1:-1)*e.currentTarget.clientHeight,behavior:reduced?'instant':'smooth'});}}}>
+ <div className={`shorts-snap ${sheet?'shorts-locked':''}`} ref={mountFeed} onScroll={e=>{if(sheet||syncing.current)return;const el=e.currentTarget;const index=Math.round(el.scrollTop/el.clientHeight),next=posts[index];if(next&&Math.abs(el.scrollTop-index*el.clientHeight)<el.clientHeight*.35&&next.id!==activeId.current){activeId.current=next.id;setActive(next.id);change(next.id);}}} tabIndex={0} aria-label="Shorts video feed" onKeyDown={e=>{if(sheet)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();feed.current?.scrollBy({top:(e.key==='ArrowDown'?1:-1)*e.currentTarget.clientHeight,behavior:reduced?'instant':'smooth'});}}}>
  {posts.map(p=><ShortScene key={p.id} post={p} active={p.id===active} openSheet={openSheet} notify={notify} user={user} requestAuth={requestAuth} buy={buy}/>)}
  {!posts.length&&<div className="shorts-follow-empty"><UserRound/><h2>팔로잉한 셀러의 영상이 없습니다.</h2><Button variant="goldOutline" onClick={()=>onTab('recommend')}>추천 영상 보기</Button></div>}
  </div>
