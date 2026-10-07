@@ -15,7 +15,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     setL(isLang(savedLang) ? savedLang : detected.lang);
     setCur(isCurrency(savedCur) ? savedCur : detected.currency);
   }, []);
-  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; }, [lang]);
   const setCurrency = (c: Currency) => { localStorage.setItem(CUR_KEY, c); setCur(c); };
   const setLang = (l: Lang) => {
     localStorage.setItem(LANG_KEY, l); setL(l);
@@ -23,7 +23,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   };
   setActiveCurrency(currency); setActiveLang(lang);
   // Re-key so every formatter and translated string re-renders in the chosen locale.
-  return <LocaleCtx.Provider value={{ currency, lang, setCurrency, setLang }}><div key={`${lang}-${currency}`} dir={lang === 'ar' ? 'rtl' : undefined} style={{ display: 'contents' }}>{children}</div></LocaleCtx.Provider>;
+  return <LocaleCtx.Provider value={{ currency, lang, setCurrency, setLang }}><div key={`${lang}-${currency}`} style={{ display: 'contents' }}>{children}</div></LocaleCtx.Provider>;
 }
 export const useCurrency = () => useContext(LocaleCtx);
 
