@@ -156,6 +156,42 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          media_urls: string[]
+          nickname: string
+          seller_id: string
+          seller_name: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          media_urls?: string[]
+          nickname: string
+          seller_id: string
+          seller_name: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          media_urls?: string[]
+          nickname?: string
+          seller_id?: string
+          seller_name?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       seller_applications: {
         Row: {
           bio: string
