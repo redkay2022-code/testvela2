@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Search, Share2, ShoppingBag, Star, UserRound, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Search, Share2, Star, UserRound, X } from 'lucide-react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
@@ -19,7 +19,7 @@ import { getComments } from '@/lib/market.functions';
 import { sellerIdentity } from '@/lib/seller-directory';
 
 const usd=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
-type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:()=>void; notify:(text:string)=>void };
+type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean)=>void; notify:(text:string)=>void };
 export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onSearch,user,close,closeSheet,change,openSheet,requestAuth,buy,notify}:Props) {
  const preview=useMarketPreview();
  const posts=shortTab==='following'?allPosts.filter(p=>preview.followedSellers.includes(sellerIdentity(p))||(p.sample&&preview.following)):allPosts;
@@ -40,7 +40,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  <div className="shorts-header-tools"><Button variant="ghost" size="icon" aria-label="Open search" title="검색" onClick={onSearch}><Search/></Button><Button variant="ghost" size="icon" aria-label="Share short" title="공유" onClick={share}><Share2/></Button></div>
  </header>
  <div className={`shorts-snap ${sheet?'shorts-locked':''}`} ref={mountFeed} onScroll={e=>{if(sheet||syncing.current)return;const el=e.currentTarget;const index=Math.round(el.scrollTop/el.clientHeight),next=posts[index];if(next&&Math.abs(el.scrollTop-index*el.clientHeight)<el.clientHeight*.35&&next.id!==activeId.current){activeId.current=next.id;setActive(next.id);change(next.id);}}} tabIndex={0} aria-label="Shorts video feed" onKeyDown={e=>{if(sheet)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();feed.current?.scrollBy({top:(e.key==='ArrowDown'?1:-1)*e.currentTarget.clientHeight,behavior:reduced?'instant':'smooth'});}}}>
- {posts.map(p=><ShortScene key={p.id} post={p} active={p.id===active} openSheet={openSheet} notify={notify} user={user} requestAuth={requestAuth} buy={buy}/>)}
+ {posts.map(p=><ShortScene key={p.id} post={p} active={p.id===active} openSheet={openSheet} notify={notify} user={user} requestAuth={requestAuth}/>)}
  {!posts.length&&<div className="shorts-follow-empty"><UserRound/><h2>팔로잉한 셀러의 영상이 없습니다.</h2><Button variant="goldOutline" onClick={()=>onTab('recommend')}>추천 영상 보기</Button></div>}
  </div>
  <AnimatePresence>{sheet&&post&&<ShortSheet key={sheet} kind={sheet} close={closeSheet}>
@@ -48,7 +48,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  </ShortSheet>}</AnimatePresence>
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
-function ShortScene({post,active,openSheet,notify,user,requestAuth,buy}:{post:LuxuryPost;active:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void;buy:()=>void}) {
+function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false);
  const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
@@ -62,9 +62,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth,buy}:{post:Lu
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
  <div className="shorts-product-overlay">
  <div className="shorts-seller-row"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><span className="shorts-anonymous-avatar"><UserRound/></span><strong>{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'Unfollow creator':'Follow creator'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>
- <div className="shorts-title-row"><span className="shorts-category-badge">{post.category}</span><h2>{post.title}</h2></div>
- <div className="shorts-product-description"><p>{post.description}</p><Button variant="ghost" onClick={()=>openSheet('product')} aria-label="펼쳐 보기 · Product Details">펼쳐 보기<ChevronRight size={13}/></Button></div>
- {post.price!==null&&<div className="shorts-purchase-row"><span className="shorts-usd-price" data-no-translate><small>USD</small>{usd(post.price)}</span><Button variant="gold" onClick={buy}><ShoppingBag size={15}/>구매 / 에스크로 주문</Button></div>}
+ <Button variant="ghost" className="shorts-view-details" onClick={()=>openSheet('product')} aria-label="상세 보기">상세 보기<ChevronRight size={14}/></Button>
  </div>
  <footer className="shorts-bottom-bar">
  {active&&<ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} composerOnly/>}
@@ -84,8 +82,10 @@ function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>v
  {children}
  </motion.section></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
-function ProductSummary({post,buy,notify}:{post:LuxuryPost;buy:()=>void;notify:Props['notify']}) {
+function ProductSummary({post,buy,notify}:{post:LuxuryPost;buy:Props['buy'];notify:Props['notify']}) {
  const preview=useMarketPreview(),verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
  const location=useRouterState({select:s=>s.location}),search=marketSearch.parse(location.search);
- return <><div className="shorts-sheet-seller" data-no-translate><span className="shorts-anonymous-avatar"><UserRound/></span><div><strong>{post.creator}</strong><SellerBadge reputation={post.reputation}/></div><Button asChild variant="goldOutline" size="sm"><Link to="/store" search={{role:search.role,seller:sellerIdentity(post),storeTab:'products'}} aria-label="Visit Seller Store">셀러샵<ChevronRight size={14}/></Link></Button></div><div className="shorts-sheet-body"><ShortsGallery key={post.id} images={post.images} title={post.title}/>{post.price!==null&&<p className="lux-price mt-4" data-no-translate>{usd(post.price)} <small>USD</small></p>}<h2 className="mt-3 text-lg font-semibold">{post.title}</h2><div className="detail-tags">{verified&&<span>✓ VELA VERIFIED</span>}<span>{post.category}</span></div><SpecsTable specs={post.source.specs} fallback={post.sample?<><h3 className="mt-6 text-sm">상품 사양 · 샘플</h3><dl className="lux-specs">{[['무브먼트','Dandong VS3235 (72-hour power reserve)'],['케이스 소재','904L Stainless Steel'],['방수','50m / 5ATM']].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></>:<p className="mt-5 text-sm text-muted-foreground">등록된 사양이 없습니다.</p>}/><p className="mt-5 text-sm leading-7 text-muted-foreground">{post.description}</p>{post.price!==null&&<EscrowGuarantee/>}<SellerRatings reputation={post.reputation}/>{post.sample&&<p className="sample-notice">샘플 상품 · 사양, 검증 및 구매는 미리보기입니다.</p>}</div>{post.price!==null&&<footer className="shorts-sheet-buy"><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('미리보기 장바구니에 담았습니다.');}}>장바구니 담기</Button><Button variant="gold" onClick={buy}>구매 / 에스크로 주문</Button></footer>}</>;
+ const [box,setBox]=useState(false);
+ const boxPrice=post.boxPrice ?? 0;
+ return <><div className="shorts-sheet-seller" data-no-translate><span className="shorts-anonymous-avatar"><UserRound/></span><div><strong>{post.creator}</strong><SellerBadge reputation={post.reputation}/></div><Button asChild variant="goldOutline" size="sm"><Link to="/store" search={{role:search.role,seller:sellerIdentity(post),storeTab:'products'}} aria-label="Visit Seller Store">셀러샵<ChevronRight size={14}/></Link></Button></div><div className="shorts-sheet-body"><ShortsGallery key={post.id} images={post.images} title={post.title}/>{post.price!==null&&<p className="lux-price mt-4" data-no-translate>{usd(post.price+(box?boxPrice:0))} <small>USD</small></p>}{post.price!==null&&boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>풀 세트 박스 추가</span><strong data-no-translate>+{usd(boxPrice)} USD</strong></label>}<h2 className="mt-3 text-lg font-semibold">{post.title}</h2><div className="detail-tags">{verified&&<span>✓ VELA VERIFIED</span>}<span>{post.category}</span></div><SpecsTable specs={post.source.specs} fallback={post.sample?<><h3 className="mt-6 text-sm">상품 사양 · 샘플</h3><dl className="lux-specs">{[['무브먼트','Dandong VS3235 (72-hour power reserve)'],['케이스 소재','904L Stainless Steel'],['방수','50m / 5ATM']].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></>:<p className="mt-5 text-sm text-muted-foreground">등록된 사양이 없습니다.</p>}/><h3 className="mt-5 text-sm font-semibold">제품 소개</h3><p className="mt-2 text-sm leading-7 text-muted-foreground">{post.description}</p>{post.price!==null&&<EscrowGuarantee/>}<SellerRatings reputation={post.reputation}/>{post.sample&&<p className="sample-notice">샘플 상품 · 사양, 검증 및 구매는 미리보기입니다.</p>}</div>{post.price!==null&&<footer className="shorts-sheet-buy"><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('미리보기 장바구니에 담았습니다.');}}>장바구니 담기</Button><Button variant="gold" onClick={()=>buy(box)}>구매 / 에스크로 주문</Button></footer>}</>;
 }

@@ -663,3 +663,5 @@
 @media(max-height:650px) {
  .shorts-product-overlay {bottom:calc(78px + env(safe-area-inset-bottom));}.shorts-title-row {margin-top:8px;}.shorts-product-description {margin-top:4px;}.shorts-product-description p {-webkit-line-clamp:1;}.shorts-purchase-row {margin-top:4px;}.shorts-bottom-bar {min-height:66px;padding-top:6px;}
 }
+
+.shorts-view-details {margin-top:10px;height:32px;padding:0;background:transparent;color:var(--media-label);font-size:12px;gap:4px;}
