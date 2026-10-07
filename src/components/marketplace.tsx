@@ -17,6 +17,8 @@ import { signInWithPhone, signUpWithPhone } from '@/lib/phone-auth.functions';
 import { uploadAvatar } from '@/lib/avatar';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 import { SpecsTable } from './specs-table';
+import { SourceFactoryField, type SourceType } from './source-factory';
+import { VideoEditor, type VideoTag } from './video-editor';
 
 function imageFor(post: Post) { return post.media_urls[0] || media[post.image_key]; }
 
