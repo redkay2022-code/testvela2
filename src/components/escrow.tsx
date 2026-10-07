@@ -22,7 +22,7 @@ function useFiles(){
 function MediaGrid({media}:{media:QcMedia[]}){
  const [open,setOpen]=useState<number|null>(null);
  return <><div className="qc-grid">{media.map((m,i)=><button type="button" key={m.url} onClick={()=>setOpen(i)} aria-label={`Open QC file ${i+1}`}>{m.type==='video'?<video src={m.url} muted playsInline preload="metadata"/>:<img src={m.url} alt={`QC inspection ${i+1}`}/>}<span>{i+1}</span></button>)}</div>
- {open!==null&&<div className="qc-lightbox" role="dialog" aria-label="QC file"><Button variant="ghost" size="icon" aria-label="Close" onClick={()=>setOpen(null)}><X/></Button>{media[open].type==='video'?<video src={media[open].url} controls autoPlay playsInline/>:<img src={media[open].url} alt={`QC inspection ${open+1}`}/>}<p>{open+1} / {media.length}</p></div>}</>;
+ {open!==null&&media[open]&&<div className="qc-lightbox" role="dialog" aria-label="QC file"><Button variant="ghost" size="icon" aria-label="Close" onClick={()=>setOpen(null)}><X/></Button>{media[open]!.type==='video'?<video src={media[open]!.url} controls autoPlay playsInline/>:<img src={media[open]!.url} alt={`QC inspection ${open+1}`}/>}<p>{open+1} / {media.length}</p></div>}</>;
 }
 
 function OrderHead({o}:{o:PreviewOrder}){return <div className="escrow-order-head">{o.image?<img src={o.image} width={52} height={52} alt=""/>:<Package className="text-primary"/>}<div><span className="lux-eyebrow">{o.id}</span><strong>{o.title}</strong><small>{stageLabel(o.stage)}</small></div><div className="text-right"><strong>{dollars(o.amount)}</strong><small className={o.released?'text-primary':''}><Lock size={10} className="mr-1 inline"/>{o.released?'Released to seller':'Held in escrow'}</small></div></div>;}
