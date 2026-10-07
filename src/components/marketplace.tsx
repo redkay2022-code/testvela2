@@ -193,22 +193,23 @@ function SmallDialog({title,onClose,children}:{title:string;onClose:()=>void;chi
 
 export function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=>void}) {
   const [signup,setSignup] = useState(false);
-  const [email,setEmail] = useState('');
+  const [phone,setPhone] = useState('');
   const [password,setPassword] = useState('');
   const [name,setName] = useState('');
   const [error,setError] = useState('');
   const [pending,setPending] = useState(false);
-  const [sent,setSent] = useState(false);
+  const signUpFn = useServerFn(signUpWithPhone), signInFn = useServerFn(signInWithPhone);
   const submit = async (e:React.FormEvent) => {
     e.preventDefault();setError('');setPending(true);
     try {
-      const result = signup ? await supabase.auth.signUp({email,password,options:{data:{display_name:name},emailRedirectTo:window.location.origin+'/me'}}) : await supabase.auth.signInWithPassword({email,password});
-      if(result.error) {setError(result.error.message === 'Invalid login credentials' ? '이메일과 비밀번호를 확인해 주세요.' : result.error.message === 'Email not confirmed' ? '이메일의 확인 링크를 먼저 눌러주세요.' : '지금 계정에 연결할 수 없어요. 입력 내용을 확인하고 다시 시도해 주세요.');return;}
-      if(signup && !result.data.session) setSent(true); else onSignedIn();
-    }catch {setError('연결이 원활하지 않아요. 잠시 후 다시 시도해 주세요.');}
+      const tokens = signup ? await signUpFn({data:{phone,password,nickname:name}}) : await signInFn({data:{phone,password}});
+      const { error: sErr } = await supabase.auth.setSession(tokens);
+      if (sErr) throw sErr;
+      onSignedIn();
+    }catch (err) {setError(err instanceof Error && err.message ? err.message : 'Could not connect. Please try again.');}
     finally {setPending(false);}
   };
-  return <SmallDialog title={signup?'취향이 만나는 시작':'다시 만나 반가워요'} onClose={onClose}>{sent ? <div className="py-5 text-center"><Check className="mx-auto mb-4 text-success" size={36}/><p className="font-medium">확인 이메일을 보냈어요</p><p className="mt-3 text-sm leading-6 text-muted-foreground">이메일에 있는 링크를 눌러 가입을 완료해 주세요.</p></div> : <form onSubmit={submit}>{signup && <><label className="form-label" htmlFor="name">닉네임</label><input id="name" className="form-input" required maxLength={40} value={name} onChange={e => setName(e.target.value)}/></>}<label className="form-label" htmlFor="email">이메일</label><input id="email" className="form-input" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)}/><label className="form-label" htmlFor="password">비밀번호</label><input id="password" className="form-input" type="password" autoComplete={signup?'new-password':'current-password'} minLength={8} required value={password} onChange={e => setPassword(e.target.value)}/>{error && <p role="alert" className="mt-4 text-xs leading-5 text-destructive">{error}</p>}<Button type="submit" className="mt-6 w-full" disabled={pending}>{pending?'연결 중…':signup?'회원가입':'로그인'}</Button><Button type="button" variant="link" className="mt-3 w-full text-xs" onClick={() => {setSignup(!signup);setError('');}}>{signup?'이미 계정이 있나요? 로그인':'처음인가요? 회원가입'}</Button></form>}</SmallDialog>;
+  return <SmallDialog title={signup?'Create your account':'Welcome back'} onClose={onClose}><form onSubmit={submit}>{signup && <><label className="form-label" htmlFor="name">Display nickname</label><input id="name" className="form-input" required maxLength={30} value={name} onChange={e => setName(e.target.value)}/></>}<label className="form-label" htmlFor="phone">Phone number</label><input id="phone" className="form-input" type="tel" autoComplete="tel" placeholder="+86 138 0000 0000" required value={phone} onChange={e => setPhone(e.target.value)}/><label className="form-label" htmlFor="password">Password</label><input id="password" className="form-input" type="password" autoComplete={signup?'new-password':'current-password'} minLength={8} required value={password} onChange={e => setPassword(e.target.value)}/><p className="mt-3 text-xs leading-5 text-muted-foreground">Your phone number is never stored — only a one-way fingerprint that keeps one account per person.</p>{error && <p role="alert" className="mt-4 text-xs leading-5 text-destructive">{error}</p>}<Button type="submit" className="mt-6 w-full" disabled={pending}>{pending?'Connecting…':signup?'Sign up':'Sign in'}</Button><Button type="button" variant="link" className="mt-3 w-full text-xs" onClick={() => {setSignup(!signup);setError('');}}>{signup?'Already have an account? Sign in':'New here? Sign up'}</Button></form></SmallDialog>;
 }
 
 export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;requestAuth:()=>void;onPosted:()=>void}) {
