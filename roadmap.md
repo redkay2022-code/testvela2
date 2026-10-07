@@ -42,3 +42,5 @@
 - [x] When video exists, show only direct muted autoplay video on the Home feed with no photo poster; retain all photos in product details
 - [ ] Verify published listing updates reach the Home feed immediately
 - [ ] Connect 17TRACK key for live courier tracking (waiting on user)
+## My VELA profile
+- [x] Enlarge the My VELA profile photo (96px desktop, 78px phones) and move the buyer tier badge inline beside the nickname; verified at 369 and 1280 widths with no overflow or page errors
