@@ -603,3 +603,8 @@
 .box-option span{flex:1}.box-option strong{color:var(--primary)}
 .currency-select{height:30px;max-width:78px;padding:0 6px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--foreground);font-size:11px}
 .locale-selects{display:inline-flex;gap:4px}
+.red-home-header .lux-header-inner,.lux-header-inner{grid-template-columns:32px auto minmax(0,1fr) 32px 32px}
+.locale-menu{position:relative;display:inline-flex;justify-content:center}
+.locale-trigger{width:32px;height:40px;display:grid;place-items:center;color:var(--foreground);background:transparent;border:0}
+.locale-menu .locale-selects{position:absolute;top:44px;inset-inline-end:0;z-index:60;display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--drawer-shadow)}
+.locale-menu .currency-select{max-width:none;width:150px;height:34px;font-size:12px}

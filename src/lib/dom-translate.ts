@@ -7,7 +7,8 @@ const SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CODE', 'NOSCRIPT']);
 
 let observer: MutationObserver | null = null;
 let dict: Record<string, string> = {};
-const written = new WeakMap<Node, string>();
+const written = new WeakMap<Node, { orig: string; out: string }>();
+const attrWritten = new WeakMap<Element, Record<string, { orig: string; out: string }>>();
 
 function tr(text: string): string | null {
   const s = text.trim();
@@ -24,16 +25,22 @@ function tr(text: string): string | null {
 }
 function textNode(n: Text) {
   if (n.parentElement && SKIP.has(n.parentElement.tagName)) return;
-  if (written.get(n) === n.data) return;
-  const next = tr(n.data);
-  if (next !== null && next !== n.data) { n.data = next; written.set(n, next); }
+  const rec = written.get(n);
+  const source = rec && rec.out === n.data ? rec.orig : n.data;
+  const next = tr(source) ?? source;
+  if (next !== n.data) n.data = next;
+  written.set(n, { orig: source, out: next });
 }
 function element(el: Element) {
   for (const a of ATTRS) {
     const v = el.getAttribute(a);
     if (!v) continue;
-    const next = tr(v);
-    if (next !== null && next !== v) el.setAttribute(a, next);
+    const recs = attrWritten.get(el) ?? {};
+    const rec = recs[a];
+    const source = rec && rec.out === v ? rec.orig : v;
+    const next = tr(source) ?? source;
+    recs[a] = { orig: source, out: next }; attrWritten.set(el, recs);
+    if (next !== v) el.setAttribute(a, next);
   }
 }
 function walk(root: Node) {
@@ -51,7 +58,6 @@ export async function applyDomTranslation(lang: Lang) {
   observer?.disconnect(); observer = null;
   const load = loaders[`../locales/${lang}.json`];
   dict = load ? (await load()).default : {};
-  if (!Object.keys(dict).length) return;
   walk(document.body);
   observer = new MutationObserver(muts => {
     for (const m of muts) {
