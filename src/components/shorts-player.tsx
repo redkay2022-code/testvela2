@@ -63,7 +63,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  <div className="shorts-product-overlay">
  <div className="shorts-seller-row">
  <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><span className="shorts-anonymous-avatar"><UserRound/></span><strong>{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'Unfollow creator':'Follow creator'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>
- <Button variant="ghost" className="shorts-view-details" onClick={()=>openSheet('product')} aria-label="상세 보기">상세 보기<ChevronRight size={14}/></Button>
+ <Button variant="gold" className="shorts-view-details" onClick={()=>openSheet('product')} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Button>
  </div>
  </div>
  <footer className="shorts-bottom-bar">
