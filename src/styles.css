@@ -734,3 +734,17 @@
 .studio-tier-progress progress::-webkit-progress-bar {background:var(--muted);border-radius:999px;}
 .studio-tier-progress progress::-webkit-progress-value {background:var(--primary);border-radius:999px;}
 .studio-tier-progress progress::-moz-progress-bar {background:var(--primary);border-radius:999px;}
+.studio-badge-line {display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;vertical-align:middle;}
+.studio-badge-line .luxury-emblem {width:20px;height:20px;flex-basis:20px;}
+.studio-rating {font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;}
+.shorts-tier-line {margin-bottom:6px;}
+.shorts-tier-line .studio-badge-line {padding:3px 8px;border-radius:999px;background:color-mix(in oklab,var(--background) 55%,transparent);}
+.rating-breakdown {display:grid;gap:4px;font-size:11px;color:var(--muted-foreground);}
+.rating-breakdown>div {display:grid;grid-template-columns:26px 1fr 24px;align-items:center;gap:6px;}
+.rating-breakdown progress {width:100%;height:6px;appearance:none;border:0;border-radius:999px;overflow:hidden;background:var(--muted);}
+.rating-breakdown progress::-webkit-progress-bar {background:var(--muted);}
+.rating-breakdown progress::-webkit-progress-value {background:var(--primary);}
+.rating-breakdown progress::-moz-progress-bar {background:var(--primary);}
+.star-picker {display:flex;gap:4px;}
+.star-picker button {font-size:26px;line-height:1;color:var(--muted-foreground);}
+.star-picker button.on {color:var(--primary);}
