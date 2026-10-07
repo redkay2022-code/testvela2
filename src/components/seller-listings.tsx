@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
-import { ArrowLeft, ArrowRight, GripVertical, ImagePlus, Pencil, Plus, Trash2, X, Eye, EyeOff, Video } from 'lucide-react';
+import { ArrowLeft, ArrowRight, GripVertical, ImagePlus, Pencil, Plus, Trash2, X, Eye, EyeOff, Video, Scissors } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useMyAccount } from './seller-account';
 import { formatMoney } from '@/lib/currency';
+import { VideoEditor, type VideoTag } from './video-editor';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string };
-type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; media_urls: string[]; video_url: string | null; status: string; specs: Specs; created_at: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
+type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; media_urls: string[]; video_url: string | null; status: string; specs: Specs; video_tags?: VideoTag[]; created_at: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
 const specFields: [keyof Specs, string, string][] = [
@@ -28,7 +29,7 @@ export function SellerListings() {
     queryKey: ['my-listings', user?.id], enabled: !!user && canSell,
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,media_urls,video_url,status,specs,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,media_urls,video_url,status,specs,video_tags,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
       if (error) throw error;
       const rows = data as unknown as Listing[];
       const paths = rows.flatMap(r => [...r.media_urls, r.video_url].filter(Boolean)) as string[];
@@ -49,7 +50,7 @@ export function SellerListings() {
 
   return <section className="seller-flow-card" aria-label="내 상품 관리">
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">내 상품 관리</h2><Button size="sm" onClick={() => setEditing('new')}><Plus />새 상품</Button></div>
-    {editing && <ListingForm user={user} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
+    {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground">불러오는 중…</p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground">아직 등록한 상품이 없어요.</p> :
       <ul className="management-list mt-3">{listings.data.map(l => <li key={l.id} className="management-row">
         <div className="flex min-w-0 items-center gap-3">{l.video ? <video src={l.video} poster={l.thumb} muted playsInline preload="metadata" className="size-12 shrink-0 rounded-md object-cover" /> : l.thumb ? <img src={l.thumb} alt="" className="size-12 shrink-0 rounded-md object-cover" /> : <div className="size-12 shrink-0 rounded-md bg-muted" />}
@@ -62,7 +63,9 @@ export function SellerListings() {
   </section>;
 }
 
-function ListingForm({ user, listing, onClose, onSaved }: { user: User; listing: Listing | null; onClose: () => void; onSaved: () => void }) {
+function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User; listing: Listing | null; catalog: { id: string; title: string }[]; onClose: () => void; onSaved: () => void }) {
+  const [videoTags, setVideoTags] = useState<VideoTag[]>(listing?.video_tags ?? []);
+  const [editing, setEditing] = useState<File | null>(null);
   const [title, setTitle] = useState(listing?.title ?? '');
   const [description, setDescription] = useState(listing?.description ?? '');
   const [category, setCategory] = useState(listing?.category === '악세사리' ? '악세사리' : '시계');
@@ -90,7 +93,7 @@ function ListingForm({ user, listing, onClose, onSaved }: { user: User; listing:
     if (photos.length + selectedPhotos.length > MAX_LISTING_PHOTOS || Number(Boolean(video)) + selectedVideos.length > 1) { setError(`사진은 최대 ${MAX_LISTING_PHOTOS}장, 영상은 1개까지 선택할 수 있어요.`); return; }
     try { await validateListingFiles(selected); }
     catch (err) { setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.'); return; }
-    if (selectedVideos[0]) setVideo({ file: selectedVideos[0], preview: createPreview(selectedVideos[0]) });
+    if (selectedVideos[0]) { setVideo({ file: selectedVideos[0], preview: createPreview(selectedVideos[0]) }); setEditing(selectedVideos[0]); }
     setPhotos(current => [...current, ...selectedPhotos.map(file => ({ id: crypto.randomUUID(), file, preview: createPreview(file) }))]);
     setError('');
   };
@@ -115,7 +118,7 @@ function ListingForm({ user, listing, onClose, onSaved }: { user: User; listing:
         uploaded.push(path); photoPaths.push(path);
       }
       const cleanSpecs = Object.fromEntries(Object.entries(specs).map(([k, v]) => [k, String(v ?? '').trim().slice(0, 80)]).filter(([, v]) => v));
-      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, media_urls: photoPaths, video_url: nextVideo, specs: cleanSpecs, status, updated_at: new Date().toISOString() };
+      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, media_urls: photoPaths, video_url: nextVideo, video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
         const retained = new Set(photoPaths); const removed = [...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await supabase.storage.from('market-media').remove(removed);
@@ -131,11 +134,12 @@ function ListingForm({ user, listing, onClose, onSaved }: { user: User; listing:
 
   const photoTotal = photos.length;
   return <div className="form-panel mt-4 rounded-lg border border-border p-4">
+    {editing && <VideoEditor file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags }) => { if (video?.file) { URL.revokeObjectURL(video.preview); objectUrls.current.delete(video.preview); } setVideo({ file, preview: createPreview(file) }); setVideoTags(tags); setEditing(null); }} />}
     <div className="flex items-center justify-between"><h3 className="font-semibold">{listing ? '상품 수정' : '새 상품 등록'}</h3><Button size="icon" variant="ghost" aria-label="닫기" onClick={onClose}><X /></Button></div>
     <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-input bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground">영상과 사진 한 번에 선택</span><span className="text-xs text-muted-foreground">영상 1개 · 30초 · 200MB / 사진 {photoTotal}/{MAX_LISTING_PHOTOS}</span>
       <input className="sr-only" type="file" accept="image/*,video/*" multiple aria-label="상품 영상과 사진 한 번에 선택" onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} /></label>
     {(video || photos.length > 0) && <div className="mt-3 space-y-3" aria-label="선택한 상품 미디어">
-      {video && <div className="relative overflow-hidden rounded-md border border-primary bg-muted"><video src={video.preview} muted playsInline controls preload="metadata" className="aspect-video w-full object-cover"/><span className="absolute left-2 top-2 rounded bg-background/80 px-2 py-1 text-[11px] font-semibold text-primary">메인 피드 영상</span><Button type="button" size="icon" variant="secondary" className="absolute right-2 top-2 size-7" aria-label="영상 제거" onClick={removeVideo}><X /></Button></div>}
+      {video && <div className="relative overflow-hidden rounded-md border border-primary bg-muted"><video src={video.preview} muted playsInline controls preload="metadata" className="aspect-video w-full object-cover"/><span className="absolute left-2 top-2 rounded bg-background/80 px-2 py-1 text-[11px] font-semibold text-primary">메인 피드 영상</span><Button type="button" size="icon" variant="secondary" className="absolute right-2 top-2 size-7" aria-label="영상 제거" onClick={removeVideo}><X /></Button>{video.file && <Button type="button" size="sm" variant="gold" className="absolute bottom-2 right-2" onClick={() => setEditing(video.file!)}><Scissors />영상 편집</Button>}{videoTags.length > 0 && <span className="absolute bottom-2 left-2 rounded bg-background/80 px-2 py-1 text-[11px] text-primary">상품 태그 {videoTags.length}개</span>}</div>}
       {photos.length > 0 && <div><p className="mb-2 text-xs text-muted-foreground">상세 사진 갤러리 · 끌어서 또는 화살표로 순서 변경</p><div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {photos.map((photo, index) => <div key={photo.id} draggable onDragStart={() => setDraggedPhoto(photo.id)} onDragEnd={() => setDraggedPhoto(null)} onDragOver={event => event.preventDefault()} onDrop={() => dropPhoto(photo.id)} className={`relative overflow-hidden rounded-md border bg-muted ${draggedPhoto === photo.id ? 'border-primary opacity-60' : 'border-border'}`}>
           {photo.preview ? <img src={photo.preview} alt={`상세 사진 ${index + 1}`} className="aspect-square w-full object-cover"/> : <div className="grid aspect-square place-items-center text-xs text-muted-foreground">사진 {index + 1}</div>}
