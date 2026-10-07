@@ -10,14 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as SellerRouteImport } from './routes/seller'
+import { Route as StoreRouteImport } from './routes/store'
 import { Route as UploadRouteImport } from './routes/upload'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -35,6 +43,16 @@ const MeRoute = MeRouteImport.update({
   path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellerRoute = SellerRouteImport.update({
+  id: '/seller',
+  path: '/seller',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreRoute = StoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UploadRoute = UploadRouteImport.update({
   id: '/upload',
   path: '/upload',
@@ -43,39 +61,76 @@ const UploadRoute = UploadRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/explore': typeof ExploreRoute
   '/market': typeof MarketRoute
   '/me': typeof MeRoute
+  '/seller': typeof SellerRoute
+  '/store': typeof StoreRoute
   '/upload': typeof UploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/explore': typeof ExploreRoute
   '/market': typeof MarketRoute
   '/me': typeof MeRoute
+  '/seller': typeof SellerRoute
+  '/store': typeof StoreRoute
   '/upload': typeof UploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/explore': typeof ExploreRoute
   '/market': typeof MarketRoute
   '/me': typeof MeRoute
+  '/seller': typeof SellerRoute
+  '/store': typeof StoreRoute
   '/upload': typeof UploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/explore' | '/market' | '/me' | '/upload'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/explore'
+    | '/market'
+    | '/me'
+    | '/seller'
+    | '/store'
+    | '/upload'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/explore' | '/market' | '/me' | '/upload'
-  id: '__root__' | '/' | '/explore' | '/market' | '/me' | '/upload'
+  to:
+    | '/'
+    | '/admin'
+    | '/explore'
+    | '/market'
+    | '/me'
+    | '/seller'
+    | '/store'
+    | '/upload'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/explore'
+    | '/market'
+    | '/me'
+    | '/seller'
+    | '/store'
+    | '/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   ExploreRoute: typeof ExploreRoute
   MarketRoute: typeof MarketRoute
   MeRoute: typeof MeRoute
+  SellerRoute: typeof SellerRoute
+  StoreRoute: typeof StoreRoute
   UploadRoute: typeof UploadRoute
 }
 
@@ -86,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -109,6 +171,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seller': {
+      id: '/seller'
+      path: '/seller'
+      fullPath: '/seller'
+      preLoaderRoute: typeof SellerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store': {
+      id: '/store'
+      path: '/store'
+      fullPath: '/store'
+      preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/upload': {
       id: '/upload'
       path: '/upload'
@@ -121,9 +197,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   ExploreRoute: ExploreRoute,
   MarketRoute: MarketRoute,
   MeRoute: MeRoute,
+  SellerRoute: SellerRoute,
+  StoreRoute: StoreRoute,
   UploadRoute: UploadRoute,
 }
 export const routeTree = rootRouteImport

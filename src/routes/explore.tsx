@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Marketplace } from '@/components/marketplace';
+import { LuxuryMarketplace } from '@/components/luxury-marketplace';
 import { marketSearch, pageHead, postsQuery } from '@/lib/market';
 export const Route = createFileRoute('/explore')({
-  validateSearch:marketSearch,
-  loader:({context}) => context.queryClient.ensureQueryData(postsQuery),
-  head:() => pageHead('취향 탐색','상품, 공간, 크리에이터를 검색하고 새로운 취향을 발견하세요.'),
-  component:() => <Marketplace mode="explore"/>,
+ validateSearch:marketSearch,
+ loader:({context})=>context.queryClient.ensureQueryData(postsQuery),
+ head:()=>pageHead('Explore watches','Find watches, factories and independent studios on velamarket.'),
+ errorComponent:()=> <div className="lux-empty">The collection could not load. Please try again.</div>,
+ notFoundComponent:()=> <div className="lux-empty">This collection is unavailable.</div>,
+ component:()=> <LuxuryMarketplace mode="explore"/>,
 });

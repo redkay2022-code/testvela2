@@ -7,6 +7,10 @@ export type Post = Database['public']['Tables']['posts']['Row'];
 export type Mode = 'home' | 'explore' | 'market' | 'me' | 'upload';
 export const paths = { home:'/', explore:'/explore', market:'/market', me:'/me', upload:'/upload' } as const;
 export const marketSearch = z.object({
+  role:z.enum(['buyer','seller','admin']).optional(), menu:z.boolean().optional(),
+  panel:z.enum(['chat','cart','checkout','settings','apply','orders']).optional(),
+  storeTab:z.enum(['products','shorts','reviews']).optional(),
+  section:z.enum(['sellers','verification','moderation','settlements','overview','orders','earnings']).optional(),
   post:z.string().optional(), auth:z.boolean().optional(), notice:z.boolean().optional(),
   category:z.string().optional(), q:z.string().optional(), tab:z.enum(['discover','following','nearby','likes','posts']).optional(),
 });
