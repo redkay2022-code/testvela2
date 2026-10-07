@@ -730,3 +730,7 @@
 .studio-tier-table th {color:var(--muted-foreground);font-weight:500;}
 .studio-tier-table tr.current td {background:color-mix(in oklab,var(--primary) 10%,transparent);}
 @media (max-width:720px){.studio-tier-metrics {grid-template-columns:repeat(2,minmax(0,1fr));}}
+.studio-tier-progress progress {appearance:none;border:0;border-radius:999px;overflow:hidden;background:var(--muted);}
+.studio-tier-progress progress::-webkit-progress-bar {background:var(--muted);border-radius:999px;}
+.studio-tier-progress progress::-webkit-progress-value {background:var(--primary);border-radius:999px;}
+.studio-tier-progress progress::-moz-progress-bar {background:var(--primary);border-radius:999px;}
