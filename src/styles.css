@@ -651,6 +651,10 @@
 .shorts-comment-form button {width:38px;height:40px;background:transparent;color:var(--soft-gold);box-shadow:none;}
 .shorts-comment-form button svg {width:18px;height:18px;}
 .shorts-follow-empty {height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;text-align:center;}
+.shorts-view-details {height:44px;padding:0 18px;gap:5px;border:1px solid var(--primary);border-radius:999px;background:var(--gold-gradient);color:var(--primary-foreground);font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap;text-shadow:none;box-shadow:0 6px 22px color-mix(in oklab,var(--primary) 38%,transparent);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;animation:shorts-details-glow 2.8s ease-in-out infinite;}
+.shorts-view-details svg {width:18px;height:18px;}
+.shorts-view-details:hover {filter:brightness(1.08);}
+.shorts-view-details:active {transform:scale(.96);}
 @media(max-width:720px) {
  .shorts-floating-header {padding-inline:12px;gap:0;}.shorts-feed-tabs {gap:12px;padding-left:0;}.shorts-feed-tabs button {font-size:12px;}.shorts-floating-header {grid-template-columns:44px minmax(0,1fr) 72px;}.shorts-header-tools>button {width:36px;}
  .shorts-product-overlay {left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));}.shorts-title-row h2 {font-size:15px;}
