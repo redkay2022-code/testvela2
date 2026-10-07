@@ -43,6 +43,7 @@ export const dict = {
   nextTier: d('Next tier {tier}', '다음 등급 {tier}', '下一等级 {tier}', '次のランク {tier}', 'Prossimo livello {tier}', 'Niveau suivant {tier}', 'Nächste Stufe {tier}', 'Volgend niveau {tier}', 'Следующий уровень {tier}', 'Gradus proximus {tier}', 'المستوى التالي {tier}'),
   remaining: d('{x} to go', '{x} 남음', '还差 {x}', 'あと {x}', 'mancano {x}', 'encore {x}', 'noch {x}', 'nog {x}', 'осталось {x}', 'restant {x}', 'متبقٍ {x}'),
   colTier: d('Tier', '등급', '等级', 'ランク', 'Livello', 'Niveau', 'Stufe', 'Niveau', 'Уровень', 'Gradus', 'المستوى'),
+  currentTier: d('Current', '현재 등급', '当前等级', '現在のランク', 'Livello attuale', 'Niveau actuel', 'Aktuelle Stufe', 'Huidig niveau', 'Текущий уровень', 'Gradus currens', 'المستوى الحالي'),
   colReq: d('Requirement', '조건', '条件', '条件', 'Requisito', 'Condition', 'Bedingung', 'Voorwaarde', 'Условие', 'Condicio', 'الشرط'),
   colFee: d('Insurance', '보험료', '保险费', '保険料', 'Assicurazione', 'Assurance', 'Versicherung', 'Verzekering', 'Страховка', 'Assecuratio', 'التأمين'),
   colPerk: d('Benefit', '혜택', '权益', '特典', 'Vantaggio', 'Avantage', 'Vorteil', 'Voordeel', 'Преимущество', 'Commodum', 'الميزة'),
