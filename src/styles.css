@@ -666,3 +666,7 @@
 }
 
 .shorts-view-details {height:30px;padding:0 2px;background:transparent;color:var(--soft-gold);font-size:12px;gap:2px;white-space:nowrap;}
+/* Keep all header feed tabs (incl. 리뷰) reachable on narrow screens and long translations */
+.lux-header-tabs {overflow-x:auto;overflow-y:hidden;justify-content:safe center;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.lux-header-tabs::-webkit-scrollbar {display:none;}
+@media(max-width:480px) {.lux-header-tabs,.red-home-header .lux-header-tabs {gap:10px;}.lux-header-tabs .lux-tab {font-size:11px;padding:0 1px;}}
