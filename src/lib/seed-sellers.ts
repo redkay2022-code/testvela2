@@ -21,7 +21,7 @@ const cats = ['커스텀제작','공장 생산','제작 과정','기타'];
 export const seedPosts: LuxuryPost[] = seedSellers.flatMap((seller, s) => [0, 1].map(n => {
   const i = s * 2 + n, acc = seller.kind === 'accessory';
   const item = acc ? accessoryItems[s - 10]! : watchItems[i % watchItems.length]!;
-  const [title, brand, model, movement, caseSize, waterResistance, material] = item;
+  const [title, brand, model, movement, caseSize, waterResistance, material] = item as unknown as string[] as [string,string,string,string,string,string,string];
   const photo = watchImages[i % 6]!; const video = n === 0 ? videos[s % 3]! : null;
   const price = acc ? [90, 150, 220][s - 10]! + n * 20 : 380 + ((i * 47) % 420);
   const specs = { brand, model, movement, caseSize, waterResistance, material, glass: acc ? '—' : 'Sapphire', condition: 'New' };
