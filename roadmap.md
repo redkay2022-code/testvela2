@@ -22,12 +22,12 @@
 - [x] Mobile/desktop layout, search, market and browser-back checks
 - [ ] Authenticated upload/like/comment verification — needs a registered, confirmed account; test signup did not succeed
 - [ ] Mainland China availability verification — needs regional network testing and a published domain
-## Seller accounts (in progress)
+## Seller accounts
 - [x] Super Admin role for velamarket@proton.me (auto-granted on signup) + admin toggle
-- [ ] WeChat sign-in & identity verification before Seller Application — sample step live; real sign-in blocked on WeChat AppID/AppSecret
-- [x] Seller application stored in Cloud with WeChat info; admin approves in back office
+- [x] WeChat and social sign-in removed in favor of privacy-first phone + password accounts
+- [x] Seller application stores only anonymous system code + nickname; admin approves in back office
 - [x] Live exchange rates (hourly, with fallback)
-## Real product media (in progress)
-- [ ] Let approved sellers combine one MP4/MOV video (up to 200MB and 30 seconds) with up to 10 photos
-- [ ] Autoplay listing video muted in the Home feed and show video first with a photo carousel in product details
+## Real product media
+- [x] Let approved sellers combine one MP4/MOV video (up to 200MB and 30 seconds) with up to 10 photos
+- [x] Autoplay listing video muted in the Home feed and show video first with a photo carousel in product details
 - [ ] Verify published listing updates reach the Home feed immediately

@@ -34,3 +34,4 @@
 - Translate on-screen UI via per-language dictionaries in src/locales applied by src/lib/dom-translate; commerce copy built in code uses src/lib/i18n t(). Live USD rates come from a cached server function with fixed fallback rates.
 - Accounts use phone + password via src/lib/phone-auth.functions.ts: the phone is peppered-SHA-256 hashed server-side and only the hash (public.profiles.phone_hash, also the synthetic auth email) is stored, enforcing one account per phone; no social/OAuth sign-in.
 - Real roles live in public.user_roles checked via has_role(); seller applications carry only system_code + nickname and approvals go through admin-verified server functions in src/lib/seller-accounts.functions.ts.
+- Product listings keep photos in media_urls and one optional video in video_url; this preserves ordered photo galleries while making video the feed cover.
