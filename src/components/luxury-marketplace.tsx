@@ -27,10 +27,12 @@ import { t } from '@/lib/i18n';
 import { InsuranceBanner, InsuranceBreakdown, InsuranceTeaser } from './insurance';
 import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity } from '@/lib/seller-directory';
+import { seedPosts } from '@/lib/seed-sellers';
+import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;children?:React.ReactNode;shortsId?:string}) {
- const {data}=useSuspenseQuery(postsQuery); const all=luxuryPosts(data); const preview=useMarketPreview();
+ const {data}=useSuspenseQuery(postsQuery); const all=[...luxuryPosts(data),...seedPosts]; const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
  const navigate=useNavigate(),router=useRouter(); const base=mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
   const sheetPushed=useRef(false),searchPushed=useRef(false),categoriesPushed=useRef(false);
@@ -142,7 +144,8 @@ function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
  const filled=Boolean(p.recipient&&p.phone&&p.address);
  const set=(k:keyof typeof f)=>(e:{target:{value:string}})=>setF(prev=>({...prev,[k]:e.target.value}));
  const price=item.price ?? 0, boxPrice=item.boxPrice ?? 0;
- return <form onSubmit={e=>{e.preventDefault();preview.order(item);onDone();}}>
+ const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [deposit,setDeposit]=useState(false);
+ return <form onSubmit={e=>{e.preventDefault();setDeposit(true);}}>
   <div className="cart-line"><img src={item.images[0]} width={64} height={64} alt=""/><div><p>{item.title}</p><p className="mt-2 text-primary">{dollars(price)}</p></div></div>
   {boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>{t('addBox')}</span><strong>+{dollars(boxPrice)}</strong></label>}
   <InsuranceBreakdown price={price} box={box?boxPrice:0} format={dollars}/>
@@ -153,7 +156,9 @@ function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   <label className="form-label" htmlFor="checkout-address">{t('address')}</label><textarea id="checkout-address" className="form-input" required maxLength={300} autoComplete="street-address" value={f.address} onChange={set('address')}/>
   <label className="form-label" htmlFor="checkout-postal">{t('postal')}</label><input id="checkout-postal" className="form-input" required maxLength={12} autoComplete="postal-code" value={f.postal} onChange={set('postal')}/>
   <label className="form-label" htmlFor="checkout-region">{t('destination')}</label><select id="checkout-region" className="form-input" value={f.region} onChange={set('region')}><option>Mainland China</option><option>South Korea</option><option>Global</option></select>
+  <CryptoNetworkPicker value={network} onChange={setNetwork}/>
   <p className="my-5 text-xs leading-6 text-muted-foreground">{t('shippingNote')}</p>
-  <Button variant="gold" className="w-full" type="submit">{t('createOrder')}<ArrowRight/></Button>
+  <Button variant="gold" className="w-full" type="submit">암호화폐로 결제하기<ArrowRight/></Button>
+  {deposit&&<CryptoDepositDialog network={network} usd={price+(box?boxPrice:0)} onClose={()=>setDeposit(false)} onSubmit={()=>{setDeposit(false);preview.order(item);onDone();}}/>}
  </form>;
 }
