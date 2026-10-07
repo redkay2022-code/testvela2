@@ -30,3 +30,4 @@
 - Keep the category picker and selected filter in validated URL search state; match multilingual category/brand aliases against existing listing content without inventing brand affiliations for editorial samples.
 - Build the public seller directory from visible feed listings grouped by stable seller identity; directory filters use validated URL search state and unknown live metrics remain unavailable.
 - Store all prices (item and Full Set Box) in base USD and convert only at display via src/lib/currency formatMoney; one stored currency keeps totals and fees consistent.
+- Translate commerce copy through src/lib/i18n dictionary t(); language and currency are detected on the device and re-render via the shared locale provider.
