@@ -668,10 +668,6 @@
  .shorts-view-details {height:38px;padding:0 14px;font-size:12.5px;}
 }
 
-.shorts-view-details {height:44px;padding:0 18px;gap:5px;border:1px solid var(--primary);border-radius:999px;background:var(--gold-gradient);color:var(--primary-foreground);font-size:14px;font-weight:700;letter-spacing:.01em;white-space:nowrap;text-shadow:none;box-shadow:0 6px 22px color-mix(in oklab,var(--primary) 38%,transparent);transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;animation:shorts-details-glow 2.8s ease-in-out infinite;}
-.shorts-view-details svg {width:18px;height:18px;}
-.shorts-view-details:hover {filter:brightness(1.08);}
-.shorts-view-details:active {transform:scale(.96);}
 @keyframes shorts-details-glow {0%,100% {box-shadow:0 6px 22px color-mix(in oklab,var(--primary) 30%,transparent);}50% {box-shadow:0 8px 32px color-mix(in oklab,var(--primary) 60%,transparent);}}
 @media(prefers-reduced-motion:reduce) {.shorts-view-details {animation:none;}}
 /* Keep all header feed tabs (incl. 리뷰) reachable on narrow screens and long translations */
