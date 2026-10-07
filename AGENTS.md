@@ -17,7 +17,7 @@
 - Use manifest-only home-screen support; no offline service worker unless offline operation is explicitly requested.
 - Isolate demo role previews and commerce/moderation actions in a shared React provider; they never grant Cloud privileges or change production rows.
 - Adapt existing editorial post IDs into a local luxury-watch sample collection without overwriting owner content; server-loaded published posts remain the source for real uploads.
-- Keep live account comments separate from simulated shopping state; reuse authenticated server functions for persistent comment writes.
+- Share photo/Shorts detail content; product Q&A uses authenticated post comments and validated detailTab for Back navigation, separate from simulated commerce.
 - Represent Shorts in the /shorts/$id leaf route with nested sheets in validated search state; replace the active ID during vertical swipes so browser back exits instead of replaying swipe history.
 - Keep Shorts Following/Recommended selection in its own validated search field and reuse ProductComments for inline submission; this isolates Shorts filters from Home and preserves authenticated comment writes.
 - Keep full-screen search in validated URL search state and reuse the public feed data so device back dismisses search without a separate data source.
@@ -41,4 +41,4 @@
 
 - Route help/privacy to public leaf pages; component presentation rules are in src/components/AGENTS.md.
 - Keep collection and watch-type filters in validated search state and derive types from existing listing content/specs without assigning unknown types.
-- Treat USDT display as an explicitly approximate USD-parity estimate; stored prices and payment network selection remain unchanged.
+- USDT display estimates USD parity; keep stored prices and payment networks unchanged.

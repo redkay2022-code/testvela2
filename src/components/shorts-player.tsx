@@ -1,3 +1,4 @@
+import { ProductDetailContent } from './product-detail-content';
 import { EscrowGuarantee } from './escrow';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -44,7 +45,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  {!posts.length&&<div className="shorts-follow-empty"><UserRound/><h2>팔로잉한 셀러의 영상이 없습니다.</h2><Button variant="goldOutline" onClick={()=>onTab('recommend')}>추천 영상 보기</Button></div>}
  </div>
  <AnimatePresence>{sheet&&post&&<ShortSheet key={sheet} kind={sheet} close={closeSheet}>
- {sheet==='comments'?<ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>:<ProductSummary post={post} buy={buy} notify={notify}/>}
+ {sheet==='comments'?<ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>:<ProductDetailContent key={post.id} post={post} user={user} requestAuth={requestAuth} buy={buy} notify={notify} shorts/>}
  </ShortSheet>}</AnimatePresence>
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
@@ -83,11 +84,4 @@ function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>v
  <header className="shorts-sheet-header"><Dialog.Title>{kind==='product'?'제품 상세':'댓글'}</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close Shorts sheet" onClick={close}><X/></Button></header>
  {children}
  </motion.section></Dialog.Content></Dialog.Portal></Dialog.Root>;
-}
-function ProductSummary({post,buy,notify}:{post:LuxuryPost;buy:Props['buy'];notify:Props['notify']}) {
- const preview=useMarketPreview(),verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
- const location=useRouterState({select:s=>s.location}),search=marketSearch.parse(location.search);
- const [box,setBox]=useState(false);
- const boxPrice=post.boxPrice ?? 0;
- return <><div className="shorts-sheet-seller" data-no-translate><span className="shorts-anonymous-avatar"><UserRound/></span><div><strong>{post.creator}</strong><SellerBadge reputation={post.reputation}/></div><Button asChild variant="goldOutline" size="sm"><Link to="/store" search={{role:search.role,seller:sellerIdentity(post),storeTab:'products'}} aria-label="Visit Seller Store">셀러샵<ChevronRight size={14}/></Link></Button></div><div className="shorts-sheet-body"><ShortsGallery key={post.id} images={post.images} title={post.title}/>{post.price!==null&&<p className="lux-price mt-4" data-no-translate>{usd(post.price+(box?boxPrice:0))} <small>USD</small></p>}{post.price!==null&&boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>풀 세트 박스 추가</span><strong data-no-translate>+{usd(boxPrice)} USD</strong></label>}<h2 className="mt-3 text-lg font-semibold">{post.title}</h2><div className="detail-tags">{verified&&<span>✓ VELA VERIFIED</span>}<span>{post.category}</span></div><SpecsTable specs={post.source.specs} fallback={post.sample?<><h3 className="mt-6 text-sm">상품 사양 · 샘플</h3><dl className="lux-specs">{[['무브먼트','Dandong VS3235 (72-hour power reserve)'],['케이스 소재','904L Stainless Steel'],['방수','50m / 5ATM']].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></>:<p className="mt-5 text-sm text-muted-foreground">등록된 사양이 없습니다.</p>}/><h3 className="mt-5 text-sm font-semibold">제품 소개</h3><p className="mt-2 text-sm leading-7 text-muted-foreground">{post.description}</p>{post.price!==null&&<EscrowGuarantee/>}<SellerRatings reputation={post.reputation}/>{post.sample&&<p className="sample-notice">샘플 상품 · 사양, 검증 및 구매는 미리보기입니다.</p>}</div>{post.price!==null&&<footer className="shorts-sheet-buy"><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('미리보기 장바구니에 담았습니다.');}}>장바구니 담기</Button><Button variant="gold" onClick={()=>buy(box)}>구매 / 에스크로 주문</Button></footer>}</>;
 }
