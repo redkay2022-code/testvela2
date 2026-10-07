@@ -15,6 +15,13 @@
       "when": 1791329298114,
       "tag": "0001_market_media_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791339499552,
+      "tag": "0002_add_box_price",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE public.posts ADD COLUMN box_price integer CHECK (box_price IS NULL OR (box_price >= 0 AND box_price <= 100000000));

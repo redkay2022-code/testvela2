@@ -75,6 +75,7 @@ export type Database = {
       posts: {
         Row: {
           base_likes: number
+          box_price: number | null
           category: string
           created_at: string
           creator: string
@@ -90,6 +91,7 @@ export type Database = {
         }
         Insert: {
           base_likes?: number
+          box_price?: number | null
           category?: string
           created_at?: string
           creator?: string
@@ -105,6 +107,7 @@ export type Database = {
         }
         Update: {
           base_likes?: number
+          box_price?: number | null
           category?: string
           created_at?: string
           creator?: string

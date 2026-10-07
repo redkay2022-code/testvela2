@@ -14,14 +14,16 @@ export function InsuranceTeaser({ price, format, role }: { price: number; format
   </div>;
 }
 
-export function InsuranceBreakdown({ price, format, tier = 'bronze' }: { price: number; format: (n: number) => string; tier?: InsuranceTier }) {
-  const fee = insuranceFee(price, tier), info = tierInfo(tier);
+export function InsuranceBreakdown({ price, box = 0, format, tier = 'bronze' }: { price: number; box?: number; format: (n: number) => string; tier?: InsuranceTier }) {
+  const baseTotal = price + box, fee = insuranceFee(baseTotal, tier), info = tierInfo(tier);
   return <dl className="insurance-breakdown" aria-label="Insurance fee breakdown">
     <div><dt>상품 금액</dt><dd>{format(price)}</dd></div>
+    {box > 0 && <div><dt>풀셋 박스</dt><dd>+{format(box)}</dd></div>}
+    {box > 0 && <div><dt>기본 합계</dt><dd>{format(baseTotal)}</dd></div>}
     <div><dt>안심 거래 보험료 (+10%)</dt><dd>+{format(fee.base)}</dd></div>
     <div><dt>{info.label} 등급 할인 (-{Math.round(info.discount * 100)}%)</dt><dd>-{format(fee.discount)}</dd></div>
     <div className="insurance-total"><dt>최종 보험료</dt><dd>{format(fee.final)}</dd></div>
-    <div className="insurance-total"><dt>합계</dt><dd>{format(price + fee.final)}</dd></div>
+    <div className="insurance-total"><dt>합계</dt><dd>{format(baseTotal + fee.final)}</dd></div>
   </dl>;
 }
 
