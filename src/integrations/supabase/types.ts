@@ -397,6 +397,27 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_tier_overrides: {
+        Row: {
+          seller_id: string
+          tier: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          seller_id: string
+          tier: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          seller_id?: string
+          tier?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
