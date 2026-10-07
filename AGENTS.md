@@ -17,3 +17,4 @@
 - Use manifest-only home-screen support; no offline service worker unless offline operation is explicitly requested.
 - Isolate demo role previews and commerce/moderation actions in a shared React provider; they never grant Cloud privileges or change production rows.
 - Adapt existing editorial post IDs into a local luxury-watch sample collection without overwriting owner content; server-loaded published posts remain the source for real uploads.
+- Keep live account comments separate from simulated shopping state; reuse authenticated server functions for persistent comment writes.
