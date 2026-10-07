@@ -28,6 +28,7 @@ export function detectLocale(timeZone: string, languages: readonly string[]): { 
 type Entry = Record<Lang, string>;
 const d = (en: string, ko: string, zh: string, ja: string, it: string, fr: string, de: string, nl: string, ru: string, la: string, ar: string): Entry => ({ en, ko, zh, ja, it, fr, de, nl, ru, la, ar });
 export const dict = {
+  deliveryInsurance: d('Safe delivery insurance', '안전배송보험', '安全配送保险', '安全配送保険', 'Assicurazione spedizione sicura', 'Assurance livraison sécurisée', 'Versandversicherung', 'Veilige verzendverzekering', 'Страхование доставки', 'Assecuratio traditionis tutae', 'تأمين الشحن الآمن'),
   insuranceFee: d('Safe-trade insurance', '안심 거래 보험료', '安心交易保险费', '安心取引保険料', 'Assicurazione transazione sicura', 'Assurance transaction sécurisée', 'Sicherheitsversicherung', 'Veilige-handel verzekering', 'Страховка безопасной сделки', 'Assecuratio tutae mercaturae', 'تأمين التداول الآمن'),
   base10: d('base 10%', '기본 10%', '基础 10%', '基本 10%', 'base 10%', 'base 10 %', 'Basis 10 %', 'basis 10%', 'база 10%', 'basis 10%', 'أساسي 10%'),
   goldTeaser: d('With GOLD tier: {x} (50% off)', 'GOLD 등급 달성 시 {x} (50% 할인)', '达到 GOLD 等级：{x}（5折）', 'GOLDランク達成で {x}（50%オフ）', 'Con livello GOLD: {x} (-50%)', 'Avec le niveau GOLD : {x} (-50 %)', 'Mit GOLD-Stufe: {x} (-50 %)', 'Met GOLD-niveau: {x} (-50%)', 'С уровнем GOLD: {x} (-50%)', 'Gradu GOLD: {x} (-50%)', 'مع مستوى GOLD: {x} (خصم 50%)'),
