@@ -243,7 +243,7 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
       }
       const imagePaths = uploaded.filter((_,i) => files[i]?.type.startsWith('image/'));
       const videoIndex = files.findIndex(f => f.type.startsWith('video/'));
-      const {error:saveError} = await supabase.from('posts').insert({user_id:user.id,title:title.trim(),description:description.trim(),category,creator:String(user.user_metadata['display_name'] || user.email?.split('@')[0] || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex] ?? null:null,price:product?Number(price):null,box_price:product&&boxPrice?Number(boxPrice):null});
+      const {error:saveError} = await supabase.from('posts').insert({user_id:user.id,title:title.trim(),description:description.trim(),category,creator:String((await supabase.from('profiles').select('nickname').eq('user_id',user.id).maybeSingle()).data?.nickname || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex] ?? null:null,price:product?Number(price):null,box_price:product&&boxPrice?Number(boxPrice):null});
       if(saveError) throw new Error('게시물을 저장하지 못했어요. 다시 시도해 주세요.');
       onPosted();
     } catch(err) {if(uploaded.length) await supabase.storage.from('market-media').remove(uploaded);setError(err instanceof Error?err.message:'잠시 후 다시 시도해 주세요.');}
