@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { Camera, Check, MapPin, MessageSquareText, RefreshCw, Send, ShieldCheck, Truck, Upload, X } from 'lucide-react';
+import { AlertTriangle, Camera, Check, ExternalLink, MapPin, MessageSquareText, RefreshCw, Send, ShieldCheck, Truck, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { dollars } from '@/lib/luxury-market';
@@ -11,11 +12,18 @@ import { EscrowTimeline } from './escrow';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1;
 const BUCKET = 'qc-media';
-type Order = { id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string };
+type Order = { id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean };
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
 type Msg = { id: string; order_id: string; author_role: string; kind: string; body: string; areas: string[]; created_at: string };
 
 export const couriers = ['SF Express', 'EMS', 'DHL Express', 'FedEx', 'UPS', 'CJ Logistics', 'China Post'];
+/** Block explorer page for a submitted TXID on its network. */
+export function explorerUrl(network: string | null, txid: string) {
+  const t = encodeURIComponent(txid.trim());
+  if (network === 'USDT-TRC20') return { name: 'Tronscan', url: `https://tronscan.org/#/transaction/${t}` };
+  if (network === 'BTC') return { name: 'Mempool', url: `https://mempool.space/tx/${t}` };
+  return { name: 'Etherscan', url: `https://etherscan.io/tx/${t.startsWith('0x') ? t : `0x${t}`}` };
+}
 const courierLink = (c: string | null, n: string) => `https://t.17track.net/en#nums=${encodeURIComponent(n)}`;
 
 /** Creates a persistent order for a signed-in buyer after TXID submission. */
@@ -32,7 +40,7 @@ function useLive(userId: string | null) {
   const q = useQuery({
     queryKey: ['live-orders', userId], enabled: !!userId,
     queryFn: async () => {
-      const { data: orders, error } = await supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at').order('created_at', { ascending: false });
+      const { data: orders, error } = await supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open').order('created_at', { ascending: false });
       if (error) throw error;
       const ids = (orders ?? []).map(o => o.id);
       const [m, msgs] = ids.length ? await Promise.all([
@@ -70,16 +78,16 @@ function Gallery({ media }: { media: Media[] }) {
 
 function Thread({ msgs }: { msgs: Msg[] }) {
   if (!msgs.length) return null;
-  return <ul className="mt-3 grid gap-2 text-sm">{msgs.map(m => <li key={m.id} className={`rounded-md border border-border p-2 ${m.author_role === 'seller' ? 'bg-card' : 'bg-primary/10'}`}>
-    <div className="flex justify-between text-xs text-muted-foreground"><span>{m.author_role === 'seller' ? '셀러' : '구매자'} · {m.kind === 'request' ? '추가 사진 요청' : m.kind === 'qc' ? 'QC 업로드' : '메시지'}</span><span>{new Date(m.created_at).toLocaleString()}</span></div>
+  return <ul className="mt-3 grid gap-2 text-sm">{msgs.map(m => <li key={m.id} className={`rounded-md border p-2 ${m.author_role === 'admin' ? 'border-primary bg-primary/20' : m.author_role === 'seller' ? 'border-border bg-card' : 'border-border bg-primary/10'}`}>
+    <div className="flex justify-between text-xs text-muted-foreground"><span>{m.author_role === 'admin' ? '관리자 (중재)' : m.author_role === 'seller' ? '셀러' : '구매자'} · {m.kind === 'request' ? '추가 사진 요청' : m.kind === 'qc' ? 'QC 업로드' : '메시지'}</span><span>{new Date(m.created_at).toLocaleString()}</span></div>
     {m.areas.length > 0 && <p className="mt-1 text-primary">{m.areas.join(', ')}</p>}
     {m.body && <p className="mt-1 whitespace-pre-wrap">{m.body}</p>}
   </li>)}</ul>;
 }
 
-function Composer({ orderId, role }: { orderId: string; role: 'buyer' | 'seller' }) {
+export function Composer({ orderId, role, onSent }: { orderId: string; role: 'buyer' | 'seller' | 'admin'; onSent?: () => void }) {
   const [v, setV] = useState(''); const [busy, setBusy] = useState(false);
-  return <form className="ship-form mt-2" onSubmit={async e => { e.preventDefault(); if (!v.trim()) return; setBusy(true); const { data } = await supabase.auth.getUser(); await supabase.from('order_messages').insert({ order_id: orderId, author_id: data.user!.id, author_role: role, body: v.trim().slice(0, 1000) }); setV(''); setBusy(false); }}>
+  return <form className="ship-form mt-2" onSubmit={async e => { e.preventDefault(); if (!v.trim()) return; setBusy(true); const { data } = await supabase.auth.getUser(); await supabase.from('order_messages').insert({ order_id: orderId, author_id: data.user!.id, author_role: role, body: v.trim().slice(0, 1000) }); setV(''); setBusy(false); onSent?.(); }}>
     <input className="form-input" maxLength={1000} value={v} onChange={e => setV(e.target.value)} placeholder="메시지 남기기" aria-label="메시지" /><Button variant="goldOutline" type="submit" disabled={busy}><Send />보내기</Button></form>;
 }
 
@@ -151,6 +159,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
   const { user, admin } = useUser();
   const q = useLive(user?.id ?? null);
   const [asking, setAsking] = useState<string | null>(null);
+  const [chat, setChat] = useState<string | null>(null);
   if (!user) return null;
   const orders = (q.data?.orders ?? []).filter(o => as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin)));
   const setStage = (id: string, stage: EscrowStage) => void supabase.from('orders').update({ stage }).eq('id', id);
@@ -177,9 +186,97 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
         {!isSeller && stage === 'qc_done' && (asking === o.id ? <RequestForm o={o} close={() => setAsking(null)} /> : <div className="escrow-actions"><Button variant="gold" onClick={() => setStage(o.id, 'shipping_prep')}><Check />QC 승인</Button><Button variant="goldOutline" onClick={() => setAsking(o.id)}><Camera />추가 사진 요청</Button></div>)}
         <TrackingPanel o={o} />
         {!isSeller && stage === 'shipped' && <Button variant="gold" className="w-full" onClick={() => setStage(o.id, 'delivered')}><ShieldCheck />수령 확인 및 구매 확정</Button>}
-        <Thread msgs={msgs} />
-        <Composer orderId={o.id} role={as} />
+        {!o.payment_verified_at && <p className="escrow-wait">관리자가 TXID 입금을 확인하는 중입니다.</p>}
+        {o.dispute_open && <p className="mt-3 flex items-center gap-2 rounded-md border border-primary p-2 text-sm text-primary"><AlertTriangle size={15} />분쟁 진행 중 · 관리자가 참여한 3자 분쟁방입니다. 에스크로 대금은 중재가 끝날 때까지 보류됩니다.</p>}
+        <div className="escrow-actions mt-3">
+          <Button variant="goldOutline" onClick={() => setChat(chat === o.id ? null : o.id)}><MessageSquareText />{o.dispute_open ? '분쟁방 열기' : isSeller ? '구매자에게 메시지' : '판매자에게 메시지'}{msgs.length ? ` (${msgs.length})` : ''}</Button>
+          {!o.dispute_open && stage !== 'delivered' && <Button variant="ghost" onClick={() => { if (confirm('분쟁을 열면 관리자가 대화에 참여하고 에스크로 대금이 보류됩니다. 계속할까요?')) void supabase.from('orders').update({ dispute_open: true }).eq('id', o.id).then(r => { if (r.error) toast.error(r.error.message); else setChat(o.id); }); }}><AlertTriangle />분쟁 열기</Button>}
+        </div>
+        {chat === o.id && <div className="mt-2"><p className="text-xs text-muted-foreground">{o.dispute_open ? '구매자 · 셀러 · 관리자 3자 대화' : '익명 1:1 주문 대화 · 닉네임과 연락처는 공유되지 않습니다'}</p><Thread msgs={msgs} /><Composer orderId={o.id} role={as} /></div>}
       </article>;
     })}
   </section>;
+}
+
+const stageToast: Record<string, [string, string]> = {
+  shipped: ['발송 완료', '송장이 등록되었습니다. 17TRACK 실시간 추적을 확인하세요.'],
+  delivered: ['배송 완료', '수령을 확인하고 구매 확정 후 리뷰를 남겨 주세요.'],
+  qc_done: ['QC 사진 도착', '셀러가 QC 사진·영상을 보냈습니다. 확인해 주세요.'],
+};
+
+/** Global watcher: toasts when a live order's payment or stage changes. Mounted once in the root. */
+export function OrderNotifier() {
+  const [uid, setUid] = useState<string | null>(null);
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null));
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setUid(s?.user.id ?? null));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  const q = useLive(uid);
+  const prev = useRef<Map<string, string> | null>(null);
+  useEffect(() => {
+    const orders = q.data?.orders; if (!orders) return;
+    const next = new Map(orders.map(o => [o.id, `${o.stage}|${o.payment_verified_at ? 1 : 0}|${o.dispute_open ? 1 : 0}`]));
+    const before = prev.current; prev.current = next;
+    if (!before) return;
+    for (const o of orders) {
+      const old = before.get(o.id); if (!old || old === next.get(o.id)) continue;
+      const [os, op, od] = old.split('|');
+      if (op === '0' && o.payment_verified_at) toast.success(`결제 확인 완료 · ${o.order_no}`, { description: `${o.title} — 입금이 확인되어 에스크로에 보관됩니다.` });
+      if (os !== o.stage && stageToast[o.stage]) { const [t, d] = stageToast[o.stage]!; toast.success(`${t} · ${o.order_no}`, { description: `${o.title} — ${d}${o.stage === 'shipped' && o.tracking_number ? ` (${o.courier} ${o.tracking_number})` : ''}` }); }
+      if (od === '0' && o.dispute_open) toast.warning(`분쟁 접수 · ${o.order_no}`, { description: '관리자가 대화에 참여해 중재를 시작합니다.' });
+    }
+  }, [q.data]);
+  return null;
+}
+
+function useAdminOrders(filter: 'crypto' | 'disputes') {
+  const qc = useQueryClient();
+  const q = useQuery({ queryKey: ['admin-orders', filter], retry: false, queryFn: async () => {
+    let b = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open').order('created_at', { ascending: false });
+    b = filter === 'crypto' ? b.not('txid', 'is', null) : b.eq('dispute_open', true);
+    const { data, error } = await b; if (error) throw error;
+    const orders = (data ?? []) as Order[];
+    let msgs: Msg[] = [];
+    if (filter === 'disputes' && orders.length) { const r = await supabase.from('order_messages').select('id,order_id,author_role,kind,body,areas,created_at').in('order_id', orders.map(o => o.id)).order('created_at'); msgs = (r.data ?? []) as Msg[]; }
+    return { orders, msgs };
+  } });
+  useEffect(() => {
+    const ch = supabase.channel(`admin-orders-${filter}`);
+    for (const table of ['orders', 'order_messages']) ch.on('postgres_changes', { event: '*', schema: 'public', table }, () => void qc.invalidateQueries({ queryKey: ['admin-orders', filter] }));
+    ch.subscribe(); return () => { void supabase.removeChannel(ch); };
+  }, [filter, qc]);
+  return q;
+}
+
+/** Admin: real submitted TXIDs with 1-click block-explorer verification. */
+export function AdminCryptoOrders() {
+  const q = useAdminOrders('crypto');
+  if (q.isLoading) return <p className="text-sm text-muted-foreground">주문을 불러오는 중…</p>;
+  if (q.error) return <p className="text-sm text-muted-foreground">관리자 계정으로 로그인하면 실제 TXID를 확인할 수 있습니다.</p>;
+  const orders = q.data?.orders ?? [];
+  if (!orders.length) return <div className="lux-empty"><ShieldCheck /><h2>수신된 실제 TXID가 없습니다.</h2><p>구매자가 TXID를 제출하면 여기에 실시간으로 표시됩니다.</p></div>;
+  return <div className="management-list">{orders.map(o => { const ex = explorerUrl(o.network, o.txid!); return <div className="management-row" key={o.id}>
+    <div className="min-w-0"><strong>{o.title}</strong><small data-no-translate>{o.order_no} · {o.seller_name} · {o.network ?? '—'}</small><small className="break-all" data-no-translate>TXID {o.txid}</small></div>
+    <strong>{dollars(Number(o.amount_usd))}</strong>
+    <span className="record-status">{o.payment_verified_at ? '입금 확인됨' : '검증 대기'}</span>
+    <div className="record-actions">
+      <Button asChild variant="ghost" size="sm"><a href={ex.url} target="_blank" rel="noreferrer"><ExternalLink />{ex.name}에서 확인</a></Button>
+      {!o.payment_verified_at && <Button variant="goldOutline" size="sm" onClick={() => { if (confirm(`${ex.name}에서 금액과 수신 주소를 확인하셨나요? 결제 확인으로 처리합니다.`)) void supabase.from('orders').update({ payment_verified_at: new Date().toISOString() }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('결제 확인 처리되었습니다.')); }}><Check />결제 확인</Button>}
+    </div></div>; })}</div>;
+}
+
+/** Admin: 3-way dispute rooms for orders with an open dispute. */
+export function AdminDisputeRooms() {
+  const q = useAdminOrders('disputes');
+  if (q.isLoading) return <p className="text-sm text-muted-foreground">분쟁을 불러오는 중…</p>;
+  if (q.error) return <p className="text-sm text-muted-foreground">관리자 계정으로 로그인하면 실제 분쟁방을 확인할 수 있습니다.</p>;
+  const orders = q.data?.orders ?? [];
+  if (!orders.length) return <div className="lux-empty"><AlertTriangle /><h2>접수된 실제 분쟁이 없습니다.</h2></div>;
+  return <div className="grid gap-4">{orders.map(o => <article className="escrow-order" key={o.id}>
+    <div className="escrow-order-head"><AlertTriangle className="text-primary" /><div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small>{stageLabel(o.stage as EscrowStage)} · {o.seller_name} · {dollars(Number(o.amount_usd))}</small></div>
+      <Button variant="ghost" size="sm" onClick={() => { if (confirm('분쟁을 종료할까요?')) void supabase.from('orders').update({ dispute_open: false }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('분쟁을 종료했습니다.')); }}>분쟁 종료</Button></div>
+    <Thread msgs={(q.data?.msgs ?? []).filter(m => m.order_id === o.id)} />
+    <Composer orderId={o.id} role="admin" />
+  </article>)}</div>;
 }
