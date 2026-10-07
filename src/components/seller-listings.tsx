@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
-import { ArrowLeft, ArrowRight, GripVertical, ImagePlus, Pencil, Plus, Trash2, X, Eye, EyeOff, Video, Scissors } from 'lucide-react';
+import { ArrowLeft, ArrowRight, GripVertical, ImagePlus, Pencil, Plus, Trash2, X, Eye, EyeOff, Video, Scissors, TriangleAlert } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useMyAccount } from './seller-account';
@@ -9,7 +9,7 @@ import { formatMoney } from '@/lib/currency';
 import { VideoEditor, type VideoTag } from './video-editor';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 
-type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string };
+type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string; sourceType?: string; factory?: string };
 type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; media_urls: string[]; video_url: string | null; status: string; specs: Specs; video_tags?: VideoTag[]; created_at: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
@@ -17,6 +17,11 @@ const specFields: [keyof Specs, string, string][] = [
   ['brand', '브랜드', '예: Rolex'], ['model', '모델', '예: Submariner 126610LN'], ['movement', '무브먼트', '예: VS3235 · 72시간'],
   ['caseSize', '케이스 크기', '예: 41mm'], ['material', '소재', '예: 904L 스틸'], ['waterResistance', '방수', '예: 50m / 5ATM'],
 ];
+const factoryOptions = [
+  'VS Factory (VSF)', 'ZF Factory (ZF)', '3K Factory (3KF)', 'PPF Factory (PPF)', 'APS Factory (APSF)', 'ARF Factory (ARF)',
+  'GMF Factory (GMF)', 'BV Factory (BVF)', 'V7 Factory (V7F)', 'RC Factory', 'RG Factory', 'UMI Factory', 'Rich Factory',
+];
+type SourceType = 'custom' | 'factory' | 'other';
 
 export function SellerListings() {
   const [user, setUser] = useState<User | null>(null);
@@ -72,6 +77,11 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   const [price, setPrice] = useState(listing?.price != null ? String(listing.price) : '');
   const [boxPrice, setBoxPrice] = useState(listing?.box_price != null ? String(listing.box_price) : '');
   const [specs, setSpecs] = useState<Specs>(listing?.specs ?? {});
+  const [sourceType, setSourceType] = useState<SourceType>(() => {
+    const t = listing?.specs?.sourceType;
+    return t === 'factory' || t === 'other' ? t : 'custom';
+  });
+  const [factory, setFactory] = useState(listing?.specs?.factory ?? '');
   const [photos, setPhotos] = useState<PhotoItem[]>(() => listing?.media_urls.map((path, index) => ({ id: `existing:${path}`, path, preview: listing.signed_media_urls?.[index] ?? '' })) ?? []);
   const [video, setVideo] = useState<VideoItem | null>(() => listing?.video_url ? { path: listing.video_url, preview: listing.signed_video_url ?? '' } : null);
   const [draggedPhoto, setDraggedPhoto] = useState<string | null>(null);
