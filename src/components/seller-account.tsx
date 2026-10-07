@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
@@ -21,7 +22,10 @@ export function AdminToggle({ user, role }: { user: User | null; role: string })
     <input type="checkbox" role="switch" aria-label="Super Admin mode" checked={on} onChange={() => void navigate({ to: '.', search: (p: any) => ({ ...p, role: on ? 'buyer' : 'admin' }) })} className="h-5 w-9 accent-primary" /></label>;
 }
 
-export function SellerOnboarding({ user, requestAuth }: { user: User | null; requestAuth: () => void }) {
+export function SellerOnboarding() {
+  const [user, setUser] = useState<User | null>(null); const nav = useNavigate();
+  useEffect(() => { void supabase.auth.getUser().then(r => setUser(r.data.user)); }, []);
+  const requestAuth = () => void nav({ to: '.', search: (p: any) => ({ ...p, panel: undefined, auth: true }) });
   const qc = useQueryClient(); const { data, isLoading } = useMyAccount(user);
   const verify = useServerFn(verifyWechatSample), submit = useServerFn(submitSellerApplication);
   const [step, setStep] = useState<'idle' | 'wechat'>('idle'); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false);
