@@ -40,8 +40,8 @@ export function LuxuryMarketplace({mode='home',children}:{mode?:View;children?:R
  <header className="lux-header">
   <div className="lux-header-inner">
   <Button variant="ghost" size="icon" aria-label="Open menu" onClick={()=>update({menu:true})}><Menu/></Button>
-   <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="velamarket home"><span className="brand-full"><span className="brand-symbol">V</span><span>vela<span className="font-normal">market</span>.</span></span><span className="brand-compact">VELA</span></Link>
-   <nav className="lux-header-tabs" aria-label="Feed tabs">{[['following','Following'],['discover','For You'],['nearby','Explore']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,tab:tab as 'following'|'discover'|'nearby'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false}>{label}</Link></Button>)}</nav>
+    <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>
+    <nav className="lux-header-tabs" aria-label="Feed tabs">{[['following','Following'],['discover','For You']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,tab:tab as 'following'|'discover'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false}>{label}</Link></Button>)}</nav>
    <Button variant="ghost" size="icon" aria-label="Open search" onClick={()=>{searchPushed.current=true;update({searchOpen:true});}}><Search/></Button>
   </div>
  </header>
