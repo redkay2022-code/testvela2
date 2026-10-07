@@ -1,4 +1,5 @@
 # velamarket
+- [x] Make the Shorts 상세 보기 control a large solid-gold pill with a soft glow (44px, 40px under 720px, 36px under 360px); verified the sheet opens at 320/390/1280 with no overflow or clipping
 - [x] Put 팔로우 inline beside the seller nickname, move 상세 보기 > to that row's right end and lower the whole overlay toward the comment bar; verified at 390/707/1280 with no clipping or overlap
 - [x] Redesign Shorts floating header, seller/product overlays, USD purchase row, quick comments and separate bottom-right actions; verified active-only playback, saved comments, sheets, navigation and narrow-screen layouts
 - [x] Role-based cart/upload center navigation and seller directory; verified saved-to-cart checkout, six filters, reload, follows, store readback, browser Back and narrow-screen layout; 30 tests pass (existing sample commerce/follows retained)
