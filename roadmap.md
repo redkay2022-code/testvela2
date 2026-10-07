@@ -1,4 +1,7 @@
 # velamarket
+- [ ] Add full-screen snap Shorts with active-only playback and floating controls
+- [ ] Integrate product/comments sheets, shopping actions and layered browser-back dismissal
+- [ ] Verify feed/store entry, playback, gestures and sheet history
 - [x] Apply exact Dark Luxury tokens and watch editorial feed
 - [x] Add product carousel, follow/save/chat/cart and checkout preview
 - [x] Add isolated buyer/seller/admin role previews and public store
