@@ -251,10 +251,16 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
   const [boxPrice,setBoxPrice] = useState('');
   const [error,setError] = useState('');
   const [pending,setPending] = useState(false);
+  const [sourceType,setSourceType] = useState<SourceType>('custom');
+  const [factory,setFactory] = useState('');
+  const [editing,setEditing] = useState<File|null>(null);
+  const [videoTags,setVideoTags] = useState<VideoTag[]>([]);
   useEffect(() => {const urls = files.map(f => URL.createObjectURL(f));setPreviews(urls);return () => urls.forEach(u => URL.revokeObjectURL(u));},[files]);
   const submit = async (e:React.FormEvent) => {
     e.preventDefault();if(!user) {requestAuth();return;}
     if(!files.length) {setError('사진 또는 영상을 선택해 주세요.');return;}
+    if(product && sourceType === 'factory' && !factory) {setError('공장을 선택해 주세요.');return;}
+    if(product && sourceType === 'other' && !factory.trim()) {setError('출처 / 공장을 직접 입력해 주세요.');return;}
     try {await validateListingFiles(files);} catch(err) {setError(err instanceof Error?err.message:'미디어를 확인해 주세요.');return;}
     setError('');setPending(true);
     const uploaded:string[]=[];
