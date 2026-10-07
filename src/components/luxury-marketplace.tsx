@@ -2,7 +2,7 @@ import { SellerOnboarding } from './seller-account';
 import { BuyerOrderBoard, EscrowGuarantee } from './escrow';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
-import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronRight, Compass, Eye, Heart, Home, Menu, MessageCircle, Play, Plus, Search, Share2, ShieldCheck, ShoppingBag, SlidersHorizontal, Store, User, X } from 'lucide-react';
@@ -29,6 +29,7 @@ import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
 import { seedPosts } from '@/lib/seed-sellers';
+import { rankRecommended } from '@/lib/feed-ranking';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
 
 type View=Mode|'store'|'seller'|'admin';
