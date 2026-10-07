@@ -8,7 +8,7 @@ export type TrackResult = { configured: boolean; status: string; events: TrackEv
 const REFRESH_MS = 10 * 60 * 1000;
 
 function parse(info: unknown): { status: string; events: TrackEvent[] } {
-  const ti = (info ?? {}) as Record<string, any>;
+  const ti = (info ?? {}) as any;
   const providers: any[] = ti?.tracking?.providers ?? [];
   const events: TrackEvent[] = providers.flatMap(p => (p?.events ?? []).map((e: any) => ({
     time: String(e?.time_iso ?? e?.time_utc ?? ''),

@@ -40,7 +40,7 @@ function useLive(userId: string | null) {
         supabase.from('order_messages').select('id,order_id,author_role,kind,body,areas,created_at').in('order_id', ids).order('created_at'),
       ]) : [{ data: [] }, { data: [] }];
       const media = (m.data ?? []) as Media[];
-      if (media.length) { const { data: s } = await supabase.storage.from(BUCKET).createSignedUrls(media.map(x => x.path), 3600); const map = new Map(s?.map(x => [x.path, x.signedUrl])); media.forEach(x => { x.url = map.get(x.path) ?? undefined; }); }
+      if (media.length) { const { data: s } = await supabase.storage.from(BUCKET).createSignedUrls(media.map(x => x.path), 3600); const map = new Map(s?.map(x => [x.path, x.signedUrl])); media.forEach(x => { const u = map.get(x.path); if (u) x.url = u; }); }
       return { orders: (orders ?? []) as Order[], media, msgs: (msgs.data ?? []) as Msg[] };
     },
   });
