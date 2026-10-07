@@ -141,7 +141,7 @@ function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   <h3 className="mt-6 text-sm font-semibold">배송 정보</h3>
   <p className="mt-1 text-xs text-muted-foreground">{filled?'프로필에 저장된 배송 정보로 자동 입력되었습니다. 필요하면 수정하세요.':'저장된 배송 정보가 없거나 불완전합니다. 직접 입력해 주세요.'}</p>
   <label className="form-label" htmlFor="checkout-name">Recipient full name</label><input id="checkout-name" className="form-input" required maxLength={60} autoComplete="name" value={f.recipient} onChange={set('recipient')}/>
-  <label className="form-label" htmlFor="checkout-phone">Phone number</label><input id="checkout-phone" type="tel" className="form-input" required maxLength={30} pattern="[0-9+()\\-\\s]{6,30}" autoComplete="tel" value={f.phone} onChange={set('phone')}/>
+  <label className="form-label" htmlFor="checkout-phone">Phone number</label><input id="checkout-phone" type="tel" className="form-input" required maxLength={30} autoComplete="tel" value={f.phone} onChange={set('phone')}/>
   <label className="form-label" htmlFor="checkout-address">Shipping address</label><textarea id="checkout-address" className="form-input" required maxLength={300} autoComplete="street-address" value={f.address} onChange={set('address')}/>
   <label className="form-label" htmlFor="checkout-postal">Postal / ZIP code</label><input id="checkout-postal" className="form-input" required maxLength={12} autoComplete="postal-code" value={f.postal} onChange={set('postal')}/>
   <label className="form-label" htmlFor="checkout-region">Destination country / region</label><select id="checkout-region" className="form-input" value={f.region} onChange={set('region')}><option>Mainland China</option><option>South Korea</option><option>Global</option></select>
