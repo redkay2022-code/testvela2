@@ -2,7 +2,7 @@ import { SellerOnboarding } from './seller-account';
 import { BuyerOrderBoard, EscrowGuarantee } from './escrow';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
-import { useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronRight, Compass, Eye, Heart, Home, Menu, MessageCircle, Play, Plus, Search, Share2, ShieldCheck, ShoppingBag, SlidersHorizontal, Store, User, X } from 'lucide-react';
@@ -29,6 +29,7 @@ import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
 import { seedPosts } from '@/lib/seed-sellers';
+import { rankRecommended } from '@/lib/feed-ranking';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
 
 type View=Mode|'store'|'seller'|'admin';
@@ -52,6 +53,9 @@ export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;ch
  const close=()=>{if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,auth:undefined,panel:undefined}),replace:true,resetScroll:false});else void navigate({to:base,search:prev=>({...prev,...(search.auth?{auth:undefined}:search.menu?{menu:undefined}:search.panel?{panel:undefined}:{post:undefined})}),replace:true,resetScroll:false});};
  let posts=all.filter(p=>!preview.hidden.includes(p.id)&&(!search.q||`${p.title} ${p.creator} ${p.factory} ${p.category}`.toLowerCase().includes(search.q.toLowerCase()))&&(!search.category||search.category==='All'||p.category===search.category||p.factory===search.category));
  if(search.tab==='following') posts=preview.following?posts.filter(p=>p.creator==='VS Watch Studio'):[];
+  const {data:reviewRows}=useQuery({queryKey:['review-counts'],queryFn:async()=>{const {data:rows}=await supabase.from('reviews').select('seller_id');return rows ?? [];},staleTime:30_000});
+  const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
+  if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts);
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?(sellerIdentity(p)===search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
