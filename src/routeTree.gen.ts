@@ -11,11 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as EscrowGuideRouteImport } from './routes/escrow-guide'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SellerRouteImport } from './routes/seller'
 import { Route as StoreRouteImport } from './routes/store'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ShortsIdRouteImport } from './routes/shorts.$id'
 
@@ -27,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EscrowGuideRoute = EscrowGuideRouteImport.update({
+  id: '/escrow-guide',
+  path: '/escrow-guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -44,6 +52,11 @@ const MeRoute = MeRouteImport.update({
   path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SellerRoute = SellerRouteImport.update({
   id: '/seller',
   path: '/seller',
@@ -52,6 +65,11 @@ const SellerRoute = SellerRouteImport.update({
 const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UploadRoute = UploadRouteImport.update({
@@ -68,22 +86,28 @@ const ShortsIdRoute = ShortsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/escrow-guide': typeof EscrowGuideRoute
   '/explore': typeof ExploreRoute
   '/market': typeof MarketRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
   '/store': typeof StoreRoute
+  '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/escrow-guide': typeof EscrowGuideRoute
   '/explore': typeof ExploreRoute
   '/market': typeof MarketRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
   '/store': typeof StoreRoute
+  '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
@@ -91,11 +115,14 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/escrow-guide': typeof EscrowGuideRoute
   '/explore': typeof ExploreRoute
   '/market': typeof MarketRoute
   '/me': typeof MeRoute
+  '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
   '/store': typeof StoreRoute
+  '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
@@ -104,33 +131,42 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/escrow-guide'
     | '/explore'
     | '/market'
     | '/me'
+    | '/privacy'
     | '/seller'
     | '/store'
+    | '/support'
     | '/upload'
     | '/shorts/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/escrow-guide'
     | '/explore'
     | '/market'
     | '/me'
+    | '/privacy'
     | '/seller'
     | '/store'
+    | '/support'
     | '/upload'
     | '/shorts/$id'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/escrow-guide'
     | '/explore'
     | '/market'
     | '/me'
+    | '/privacy'
     | '/seller'
     | '/store'
+    | '/support'
     | '/upload'
     | '/shorts/$id'
   fileRoutesById: FileRoutesById
@@ -138,11 +174,14 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  EscrowGuideRoute: typeof EscrowGuideRoute
   ExploreRoute: typeof ExploreRoute
   MarketRoute: typeof MarketRoute
   MeRoute: typeof MeRoute
+  PrivacyRoute: typeof PrivacyRoute
   SellerRoute: typeof SellerRoute
   StoreRoute: typeof StoreRoute
+  SupportRoute: typeof SupportRoute
   UploadRoute: typeof UploadRoute
   ShortsIdRoute: typeof ShortsIdRoute
 }
@@ -161,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/escrow-guide': {
+      id: '/escrow-guide'
+      path: '/escrow-guide'
+      fullPath: '/escrow-guide'
+      preLoaderRoute: typeof EscrowGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -184,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/seller': {
       id: '/seller'
       path: '/seller'
@@ -196,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/store'
       fullPath: '/store'
       preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/upload': {
@@ -218,11 +278,14 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  EscrowGuideRoute: EscrowGuideRoute,
   ExploreRoute: ExploreRoute,
   MarketRoute: MarketRoute,
   MeRoute: MeRoute,
+  PrivacyRoute: PrivacyRoute,
   SellerRoute: SellerRoute,
   StoreRoute: StoreRoute,
+  SupportRoute: SupportRoute,
   UploadRoute: UploadRoute,
   ShortsIdRoute: ShortsIdRoute,
 }
