@@ -98,10 +98,13 @@ export async function applyDomTranslation(next: Lang) {
   dict = load ? (await load()).default : {};
   walk(document.body);
   observer = new MutationObserver(muts => {
+    // Never let a translation glitch break the page; skip the node instead.
     for (const m of muts) {
-      if (m.type === 'characterData') textNode(m.target as Text);
-      else if (m.type === 'attributes') element(m.target as Element);
-      else m.addedNodes.forEach(walk);
+      try {
+        if (m.type === 'characterData') textNode(m.target as Text);
+        else if (m.type === 'attributes') element(m.target as Element);
+        else m.addedNodes.forEach(walk);
+      } catch { /* leave original text */ }
     }
   });
   observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] });
