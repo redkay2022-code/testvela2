@@ -1,5 +1,6 @@
 import { formatDate } from '@/lib/i18n';
 import { useEffect, useRef, useState } from 'react';
+import { PHONE_COUNTRIES, detectPhoneCountry, toE164 } from '@/lib/phone-countries';
 import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
 import { useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -196,7 +197,10 @@ function SmallDialog({title,onClose,children}:{title:string;onClose:()=>void;chi
 
 export function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=>void}) {
   const [signup,setSignup] = useState(false);
-  const [phone,setPhone] = useState('');
+  const [localPhone,setPhone] = useState('');
+  const [country,setCountry] = useState('KR');
+  useEffect(() => { setCountry(detectPhoneCountry()); }, []);
+  const phone = toE164(country, localPhone);
   const [password,setPassword] = useState('');
   const [name,setName] = useState('');
   const [error,setError] = useState('');
