@@ -29,5 +29,6 @@
 - [x] Live exchange rates (hourly, with fallback)
 ## Real product media
 - [x] Let approved sellers combine one MP4/MOV video (up to 200MB and 30 seconds) with up to 10 photos
+- [x] Use one batch selector for mixed video/photo files with previews, removal, drag reordering and touch-friendly arrow reordering
 - [x] Autoplay listing video muted in the Home feed and show video first with a photo carousel in product details
 - [ ] Verify published listing updates reach the Home feed immediately
