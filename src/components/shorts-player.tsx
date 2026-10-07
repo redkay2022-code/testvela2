@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowLeft, Check, Heart, MessageCircle, Music2, Play, Plus, Share2, ShieldCheck, ShoppingBag, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, Check, Heart, MessageCircle, Music2, Play, Plus, Share2, ShoppingBag, Volume2, VolumeX, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 import { ProductComments } from './product-comments';
 import { useMarketPreview } from './market-preview';
 import { dollars, type LuxuryPost } from '@/lib/luxury-market';
+import { SellerBadge, SellerRatings } from './reputation';
 
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:()=>void; notify:(text:string)=>void };
 export function ShortsPlayer({posts,selectedId,sheet,user,close,closeSheet,change,openSheet,requestAuth,buy,notify}:Props) {
@@ -30,7 +31,7 @@ export function ShortsPlayer({posts,selectedId,sheet,user,close,closeSheet,chang
 function ShortScene({post,active,muted,openSheet,notify}:{post:LuxuryPost;active:boolean;muted:boolean;openSheet:Props['openSheet'];notify:Props['notify']}) {
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const [expanded,setExpanded]=useState(false),[failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false);
- const liked=preview.saved.includes(post.id),verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
+ const liked=preview.saved.includes(post.id);
  useEffect(()=>{const v=video.current;if(!v)return;v.muted=muted;let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,muted,post.video]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active}>
  {post.video&&!failed?<video ref={video} poster={post.images[0]} playsInline loop muted={muted} preload={active?'auto':'none'} onError={()=>setFailed(true)}><source src={post.video} type={post.videoFallback?"video/webm":undefined}/>{post.videoFallback&&<source src={post.videoFallback} type="video/mp4"/>}</video>:<img src={post.images[0]} alt={post.title}/>}
@@ -43,7 +44,7 @@ function ShortScene({post,active,muted,openSheet,notify}:{post:LuxuryPost;active
  <Button variant="goldOutline" className="shorts-details" aria-label="상세보기 · Product Details" tabIndex={active?0:-1} onClick={()=>openSheet('product')}><ShoppingBag/><span>상세보기</span></Button>
   <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="Share short" tabIndex={active?0:-1} onClick={async()=>{try{if(navigator.share)await navigator.share({title:post.title,url:window.location.href});else{await navigator.clipboard.writeText(window.location.href);notify('Short link copied');}}catch{/* Share dismissed */}}}><Share2/></Button><span>Share</span></div>
  </aside>
- <div className="shorts-info"><div className="shorts-creator"><strong>@{post.creator.replaceAll(' ','_')}</strong>{verified&&<span><ShieldCheck size={12}/> VELA VERIFIED</span>}</div><h2>{post.title}</h2><div className="shorts-description"><p className={expanded?'expanded':''}>{post.description}</p><Button variant="ghost" size="sm" tabIndex={active?0:-1} onClick={()=>setExpanded(e=>!e)} aria-expanded={expanded}>{expanded?'less':'…more'}</Button></div><p className="shorts-tags">#{post.factory.replaceAll(' ','')} #Datejust #Shorts</p><div className="shorts-audio"><Music2 size={15}/><span>{post.sample?'Studio visual · Original audio (silent sample)':'Original audio'} · {post.creator}</span></div></div>
+ <div className="shorts-info"><div className="shorts-creator"><strong>@{post.creator.replaceAll(' ','_')}</strong><SellerBadge reputation={post.reputation}/></div><h2>{post.title}</h2><div className="shorts-description"><p className={expanded?'expanded':''}>{post.description}</p><Button variant="ghost" size="sm" tabIndex={active?0:-1} onClick={()=>setExpanded(e=>!e)} aria-expanded={expanded}>{expanded?'less':'…more'}</Button></div><p className="shorts-tags">#{post.factory.replaceAll(' ','')} #Datejust #Shorts</p><div className="shorts-audio"><Music2 size={15}/><span>{post.sample?'Studio visual · Original audio (silent sample)':'Original audio'} · {post.creator}</span></div></div>
  </article>;
 }
 function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>void;children:React.ReactNode}) {
@@ -56,7 +57,7 @@ function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>v
 }
 function ProductSummary({post,buy,notify}:{post:LuxuryPost;buy:()=>void;notify:Props['notify']}) {
  const preview=useMarketPreview(),verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
- return <><div className="shorts-sheet-body">{post.price!==null&&<p className="lux-price">{dollars(post.price)}</p>}<h2 className="mt-3 text-lg font-semibold">{post.title}</h2><div className="detail-tags">{verified&&<span>✓ VELA VERIFIED</span>}<span>{post.factory}</span><span>{post.category}</span></div><h3 className="mt-6 text-sm">스펙 정보 · Specifications</h3><dl className="lux-specs">{(post.sample?[
+ return <><div className="shorts-sheet-body">{post.price!==null&&<p className="lux-price">{dollars(post.price)}</p>}<div className="seller-name-line mt-4 text-xs"><span>{post.creator}</span><SellerBadge reputation={post.reputation}/></div><h2 className="mt-3 text-lg font-semibold">{post.title}</h2><div className="detail-tags">{verified&&<span>✓ VELA VERIFIED</span>}<span>{post.factory}</span><span>{post.category}</span></div><h3 className="mt-6 text-sm">스펙 정보 · Specifications</h3><dl className="lux-specs">{(post.sample?[
  ['Movement','Dandong VS3235 (72-hour power reserve)'],['Material','904L Stainless Steel'],['Proportion','1:1 Original Specs'],['Water Resistance','50m / 5ATM']
- ]:[['Specifications','Contact seller to confirm']]).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="mt-5 text-sm leading-7 text-muted-foreground">{post.description}</p><p className="mt-4 text-xs leading-6 text-primary">#{post.factory.replaceAll(' ','')} #Datejust #Shorts</p>{post.sample&&<p className="sample-notice">Studio sample · Specifications, verification and shopping are previews, not live claims.</p>}</div><footer className="shorts-sheet-buy"><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('Added to your sample shopping bag');}}>Add to Cart</Button><Button variant="gold" onClick={buy}>Buy Now</Button></footer></>;
+ ]:[['Specifications','Contact seller to confirm']]).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p className="mt-5 text-sm leading-7 text-muted-foreground">{post.description}</p><p className="mt-4 text-xs leading-6 text-primary">#{post.factory.replaceAll(' ','')} #Datejust #Shorts</p><SellerRatings reputation={post.reputation}/>{post.sample&&<p className="sample-notice">Studio sample · Specifications, verification and shopping are previews, not live claims.</p>}</div><footer className="shorts-sheet-buy"><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('Added to your sample shopping bag');}}>Add to Cart</Button><Button variant="gold" onClick={buy}>Buy Now</Button></footer></>;
 }
