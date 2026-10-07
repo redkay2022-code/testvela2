@@ -112,6 +112,8 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
     const p = Number(price); if (!Number.isFinite(p) || p < 1) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
     if (photos.length === 0) { setError('영상 표지와 상세 갤러리에 사용할 사진을 1장 이상 추가해 주세요.'); return; }
+    if (sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
+    if (sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
     setError(''); setPending(true);
     const uploaded: string[] = [];
     try {
@@ -128,6 +130,9 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
         uploaded.push(path); photoPaths.push(path);
       }
       const cleanSpecs = Object.fromEntries(Object.entries(specs).map(([k, v]) => [k, String(v ?? '').trim().slice(0, 80)]).filter(([, v]) => v));
+      cleanSpecs.sourceType = sourceType;
+      if (sourceType === 'custom') delete cleanSpecs.factory;
+      else cleanSpecs.factory = factory.trim().slice(0, 80);
       const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, media_urls: photoPaths, video_url: nextVideo, video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
@@ -168,6 +173,26 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       <div><label htmlFor="l-box" className="form-label">풀셋 박스 (USD $, 선택)</label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
     </div>
     <p className="mt-2 text-xs text-muted-foreground">가격은 USD로 저장되며, 구매자에게는 각자의 통화로 자동 환산되어 표시돼요.{price && Number(price) > 0 ? ` (현재 표시: ${formatMoney(Number(price))})` : ''}</p>
+    <div className="mt-1">
+      <div className="form-label">제조 / 출처 구분 (Source & Factory)</div>
+      <div className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3" role="note">
+        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
+        <div className="min-w-0">
+          <p className="text-xs font-semibold leading-relaxed text-destructive">⚠️ [경고] 허위 공장 표기 또는 출처 정보 도용 적발 시, 예고 없이 상품 삭제 및 셀러 자격이 영구 박탈될 수 있으며 에스크로 정산이 동결 조치됩니다.</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Listing false factory information will result in immediate seller ban and escrow freeze.</p>
+        </div>
+      </div>
+      <div role="radiogroup" aria-label="제조 / 출처 구분 (Source & Factory)" className="mt-3 grid grid-cols-3 gap-2">
+        {([['custom', '커스텀 제작'], ['factory', '공장 선택'], ['other', '기타 - 직접입력']] as const).map(([value, label]) => (
+          <label key={value} className={`flex cursor-pointer items-center justify-center rounded-md border px-2 py-2 text-center text-xs font-medium transition-colors ${sourceType === value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
+            <input type="radio" name="sourceType" className="sr-only" checked={sourceType === value} onChange={() => { setSourceType(value); setFactory(''); }} />
+            {label}
+          </label>
+        ))}
+      </div>
+      {sourceType === 'factory' && <select aria-label="공장 선택" className="form-input mt-2" value={factory} onChange={e => setFactory(e.target.value)}><option value="">공장을 선택해 주세요</option>{factoryOptions.map(f => <option key={f} value={f}>{f}</option>)}</select>}
+      {sourceType === 'other' && <input aria-label="출처 직접 입력" className="form-input mt-2" placeholder="출처 / 공장을 직접 입력해 주세요" maxLength={80} value={factory} onChange={e => setFactory(e.target.value)} />}
+    </div>
     {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
     <div className="mt-4 grid grid-cols-2 gap-2"><Button variant="secondary" disabled={pending} onClick={() => void save('draft')}>임시 저장</Button><Button disabled={pending} onClick={() => void save('published')}>{pending ? '저장 중…' : '게시하기'}</Button></div>
   </div>;
