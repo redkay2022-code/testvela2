@@ -3,7 +3,7 @@ import { ProductionMenu } from './production-menu';
 import { MarketHelp } from './market-help';
 import { matchesCollection, watchTypes } from '@/lib/collection-filters';
 import { SellerOnboarding } from './seller-account';
-import { BuyerOrderBoard, EscrowGuarantee } from './escrow';
+import { EscrowGuarantee } from './escrow';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
 import { useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
@@ -40,6 +40,7 @@ type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;help?:'escrow'|'support'|'privacy'}) {
  const {data}=useSuspenseQuery(postsQuery); const all=[...luxuryPosts(data),...seedPosts]; const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
+ const helpPath=help==='escrow'?'/escrow-guide':help==='support'?'/support':help==='privacy'?'/privacy':undefined;
  const navigate=useNavigate(),router=useRouter(); const base=mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
   const sheetPushed=useRef(false),searchPushed=useRef(false),categoriesPushed=useRef(false);
  const [query,setQuery]=useState(search.q || ''),[toast,setToast]=useState(''),[user,setUser]=useState<AuthUser|null>(null),[newest,setNewest]=useState(false);
@@ -63,6 +64,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
+ if(mode==='market')posts=posts.filter(p=>matchesCollection(p,search.collection ?? 'watches',search.watchType));
  if(newest) posts=[...posts].reverse();
  const cleanHome=mode==='home'&&!shortsId;
  if(cleanHome)posts=posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
