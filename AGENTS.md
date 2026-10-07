@@ -38,3 +38,4 @@
 - Product listings keep photos in media_urls and one optional video in video_url; this preserves ordered photo galleries while making video the feed cover.
 
 - Keep the admin presentation in a dedicated dashboard using validated search modules; live seller approvals remain authenticated server actions, while disconnected crypto and moderation operations are visibly non-production. This prevents sample actions from implying real transfers or privileges.
+- Real orders, QC media and the buyer/seller QC board live in Cloud (orders, order_qc_media, order_messages, private qc-media bucket); a database trigger enforces role-based stage changes and the 9-photo + 1-video QC minimum so clients cannot skip steps. Live courier status comes from 17TRACK via a cached authenticated server function (TRACK17_API_KEY).
