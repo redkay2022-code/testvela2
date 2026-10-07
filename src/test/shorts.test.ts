@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { marketSearch } from '@/lib/market';
 describe('Shorts navigation',()=>{
+ it('keeps product Q&A nested under the current product',()=>{
+  expect(marketSearch.parse({shortSheet:'product',detailTab:'qna',post:'sunny-room'})).toMatchObject({shortSheet:'product',detailTab:'qna',post:'sunny-room'});
+  expect(marketSearch.safeParse({detailTab:'unknown'}).success).toBe(false);
+ });
  it('isolates Shorts tabs from Home and preserves nested search',()=>{
   expect(marketSearch.parse({shortTab:'following',tab:'discover',searchOpen:true,shortSheet:'product'})).toMatchObject({shortTab:'following',tab:'discover',searchOpen:true,shortSheet:'product'});
   expect(marketSearch.safeParse({shortTab:'nearby'}).success).toBe(false);
