@@ -17,6 +17,7 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as SellerRouteImport } from './routes/seller'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as UploadRouteImport } from './routes/upload'
+import { Route as ShortsIdRouteImport } from './routes/shorts.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,11 @@ const UploadRoute = UploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShortsIdRoute = ShortsIdRouteImport.update({
+  id: '/shorts/$id',
+  path: '/shorts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/seller': typeof SellerRoute
   '/store': typeof StoreRoute
   '/upload': typeof UploadRoute
+  '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/seller': typeof SellerRoute
   '/store': typeof StoreRoute
   '/upload': typeof UploadRoute
+  '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/seller': typeof SellerRoute
   '/store': typeof StoreRoute
   '/upload': typeof UploadRoute
+  '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/seller'
     | '/store'
     | '/upload'
+    | '/shorts/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/seller'
     | '/store'
     | '/upload'
+    | '/shorts/$id'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/seller'
     | '/store'
     | '/upload'
+    | '/shorts/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   SellerRoute: typeof SellerRoute
   StoreRoute: typeof StoreRoute
   UploadRoute: typeof UploadRoute
+  ShortsIdRoute: typeof ShortsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shorts/$id': {
+      id: '/shorts/$id'
+      path: '/shorts/$id'
+      fullPath: '/shorts/$id'
+      preLoaderRoute: typeof ShortsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +224,7 @@ const rootRouteChildren: RootRouteChildren = {
   SellerRoute: SellerRoute,
   StoreRoute: StoreRoute,
   UploadRoute: UploadRoute,
+  ShortsIdRoute: ShortsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

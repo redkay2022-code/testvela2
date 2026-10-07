@@ -8,7 +8,7 @@ import { marketSearch } from '@/lib/market';
 export function ShortsGallery({images,title}:{images:string[];title:string}) {
  const photos=images.slice(0,15),[slide,setSlide]=useState(0),carousel=useRef<HTMLDivElement>(null);
  const location=useRouterState({select:s=>s.location}),search=marketSearch.parse(location.search);
- const navigate=useNavigate(),router=useRouter(),pushed=useRef(false);
+ const navigate=useNavigate({from:'/shorts/$id'}),router=useRouter(),pushed=useRef(false);
  const photo=search.shortPhoto;
  useEffect(()=>{if(photo===undefined)pushed.current=false;},[photo]);
  const open=(index:number)=>{pushed.current=true;void navigate({to:'.',search:prev=>({...prev,shortPhoto:index}),resetScroll:false});};

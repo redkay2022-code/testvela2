@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Check, ChevronRight, Heart, MessageCircle, Play, Plus, Share2, ShoppingBag, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Share2, ShoppingBag, X } from 'lucide-react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
@@ -15,13 +15,15 @@ import { marketSearch } from '@/lib/market';
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:()=>void; notify:(text:string)=>void };
 export function ShortsPlayer({posts,selectedId,sheet,user,close,closeSheet,change,openSheet,requestAuth,buy,notify}:Props) {
  const feed=useRef<HTMLDivElement>(null), initialized=useRef(false), activeId=useRef(selectedId);
+ const touch=useRef<{x:number;y:number}|null>(null);
  const [active,setActive]=useState(selectedId);
  const reduced=useReducedMotion();
  const post=posts.find(p=>p.id===active) || posts[0];
  useEffect(()=>{activeId.current=selectedId;setActive(selectedId);const el=feed.current;const index=posts.findIndex(p=>p.id===selectedId);if(el&&index>=0){el.scrollTo({top:index*el.clientHeight,behavior:'instant'});initialized.current=true;}},[selectedId,posts.length]);
  if(!post)return null;
- return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Content asChild aria-describedby={undefined}><motion.div className="shorts-player" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
+ return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Content asChild aria-describedby={undefined}><motion.div className="shorts-player" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onTouchStart={e=>{if(sheet||e.touches.length!==1||(e.target instanceof Element&&e.target.closest('button,a')))return;const t=e.touches[0];if(t)touch.current={x:t.clientX,y:t.clientY};}} onTouchCancel={()=>{touch.current=null;}} onTouchEnd={e=>{const start=touch.current;touch.current=null;const end=e.changedTouches[0];if(!sheet&&start&&end){const dx=end.clientX-start.x,dy=end.clientY-start.y;if(dx>80&&dx>Math.abs(dy)*1.5)close();}}}>
  <Dialog.Title className="sr-only">VELA Shorts</Dialog.Title>
+ <Button variant="ghost" size="icon" className="shorts-exit" aria-label="Close Shorts and return Home" title="Return Home" onClick={close}><ArrowLeft/></Button>
   <div className={`shorts-snap ${sheet?'shorts-locked':''}`} ref={el=>{feed.current=el;if(el&&!initialized.current){initialized.current=true;const index=posts.findIndex(p=>p.id===selectedId);requestAnimationFrame(()=>el.scrollTo({top:Math.max(0,index)*el.clientHeight,behavior:'instant'}));}}} onScroll={e=>{if(sheet||!initialized.current)return;const el=e.currentTarget;const index=Math.round(el.scrollTop/el.clientHeight),next=posts[index];if(next&&Math.abs(el.scrollTop-index*el.clientHeight)<el.clientHeight*.35&&next.id!==activeId.current){activeId.current=next.id;setActive(next.id);change(next.id);}}} tabIndex={0} aria-label="Shorts video feed" onKeyDown={e=>{if(sheet)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();feed.current?.scrollBy({top:(e.key==='ArrowDown'?1:-1)*e.currentTarget.clientHeight,behavior:reduced?'instant':'smooth'});}}}>
  {posts.map(p=><ShortScene key={p.id} post={p} active={p.id===active} muted openSheet={openSheet} notify={notify}/>)}
  </div>
