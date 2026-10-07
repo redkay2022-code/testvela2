@@ -72,7 +72,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId}:{mode?:View;ch
  {mode==='me'?<AccountView posts={all} user={user} onPanel={panel=>update({panel})} requestAuth={()=>update({auth:true})}/>:
  mode==='upload'?<><div className="sample-notice">Product publishing · Account sign-in required</div><UploadForm user={user} requestAuth={()=>update({auth:true})} onPosted={()=>{void router.invalidate();void navigate({to:'/me',search:{role:search.role}});}}/></>:
   mode==='store'?search.seller?<><SellerStoreHeader post={storePosts[0]} count={storePosts.length} search={search}/>{search.storeTab==='reviews'?(storePosts[0]?.sample?<Reviews/>:<div className="lux-empty">No reviews yet.</div>):<Feed posts={posts} base={base} search={search}/>}</>:<><InsuranceBanner role={search.role}/><SellerDirectory posts={all.filter(p=>!preview.hidden.includes(p.id))} category={search.storeCategory} role={search.role}/></>:
-  mode==='admin'||mode==='seller'?children:<div className="lux-feed-transition" key={search.tab || 'discover'}>{mode==='home'&&!search.feedCategory&&<InsuranceBanner role={search.role}/>}<Feed posts={posts} base={base} search={search}/></div>}
+  mode==='admin'||mode==='seller'?children:<div className="lux-feed-transition" key={search.tab || 'discover'}><Feed posts={posts} base={base} search={search}/></div>}
  </main>
  <nav className="lux-bottom-nav" aria-label="Main navigation"><div>
   <Button asChild variant="ghost" className={`lux-nav-item ${mode==='home'&&!search.panel?'active':''}`}><Link to="/" search={{role:search.role}}><Home/><span>메인 페이지</span></Link></Button>

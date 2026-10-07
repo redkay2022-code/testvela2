@@ -1,3 +1,4 @@
+import { Globe } from 'lucide-react';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { currencies, currencyLabels, isCurrency, setActiveCurrency, type Currency } from '@/lib/currency';
 import { getUsdRates } from '@/lib/rates.functions';
@@ -34,12 +35,13 @@ export const useCurrency = () => useContext(LocaleCtx);
 
 export function CurrencySelect({ className = '' }: { className?: string }) {
   const { currency, lang, setCurrency, setLang } = useCurrency();
-  return <span className={`locale-selects ${className}`}>
+  const [open, setOpen] = useState(false);
+  return <span className={`locale-menu ${className}`}><button type="button" className="locale-trigger" aria-label={t('language')} aria-expanded={open} onClick={() => setOpen(o => !o)}><Globe size={19}/></button>{open && <span className="locale-selects">
     <select aria-label={t('language')} className="currency-select" value={lang} onChange={e => { if (isLang(e.target.value)) setLang(e.target.value); }}>
       {langs.map(l => <option key={l} value={l}>{langLabels[l]}</option>)}
     </select>
     <select aria-label="Currency" className="currency-select" value={currency} onChange={e => { if (isCurrency(e.target.value)) setCurrency(e.target.value); }}>
       {currencies.map(c => <option key={c} value={c}>{currencyLabels[c]}</option>)}
     </select>
-  </span>;
+  </span>}</span>;
 }
