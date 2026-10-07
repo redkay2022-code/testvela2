@@ -609,4 +609,3 @@
 .locale-menu .locale-selects{position:absolute;top:44px;inset-inline-end:0;z-index:60;display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--drawer-shadow)}
 .locale-menu .currency-select{max-width:none;width:150px;height:34px;font-size:12px}
 .seller-flow-card{border:1px solid var(--border);border-radius:14px;padding:16px;background:var(--card)}
-.wechat-btn{background:#07c160;color:#fff}
