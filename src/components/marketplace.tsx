@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { categories, media, priceLabel } from '@/lib/market-media';
 import { marketSearch, paths, postsQuery, type Mode, type Post } from '@/lib/market';
 import { addComment, getComments, setLike } from '@/lib/market.functions';
+import { signInWithPhone, signUpWithPhone } from '@/lib/phone-auth.functions';
 
 function imageFor(post: Post) { return post.media_urls[0] || media[post.image_key]; }
 
@@ -81,7 +82,7 @@ export function Marketplace({ mode = 'home' }: { mode?: Mode }) {
   if (sort === 'newest') filtered = [...filtered].sort((a,b) => b.created_at.localeCompare(a.created_at));
   const columns = [0,1,2].map(col => filtered.filter((_,i) => i%3 === col));
   const selected = posts.find(p => p.id === search.post);
-  const displayName = String(user?.user_metadata['display_name'] || user?.email?.split('@')[0] || 'vela member');
+  const displayName = String(user?.user_metadata['display_name'] || 'vela member');
 
   return <>
     <main className="market-shell">
