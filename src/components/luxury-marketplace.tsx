@@ -20,13 +20,15 @@ export function LuxuryMarketplace({mode='home',children}:{mode?:View;children?:R
  const {data}=useSuspenseQuery(postsQuery); const all=luxuryPosts(data); const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
  const navigate=useNavigate(),router=useRouter(); const base=mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
- const sheetPushed=useRef(false);
+  const sheetPushed=useRef(false),searchPushed=useRef(false);
  const [query,setQuery]=useState(search.q || ''),[toast,setToast]=useState(''),[user,setUser]=useState<AuthUser|null>(null),[newest,setNewest]=useState(false);
  useEffect(()=>{const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>setUser(session?.user || null));return ()=>subscription.unsubscribe();},[]);
  useEffect(()=>{if(!search.shortSheet)sheetPushed.current=false;},[search.shortSheet]);
+  useEffect(()=>{if(!search.searchOpen)searchPushed.current=false;},[search.searchOpen]);
  useEffect(()=>setQuery(search.q || ''),[search.q]);
  useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(''),3500);return()=>clearTimeout(timer);},[toast]);
  const update=(values:Partial<typeof search>)=>void navigate({to:base,search:prev=>({...prev,...values}),resetScroll:false});
+  const closeSearch=()=>{if(searchPushed.current){searchPushed.current=false;router.history.back();}else void navigate({to:base,search:prev=>({...prev,searchOpen:undefined}),replace:true,resetScroll:false});};
  const close=()=>void navigate({to:base,search:prev=>({...prev,...(search.auth?{auth:undefined}:search.menu?{menu:undefined}:search.panel?{panel:undefined}:search.shortSheet?{shortSheet:undefined}:search.shorts?{shorts:undefined}:{post:undefined})}),replace:true,resetScroll:false});
  let posts=all.filter(p=>!preview.hidden.includes(p.id)&&(!search.q||`${p.title} ${p.creator} ${p.factory} ${p.category}`.toLowerCase().includes(search.q.toLowerCase()))&&(!search.category||search.category==='All'||p.category===search.category||p.factory===search.category));
  if(search.tab==='following') posts=preview.following?posts.filter(p=>p.creator==='VS Watch Studio'):[];
@@ -35,14 +37,16 @@ export function LuxuryMarketplace({mode='home',children}:{mode?:View;children?:R
  const selected=all.find(p=>p.id===(search.shorts || search.post));
  const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
  return <>
- <main className={`lux-shell ${mode==='admin'?'backoffice-shell':''}`}>
  <header className="lux-header">
+  <div className="lux-header-inner">
   <Button variant="ghost" size="icon" aria-label="Open menu" onClick={()=>update({menu:true})}><Menu/></Button>
-  <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="velamarket home"><span className="brand-symbol">V</span><span>vela<span className="font-normal">market</span><span className="text-primary">.</span></span></Link>
-  <div className="flex items-center gap-2"><Button variant="ghost" size="icon" aria-label="Open search" asChild><Link to="/explore" search={{role:search.role}}><Search/></Link></Button><Button variant="ghost" size="icon" className="desktop-only" aria-label="Shopping bag" onClick={()=>update({panel:'cart'})}><ShoppingBag/>{preview.cart.length>0&&<span className="cart-count">{preview.cart.length}</span>}</Button></div>
+   <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="velamarket home"><span className="brand-full"><span className="brand-symbol">V</span><span>vela<span className="font-normal">market</span>.</span></span><span className="brand-compact">VELA</span></Link>
+   <nav className="lux-header-tabs" aria-label="Feed tabs">{[['following','Following'],['discover','For You'],['nearby','Explore']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,tab:tab as 'following'|'discover'|'nearby'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false}>{label}</Link></Button>)}</nav>
+   <Button variant="ghost" size="icon" aria-label="Open search" onClick={()=>{searchPushed.current=true;update({searchOpen:true});}}><Search/></Button>
+  </div>
  </header>
+  <main className={`lux-shell ${mode==='admin'?'backoffice-shell':''}`}>
  {(mode==='home'||mode==='explore'||mode==='market')&&<>
- <nav className="lux-tabs" aria-label="Feed tabs">{[['following','Following'],['discover','For You'],['nearby','Explore']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,tab:tab as 'following'|'discover'|'nearby'}} resetScroll={false}>{label}</Link></Button>)}</nav>
  {mode==='explore'&&<form className="lux-search" onSubmit={e=>{e.preventDefault();update({q:query || undefined});}}><Search size={18}/><input autoFocus aria-label="Search watches" placeholder="Search watches, factories, studios…" value={query} onChange={e=>setQuery(e.target.value)}/><Button variant="ghost" size="icon" type="submit" aria-label="Search"><ArrowRight/></Button></form>}
  <nav className="lux-categories" aria-label="Categories">{luxuryCategories.map(category=><Button asChild key={category} variant="ghost" className={`lux-chip ${(search.category || 'All')===category?'active':''}`}><Link to={base} search={prev=>({...prev,category:category==='All'?undefined:category})} resetScroll={false}>{category}</Link></Button>)}<Button variant="ghost" size="icon" className="shrink-0" aria-label="Toggle newest first" aria-pressed={newest} onClick={()=>setNewest(p=>!p)}><SlidersHorizontal/></Button></nav>
  <div className="lux-feed-heading"><div><span className="lux-eyebrow">THE EDIT · OCTOBER 2026</span><h1>{search.q?`Results for “${search.q}”`:search.tab==='following'?'From your studios':mode==='market'?'The watch collection':'Exceptional finds.'}</h1></div><span className="curated-label"><span className="status-dot"/>Curated daily</span></div>
@@ -50,7 +54,7 @@ export function LuxuryMarketplace({mode='home',children}:{mode?:View;children?:R
  {mode==='me'?<AccountView posts={all} user={user} onPanel={panel=>update({panel})} requestAuth={()=>update({auth:true})}/>:
  mode==='upload'?<><div className="sample-notice">Product publishing · Account sign-in required</div><UploadForm user={user} requestAuth={()=>update({auth:true})} onPosted={()=>{void router.invalidate();void navigate({to:'/me',search:{role:search.role}});}}/></>:
  mode==='store'?<><StoreHeader shortId={shorts[0]?.id} tab={search.storeTab || 'products'} role={search.role}/>{search.storeTab==='reviews'?<Reviews/>:<Feed posts={posts} base={base} search={search}/>}</>:
- mode==='admin'||mode==='seller'?children:<Feed posts={posts} base={base} search={search}/>}
+  mode==='admin'||mode==='seller'?children:<div className="lux-feed-transition" key={search.tab || 'discover'}><Feed posts={posts} base={base} search={search}/></div>}
  </main>
  <nav className="lux-bottom-nav" aria-label="Main navigation"><div>
  {[['/','home',Home,'Home'],['/explore','explore',Compass,'Explore']].map(([to,m,Icon,label])=>{const I=Icon as typeof Home;return <Link key={String(to)} to={to as '/'} search={{role:search.role}} className={`lux-nav-item ${mode===m?'active':''}`}><I/><span>{String(label)}</span></Link>;})}
@@ -58,6 +62,7 @@ export function LuxuryMarketplace({mode='home',children}:{mode?:View;children?:R
  <Link to="/market" search={{role:search.role}} className={`lux-nav-item ${mode==='market'?'active':''}`}><ShoppingBag/><span>Market</span></Link>
  <Link to="/me" search={{role:search.role}} className={`lux-nav-item ${mode==='me'?'active':''}`}><User/><span>My Vela</span></Link>
  </div></nav>
+  {search.searchOpen&&<Dialog.Root open onOpenChange={open=>{if(!open)closeSearch();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className="lux-search-overlay" aria-describedby={undefined}><div className="lux-search-overlay-inner"><div className="lux-search-top"><Dialog.Title className="text-lg font-semibold">Search</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close search" onClick={closeSearch}><X/></Button></div><form className="lux-search" onSubmit={e=>{e.preventDefault();void navigate({to:'/explore',search:{role:search.role,q:query.trim() || undefined},replace:true});}}><Search size={18}/><input autoFocus aria-label="Search watches" placeholder="Search watches, factories, studios…" value={query} onChange={e=>setQuery(e.target.value)}/>{query&&<Button variant="ghost" size="icon" type="button" aria-label="Clear search" onClick={()=>setQuery('')}><X/></Button>}<Button variant="ghost" size="icon" type="submit" aria-label="Search"><ArrowRight/></Button></form><div className="lux-search-results"><Feed posts={all.filter(p=>!preview.hidden.includes(p.id)&&`${p.title} ${p.creator} ${p.factory} ${p.category}`.toLowerCase().includes(query.trim().toLowerCase()))} base={base} search={{role:search.role}}/></div></div></Dialog.Content></Dialog.Portal></Dialog.Root>}
  <AnimatePresence>{selected&&!search.shorts&&<ProductDetail key={selected.id} post={selected} user={user} requestAuth={()=>update({auth:true})} close={close} onPanel={panel=>update({panel})} notify={setToast}/>}</AnimatePresence>
  <AnimatePresence>{search.shorts&&<ShortsPlayer posts={shorts} selectedId={search.shorts} sheet={search.shortSheet} user={user} close={()=>update({shorts:undefined,shortSheet:undefined})} closeSheet={()=>{if(sheetPushed.current){sheetPushed.current=false;router.history.back();}else void navigate({to:base,search:prev=>({...prev,shortSheet:undefined}),replace:true,resetScroll:false});}} change={id=>void navigate({to:base,search:prev=>({...prev,shorts:id}),replace:true,resetScroll:false})} openSheet={shortSheet=>{sheetPushed.current=true;update({shortSheet});}} requestAuth={()=>update({auth:true})} buy={()=>update({panel:'checkout'})} notify={setToast}/>}</AnimatePresence>
  {search.menu&&<Overlay title="velamarket" close={close} side><div className="menu-links">{[['/','Discover'],['/market','Watch collection'],['/store','VS Watch Studio'],['/me','My Vela']].map(([to,label])=><Button asChild variant="ghost" key={to}><Link to={to as '/'} search={{role:search.role}}>{label}<ChevronRight/></Link></Button>)}</div><div className="mt-8 border-t border-border pt-6"><span className="lux-eyebrow">VIEW AS · SAMPLE ACCOUNTS</span><RoleSwitcher/></div><p className="mt-8 text-xs leading-6 text-muted-foreground">벨라마켓 · A considered collection.</p></Overlay>}

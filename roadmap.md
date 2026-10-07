@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Verify single-row sticky navigation, narrow-screen spacing, tabs and full-screen search dismissal
 - [x] Add full-screen snap Shorts with active-only playback and floating controls
 - [x] Integrate product/comments sheets, shopping actions and layered browser-back dismissal
 - [x] Verify feed/store entry, playback, gestures and sheet history
