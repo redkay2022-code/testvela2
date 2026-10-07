@@ -57,6 +57,13 @@
       "when": 1791397935398,
       "tag": "0007_review_media_read",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791403257929,
+      "tag": "0008_qc_board_and_tracking",
+      "breakpoints": true
     }
   ]
 }

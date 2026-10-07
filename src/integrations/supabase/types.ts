@@ -72,6 +72,148 @@ export type Database = {
           },
         ]
       }
+      order_messages: {
+        Row: {
+          areas: string[]
+          author_id: string
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          order_id: string
+        }
+        Insert: {
+          areas?: string[]
+          author_id: string
+          author_role: string
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          order_id: string
+        }
+        Update: {
+          areas?: string[]
+          author_id?: string
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_qc_media: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          order_id: string
+          path: string
+          round: number
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          order_id: string
+          path: string
+          round?: number
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          order_id?: string
+          path?: string
+          round?: number
+          uploader_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_qc_media_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          amount_usd: number
+          buyer_id: string
+          courier: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          network: string | null
+          order_no: string
+          post_id: string | null
+          seller_id: string | null
+          seller_name: string
+          stage: string
+          title: string
+          tracking_checked_at: string | null
+          tracking_number: string | null
+          tracking_status: Json
+          txid: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_usd?: number
+          buyer_id: string
+          courier?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          network?: string | null
+          order_no?: string
+          post_id?: string | null
+          seller_id?: string | null
+          seller_name?: string
+          stage?: string
+          title: string
+          tracking_checked_at?: string | null
+          tracking_number?: string | null
+          tracking_status?: Json
+          txid?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_usd?: number
+          buyer_id?: string
+          courier?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          network?: string | null
+          order_no?: string
+          post_id?: string | null
+          seller_id?: string | null
+          seller_name?: string
+          stage?: string
+          title?: string
+          tracking_checked_at?: string | null
+          tracking_number?: string | null
+          tracking_status?: Json
+          txid?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           base_likes: number
@@ -301,6 +443,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_order_party: {
+        Args: { _order_id: string; _uid: string }
+        Returns: boolean
+      }
+      is_order_seller: {
+        Args: { _order_id: string; _uid: string }
         Returns: boolean
       }
     }
