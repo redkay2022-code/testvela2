@@ -22,3 +22,8 @@
 - [x] Mobile/desktop layout, search, market and browser-back checks
 - [ ] Authenticated upload/like/comment verification — needs a registered, confirmed account; test signup did not succeed
 - [ ] Mainland China availability verification — needs regional network testing and a published domain
+## Seller accounts (in progress)
+- [ ] Super Admin role for owner account + admin toggle on My Page (blocked: which account)
+- [ ] WeChat sign-in & identity verification before Seller Application (blocked: WeChat Open Platform AppID/AppSecret)
+- [ ] Seller application stored in Cloud with WeChat info; admin approves in back office
+- [x] Live exchange rates (hourly, with fallback)
