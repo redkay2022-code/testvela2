@@ -36,3 +36,5 @@
 - Accounts use phone + password via src/lib/phone-auth.functions.ts: the phone is peppered-SHA-256 hashed server-side and only the hash (public.profiles.phone_hash, also the synthetic auth email) is stored, enforcing one account per phone; no social/OAuth sign-in.
 - Real roles live in public.user_roles checked via has_role(); seller applications carry only system_code + nickname and approvals go through admin-verified server functions in src/lib/seller-accounts.functions.ts.
 - Product listings keep photos in media_urls and one optional video in video_url; this preserves ordered photo galleries while making video the feed cover.
+
+- Keep the admin presentation in a dedicated dashboard using validated search modules; live seller approvals remain authenticated server actions, while disconnected crypto and moderation operations are visibly non-production. This prevents sample actions from implying real transfers or privileges.

@@ -7,7 +7,7 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 export const Route=createFileRoute('/admin')({
  validateSearch:marketSearch,
  loader:({context})=>context.queryClient.ensureQueryData(postsQuery),
- head:()=>pageHead('Vela platform management','Sample back office for seller KYC, product verification, moderation and settlements.'),
+ head:()=>pageHead('VELA 가상화폐 관리자 백오피스','익명 판매자 승인, TXID 검증, 가상화폐 에스크로 정산, 분쟁 중재와 상품·리뷰 관리.'),
  errorComponent:()=> <div className="lux-empty">This view could not load. Please try again.</div>,
  notFoundComponent:()=> <div className="lux-empty">This view is unavailable.</div>,
  component:DashboardPage,

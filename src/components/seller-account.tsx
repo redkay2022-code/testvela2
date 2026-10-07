@@ -62,9 +62,10 @@ export function SellerOnboarding() {
 
 export function AdminApplications() {
   const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication);
-  const { data, error } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false });
-  if (error) return <p className="text-sm text-muted-foreground">Sign in with the Super Admin account to see real applications.</p>;
-  if (!data?.length) return <p className="text-sm text-muted-foreground">No real applications yet.</p>;
+  const { data, error, isLoading } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false });
+  if (isLoading) return <p className="text-sm text-muted-foreground">판매자 신청을 불러오는 중…</p>;
+  if (error) return <p className="text-sm text-muted-foreground">실제 신청은 관리자 계정으로 로그인한 후 확인할 수 있습니다.</p>;
+  if (!data?.length) return <p className="text-sm text-muted-foreground">접수된 판매자 신청이 없습니다.</p>;
   return <div className="management-list">{data.map(a => <div className="management-row" key={a.id}><div className="studio-initial">{(a.nickname ?? '?')[0]}</div><div><strong data-no-translate>{a.nickname ?? 'Member'}</strong><small data-no-translate>#{a.system_code ?? '—'}</small></div><span className="record-status">{a.status}</span>
-    {a.status === 'pending' && <div className="record-actions"><Button variant="goldOutline" size="sm" onClick={() => void decide({ data: { id: a.id, approve: true } }).then(() => qc.invalidateQueries({ queryKey: ['seller-applications'] }))}><Check/>Approve</Button><Button variant="ghost" size="sm" onClick={() => void decide({ data: { id: a.id, approve: false } }).then(() => qc.invalidateQueries({ queryKey: ['seller-applications'] }))}><X/>Reject</Button></div>}</div>)}</div>;
+    {a.status === 'pending' && <div className="record-actions"><Button variant="goldOutline" size="sm" onClick={() => void decide({ data: { id: a.id, approve: true } }).then(() => qc.invalidateQueries({ queryKey: ['seller-applications'] }))}><Check/>승인</Button><Button variant="ghost" size="sm" onClick={() => void decide({ data: { id: a.id, approve: false } }).then(() => qc.invalidateQueries({ queryKey: ['seller-applications'] }))}><X/>거절</Button></div>}</div>)}</div>;
 }
