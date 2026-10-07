@@ -1,5 +1,5 @@
 # velamarket
-- [ ] Simplify Admin to five crypto/privacy modules and four metrics; verify navigation, sample actions and live seller application access.
+- [x] Simplify Admin to five crypto/privacy modules and four metrics; verified all tabs, 13 seed sellers, sample approval/hold toggles, three live reviews and 369px layout with no overflow/errors. Existing authenticated application read succeeds (empty queue); real crypto verification/payouts remain disconnected.
 - [x] Make each review's 구매처 open that seller's storefront with its products and customer reviews (canonical seller key + slug-tolerant matching); verified both sample sellers end to end with no page errors
 - [x] Make the Shorts 상세 보기 control a large solid-gold pill with a soft glow (44px, 40px under 720px, 36px under 360px); verified the sheet opens at 320/390/1280 with no overflow or clipping
 - [x] Put 팔로우 inline beside the seller nickname, move 상세 보기 > to that row's right end and lower the whole overlay toward the comment bar; verified at 390/707/1280 with no clipping or overlap
