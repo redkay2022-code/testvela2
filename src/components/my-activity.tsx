@@ -22,7 +22,7 @@ export function MyActivity({ user, posts, onOrders }: { user: User | null; posts
   const liked = (likes.data ?? []).map(l => byId.get(l.post_id)).filter(Boolean) as LuxuryPost[];
   const tabs: [Tab, string, typeof Package, number][] = [['orders', '구매 현황', Package, (orders.data?.length ?? 0) + p.orders.length], ['qna', 'Q&A', MessageSquare, qna.data?.length ?? 0], ['likes', '좋아요', Heart, liked.length], ['saved', '저장', Bookmark, saved.length]];
   const grid = (list: LuxuryPost[], empty: string) => list.length ? <div className="saved-grid">{list.map(post => <Link key={post.id} to="/me" search={{ post: post.id }}><img src={post.images[0]} width={512} height={512} alt={post.title} /><h3>{post.title}</h3><p>{dollars(post.price ?? 0)}</p></Link>)}</div> : <p className="saved-empty">{empty}</p>;
-  return <section id="saved-collection" className="mt-8">
+  return <section id="saved-collection" className="mt-1">
     <div className="section-heading"><h2>내 활동</h2></div>
     <div className="grid grid-cols-4 gap-1 mb-4" role="tablist">{tabs.map(([k, label, Icon, n]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`flex flex-col items-center gap-1 rounded-md border py-2 text-xs ${tab === k ? 'border-primary text-primary' : 'border-border text-muted-foreground'}`}><Icon size={18} /><span>{label}</span><strong>{n}</strong></button>)}</div>
     {!user && tab !== 'saved' ? <p className="saved-empty">로그인하면 확인할 수 있어요.</p> :
