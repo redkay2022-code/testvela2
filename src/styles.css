@@ -577,3 +577,25 @@
 .directory-actions{display:flex;gap:10px;margin-top:18px}.directory-actions>*{flex:1;min-width:0;font-size:12px}
 .shopping-row{display:grid;grid-template-columns:64px minmax(0,1fr) 32px;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}.shopping-row>img{width:64px;height:64px;object-fit:cover;border-radius:4px}.shopping-row h3{font-size:13px;line-height:1.5;overflow-wrap:anywhere}.shopping-row p{font-size:12px;margin-top:4px}.shopping-row>div>button{font-size:12px;padding:0;height:30px}.shopping-row>button{width:32px}.shopping-empty{display:flex;flex-direction:column;align-items:center;gap:12px;padding:28px 0;color:var(--muted-foreground);font-size:13px}.shopping-total{text-align:right;margin-top:16px;font-weight:600}.lux-bottom-nav .lux-buyer-bag{position:relative}.bag-count{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 3px;border-radius:50%;display:grid;place-items:center;font-size:10px;background:var(--foreground);color:var(--background)}
 @media(max-width:640px){.directory-grid{grid-template-columns:minmax(0,1fr)}.directory-card{padding:16px}.directory-filters{max-width:100%;padding-right:12px}}
+
+/* Insurance fee tiers */
+.insurance-card{margin-top:16px;padding:14px;border:1px solid color-mix(in oklab,var(--primary) 45%,transparent);border-radius:12px;background:var(--card);font-size:13px}
+.insurance-card p{display:flex;align-items:center;gap:6px;color:var(--foreground)}
+.insurance-card strong,.insurance-total dd{color:var(--primary)}
+.insurance-teaser{margin-top:8px;display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted-foreground)}
+.insurance-teaser span{display:inline-flex;align-items:center;color:var(--primary);white-space:nowrap}
+.insurance-breakdown{margin-top:16px;padding:12px 14px;border:1px solid var(--border);border-radius:12px;font-size:13px}
+.insurance-breakdown div{display:flex;justify-content:space-between;gap:12px;padding:5px 0;color:var(--muted-foreground)}
+.insurance-breakdown .insurance-total{border-top:1px solid var(--border);color:var(--foreground);font-weight:600}
+.insurance-banner{display:flex;align-items:center;gap:10px;margin:10px 12px;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in oklab,var(--primary) 50%,transparent);background:linear-gradient(90deg,color-mix(in oklab,var(--primary) 18%,transparent),transparent);color:var(--primary);font-size:13px}
+.insurance-banner span{flex:1;color:var(--muted-foreground)}.insurance-banner strong{color:var(--foreground);margin-right:6px}
+.tier-benefits{margin-top:24px;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--card)}
+.tier-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;border:1px solid currentColor;white-space:nowrap}
+.tier-bronze{color:#b08d57}.tier-silver{color:#c9ced6}.tier-gold{color:var(--primary)}.tier-platinum{color:#e2e8f0}.tier-black{color:var(--foreground);background:#000;box-shadow:0 0 10px color-mix(in oklab,var(--primary) 50%,transparent)}
+.tier-next{margin:12px 0;font-size:12px;color:var(--muted-foreground)}.tier-next>div{display:flex;justify-content:space-between;margin-bottom:6px}
+.tier-next progress{width:100%;height:6px;accent-color:var(--primary)}
+.tier-table{width:100%;font-size:11.5px;border-collapse:collapse;color:var(--muted-foreground)}
+.tier-table th{text-align:left;font-weight:500;padding:6px 4px;border-bottom:1px solid var(--border)}
+.tier-table td{padding:8px 4px;border-bottom:1px solid var(--border)}
+.tier-table tr.current td{color:var(--foreground);background:color-mix(in oklab,var(--primary) 8%,transparent)}
+.tier-note{margin-top:10px;font-size:11px;line-height:1.6;color:var(--muted-foreground)}
