@@ -9,7 +9,7 @@ export const getMyAccount = createServerFn({ method: 'GET' })
     const { supabase, userId } = context;
     const [roles, profile, app] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId),
-      supabase.from('profiles').select('system_code, nickname').eq('user_id', userId).maybeSingle(),
+      supabase.from('profiles').select('system_code, nickname, avatar_url').eq('user_id', userId).maybeSingle(),
       supabase.from('seller_applications').select('id, status, nickname, system_code, created_at').eq('user_id', userId).maybeSingle(),
     ]);
     return { roles: (roles.data ?? []).map(r => r.role), profile: profile.data, application: app.data };
