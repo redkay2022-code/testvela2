@@ -5,6 +5,7 @@ import { Bitcoin, Check, FileCheck, ShieldCheck, Store, TrendingUp, Users, Walle
 import { Button } from './ui/button';
 import { AdminApplications } from './seller-account';
 import { ReviewList } from './customer-reviews';
+import { AdminCryptoOrders, AdminDisputeRooms } from './live-orders';
 import { useMarketPreview } from './market-preview';
 import { marketSearch } from '@/lib/market';
 import { seedSellers, seedPosts } from '@/lib/seed-sellers';
@@ -49,14 +50,14 @@ export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
       <div className="management-list">{seedSellers.map(s => <div className="management-row" key={s.name}><div className="studio-initial"><Store size={20}/></div><div><strong>{s.name}</strong><small>{s.kind === 'watch' ? '시계' : '액세서리'} · 쇼케이스 판매자 · 실제 계정 아님</small></div><span className="record-status">{p.audits[`seed-seller:${s.name}`] ?? '승인됨'}</span><div className="record-actions"><Button asChild variant="ghost" size="sm"><Link to="/store" search={{ role: 'admin', seller: s.name }}>스토어</Link></Button><Button variant="goldOutline" size="sm" onClick={() => decide(`seed-seller:${s.name}`, p.audits[`seed-seller:${s.name}`] === '일시 중지' ? '승인됨' : '일시 중지')}>{p.audits[`seed-seller:${s.name}`] === '일시 중지' ? '승인 복원' : '샘플 승인 중지'}</Button></div></div>)}</div>
     </> : section === 'crypto' ? <>
       <div className="section-heading"><h2>구매자 TXID 검증</h2><span>USDT TRC-20 / ERC-20 · BTC · ETH</span></div>
-      <div className="lux-empty"><Bitcoin/><h2>수신된 실제 TXID가 없습니다.</h2><p>주문별 네트워크·입금액·수신 주소·확인 수를 대조한 뒤 에스크로 승인이 필요합니다.</p></div>
+      <AdminCryptoOrders/><div className="section-heading mt-8"><h2>샘플 주문</h2><span>미리보기 전용</span></div>
       <div className="management-list">{held.map(o => <div className="management-row" key={o.id}><div><strong>{o.title}</strong><small>{o.id} · {o.sellerName} · 샘플 주문</small><small>TXID / 네트워크 / 입금 확인: 미연결</small></div><strong>{usd(o.amount)}</strong><Button variant="goldOutline" size="sm" disabled><ShieldCheck/>검증 자료 없음</Button></div>)}</div>
     </> : section === 'settlements' ? <>
       <div className="section-heading"><h2>구매 확정 후 가상화폐 정산</h2><span>USDT · BTC · ETH</span></div>
       <div className="management-list">{p.orders.map(o => <div className="management-row" key={o.id}><Wallet className="text-primary"/><div><strong>{o.title}</strong><small>{o.id} · {o.sellerName}</small><small>정산 네트워크 / 판매자 지갑: 미등록</small></div><strong>{usd(o.amount)}</strong><span className="record-status">{o.stage !== 'delivered' ? '구매 확정 대기' : o.released ? '샘플 정산 완료' : '구매 확정됨'}</span><Button variant="goldOutline" size="sm" disabled>송금 미연결</Button></div>)}</div>
     </> : section === 'disputes' ? <>
       <div className="section-heading"><h2>환불 · 불량 신고 · 에스크로 보류</h2><span>샘플 주문 중재</span></div>
-      <div className="lux-empty"><Scale/><h2>접수된 실제 분쟁이 없습니다.</h2></div>
+      <AdminDisputeRooms/><div className="section-heading mt-8"><h2>샘플 주문</h2><span>미리보기 전용</span></div>
       <div className="management-list">{held.map(o => <div className="management-row" key={o.id}><div><strong>{o.title}</strong><small>{o.id} · {o.sellerName} · {usd(o.amount)} · 샘플</small>{o.request && <small>추가 검수 요청: {o.request.note}</small>}</div><span className="record-status">{p.audits[`dispute:${o.id}`] ?? '분쟁 미접수'}</span><div className="record-actions"><Button variant="goldOutline" size="sm" onClick={() => decide(`dispute:${o.id}`, '샘플 에스크로 보류')}>보류 시뮬레이션</Button><Button variant="ghost" size="sm" disabled={p.audits[`dispute:${o.id}`] !== '샘플 에스크로 보류'} onClick={() => decide(`dispute:${o.id}`, '샘플 보류 해제')}>보류 해제</Button></div></div>)}</div>
     </> : <>
       <div className="section-heading"><h2>상품 영상 & 고객 리뷰</h2><span>실제 삭제 권한과 샘플 숨김 구분</span></div>

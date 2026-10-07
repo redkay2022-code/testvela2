@@ -13,6 +13,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { MarketPreviewProvider } from '@/components/market-preview';
+import { Toaster } from '@/components/ui/sonner';
+import { OrderNotifier } from '@/components/live-orders';
 
 function NotFoundComponent() {
   return (
@@ -126,6 +128,8 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <MarketPreviewProvider><Outlet /></MarketPreviewProvider>
+      <Toaster position="top-center" richColors />
+      <OrderNotifier />
     </QueryClientProvider>
   );
 }
