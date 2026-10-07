@@ -74,9 +74,9 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
 
   const updateClip = (id: string, patch: Partial<Clip>) => setClips(cs => cs.map(c => c.id === id ? { ...c, ...patch } : c));
   const moveClip = (id: string, d: number) => setClips(cs => { const i = cs.findIndex(c => c.id === id), j = i + d; if (j < 0 || j >= cs.length) return cs; const n = [...cs]; [n[i], n[j]] = [n[j]!, n[i]!]; return n; });
-  const autoCaptions = async () => {
-    setBusy('captions'); setErr('');
-    try { const wav = await clipsToWavBase64(clips); const list = await transcribe({ data: { wav, duration: total } }); setCaptions(list); if (!list.length) setErr('영상에서 말소리를 찾지 못했어요.'); }
+  const autoCaptions = async (toEnglish = false) => {
+    setBusy(toEnglish ? 'captions-en' : 'captions'); setErr('');
+    try { const wav = await clipsToWavBase64(clips); const list = await transcribe({ data: { wav, duration: total, toEnglish } }); setCaptions(list); if (!list.length) setErr('영상에서 말소리를 찾지 못했어요.'); }
     catch (e) { setErr(e instanceof Error ? e.message : '자막을 만들지 못했어요.'); } finally { setBusy(''); }
   };
   const activeTexts = texts.filter(x => t >= x.start && t <= x.end);
@@ -166,7 +166,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
             <label className="editor-row">끝<input type="range" min={0} max={c.duration} step={0.1} value={c.end} onChange={e => updateClip(c.id, { end: Math.max(Number(e.target.value), c.start + 0.5) })}/></label></div>)}
         </>}
         {layer === 'text' && <>
-          <div className="editor-card"><div className="flex items-center gap-2"><Captions size={16} className="text-primary"/><strong className="text-sm">자동 자막</strong><Button size="sm" variant="goldOutline" className="ml-auto" disabled={!!busy || !clips.length} onClick={() => void autoCaptions()}>{busy === 'captions' ? <><Loader2 className="animate-spin"/>생성 중…</> : captions.length ? '다시 생성' : '음성에서 자막 만들기'}</Button></div>
+          <div className="editor-card"><div className="flex flex-wrap items-center gap-2"><Captions size={16} className="text-primary"/><strong className="text-sm">자동 자막</strong><div className="ml-auto flex gap-1"><Button size="sm" variant="goldOutline" disabled={!!busy || !clips.length} onClick={() => void autoCaptions()}>{busy === 'captions' ? <><Loader2 className="animate-spin"/>생성 중…</> : captions.length ? '다시 생성' : '원어 자막'}</Button><Button size="sm" variant="goldOutline" disabled={!!busy || !clips.length} onClick={() => void autoCaptions(true)}>{busy === 'captions-en' ? <><Loader2 className="animate-spin"/>번역 중…</> : '영어 자막 (中→EN)'}</Button></div></div>
             {captions.length > 0 && <><label className="mt-2 flex items-center gap-2 text-xs"><input type="checkbox" checked={showCaptions} onChange={e => setShowCaptions(e.target.checked)}/>자막 표시</label><div className="mt-2 grid max-h-40 gap-1 overflow-y-auto">{captions.map((c, i) => <div key={i} className="flex items-center gap-2 text-xs"><span className="w-16 shrink-0 text-muted-foreground">{fmt(c.start)}</span><input className="form-input !mt-0 !py-1 text-xs" value={c.text} maxLength={80} onChange={e => setCaptions(cs => cs.map((x, k) => k === i ? { ...x, text: e.target.value } : x))}/></div>)}</div></>}</div>
           <div className="editor-card"><strong className="text-sm">스펙 텍스트 추가</strong><input className="form-input" placeholder="예: VS3235 · 41MM · 904L" maxLength={40} value={draft.text} onChange={e => setDraft(d => ({ ...d, text: e.target.value }))}/>
             <div className="mt-2 flex flex-wrap gap-2">{(Object.keys(textStyles) as TextStyle[]).map(s => <button key={s} type="button" className={`editor-chip text-${s} ${draft.style === s ? 'active' : ''}`} onClick={() => setDraft(d => ({ ...d, style: s }))}>{textStyles[s]}</button>)}</div>
