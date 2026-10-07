@@ -24,3 +24,13 @@ describe('studio tiers', () => {
     expect(m).toMatchObject({ volumeUsd: 100, completedSales: 1, disputes: 1, disputeRate: 50 });
   });
 });
+import { liveReputation, ratingStats } from '@/lib/studio-metrics';
+describe('order ratings', () => {
+  it('averages ratings and drops tier when rating falls', () => {
+    const s = ratingStats([5, 4, 5, null]);
+    expect(s.average).toBeCloseTo(14 / 3); expect(s.count).toBe(3);
+    const m = { volumeUsd: 20000, completedSales: 20, totalOrders: 20, disputes: 0, disputeRate: 0 };
+    expect(sellerTier(liveReputation(m, null, ratingStats([5, 5, 4])))).toBe('pro');
+    expect(sellerTier(liveReputation(m, null, ratingStats([5, 4, 4])))).toBe('standard');
+  });
+});

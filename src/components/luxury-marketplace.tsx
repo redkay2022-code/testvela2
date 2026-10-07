@@ -22,6 +22,7 @@ import { AccountView } from './role-views';
 import { ProductDetailContent } from './product-detail-content';
 import { ShortsPlayer } from './shorts-player';
 import { BuyerBadge, SellerBadge, SellerRatings } from './reputation';
+import { useSellerRatingMap, withLiveRatings } from '@/lib/studio-tier';
 import { SpecsTable } from './specs-table';
 import { type BuyerTier } from '@/lib/reputation';
 import { FeedCategoryPicker } from './feed-category-picker';
@@ -40,7 +41,7 @@ import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;help?:'escrow'|'support'|'privacy'}) {
- const {data}=useSuspenseQuery(postsQuery); const all=[...luxuryPosts(data),...seedPosts]; const preview=useMarketPreview();
+ const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const all=withLiveRatings([...luxuryPosts(data),...seedPosts],ratingMap.data); const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
  const helpPath=help==='escrow'?'/escrow-guide':help==='support'?'/support':help==='privacy'?'/privacy':undefined;
  const navigate=useNavigate(),router=useRouter(); const base=mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
@@ -140,7 +141,7 @@ function CommercePanel({posts,onBuy,panel,user,selected,close,onPanel,notify}:{u
 }
 function SellerStoreHeader({post,count,search}:{post:LuxuryPost|undefined;count:number;search:ReturnType<typeof marketSearch.parse>}) {
  const preview=useMarketPreview(),following=post?preview.isFollowing(sellerIdentity(post)):false;
- return <><div className="store-profile mt-8">{post&&<img src={post.images[0]} className="store-avatar" alt={post.creator}/>}<div className="store-title" data-no-translate><h1>{post?.creator || 'Seller unavailable'}{post&&<SellerBadge reputation={post.reputation}/>}</h1>{post&&<Button variant="goldOutline" aria-pressed={following} onClick={()=>preview.toggleSeller(sellerIdentity(post))}>{following?<Check/>:<Plus/>}{following?'Following':'Follow'}</Button>}</div>{post&&<p className="store-bio">{post.sample?'Independent watch curation. Thoughtful details, precise movements.':post.description}</p>}<div className="store-stats"><span><strong>{count}</strong> Products</span></div>{post&&<SellerRatings reputation={post.reputation}/>}</div><nav className="lux-tabs store-tabs">{(['products','shorts','reviews'] as const).map(tab=><Button key={tab} asChild variant="ghost" className={`lux-tab ${(search.storeTab || 'products')===tab?'active':''}`}><Link to="/store" search={{role:search.role,seller:search.seller,storeTab:tab}}>{tab==='reviews'?'Customer Reviews':`${tab[0]?.toUpperCase()}${tab.slice(1)}`}</Link></Button>)}</nav></>;
+ return <><div className="store-profile mt-8">{post&&<img src={post.images[0]} className="store-avatar" alt={post.creator}/>}<div className="store-title" data-no-translate><h1>{post?.creator || 'Seller unavailable'}{post&&<SellerBadge reputation={post.reputation} withRating/>}</h1>{post&&<Button variant="goldOutline" aria-pressed={following} onClick={()=>preview.toggleSeller(sellerIdentity(post))}>{following?<Check/>:<Plus/>}{following?'Following':'Follow'}</Button>}</div>{post&&<p className="store-bio">{post.sample?'Independent watch curation. Thoughtful details, precise movements.':post.description}</p>}<div className="store-stats"><span><strong>{count}</strong> Products</span></div>{post&&<SellerRatings reputation={post.reputation}/>}</div><nav className="lux-tabs store-tabs">{(['products','shorts','reviews'] as const).map(tab=><Button key={tab} asChild variant="ghost" className={`lux-tab ${(search.storeTab || 'products')===tab?'active':''}`}><Link to="/store" search={{role:search.role,seller:search.seller,storeTab:tab}}>{tab==='reviews'?'Customer Reviews':`${tab[0]?.toUpperCase()}${tab.slice(1)}`}</Link></Button>)}</nav></>;
 }
 function Reviews(){const memberships:BuyerTier[]=['gold','silver','member'];return <div className="review-list">{[['A. Chen','Beautiful finishing. The studio shared detailed photos before shipping.'],['J. Park','Quick communication and a carefully packed watch.'],['M. Lee','The dial looks even better in person.']].map(([name,text],index)=><article key={name}><div className="flex justify-between"><div className="review-author"><strong>{name}</strong><BuyerBadge tier={memberships[index] ?? 'member'}/></div><span className="text-primary">★★★★★</span></div><p className="mt-3 text-sm leading-7 text-muted-foreground">{text}</p><span className="mt-3 block text-xs text-muted-foreground">Sample review · Verified purchase preview</span></article>)}</div>;}
 

@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { ReviewModal } from './customer-reviews';
+import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -159,11 +161,13 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
   const { user, admin } = useUser();
   const q = useLive(user?.id ?? null);
   const [asking, setAsking] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<string | null>(null);
   const [chat, setChat] = useState<string | null>(null);
   if (!user) return null;
   const orders = (q.data?.orders ?? []).filter(o => as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin)));
   const setStage = (id: string, stage: EscrowStage) => void supabase.from('orders').update({ stage }).eq('id', id);
   return <section className="escrow-board mb-6" aria-label="QC 게시판">
+    {reviewing && <ReviewModal orderId={reviewing} close={() => setReviewing(null)} requestAuth={() => setReviewing(null)} />}
     <div className="section-heading"><h2><MessageSquareText size={16} className="mr-1 inline" />QC 게시판</h2><span>실시간 저장</span></div>
     {!orders.length && <p className="py-6 text-center text-sm text-muted-foreground">{as === 'buyer' ? '결제한 실제 주문이 여기에 표시됩니다.' : '받은 실제 주문이 여기에 표시됩니다.'}</p>}
     {orders.map(o => {
@@ -186,6 +190,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
         {!isSeller && stage === 'qc_done' && (asking === o.id ? <RequestForm o={o} close={() => setAsking(null)} /> : <div className="escrow-actions"><Button variant="gold" onClick={() => setStage(o.id, 'shipping_prep')}><Check />QC 승인</Button><Button variant="goldOutline" onClick={() => setAsking(o.id)}><Camera />추가 사진 요청</Button></div>)}
         <TrackingPanel o={o} />
         {!isSeller && stage === 'shipped' && <Button variant="gold" className="w-full" onClick={() => setStage(o.id, 'delivered')}><ShieldCheck />수령 확인 및 구매 확정</Button>}
+        {!isSeller && stage === 'delivered' && <Button variant="gold" className="w-full" onClick={() => setReviewing(o.id)}><Star />리뷰 작성 및 셀러 평가</Button>}
         {!o.payment_verified_at && <p className="escrow-wait">관리자가 TXID 입금을 확인하는 중입니다.</p>}
         {o.dispute_open && <p className="mt-3 flex items-center gap-2 rounded-md border border-primary p-2 text-sm text-primary"><AlertTriangle size={15} />분쟁 진행 중 · 관리자가 참여한 3자 분쟁방입니다. 에스크로 대금은 중재가 끝날 때까지 보류됩니다.</p>}
         <div className="escrow-actions mt-3">

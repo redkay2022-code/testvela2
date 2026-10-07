@@ -2,7 +2,7 @@ export type SellerTier = 'standard' | 'pro' | 'prime' | 'master';
 export type BuyerTier = 'member' | 'silver' | 'gold' | 'black';
 export const ratingCriteria = ['Product Accuracy', 'QC Standard', 'Shipping Speed', 'Service'] as const;
 /** volumeUsd = completed escrowed sales in USD; disputeRate = percent of orders disputed (0-100). */
-export type SellerReputation = { approved: boolean; ratings: readonly [number, number, number, number] | null; completedSales: number; volumeUsd?: number; disputeRate?: number; override?: SellerTier | null; sample?: boolean };
+export type SellerReputation = { approved: boolean; ratings: readonly [number, number, number, number] | null; completedSales: number; volumeUsd?: number; disputeRate?: number; override?: SellerTier | null; ratingAvg?: number | null; ratingCount?: number; sample?: boolean };
 export const sellerTiers: readonly SellerTier[] = ['standard', 'pro', 'prime', 'master'];
 export const sellerLabels: Record<SellerTier, string> = { standard: 'STANDARD', pro: 'PRO', prime: 'PRIME', master: 'MASTER' };
 export const studioNames: Record<SellerTier, string> = { standard: 'STANDARD STUDIO', pro: 'PRO STUDIO', prime: 'PRIME STUDIO', master: 'MASTER STUDIO' };
@@ -15,6 +15,7 @@ export const tierRules: Record<SellerTier, TierRule> = {
   master: { volume: 150000, sales: 150, rating: 4.9, maxDispute: 0.5, fee: 5, boost: '메인 배너 하이라이트' },
 };
 export function ratingAverage(reputation: SellerReputation): number | null {
+  if (reputation.ratingAvg !== undefined) return reputation.ratingAvg;
   if (!reputation.ratings) return null;
   return reputation.ratings.reduce((sum, score) => sum + Math.max(0, Math.min(5, score)), 0) / 4;
 }
@@ -47,5 +48,5 @@ export function nextSellerTier(reputation: SellerReputation) {
 }
 // Editorial studio reputation is isolated sample data, never a live seller approval.
 export const studioReputation: SellerReputation = { approved: true, ratings: [4.94, 4.92, 4.82, 4.92], completedSales: 128, volumeUsd: 62400, disputeRate: 0.6, sample: true };
-export const launchReputation: SellerReputation = { approved: true, ratings: null, completedSales: 0, volumeUsd: 0, disputeRate: 0, sample: true };
+export const launchReputation: SellerReputation = { approved: true, ratings: null, ratingCount: 0, completedSales: 0, volumeUsd: 0, disputeRate: 0, sample: true };
 export const unknownReputation: SellerReputation = { approved: false, ratings: null, completedSales: 0 };
