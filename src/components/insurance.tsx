@@ -1,14 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight, ShieldCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
-import { formatMoney, krwToUsd } from '@/lib/currency';
+import { formatMoney } from '@/lib/currency';
 import { insuredPurchase, insuranceFee, insuranceTiers, nextInsuranceTier, tierForSpend, tierInfo, type InsuranceTier } from '@/lib/insurance';
 
 type Role = 'buyer' | 'seller' | 'admin' | undefined;
-// No trusted spend history exists yet, so every account starts at the BRONZE baseline.
-const VERIFIED_SPEND = 0;
-const perkKeys = { bronze: 'perkBronze', silver: 'perkSilver', gold: 'perkGold', platinum: 'perkPlatinum', black: 'perkBlack' } as const;
+/** Sum of the buyer's admin-verified crypto orders (USD equivalent). */
+function useVerifiedSpend() {
+  const [uid, setUid] = useState<string | null>(null);
+  useEffect(() => { supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null)); const { data } = supabase.auth.onAuthStateChange((_e, s) => setUid(s?.user?.id ?? null)); return () => data.subscription.unsubscribe(); }, []);
+  const q = useQuery({ queryKey: ['verified-spend', uid], enabled: !!uid, staleTime: 30_000, queryFn: async () => {
+    const { data } = await supabase.from('orders').select('amount_usd').eq('buyer_id', uid!).not('payment_verified_at', 'is', null);
+    return (data ?? []).reduce((sum, o) => sum + Number(o.amount_usd ?? 0), 0);
+  } });
+  return q.data ?? 0;
+}
+const perkKeys = { bronze: 'perkBronze', silver: 'perkSilver', gold: 'perkGold', platinum: 'perkPlatinum' } as const;
 
 export function InsuranceTeaser({ price, format, role }: { price: number; format: (n: number) => string; role?: Role }) {
   const fee = insuranceFee(price), gold = insuranceFee(price, 'gold');
@@ -29,18 +39,19 @@ export function InsuranceBreakdown({ price, box = 0, format }: { price: number; 
 }
 
 export function TierBenefits() {
-  const current = tierForSpend(VERIFIED_SPEND), next = nextInsuranceTier(VERIFIED_SPEND);
-  const [tab, setTab] = useState<InsuranceTier>(current.id);
-  const tier = tierInfo(tab);
+  const spend = useVerifiedSpend();
+  const current = tierForSpend(spend), next = nextInsuranceTier(spend);
+  const [tab, setTab] = useState<InsuranceTier | null>(null);
+  const tier = tierInfo(tab ?? current.id);
   return <section className="tier-benefits" aria-label={t('tierTitle')}>
     <div className="section-heading"><h2>{t('tierTitle')}</h2><span className={`tier-pill tier-${current.id}`}>{current.label}</span></div>
-    {next && <div className="tier-next"><div><span>{t('nextTier',{tier:next.tier.label})}</span><span>{t('remaining',{x:formatMoney(krwToUsd(next.remaining))})}</span></div><progress max={100} value={next.progress} aria-label="Progress to next tier"/></div>}
+    {next && <div className="tier-next"><div><span>{t('nextTier',{tier:next.tier.label})}</span><span>{t('remaining',{x:formatMoney(next.remaining)})}</span></div><div className="tier-spend">{formatMoney(spend)} / {formatMoney(next.tier.threshold)}</div><progress max={100} value={next.progress} aria-label="Progress to next tier"/></div>}
     <div className="tier-tabs" role="tablist" aria-label={t('tierTitle')}>
-      {insuranceTiers.map(ti => <button key={ti.id} type="button" role="tab" aria-selected={tab === ti.id} className={`tier-tab${tab === ti.id ? ' active' : ''}`} onClick={() => setTab(ti.id)}><span className={`tier-pill tier-${ti.id}`}>{ti.label}</span>{ti.id === current.id && <small>{t('currentTier')}</small>}</button>)}
+      {insuranceTiers.map(ti => <button key={ti.id} type="button" role="tab" aria-selected={tier.id === ti.id} className={`tier-tab${tier.id === ti.id ? ' active' : ''}`} onClick={() => setTab(ti.id)}><span className={`tier-pill tier-${ti.id}`}>{ti.label}</span>{ti.id === current.id && <small>{t('currentTier')}</small>}</button>)}
     </div>
     <div className="tier-tab-panel" role="tabpanel">
       <dl className="tier-tab-facts">
-        <div><dt>{t('colReq')}</dt><dd>{tier.threshold ? t('over',{x:formatMoney(krwToUsd(tier.threshold))}) : t('basic')}</dd></div>
+        <div><dt>{t('colReq')}</dt><dd>{tier.threshold ? (() => { const n = insuranceTiers[insuranceTiers.indexOf(tier) + 1]; return n ? `${formatMoney(tier.threshold + 1)} ~ ${formatMoney(n.threshold)}` : `${formatMoney(tier.threshold + 1)}+`; })() : `${t('basic')} · ${formatMoney(0)} ~ ${formatMoney(insuranceTiers[1].threshold)}`}</dd></div>
         <div><dt>{t('colFee')}</dt><dd>{Math.round(tier.rate * 100)}%{tier.discount ? <small> (-{Math.round(tier.discount * 100)}%)</small> : null}</dd></div>
       </dl>
       <p className="tier-tab-perk">{t(perkKeys[tier.id])}</p>

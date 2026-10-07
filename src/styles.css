@@ -591,7 +591,7 @@
 .insurance-banner span{flex:1;color:var(--muted-foreground)}.insurance-banner strong{color:var(--foreground);margin-right:6px}
 .tier-benefits{margin-top:14px;padding:16px;border:1px solid var(--border);border-radius:14px;background:var(--card)}
 .tier-pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.06em;border:1px solid currentColor;white-space:nowrap}
-.tier-bronze{color:#b08d57}.tier-silver{color:#c9ced6}.tier-gold{color:var(--primary)}.tier-platinum{color:#e2e8f0}.tier-black{color:var(--foreground);background:#000;box-shadow:0 0 10px color-mix(in oklab,var(--primary) 50%,transparent)}
+.tier-bronze{color:#b08d57}.tier-silver{color:#c9ced6}.tier-gold{color:var(--primary)}.tier-platinum{color:#e2e8f0}
 .tier-next{margin:12px 0;font-size:12px;color:var(--muted-foreground)}.tier-next>div{display:flex;justify-content:space-between;margin-bottom:6px}
 .tier-next progress{width:100%;height:6px;accent-color:var(--primary)}
 .tier-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
@@ -698,3 +698,4 @@
 .shorts-sheet .shorts-gallery-photo {height:min(48dvh,108vw,460px);aspect-ratio:auto;}
 .lux-detail-scroll {min-height:0;flex:1;}
 @media(max-width:360px) {.product-shopping-actions {gap:4px;padding-inline:10px;grid-template-columns:40px 32px minmax(0,1fr) minmax(0,1fr);}.product-shopping-actions>button {font-size:11px;}.shorts-sheet-seller {gap:5px;}.shorts-sheet-seller button,.shorts-sheet-seller>a {padding-inline:7px;font-size:10px;}}
+.tier-spend{font-size:11px;color:var(--muted-foreground);margin:4px 0}
