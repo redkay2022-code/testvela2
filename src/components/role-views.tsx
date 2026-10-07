@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { dollars, type LuxuryPost } from '@/lib/luxury-market';
 import { marketSearch } from '@/lib/market';
 import { useMarketPreview } from './market-preview';
+import { BuyerBadge } from './reputation';
 
 export function RoleSwitcher(){
  const location=useRouterState({select:s=>s.location}),search=marketSearch.parse(location.search),navigate=useNavigate();

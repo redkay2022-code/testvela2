@@ -5,6 +5,7 @@ import { MessageCircle, Send } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { addComment, getComments } from '@/lib/market.functions';
+import { BuyerBadge } from './reputation';
 export function ProductComments({postId,user,requestAuth}:{postId:string;user:User|null;requestAuth:()=>void}) {
  const read=useServerFn(getComments),write=useServerFn(addComment),client=useQueryClient();
  const {data:comments,error}=useQuery({queryKey:['comments',postId],queryFn:()=>read({data:{postId}})});

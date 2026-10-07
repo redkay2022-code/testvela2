@@ -20,3 +20,5 @@
 - Keep live account comments separate from simulated shopping state; reuse authenticated server functions for persistent comment writes.
 - Represent the Shorts player and its nested sheets in URL search state; replacing only the active short keeps swipe navigation out of the back stack.
 - Keep full-screen search in validated URL search state and reuse the public feed data so device back dismisses search without a separate data source.
+- Derive seller reputation with shared pure threshold functions and local SVG emblems; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
+- Buyer membership is an explicit trusted tier, not inferred from client orders or metadata; use baseline Member when no earned membership is available.
