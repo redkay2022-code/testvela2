@@ -43,7 +43,8 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
   const soundtrack = useRef<AudioBuffer | null>(null); const tRef = useRef(0); const raf = useRef(0);
 
   const addFile = async (f: File) => { const url = URL.createObjectURL(f); try { const duration = await readDuration(url); setClips(c => [...c, { id: uid(), file: f, url, duration, start: 0, end: Math.min(duration, MAX_VIDEO_SECONDS) }]); } catch (e) { URL.revokeObjectURL(url); setErr(e instanceof Error ? e.message : '영상을 읽을 수 없어요.'); } };
-  useEffect(() => { void addFile(file); return () => { cancelAnimationFrame(raf.current); audioSrc.current?.stop(); void audioCtx.current?.close(); }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const loaded = useRef(false);
+  useEffect(() => { if (!loaded.current) { loaded.current = true; void addFile(file); } return () => { cancelAnimationFrame(raf.current); audioSrc.current?.stop(); void audioCtx.current?.close(); }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => clips.forEach(c => URL.revokeObjectURL(c.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const total = clips.reduce((s, c) => s + (c.end - c.start), 0);
@@ -129,7 +130,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
   };
 
   const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['text', '텍스트·자막', Type], ['music', '음악·효과음', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
-  return <div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor">
+  return <div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
     <header className="video-editor-head"><Button variant="ghost" size="icon" aria-label="편집 취소" onClick={onCancel} disabled={busy === 'export'}><X/></Button><h2>영상 편집</h2><Button variant="gold" size="sm" disabled={!clips.length || !!busy || total > MAX_VIDEO_SECONDS + 0.05} onClick={() => void exportVideo()}>{busy === 'export' ? <><Loader2 className="animate-spin"/>만드는 중…</> : '편집 완료'}</Button></header>
     <div className="video-editor-body">
       <div className={`video-editor-stage ${vertical ? 'is-vertical' : ''}`}>
