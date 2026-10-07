@@ -41,8 +41,7 @@ export const signUpWithPhone = createServerFn({ method: 'POST' })
     const { data: existing } = await supabaseAdmin.from('profiles').select('user_id').eq('phone_hash', hash).maybeSingle();
     if (existing) throw new Error('An account already exists with this phone number.');
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({ email: authEmail(hash), password: data.password, email_confirm: true });
-    if (error) console.error('createUser failed', error.message);
-    if (error || !created.user) throw new Error(/already/i.test(error?.message ?? '') ? 'An account already exists with this phone number.' : 'Could not create your account. ' + (error?.message ?? ''));
+    if (error || !created.user) throw new Error(/already/i.test(error?.message ?? '') ? 'An account already exists with this phone number.' : /weak|pwned|password/i.test(error?.message ?? '') ? 'This password is too common. Please choose a stronger one.' : 'Could not create your account. Please try again.');
     let saved = false;
     for (let i = 0; i < 5 && !saved; i++) {
       const { error: pErr } = await supabaseAdmin.from('profiles').insert({ user_id: created.user.id, phone_hash: hash, system_code: randomCode(), nickname: data.nickname });
