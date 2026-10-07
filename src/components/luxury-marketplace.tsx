@@ -22,6 +22,7 @@ import { AccountView } from './role-views';
 import { ProductDetailContent } from './product-detail-content';
 import { ShortsPlayer } from './shorts-player';
 import { BuyerBadge, SellerBadge, SellerRatings } from './reputation';
+import { useSellerRatingMap, withLiveRatings } from '@/lib/studio-tier';
 import { SpecsTable } from './specs-table';
 import { type BuyerTier } from '@/lib/reputation';
 import { FeedCategoryPicker } from './feed-category-picker';
@@ -40,7 +41,7 @@ import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;help?:'escrow'|'support'|'privacy'}) {
- const {data}=useSuspenseQuery(postsQuery); const all=[...luxuryPosts(data),...seedPosts]; const preview=useMarketPreview();
+ const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const all=withLiveRatings([...luxuryPosts(data),...seedPosts],ratingMap.data); const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
  const helpPath=help==='escrow'?'/escrow-guide':help==='support'?'/support':help==='privacy'?'/privacy':undefined;
  const navigate=useNavigate(),router=useRouter(); const base=mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];

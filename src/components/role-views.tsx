@@ -34,7 +34,7 @@ function StudioTierTab(){
  const auth=useQuery({queryKey:['auth-user'],queryFn:async()=>(await supabase.auth.getUser()).data.user});
  const acct=useMyAccount(auth.data??null);const isSeller=!!acct.data?.roles?.includes('seller');
  const live=useStudioReputation(isSeller?auth.data?.id:null);
- return <>{!isSeller&&<div className="sample-notice mt-4">샘플 스튜디오 등급입니다 · 승인된 판매자로 로그인하면 실제 주문 기반 등급이 표시됩니다.</div>}<StudioTierPanel reputation={isSeller&&live.data?live.data:studioReputation} live={isSeller&&!!live.data}/></>;
+ return <>{!isSeller&&<div className="sample-notice mt-4">샘플 스튜디오 등급입니다 · 승인된 판매자로 로그인하면 실제 주문 기반 등급이 표시됩니다.</div>}<StudioTierPanel reputation={isSeller&&live.data?live.data.reputation:studioReputation} live={isSeller&&!!live.data} stats={isSeller?live.data?.stats:undefined} recent={isSeller?live.data?.recent:undefined}/></>;
 }
 export function Dashboard({kind,posts}:{kind:'admin'|'seller';posts:LuxuryPost[]}){
  const search=marketSearch.parse(useRouterState({select:s=>s.location.search})); const p=useMarketPreview();const [message,setMessage]=useState('');
