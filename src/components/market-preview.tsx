@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
+import { CurrencyProvider } from './currency';
 import type { LuxuryPost } from '@/lib/luxury-market';
 import type { EscrowStage } from '@/lib/escrow';
 export type QcMedia={url:string;type:'image'|'video';name:string};
@@ -20,6 +21,6 @@ export function MarketPreviewProvider({children}:{children:ReactNode}) {
   requestPhotos:(id,areas,note)=>patch(id,o=>({stage:'qc_requested',request:{areas,note},notices:[`Additional photos requested: ${areas.join(', ')}`,...o.notices]})),
   ship:(id,tracking)=>patch(id,o=>({stage:'shipped',tracking,notices:[`Shipped via ${tracking.courier} · ${tracking.number}`,...o.notices]})),
   confirmDelivery:id=>patch(id,o=>({stage:'delivered',released:true,status:'Escrow released',notices:['Delivery confirmed · escrow released to seller',...o.notices]})),
-  hidden,hide:id=>setHidden(p=>[...p,id]),audits,decide:(id,status)=>{setAudits(p=>({...p,[id]:status}));setOrders(prev=>prev.map(order=>order.id===id?{...order,status}:order));},application,apply:()=>setApplication(true)}}>{children}</Context.Provider>;
+  hidden,hide:id=>setHidden(p=>[...p,id]),audits,decide:(id,status)=>{setAudits(p=>({...p,[id]:status}));setOrders(prev=>prev.map(order=>order.id===id?{...order,status}:order));},application,apply:()=>setApplication(true)}}><CurrencyProvider>{children}</CurrencyProvider></Context.Provider>;
 }
 export function useMarketPreview(){const context=useContext(Context);if(!context) throw new Error('Market preview provider missing');return context;}

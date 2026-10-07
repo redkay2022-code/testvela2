@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { ChevronRight, ShieldCheck } from 'lucide-react';
-import { insuranceFee, insuranceTiers, nextInsuranceTier, tierForSpend, tierInfo, won, type InsuranceTier } from '@/lib/insurance';
+import { formatMoney, krwToUsd } from '@/lib/currency';
+import { insuranceFee, insuranceTiers, nextInsuranceTier, tierForSpend, tierInfo, type InsuranceTier } from '@/lib/insurance';
 
 type Role = 'buyer' | 'seller' | 'admin' | undefined;
 // No trusted spend history exists yet, so every account starts at the BRONZE baseline.
@@ -31,9 +32,9 @@ export function TierBenefits() {
   const current = tierForSpend(VERIFIED_SPEND), next = nextInsuranceTier(VERIFIED_SPEND);
   return <section className="tier-benefits" aria-label="VIP 등급 및 혜택">
     <div className="section-heading"><h2>VIP 등급 및 혜택</h2><span className={`tier-pill tier-${current.id}`}>{current.label}</span></div>
-    {next && <div className="tier-next"><div><span>다음 등급 {next.tier.label}</span><span>{won(next.remaining)} 남음</span></div><progress max={100} value={next.progress} aria-label="Progress to next tier"/></div>}
+    {next && <div className="tier-next"><div><span>다음 등급 {next.tier.label}</span><span>{formatMoney(krwToUsd(next.remaining))} 남음</span></div><progress max={100} value={next.progress} aria-label="Progress to next tier"/></div>}
     <table className="tier-table"><thead><tr><th>등급</th><th>조건</th><th>보험료</th><th>혜택</th></tr></thead><tbody>
-      {insuranceTiers.map(t => <tr key={t.id} className={t.id === current.id ? 'current' : ''}><td><span className={`tier-pill tier-${t.id}`}>{t.label}</span></td><td>{t.threshold ? `${won(t.threshold)} 초과` : '기본'}</td><td>{Math.round(t.rate * 100)}%{t.discount ? <small> (-{Math.round(t.discount * 100)}%)</small> : null}</td><td>{t.perk}</td></tr>)}
+      {insuranceTiers.map(t => <tr key={t.id} className={t.id === current.id ? 'current' : ''}><td><span className={`tier-pill tier-${t.id}`}>{t.label}</span></td><td>{t.threshold ? `${formatMoney(krwToUsd(t.threshold))} 초과` : '기본'}</td><td>{Math.round(t.rate * 100)}%{t.discount ? <small> (-{Math.round(t.discount * 100)}%)</small> : null}</td><td>{t.perk}</td></tr>)}
     </tbody></table>
     <p className="tier-note">기본 보험료 10%: 100% 정품 보증, 분실·파손 보험, 4K QC 포함. 등급은 확인된 구매 금액 기준이며 현재 결제 연동 전으로 모든 계정은 BRONZE입니다.</p>
   </section>;

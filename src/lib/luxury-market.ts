@@ -1,3 +1,4 @@
+import { formatMoney } from './currency';
 import watch0 from '@/assets/watch-0.webp';
 import watch1 from '@/assets/watch-1.webp';
 import watch2 from '@/assets/watch-2.webp';
@@ -36,4 +37,5 @@ export function luxuryPosts(posts:Post[]):LuxuryPost[] {
    views:sample?(['3.2K','1.8K','4.6K','8.1K','2.4K','5.7K'][i%6] ?? '0'):'0',likes:post.base_likes,verified:sample&&i%4!==3};
  });
 }
-export const dollars=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
+/** Formats a base-USD amount in the active display currency. */
+export const dollars=(amount:number)=>formatMoney(amount);
