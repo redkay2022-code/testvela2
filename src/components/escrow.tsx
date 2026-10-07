@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { dollars } from '@/lib/luxury-market';
 import { escrowSteps, QC_MAX, QC_MIN, qcAreas, stageLabel, stepIndex, validQcCount, type EscrowStage } from '@/lib/escrow';
 import { useMarketPreview, type PreviewOrder, type QcMedia } from './market-preview';
+import { LiveOrderBoard } from './live-orders';
 
 export function EscrowTimeline({stage,preview=false}:{stage?:EscrowStage;preview?:boolean}){
  const active=stage?stepIndex(stage):-1, done=stage==='delivered';
@@ -37,7 +38,7 @@ function RequestDialog({o,close}:{o:PreviewOrder;close:()=>void}){
 export function BuyerOrderBoard(){
  const p=useMarketPreview();const [asking,setAsking]=useState<string|null>(null);const [reviewing,setReviewing]=useState<string|null>(null);const navigate=useNavigate();
  if(!p.orders.length)return <p className="py-10 text-center text-muted-foreground">No orders yet.</p>;
- return <div className="escrow-board"><p className="sample-notice">Sample escrow orders · no real payment is held</p>{p.orders.map(o=><article className="escrow-order" key={o.id}><OrderHead o={o}/><EscrowTimeline stage={o.stage}/>
+ return <div className="escrow-board"><LiveOrderBoard as="buyer"/><p className="sample-notice">Sample escrow orders · no real payment is held</p>{p.orders.map(o=><article className="escrow-order" key={o.id}><OrderHead o={o}/><EscrowTimeline stage={o.stage}/>
   {o.notices[0]&&<p className="escrow-notice" role="status">{o.notices[0]}</p>}
   {o.stage==='qc_requested'&&o.request&&<p className="escrow-wait">Waiting for the seller to upload supplementary photos: {o.request.areas.join(', ')}{o.request.note?` — “${o.request.note}”`:''}</p>}
   {o.qcMedia.length>0&&['qc_done','qc_requested'].includes(o.stage)&&<><h4 className="escrow-sub"><Camera size={14}/> Seller QC gallery · {o.qcMedia.length} files</h4><MediaGrid media={o.qcMedia}/></>}
