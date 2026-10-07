@@ -653,8 +653,8 @@
 .shorts-follow-empty {height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;text-align:center;}
 @media(max-width:720px) {
  .shorts-floating-header {padding-inline:12px;gap:0;}.shorts-feed-tabs {gap:12px;padding-left:0;}.shorts-feed-tabs button {font-size:12px;}.shorts-floating-header {grid-template-columns:44px minmax(0,1fr) 72px;}.shorts-header-tools>button {width:36px;}
- .shorts-product-overlay {left:16px;right:16px;bottom:calc(88px + env(safe-area-inset-bottom));}.shorts-title-row h2 {font-size:15px;}
- .shorts-bottom-bar {padding-inline:16px;gap:12px;}.shorts-bottom-actions {gap:5px;}.shorts-bottom-actions .shorts-action {min-width:36px;}.shorts-bottom-actions .shorts-action button {width:36px;}
+ .shorts-product-overlay {left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));}.shorts-title-row h2 {font-size:15px;}
+ .shorts-bottom-bar {min-height:72px;padding-block:8px;padding-inline:16px;gap:12px;}.shorts-bottom-actions {gap:5px;}.shorts-bottom-actions .shorts-action {min-width:36px;}.shorts-bottom-actions .shorts-action button {width:36px;}
 }
 @media(max-width:360px) {
  .shorts-floating-header {padding-inline:8px;}.shorts-feed-tabs {gap:12px;}.shorts-feed-tabs button {font-size:11px;}
@@ -662,7 +662,7 @@
  .shorts-bottom-bar {padding-inline:12px;gap:6px;}.shorts-bottom-actions {gap:0;}.shorts-comment-form input {padding-inline:6px;font-size:11px;}
 }
 @media(max-height:650px) {
- .shorts-product-overlay {bottom:calc(78px + env(safe-area-inset-bottom));}.shorts-title-row {margin-top:8px;}.shorts-product-description {margin-top:4px;}.shorts-product-description p {-webkit-line-clamp:1;}.shorts-purchase-row {margin-top:4px;}.shorts-bottom-bar {min-height:66px;padding-top:6px;}
+ .shorts-product-overlay {bottom:calc(66px + env(safe-area-inset-bottom));}.shorts-title-row {margin-top:8px;}.shorts-product-description {margin-top:4px;}.shorts-product-description p {-webkit-line-clamp:1;}.shorts-purchase-row {margin-top:4px;}.shorts-bottom-bar {min-height:62px;padding-block:6px;}
 }
 
 .shorts-view-details {height:30px;padding:0 2px;background:transparent;color:var(--soft-gold);font-size:12px;gap:2px;white-space:nowrap;}
