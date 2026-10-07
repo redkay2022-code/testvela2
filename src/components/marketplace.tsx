@@ -5,7 +5,7 @@ import { useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-quer
 import { useServerFn } from '@tanstack/react-start';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowDownWideNarrow, ArrowLeft, ArrowRight, Bell, Check, ChevronDown, Compass, Heart, Home, ImagePlus, MapPin, MessageCircle, Plus, Search, Send, Share2, ShoppingBag, Sparkles, User, X } from 'lucide-react';
+import { ArrowDownWideNarrow, ArrowLeft, ArrowRight, Bell, Check, ChevronDown, Compass, Heart, Home, ImagePlus, MapPin, MessageCircle, Plus, Search, Send, Share2, ShieldCheck, ShoppingBag, Sparkles, User, X } from 'lucide-react';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
