@@ -1,26 +1,40 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { currencies, currencyLabels, detectCurrency, isCurrency, setActiveCurrency, type Currency } from '@/lib/currency';
+import { currencies, currencyLabels, isCurrency, setActiveCurrency, type Currency } from '@/lib/currency';
+import { defaultCurrency, detectLocale, isLang, langLabels, langs, setActiveLang, t, type Lang } from '@/lib/i18n';
 
-const KEY = 'vela-currency';
-const Ctx = createContext<{ currency: Currency; setCurrency: (c: Currency) => void }>({ currency: 'USD', setCurrency: () => {} });
+const CUR_KEY = 'vela-currency', LANG_KEY = 'vela-lang';
+type Ctx = { currency: Currency; lang: Lang; setCurrency: (c: Currency) => void; setLang: (l: Lang) => void };
+const LocaleCtx = createContext<Ctx>({ currency: 'USD', lang: 'en', setCurrency: () => {}, setLang: () => {} });
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setState] = useState<Currency>('USD');
+  const [currency, setCur] = useState<Currency>('USD');
+  const [lang, setL] = useState<Lang>('en');
   useEffect(() => {
-    const saved = localStorage.getItem(KEY);
-    const next = isCurrency(saved) ? saved : detectCurrency(Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.languages ?? [navigator.language]);
-    setActiveCurrency(next); setState(next);
+    const detected = detectLocale(Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.languages ?? [navigator.language]);
+    const savedLang = localStorage.getItem(LANG_KEY), savedCur = localStorage.getItem(CUR_KEY);
+    setL(isLang(savedLang) ? savedLang : detected.lang);
+    setCur(isCurrency(savedCur) ? savedCur : detected.currency);
   }, []);
-  const setCurrency = (c: Currency) => { localStorage.setItem(KEY, c); setActiveCurrency(c); setState(c); };
-  setActiveCurrency(currency);
-  // Re-key so every price formatter re-renders in the chosen currency.
-  return <Ctx.Provider value={{ currency, setCurrency }}><div key={currency} style={{ display: 'contents' }}>{children}</div></Ctx.Provider>;
+  useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; }, [lang]);
+  const setCurrency = (c: Currency) => { localStorage.setItem(CUR_KEY, c); setCur(c); };
+  const setLang = (l: Lang) => {
+    localStorage.setItem(LANG_KEY, l); setL(l);
+    if (!localStorage.getItem(CUR_KEY)) setCur(defaultCurrency[l]);
+  };
+  setActiveCurrency(currency); setActiveLang(lang);
+  // Re-key so every formatter and translated string re-renders in the chosen locale.
+  return <LocaleCtx.Provider value={{ currency, lang, setCurrency, setLang }}><div key={`${lang}-${currency}`} style={{ display: 'contents' }}>{children}</div></LocaleCtx.Provider>;
 }
-export const useCurrency = () => useContext(Ctx);
+export const useCurrency = () => useContext(LocaleCtx);
 
 export function CurrencySelect({ className = '' }: { className?: string }) {
-  const { currency, setCurrency } = useCurrency();
-  return <select aria-label="Currency" className={`currency-select ${className}`} value={currency} onChange={e => { if (isCurrency(e.target.value)) setCurrency(e.target.value); }}>
-    {currencies.map(c => <option key={c} value={c}>{currencyLabels[c]}</option>)}
-  </select>;
+  const { currency, lang, setCurrency, setLang } = useCurrency();
+  return <span className={`locale-selects ${className}`}>
+    <select aria-label={t('language')} className="currency-select" value={lang} onChange={e => { if (isLang(e.target.value)) setLang(e.target.value); }}>
+      {langs.map(l => <option key={l} value={l}>{langLabels[l]}</option>)}
+    </select>
+    <select aria-label="Currency" className="currency-select" value={currency} onChange={e => { if (isCurrency(e.target.value)) setCurrency(e.target.value); }}>
+      {currencies.map(c => <option key={c} value={c}>{currencyLabels[c]}</option>)}
+    </select>
+  </span>;
 }
