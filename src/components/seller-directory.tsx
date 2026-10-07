@@ -6,7 +6,7 @@ import { useMarketPreview } from './market-preview';
 import { directorySellers, matchesStoreCategory, storeFilters, type StoreCategory } from '@/lib/seller-directory';
 import type { LuxuryPost } from '@/lib/luxury-market';
 
-export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost[]; category?:StoreCategory; role?:'buyer'|'seller'|'admin'}) {
+export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost[]; category?:StoreCategory|undefined; role?:'buyer'|'seller'|'admin'|undefined}) {
   const preview = useMarketPreview();
   const sellers = directorySellers(posts).filter(seller => matchesStoreCategory(seller, category)).sort((a,b)=>category==='top'?(b.rating ?? 0)-(a.rating ?? 0):0);
   return <section className="seller-directory">
