@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
-import { Check, ShieldCheck, User, X } from 'lucide-react';
+import { Check, ShieldCheck, UserRound, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { decideSellerApplication, getMyAccount, listSellerApplications, submitSellerApplication, updateNickname } from '@/lib/seller-accounts.functions';
@@ -33,7 +33,7 @@ export function NicknameEditor({ user }: { user: User | null }) {
   return <form className="seller-flow-card" onSubmit={async e => { e.preventDefault(); setMsg(''); try { await save({ data: { nickname: value } }); await qc.invalidateQueries({ queryKey: ['my-account'] }); setMsg('Saved'); } catch (err) { setMsg(err instanceof Error ? err.message : 'Could not save'); } }}>
     <span className="lux-eyebrow">ACCOUNT</span>
     <label className="mt-3 flex cursor-pointer items-center gap-3">
-      <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-input bg-muted">{avatarUrl ? <img src={avatarUrl} alt="프로필 사진" className="size-full object-cover" /> : <User size={22} className="text-muted-foreground" />}</span>
+      <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-input bg-muted">{avatarUrl ? <img src={avatarUrl} alt="프로필 사진" className="size-full object-cover" /> : <UserRound size={22} className="text-muted-foreground" />}</span>
       <span className="text-sm text-muted-foreground">프로필 사진 변경 (5MB 이하)</span>
       <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" aria-label="프로필 사진 변경" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; setMsg(''); try { await uploadAvatar(user.id, f); await qc.invalidateQueries({ queryKey: ['my-account'] }); setMsg('Saved'); } catch (err) { setMsg(err instanceof Error ? err.message : 'Could not save'); } }} />
     </label>
