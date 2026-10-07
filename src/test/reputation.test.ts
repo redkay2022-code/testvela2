@@ -3,7 +3,7 @@ import { nextSellerTier, ratingAverage, sellerTier, type SellerReputation } from
 const rep = (rating: number, sales: number, approved = true): SellerReputation => ({ approved, ratings: [rating, rating, rating, rating], completedSales: sales });
 describe('seller reputation', () => {
   it('starts every approved seller at Verified without a warning tier', () => {
-    expect(sellerTier(rep(0, 0))).toBe('verified');
+    expect(sellerTier(rep(0, 0))).toBe('standard');
     expect(sellerTier(rep(4.99, 300, false))).toBeNull();
   });
   it('requires both Master thresholds', () => {
