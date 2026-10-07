@@ -665,6 +665,7 @@
  .shorts-floating-header {padding-inline:8px;}.shorts-feed-tabs {gap:12px;}.shorts-feed-tabs button {font-size:11px;}
  .shorts-product-overlay {left:12px;right:12px;}.shorts-purchase-row {gap:6px;}.shorts-usd-price {font-size:20px;}.shorts-purchase-row>button {font-size:11px;padding-inline:8px;}
  .shorts-view-details {height:36px;padding:0 12px;font-size:12px;}.shorts-view-details svg {width:15px;height:15px;}
+ .shorts-anonymous-avatar {width:34px;height:34px;}.shorts-anonymous-avatar svg {height:18px;width:18px;}.shorts-seller-link {gap:8px;}.shorts-follow-button {height:28px;padding:0 7px;font-size:10.5px;}
  .shorts-bottom-bar {padding-inline:12px;gap:6px;}.shorts-bottom-actions {gap:0;}.shorts-comment-form input {padding-inline:6px;font-size:11px;}
 }
 @media(max-height:650px) {
