@@ -25,3 +25,5 @@
 
 - Keep Shorts inspection lightboxing in validated URL search state above the sheet; preserve original uploaded image URLs and unwind browser back one layer at a time.
 - Resolve storefronts from the selected seller identity using public feed rows; never display sample reputation or reviews as another seller’s data.
+
+- Keep Home sub-topic selection in validated URL search state and filter the existing public feed; message navigation opens the existing isolated sample conversation without inventing unread data.
