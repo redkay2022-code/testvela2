@@ -431,14 +431,14 @@
 .tier-progress-row progress {grid-column:1 / -1;}
 .tier-progress p {margin-top:12px;color:var(--muted-foreground);line-height:1.8;}
 .review-author {display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
-.account-profile>div:nth-child(2) {min-width:0;flex:1;}.account-profile h2 {overflow-wrap:anywhere;}.account-name-line {display:flex;align-items:center;gap:9px;flex-wrap:wrap;}.account-name-line h2 {margin-bottom:2px;}.account-name-line .reputation-badge {font-size:11px;}.account-name-line .luxury-emblem {width:24px;height:24px;flex-basis:24px;}
+.account-profile>div:nth-child(2) {min-width:0;flex:1;}.account-profile h2 {overflow-wrap:anywhere;}.account-name-line {display:flex;align-items:center;gap:9px;flex-wrap:wrap;}.account-name-line h2 {margin-bottom:2px;}.account-name-line .reputation-badge {font-size:11px;gap:2px;}.account-name-line .reputation-badge>span {line-height:1;transform:translateY(0.6px);}.account-name-line .luxury-emblem {width:24px;height:24px;flex-basis:24px;}
 .store-title h1 {flex-wrap:wrap;}.store-title h1 .reputation-badge {font-size:10px;}.store-title h1 .emblem-master {color:var(--badge-platinum);}
 .shorts-creator>.reputation-badge {border:0;padding:0;}.shorts-creator>.tier-master {color:var(--badge-platinum);}
 @media(max-width:720px) {
  .lux-post-creator .badge-compact .luxury-emblem {width:13px;height:13px;flex-basis:13px;}
  .rating-criteria {gap:14px 16px;}.reputation-heading {gap:12px;}.reputation-heading>.reputation-badge {max-width:50%;}
  .seller-name-line .badge-compact .luxury-emblem {width:18px;height:18px;flex-basis:18px;}
- .seller-reputation {padding:20px 0;}.account-name-line .reputation-badge {font-size:10px;}.account-name-line .reputation-badge>span {font-size:inherit;}.account-name-line .luxury-emblem {width:20px;height:20px;flex-basis:20px;}
+ .seller-reputation {padding:20px 0;}.account-name-line .reputation-badge {font-size:10px;gap:2px;}.account-name-line .reputation-badge>span {font-size:inherit;line-height:1;transform:translateY(0.5px);}.account-name-line .luxury-emblem {width:20px;height:20px;flex-basis:20px;}
 }
 
 /* Inspection media preserves original uploaded resolution. */
