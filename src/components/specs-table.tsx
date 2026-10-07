@@ -2,9 +2,11 @@ const specLabels: Record<string, string> = {
   brand: '브랜드',
   model: '모델',
   movement: '무브먼트',
-  caseSize: '케이스 크기',
-  material: '소재',
+  caseSize: '다이암터',
+  material: '케이스 소재',
   waterResistance: '방수',
+  glass: '글라스/크리스탈',
+  condition: '상태',
 };
 
 function labelFor(key: string) {
