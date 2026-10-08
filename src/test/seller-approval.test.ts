@@ -65,3 +65,17 @@ describe('approved seller profile badge', () => {
     expect(accountSellerTier({ roles: ['seller'] }, { approved: true, ratings: null, completedSales: 0, override: 'master', sample: true })).toBe('standard');
   });
 });
+
+import { ratingDowngradeAlert } from '@/lib/reputation';
+describe('rating downgrade alert', () => {
+  const base = { approved: true, ratings: null, completedSales: 60, volumeUsd: 60000, disputeRate: 0.5 } as const;
+  it('alerts PRIME seller whose rating drops below 4.8', () => {
+    expect(ratingDowngradeAlert({ ...base, ratingAvg: 4.6 })).toMatchObject({ tier: 'prime', required: 4.8, fallback: 'pro' });
+  });
+  it('no alert when rating meets PRIME 4.8', () => {
+    expect(ratingDowngradeAlert({ ...base, ratingAvg: 4.85 })).toBeNull();
+  });
+  it('PRO requires 4.5', () => {
+    expect(ratingDowngradeAlert({ ...base, completedSales: 20, volumeUsd: 20000, ratingAvg: 4.4 })).toMatchObject({ tier: 'pro', required: 4.5, fallback: 'standard' });
+  });
+});
