@@ -22,6 +22,7 @@ import { getComments } from '@/lib/market.functions';
 import { stableMediaSrc } from '@/lib/media-refresh';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { isHybridPost } from '@/lib/post-media';
+import { supabase } from '@/integrations/supabase/client';
 
 const usd=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean)=>void; notify:(text:string)=>void };
@@ -48,7 +49,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  {!posts.length&&<div className="shorts-follow-empty"><UserRound/><h2>팔로잉한 셀러의 영상이 없습니다.</h2><Button variant="goldOutline" onClick={()=>onTab('recommend')}>추천 영상 보기</Button></div>}
  </div>
  <AnimatePresence>{sheet&&post&&<ShortSheet key={sheet} kind={sheet} close={closeSheet}>
- {sheet==='comments'?<ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>:<ProductDetailContent key={post.id} post={post} user={user} requestAuth={requestAuth} buy={buy} notify={notify} shorts/>}
+  {sheet==='comments'?<ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>:isHybridPost(post)?<ProductDetailContent key={post.id} post={post} user={user} requestAuth={requestAuth} buy={buy} notify={notify} shorts/>:<VideoOnlyDetails key={post.id} post={post} user={user} requestAuth={requestAuth}/>}
  </ShortSheet>}</AnimatePresence>
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
@@ -64,9 +65,8 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  const shownTag=videoTags.find(tg=>clock>=tg.at&&clock<=tg.at+3);
  useEffect(()=>{setFailed(false);},[post.video]);
   const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
- const following=preview.isFollowing(identity);
  const read=useServerFn(getComments);
- const {data:comments}=useQuery({queryKey:['comments',post.id],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
+  const {data:comments}=useQuery({queryKey:['comments',post.id,user?.id ?? 'public'],queryFn:async()=>{if(!user)return read({data:{postId:post.id}});const {data,error}=await supabase.from('comments').select('*').eq('post_id',post.id).order('created_at');if(error)throw error;return data;},enabled:active});
  useEffect(()=>{const v=video.current;if(!v)return;const want=active&&shortsSound;v.muted=!want;if(active)setSound(want);let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(cancelled)return;if(!v.muted){v.muted=true;setSound(false);void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,post.video]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active} inert={!active}>
  {post.video&&!failed?<><img className={`shorts-video-poster ${active&&ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{active&&<video ref={video} src={videoSrc} playsInline loop muted autoPlay preload="auto" poster={post.images[0]} onLoadedData={()=>setReady(true)} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
@@ -75,12 +75,11 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
  {hybrid&&shownTag&&<Link to="/post/$id" params={{id:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>}
  <div className="shorts-product-overlay">
- {hybrid?<><div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
+  <div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
  <div className="shorts-seller-row">
- <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><span className="shorts-anonymous-avatar"><UserRound/></span><strong>{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'Unfollow creator':'Follow creator'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>
- <Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>
+  <ShortSellerIdentity post={post}/>
+  {hybrid?<Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>:<Button variant="gold" className="shorts-view-details" aria-label="상세 보기" onClick={()=>openSheet('product')}>상세 보기<ChevronRight size={17}/></Button>}
  </div>
- </>:<div className="shorts-video-copy"><h2>{post.title}</h2><p>{post.description}</p></div>}
  </div>
  <footer className="shorts-bottom-bar">
  {active&&<ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} composerOnly/>}
@@ -92,11 +91,22 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  </footer>
  </article>;
 }
+function ShortSellerIdentity({post}:{post:LuxuryPost}) {
+ const preview=useMarketPreview(),identity=sellerIdentity(post),following=preview.isFollowing(identity);
+ return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><span className="shorts-anonymous-avatar" role="img" aria-label="판매자 프로필"><UserRound/></span><strong>{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
+}
+function VideoOnlyDetails({post,user,requestAuth}:{post:LuxuryPost;user:User|null;requestAuth:()=>void}) {
+ return <section className="shorts-video-details" lang="ko" data-no-translate>
+ <header className="shorts-video-details-seller" aria-label="판매자 정보"><ShortSellerIdentity post={post}/></header>
+ <div className="shorts-video-details-body"><h2>{post.title}</h2><p>{post.description}</p></div>
+ <ProductComments postId={post.id} user={user} requestAuth={requestAuth} composerFirst live/>
+ </section>;
+}
 function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>void;children:React.ReactNode}) {
  const reduced=useReducedMotion();
  return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Overlay className="shorts-sheet-backdrop"/><Dialog.Content asChild aria-describedby={undefined}><motion.section className="shorts-sheet" initial={{y:reduced?0:'100%'}} animate={{y:0}} exit={{y:reduced?0:'100%'}} transition={{type:'spring',damping:32,stiffness:300}}>
  <motion.div className="shorts-sheet-handle" drag="y" dragConstraints={{top:0,bottom:0}} dragElastic={.4} onDragEnd={(_,info)=>{if(info.offset.y>60||info.velocity.y>500)close();}} aria-label="Drag down to close sheet"><span/></motion.div>
- <header className="shorts-sheet-header"><Dialog.Title>{kind==='product'?'제품 상세':'댓글'}</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close Shorts sheet" onClick={close}><X/></Button></header>
+  <header className="shorts-sheet-header"><Dialog.Title>{kind==='product'?'상세 보기':'댓글'}</Dialog.Title><Button variant="ghost" size="icon" aria-label="상세 팝업 닫기" onClick={close}><X/></Button></header>
  {children}
  </motion.section></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
