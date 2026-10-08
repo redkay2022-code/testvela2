@@ -68,6 +68,7 @@ function alreadyTarget(s: string) {
   return false;
 }
 function textNode(n: Text) {
+  if (n.parentElement?.closest('[lang="ko"][data-no-translate]')) return;
   if (n.parentElement && SKIP.has(n.parentElement.tagName)) return;
   const rec = written.get(n);
   const source = rec && rec.out === n.data ? rec.orig : n.data;
@@ -76,6 +77,7 @@ function textNode(n: Text) {
   written.set(n, { orig: source, out: next });
 }
 function element(el: Element) {
+  if (el.closest('[lang="ko"][data-no-translate]')) return;
   for (const a of ATTRS) {
     const v = el.getAttribute(a);
     if (!v) continue;
