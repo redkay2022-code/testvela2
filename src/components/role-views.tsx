@@ -19,6 +19,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { TierBenefits } from './insurance';
 import { MembershipCard } from './loyalty';
 import { MyActivity } from './my-activity';
+import { LiveOrderBoard } from './live-orders';
+import { formatMoney } from '@/lib/currency';
+
+function SellerStats(){
+ const q=useQuery({queryKey:['seller-stats'],queryFn:async()=>{const {data,error}=await supabase.rpc('seller_dashboard_stats');if(error)throw error;return data as Record<string,number>|null;},refetchInterval:30000});
+ const d=q.data;const v=(k:string)=>d?String(d[k]??0):'—';
+ const items:[string,string,typeof Users][]=[['팔로워',v('followers'),Users],['판매 중',v('selling'),Store],['판매 완료',v('sold_out'),Check],['주문 수',v('orders'),Package],['장바구니 담김',v('cart'),Heart],['제작·검수 진행',v('preparing'),FileCheck],['에스크로 입금 예정',d?formatMoney(Number(d['escrow_pending_usd']??0)):'—',DollarSign]];
+ return <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 my-4">{items.map(([l,val,Icon])=><div key={l} className="seller-flow-card"><Icon size={16} className="text-primary"/><strong className="mt-1 block text-lg">{val}</strong><small className="text-muted-foreground">{l}</small></div>)}</div>;
+}
 
 export function RoleSwitcher(){
  const location=useRouterState({select:s=>s.location}),search=marketSearch.parse(location.search),navigate=useNavigate();
@@ -48,6 +57,6 @@ export function Dashboard({kind,posts}:{kind:'admin'|'seller';posts:LuxuryPost[]
  if(kind==='admin')return <AdminDashboard posts={posts}/>;
  const tabs=sellerTabs;const section=search.section || 'overview';
  return <div className="dashboard"><div className="dashboard-heading"><div><span className="lux-eyebrow">VS WATCH STUDIO</span><h1>Studio dashboard</h1><p>Every detail of your business, in one place.</p></div><Button asChild variant="goldOutline"><Link to="/store" search={{role}}>View store<ArrowRight/></Link></Button></div><nav className="dashboard-tabs">{tabs.map(([s,label,Icon])=><Button asChild variant="ghost" key={s} className={section===s?'active':''}><Link to="/seller" search={{role,section:s}} resetScroll={false}><Icon/>{label}</Link></Button>)}</nav>
- {section==='tier'?<StudioTierTab/>:section==='orders'?<><div className="section-heading"><h2>Escrow order timeline</h2><span>QC upload & shipping</span></div><SellerOrderControl/></>:<><div className="studio-tools"><Button asChild variant="gold"><Link to="/upload" search={{role}}><Plus/>Add New Product</Link></Button><Button asChild variant="goldOutline"><Link to="/upload" search={{role}}><Video/>Add Shorts Video</Link></Button></div><div className="section-heading"><h2>Your collection</h2><span>{posts.length} sample listings</span></div><div className="management-list">{posts.slice(0,6).map(post=><div className="management-row" key={post.id}><img src={post.images[0]} width={58} height={58} alt=""/><div><strong>{post.title}</strong><small>{post.factory} · {post.category}</small></div><strong className="text-primary">{dollars(post.price ?? 0)}</strong><Button asChild variant="ghost" size="icon" aria-label={`View ${post.title}`}><Link to="/seller" search={{role,post:post.id}}><ChevronRight/></Link></Button></div>)}</div></>}
+ {section==='tier'?<StudioTierTab/>:section==='orders'?<><div className="section-heading"><h2>주문 · 제작 현황 · QC 검수</h2><span>단계 업데이트 및 검수 사진/영상 업로드</span></div><LiveOrderBoard as="seller"/></>:<><div className="studio-tools"><Button asChild variant="gold"><Link to="/upload" search={{role}}><Plus/>Add New Product</Link></Button><Button asChild variant="goldOutline"><Link to="/upload" search={{role}}><Video/>Add Shorts Video</Link></Button></div><SellerStats/></>}
  </div>;
 }

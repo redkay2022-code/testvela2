@@ -169,6 +169,13 @@
       "when": 1791481949638,
       "tag": "0023_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791492182227,
+      "tag": "0024_seller_dashboard",
+      "breakpoints": true
     }
   ]
 }
