@@ -11,7 +11,7 @@ import { automatedTier, sellerTiers, studioNames, type SellerTier } from '@/lib/
 import { liveReputation } from '@/lib/studio-metrics';
 import { StudioTierBadge } from './reputation';
 import { uploadAvatar, useAvatarUrl } from '@/lib/avatar';
-import { shouldOpenSellerDashboard } from '@/lib/seller-approval';
+import { accountPage, shouldOpenSellerDashboard } from '@/lib/seller-approval';
 
 export function useMyAccount(user: User | null) {
   const fn = useServerFn(getMyAccount);
@@ -26,6 +26,7 @@ export function SellerApprovalRedirect({ user, applying }: { user: User | null; 
   const { data: account } = useMyAccount(user);
   const navigate = useNavigate();
   const pathname = useRouterState({ select: state => state.location.pathname });
+  const search = useRouterState({ select: state => state.location.search });
   const qc = useQueryClient();
   const previous = useRef<{ userId: string | null; seller: boolean | null }>({ userId: null, seller: null });
   useEffect(() => {
@@ -33,15 +34,16 @@ export function SellerApprovalRedirect({ user, applying }: { user: User | null; 
     if (!user || !account) return;
     const key = `vela-seller-dashboard-opened:${user.id}`;
     const opened = typeof window !== 'undefined' && window.localStorage.getItem(key) === '1';
-    const redirect = !opened && shouldOpenSellerDashboard(account, previous.current.seller, pathname, applying);
+    const accountRedirect = pathname === '/me' && accountPage(account) === '/seller';
+    const redirect = accountRedirect || (!opened && shouldOpenSellerDashboard(account, previous.current.seller, pathname, applying));
     previous.current.seller = account.roles.includes('seller');
     if (account.roles.includes('seller') && pathname === '/seller') window.localStorage.setItem(key, '1');
     if (!redirect) return;
     window.localStorage.setItem(key, '1');
     void qc.invalidateQueries({ queryKey: ['posts'] });
     void qc.invalidateQueries({ queryKey: ['stores'] });
-    void navigate({ to: '/seller', search: { role: 'seller' }, replace: true });
-  }, [account, user?.id, pathname, applying, navigate, qc]);
+    void navigate({ to: '/seller', search: accountRedirect ? { ...search, role: 'seller' } : { role: 'seller' }, replace: true });
+  }, [account, user?.id, pathname, search, applying, navigate, qc]);
   return null;
 }
 

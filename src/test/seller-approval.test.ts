@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { accountSellerTier, accountUploadRole, shouldOpenSellerDashboard } from '@/lib/seller-approval';
+import { accountPage, accountSellerTier, accountUploadRole, shouldOpenSellerDashboard } from '@/lib/seller-approval';
+
+describe('trusted account page', () => {
+  it('always opens the seller dashboard for a trusted seller', () => {
+    expect(accountPage({ roles: ['user', 'seller'] })).toBe('/seller');
+    expect(accountPage({ roles: ['admin', 'seller'] })).toBe('/seller');
+  });
+  it('keeps customers, pending users and guests on My VELA', () => {
+    expect(accountPage({ roles: ['user'] })).toBe('/me');
+    expect(accountPage(undefined)).toBe('/me');
+  });
+});
 
 describe('account center navigation', () => {
   it('switches to product upload as soon as the trusted seller role is granted', () => {

@@ -3,7 +3,7 @@ import { ProductionMenu } from './production-menu';
 import { MarketHelp } from './market-help';
 import { matchesCollection, watchTypes } from '@/lib/collection-filters';
 import { SellerOnboarding, SellerApprovalRedirect, useMyAccount } from './seller-account';
-import { accountUploadRole } from '@/lib/seller-approval';
+import { accountPage, accountUploadRole } from '@/lib/seller-approval';
 import { ProfileSettings } from './profile-settings';
 import { EscrowGuarantee } from './escrow';
 import { useEffect, useRef, useState } from 'react';
@@ -57,6 +57,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const [authReady,setAuthReady]=useState(false);
   const account=useMyAccount(user);
   const uploadRole=accountUploadRole(user?account.data:undefined);
+  const myPage=accountPage(user?account.data:undefined);
  const notifications=useNotifications(user);
  const notificationPushed=useRef(false);
  const closeNotifications=()=>{if(notificationPushed.current){notificationPushed.current=false;router.history.back();}else update({notice:undefined});};
@@ -115,7 +116,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  <div className="lux-feed-heading"><div><span className="lux-eyebrow">THE EDIT · OCTOBER 2026</span><h1>{search.q?`Results for “${search.q}”`:search.tab==='following'?'From your studios':mode==='market'?(search.collection==='accessories'?'액세서리 컬렉션':'시계 컬렉션'):'Exceptional finds.'}</h1></div><span className="curated-label"><span className="status-dot"/>Curated daily</span></div>
  </>}
  {help?<MarketHelp kind={help} user={user} requestAuth={()=>update({auth:true})}/>:cleanHome&&search.tab==='reviews'?<section className="mt-4 grid gap-4"><ReviewComposer requestAuth={()=>update({auth:true})}/><ReviewList role={search.role} posts={posts}/></section>:
- mode==='me'?<AccountView posts={all} user={user} onPanel={panel=>update({panel})} requestAuth={signup=>update({auth:true,authSignup:signup||undefined})}/>:
+ mode==='me'?(user&&(!account.data||myPage==='/seller')?<div className="lux-empty">Loading…</div>:<AccountView posts={all} user={user} onPanel={panel=>update({panel})} requestAuth={signup=>update({auth:true,authSignup:signup||undefined})}/>):
  mode==='upload'?<><div className="sample-notice">Product publishing · Account sign-in required</div><UploadForm user={user} requestAuth={()=>update({auth:true})} onPosted={()=>{void router.invalidate();void navigate({to:'/me',search:{role:search.role}});}}/></>:
   mode==='store'?search.seller?<><SellerStoreHeader post={storePosts[0]} count={storePosts.length} search={search}/>{search.storeTab==='reviews'?<><h2 className="mt-6 text-base font-semibold">고객 리뷰</h2><ReviewList posts={posts} sellerId={search.seller} role={search.role}/></>:<Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/>}</>:<><InsuranceBanner role={search.role}/><SellerDirectory posts={all.filter(p=>!preview.hidden.includes(p.id))} category={search.storeCategory} role={search.role}/></>:
   mode==='admin'||mode==='seller'?children:<div className="lux-feed-transition" key={search.tab || 'discover'}><Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/></div>}
@@ -125,7 +126,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   <Button asChild variant="ghost" className={`lux-nav-item ${mode==='store'?'active':''}`}><Link to="/store" search={{role:search.role}} aria-label="스토어"><Store aria-hidden="true"/><span>스토어</span></Link></Button>
   {uploadRole?<Button asChild variant="gold" className="lux-upload"><Link to="/upload" search={{role:uploadRole}} aria-label="상품 올리기"><Plus aria-hidden="true"/><span className="sr-only">상품 올리기</span></Link></Button>:<Button asChild variant="gold" className="lux-upload lux-buyer-bag"><Link to="/me" search={{role:search.role,panel:'cart'}} aria-label={preview.cart.length?`장바구니 (${preview.cart.length}개)`:'장바구니'}><ShoppingBag aria-hidden="true"/><span className="sr-only">장바구니</span>{preview.cart.length>0&&<span className="bag-count" aria-hidden="true">{preview.cart.length}</span>}</Link></Button>}
   <Button asChild variant="ghost" className={`lux-nav-item ${search.panel==='chat'?'active':''}`}><Link to={base} search={prev=>({...prev,panel:'chat'})} resetScroll={false} aria-label="메시지"><MessageCircle aria-hidden="true"/><span>메시지</span></Link></Button>
-  <Button asChild variant="ghost" className={`lux-nav-item ${mode==='me'?'active':''}`}><Link to="/me" search={{role:search.role}} aria-label="나"><User aria-hidden="true"/><span>나</span></Link></Button>
+  <Button asChild variant="ghost" className={`lux-nav-item ${mode==='me'||mode==='seller'?'active':''}`}><Link to={myPage} search={{role:search.role}} aria-label="나"><User aria-hidden="true"/><span>나</span></Link></Button>
 </div></nav>
 
  <AnimatePresence>{entry==='product'&&selected&&!shortsId&&<ProductDetail key={selected.id} post={selected} user={user} requestAuth={()=>update({auth:true})} close={close} buy={box=>void navigate({to:'/buy/$id',params:{id:selected.id},search:{checkoutBox:box||undefined}})} notify={setToast}/>}</AnimatePresence>
