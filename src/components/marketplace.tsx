@@ -221,17 +221,6 @@ export function AuthDialog({onClose,onSignedIn,initialSignup=false}:{onClose:()=
   const [error,setError] = useState('');
   const [pending,setPending] = useState(false);
   const signUpFn = useServerFn(signUpWithPhone), signInFn = useServerFn(signInWithPhone);
-  const addMedia = (selected: File[]) => {
-    if (!selected.length) return;
-    try {
-      const next = appendListingFiles(files, selected);
-      setFiles(next);
-      setError('');
-      const video = selected.find(isListingVideo);
-      if (video) { setVideoTags([]); setEditing(video); }
-    } catch (err) { setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.'); }
-  };
-  const photoPicker = useRef<HTMLInputElement>(null);
   const submit = async (e:React.FormEvent) => {
     e.preventDefault();setError('');setPending(true);
     try {

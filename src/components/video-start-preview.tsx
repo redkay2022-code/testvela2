@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { captureVideoFrame } from '@/lib/video-thumbnail';
 
 /** An opening-frame poster for local upload previews, including edited WEBM clips. */
-export function VideoStartPreview({ file, src, className }: { file?: File; src: string; className: string }) {
+export function VideoStartPreview({ file, src, className }: { file?: File | undefined; src: string; className: string }) {
   const [poster, setPoster] = useState<string>();
   useEffect(() => {
     let disposed = false;
