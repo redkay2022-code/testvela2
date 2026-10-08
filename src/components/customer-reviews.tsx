@@ -4,34 +4,24 @@ import { SellerBadge } from './reputation';
 import { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useServerFn } from '@tanstack/react-start';
 import { BadgeCheck, ImagePlus, MessageSquareText, Package, Store, X } from 'lucide-react';
 import { useMarketPreview } from './market-preview';
 import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/i18n';
 import { sellerKey } from '@/lib/seller-directory';
+import { getPublicReviews } from '@/lib/market.functions';
 
 const BUCKET = 'review-media';
 type Review = { id: string; nickname: string; seller_id: string; seller_name: string; body: string; media_urls: string[]; video_url: string | null; created_at: string; urls: Record<string, string> };
 
-async function loadReviews(sellerId?: string): Promise<Review[]> {
-  const columns = 'id,nickname,seller_id,seller_name,body,media_urls,video_url,created_at';
-  const query = () => supabase.from('reviews').select(columns).order('created_at', { ascending: false }).limit(60);
-  const quoted = sellerId ? `"${sellerId.replace(/["\\]/g, '\\$&')}"` : '';
-  let result = sellerId ? await query().or(`seller_id.eq.${quoted},seller_name.eq.${quoted}`) : await query();
-  if (result.error && sellerId) result = await query().eq('seller_id', sellerId);
-  if (result.error) throw result.error;
-  const key = sellerKey(sellerId ?? '');
-  const rows = (result.data ?? []).filter(r => !sellerId || r.seller_id === sellerId || sellerKey(r.seller_id) === key || sellerKey(r.seller_name) === key);
-  const paths = rows.flatMap(r => [...r.media_urls, ...(r.video_url ? [r.video_url] : [])]);
-  const urls: Record<string, string> = {};
-  if (paths.length) { const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600); signed?.forEach(s => { if (s.path && s.signedUrl) urls[s.path] = s.signedUrl; }); }
-  return rows.map(r => ({ ...r, urls }));
-}
-
 export function ReviewList({ sellerId, role, posts }: { sellerId?: string; role?: 'buyer' | 'seller' | 'admin' | undefined; posts?: LuxuryPost[] }) {
+  const readReviews = useServerFn(getPublicReviews);
   const repFor = (id: string, name: string) => posts?.find(p => sellerMatches(p, id) || sellerMatches(p, name))?.reputation;
-  const { data, isLoading } = useQuery({ queryKey: ['reviews', sellerId ?? 'all'], queryFn: () => loadReviews(sellerId) });
+  const { data: raw, isLoading } = useQuery({ queryKey: ['reviews', sellerId ?? 'all'], queryFn: () => readReviews({ data: { sellerId } }) });
+  const key = sellerKey(sellerId ?? '');
+  const data = (raw as Review[] | undefined)?.filter(r => !sellerId || r.seller_id === sellerId || sellerKey(r.seller_id) === key || sellerKey(r.seller_name) === key);
   if (isLoading) return <p className="py-8 text-center text-sm text-muted-foreground">리뷰를 불러오는 중…</p>;
   if (!data?.length) return <div className="lux-empty"><MessageSquareText/><h2>아직 고객 리뷰가 없습니다.</h2></div>;
   return <div className="mt-4 grid gap-4">{data.map(r => <article key={r.id} className="rounded-lg border border-border bg-card p-4">

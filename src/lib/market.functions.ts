@@ -55,6 +55,26 @@ export const getComments = createServerFn({ method: 'GET' })
     return rows;
   });
 
+export const getPublicReviews = createServerFn({ method: 'GET' })
+  .inputValidator((data: unknown) => z.object({ sellerId: z.string().max(100).optional() }).parse(data))
+  .handler(async ({ data }) => {
+    const columns = 'id,nickname,seller_id,seller_name,body,media_urls,video_url,created_at';
+    let query = publicClient().from('reviews').select(columns).order('created_at', { ascending: false }).limit(60);
+    if (data.sellerId) query = query.eq('seller_id', data.sellerId);
+    const { data: rows, error } = await query;
+    if (error) throw new Error('리뷰를 불러오지 못했습니다.');
+    const paths = [...new Set((rows ?? []).flatMap(row => [...row.media_urls, ...(row.video_url ? [row.video_url] : [])])
+      .filter(path => !path.includes('..') && path.split('/').length === 2))];
+    const urls: Record<string, string> = {};
+    if (paths.length) {
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+      const { data: signed, error: signError } = await supabaseAdmin.storage.from('review-media').createSignedUrls(paths, 3600);
+      if (signError) throw new Error('리뷰 미디어를 불러오지 못했습니다.');
+      signed?.forEach(item => { if (item.path && item.signedUrl) urls[item.path] = item.signedUrl; });
+    }
+    return (rows ?? []).map(row => ({ ...row, urls }));
+  });
+
 export const addComment = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ postId:z.string().max(100), body:z.string().trim().min(1).max(1000) }).parse(data))
