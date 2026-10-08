@@ -2,6 +2,11 @@ import { sellerTier, type SellerReputation } from './reputation';
 
 export type SellerApprovalState = { roles: string[]; application: { status: string } | null };
 
+/** Account navigation uses trusted roles, never selected preview roles. */
+export function accountPage(account: Pick<SellerApprovalState, 'roles'> | undefined) {
+  return account?.roles.includes('seller') ? '/seller' as const : '/me' as const;
+}
+
 /** Navigation presentation only; uploading remains protected by server policies. */
 export function accountUploadRole(account: Pick<SellerApprovalState, 'roles'> | undefined) {
   if (account?.roles.includes('seller')) return 'seller' as const;
