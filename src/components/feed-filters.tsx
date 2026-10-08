@@ -23,6 +23,9 @@ export function FeedFilters({ value, count, onChange }: { value: FeedFilter; cou
         <option value="">모든 공장</option><option value="커스텀 제작">커스텀 제작</option>{factoryOptions.map(f => <option key={f} value={f}>{f}</option>)}
       </select>
       <div className="feed-filters-price" key={`${value.fmin ?? ""}-${value.fmax ?? ""}`}><input className="form-input" inputMode="numeric" placeholder="최소 USD" aria-label="최소 금액 USD" defaultValue={value.fmin ?? ''} onBlur={e => onChange({ ...value, fmin: num(e.target.value) })}/><span>–</span><input className="form-input" inputMode="numeric" placeholder="최대 USD" aria-label="최대 금액 USD" defaultValue={value.fmax ?? ''} onBlur={e => onChange({ ...value, fmax: num(e.target.value) })}/></div>
+      <select className="form-input" aria-label="정렬" value={value.fsort ?? ''} onChange={e => onChange({ ...value, fsort: (e.target.value || undefined) as FeedFilter['fsort'] })}>
+        <option value="">추천순</option><option value="newest">최신순</option><option value="price_desc">가격 높은순</option><option value="price_asc">가격 낮은순</option>
+      </select>
       <label className="feed-filters-check"><input type="checkbox" checked={Boolean(value.fshorts)} onChange={e => onChange({ ...value, fshorts: e.target.checked || undefined })}/>숏츠(영상)만 보기</label>
     </div>}
     {active && <div className="feed-filters-summary"><span>{count}개 게시물</span><button type="button" onClick={() => { setText(''); onChange({}); }}>필터 초기화</button></div>}
