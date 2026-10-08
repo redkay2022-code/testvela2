@@ -1,5 +1,5 @@
 export const MAX_LISTING_PHOTOS = 10;
-export const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 export const MAX_VIDEO_SECONDS = 30;
 
 export function isListingVideo(file: File) {
@@ -37,10 +37,14 @@ export async function validateListingFiles(files: File[]) {
   if (photos.length > MAX_LISTING_PHOTOS) throw new Error(`사진은 최대 ${MAX_LISTING_PHOTOS}장까지 올릴 수 있어요.`);
   if (videos.length > 1) throw new Error('영상은 상품당 1개만 올릴 수 있어요.');
   if (files.some(file => !isListingPhoto(file) && !isListingVideo(file))) throw new Error('사진은 JPG·PNG·WEBP, 영상은 MP4·MOV·WEBM 형식만 지원해요.');
+  if (photos.some(photoTooLarge)) throw new Error('사진은 장당 최대 10MB까지 올릴 수 있어요.');
   const video = videos[0];
   if (video) {
-    if (video.size > MAX_VIDEO_BYTES) throw new Error('영상은 최대 200MB까지 올릴 수 있어요.');
+    if (video.size > MAX_VIDEO_BYTES) throw new Error('영상은 최대 100MB까지 올릴 수 있어요.');
     const duration = await readVideoDuration(video);
     if (!Number.isFinite(duration) || duration > MAX_VIDEO_SECONDS + 0.05) throw new Error('영상 길이는 최대 30초까지 가능해요.');
   }
 }
+export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+/** Photo size rule mirrored from the storage bucket: each photo is at most 10MB. */
+export const photoTooLarge = (file: { size: number }) => file.size > MAX_PHOTO_BYTES;

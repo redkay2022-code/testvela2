@@ -1,6 +1,6 @@
 import type { LuxuryPost } from './luxury-market';
 
-export type FeedFilter = { fq?: string | undefined; ffactory?: string | undefined; fmin?: number | undefined; fmax?: number | undefined; fshorts?: boolean | undefined };
+export type FeedFilter = { fq?: string | undefined; ffactory?: string | undefined; fmin?: number | undefined; fmax?: number | undefined; fshorts?: boolean | undefined; fsort?: 'newest' | 'price_desc' | 'price_asc' | undefined };
 
 /** Factory label for a post: seller-entered specs.factory wins, then the sample/editorial factory field. */
 export function postFactory(post: LuxuryPost): string {
@@ -33,4 +33,14 @@ export function filterFeed(posts: LuxuryPost[], f: FeedFilter): LuxuryPost[] {
   });
 }
 
-export const hasFeedFilter = (f: FeedFilter) => Boolean(f.fq || f.ffactory || f.fmin != null || f.fmax != null || f.fshorts);
+export const hasFeedFilter = (f: FeedFilter) => Boolean(f.fq || f.ffactory || f.fmin != null || f.fmax != null || f.fshorts || f.fsort);
+
+export type FeedSort = 'newest' | 'price_desc' | 'price_asc';
+/** Sorts filtered results; unpriced items always go last for price sorts. Unsorted keeps the recommended order. */
+export function sortFeed(posts: LuxuryPost[], sort: FeedSort | undefined): LuxuryPost[] {
+  if (!sort) return posts;
+  const copy = [...posts];
+  if (sort === 'newest') return copy.sort((a, b) => (b.source?.created_at ?? '').localeCompare(a.source?.created_at ?? ''));
+  const dir = sort === 'price_desc' ? -1 : 1;
+  return copy.sort((a, b) => a.price == null ? 1 : b.price == null ? -1 : (a.price - b.price) * dir);
+}
