@@ -21,16 +21,17 @@ const tabs = [
   ['disputes', '분쟁 중재', Scale],
   ['moderation', '피드 & 리뷰 관리', FileCheck],
 ] as const;
-const mainTabs = [['dashboard','Dashboard'],['stores','Stores'],['products','Products'],['categories','Categories'],['inventory','Inventory'],['orders','Orders'],['loyalty','Loyalty / Points'],['settings','Settings']] as const;
+const mainTabs = [['dashboard','Dashboard'],['applications','판매자 신청'],['stores','Stores'],['products','Products'],['categories','Categories'],['inventory','Inventory'],['orders','Orders'],['loyalty','Loyalty / Points'],['settings','Settings']] as const;
 const legacyKeys = ['sellers','verification','crypto','settlements','disputes','moderation'];
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 
 export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
   const search = marketSearch.parse(useRouterState({ select: s => s.location.search }));
   const top = !search.section ? 'dashboard' : legacyKeys.includes(search.section) ? 'settings' : search.section;
-  const nav = <nav className="dashboard-tabs flex-wrap" aria-label="관리자 메뉴">{mainTabs.map(([key, label]) => <Button asChild variant="ghost" key={key} className={top === key ? 'active' : ''}><Link to="/admin" search={{ role: 'admin', section: key === 'settings' ? 'sellers' : key }} resetScroll={false}>{label}</Link></Button>)}</nav>;
+  const nav = <nav className="dashboard-tabs flex-wrap" aria-label="관리자 메뉴">{mainTabs.map(([key, label]) => <Button asChild variant="ghost" key={key} className={top === key ? 'active' : ''}><Link to="/admin" search={{ role: 'admin', section: key === 'settings' ? 'crypto' : key }} resetScroll={false}>{label}</Link></Button>)}</nav>;
+  if (top === 'applications') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>판매자 신청</h1><p>시스템 ID · 닉네임만 확인</p></div></div>{nav}<AdminApplications/></div>;
   if (top === 'loyalty') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>Loyalty / Points</h1><p>VELA Point 발행·사용·예산 관리</p></div></div>{nav}<AdminLoyalty/></div>;
-  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
+  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}{top === 'dashboard' && <><div className="section-heading"><h2>판매자 신청</h2><span>대기 중인 신청</span></div><AdminApplications/></>}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
   return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1></div></div>{nav}<LegacyAdmin posts={posts}/></div>;
 }
 
