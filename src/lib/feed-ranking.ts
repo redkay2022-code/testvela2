@@ -9,10 +9,18 @@ export function trustScore(post: LuxuryPost, reviewCount: number): number {
   return rating * 100 + Math.min(sales, 200) * 0.1 + Math.min(reviewCount, 50) * 0.2;
 }
 
-/** Orders posts by seller trust + review activity, keeping input order on ties. */
-export function rankRecommended(posts: LuxuryPost[], reviewCounts: Record<string, number>): LuxuryPost[] {
+const FRESH_MS = 72 * 3600 * 1000;
+/** Real uploads younger than 72h, so a seller sees a new post on Home immediately. */
+export function freshUploadTime(post: LuxuryPost, now = Date.now()): number {
+  if (post.sample || !post.source?.created_at) return 0;
+  const t = Date.parse(post.source.created_at);
+  return Number.isFinite(t) && now - t < FRESH_MS ? t : 0;
+}
+
+/** Fresh real uploads first (newest first), then seller trust + review activity, keeping input order on ties. */
+export function rankRecommended(posts: LuxuryPost[], reviewCounts: Record<string, number>, now = Date.now()): LuxuryPost[] {
   return posts
-    .map((post, index) => ({ post, index, score: trustScore(post, reviewCounts[sellerIdentity(post)] ?? 0) }))
-    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map((post, index) => ({ post, index, fresh: freshUploadTime(post, now), score: trustScore(post, reviewCounts[sellerIdentity(post)] ?? 0) }))
+    .sort((a, b) => b.fresh - a.fresh || b.score - a.score || a.index - b.index)
     .map(entry => entry.post);
 }
