@@ -18,7 +18,6 @@
 - Isolate demo role previews and commerce/moderation actions in a shared React provider; they never grant Cloud privileges or change production rows.
 - Share photo/Shorts detail content; product Q&A uses authenticated post comments and validated detailTab for Back navigation, separate from simulated commerce.
 - Represent Shorts in the /shorts/$id leaf route with nested sheets in validated search state; replace the active ID during vertical swipes so browser back exits instead of replaying swipe history.
-- Keep Shorts Following/Recommended selection in its own validated search field and reuse ProductComments for inline submission; this isolates Shorts filters from Home and preserves authenticated comment writes.
 - Derive seller reputation with shared pure threshold functions and local SVG emblems; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
 - Buyer membership is an explicit trusted tier, not inferred from client orders or metadata; use baseline Member when no earned membership is available.
 - Resolve storefronts from the selected seller identity using public feed rows, matching identity, creator name and slug-insensitive keys so a review's 구매처 link always opens that seller's store; store reviews under the same canonical seller identity and never display sample reputation or reviews as another seller’s data.
