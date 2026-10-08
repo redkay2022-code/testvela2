@@ -796,3 +796,5 @@
 .trim-range input::-webkit-slider-thumb {-webkit-appearance:none;pointer-events:auto;width:18px;height:28px;border-radius:5px;background:var(--primary);border:2px solid var(--background);cursor:ew-resize;}
 .trim-range input::-moz-range-thumb {pointer-events:auto;width:16px;height:26px;border-radius:5px;background:var(--primary);border:2px solid var(--background);cursor:ew-resize;}
 .trim-range input::-moz-range-track {background:transparent;}
+
+.shorts-sound-toggle{position:absolute;z-index:6;top:calc(env(safe-area-inset-top) + 64px);right:14px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid color-mix(in oklab,var(--primary) 55%,transparent);background:color-mix(in oklab,var(--background) 60%,transparent);color:var(--primary);font-size:12px;font-weight:600;backdrop-filter:blur(8px)}
