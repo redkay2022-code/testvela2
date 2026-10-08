@@ -18,9 +18,9 @@
 - Isolate demo role previews and commerce/moderation actions in a shared React provider; they never grant Cloud privileges or change production rows.
 - Share photo/Shorts detail content; product Q&A uses authenticated post comments and validated detailTab for Back navigation, separate from simulated commerce.
 - Represent Shorts in the /shorts/$id leaf route with nested sheets in validated search state; replace the active ID during vertical swipes so browser back exits instead of replaying swipe history.
-- Derive seller reputation with shared pure threshold functions and local SVG emblems; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
+- Derive seller reputation and account badges with shared pure functions and local SVG emblems; account badges use trusted roles, not URL view state; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
 - Buyer membership is an explicit trusted tier, not inferred from client orders or metadata; use baseline Member when no earned membership is available.
-- Resolve storefronts from the selected seller identity using public feed rows, matching identity, creator name and slug-insensitive keys so a review's 구매처 link always opens that seller's store; store reviews under the same canonical seller identity and never display sample reputation or reviews as another seller’s data.
+- Resolve storefronts from public feed rows by seller identity, creator name and slug-insensitive keys; reviews share that canonical identity so 구매처 opens the correct store. Never attribute sample reputation or reviews to another seller.
 - Build the public seller directory from visible feed listings grouped by stable seller identity; directory filters use validated URL search state and unknown live metrics remain unavailable.
 - Use insuredPurchase for mandatory delivery insurance and checkout totals; calculate on the seller item price, excluding the optional box, to keep displayed and submitted totals consistent.
 - Store all prices (item and Full Set Box) in base USD and convert only at display via src/lib/currency formatMoney; one stored currency keeps totals and fees consistent.
