@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { watchImages } from '@/lib/luxury-market';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
+import { CategoryOptions, categoriesQueryKey, useCategories, type CategoryRow } from './category-options';
 import {
   availableQty, imageKinds, productCategories, productStatuses, publishBlockers, slugify, verificationStatuses, watchSpecFields,
   type ImageKind, type ProductStatus,
@@ -341,7 +342,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
       <label>Brand<input value={f.brand} onChange={e => set('brand', e.target.value)} /></label>
       <label>Model<input value={f.model} onChange={e => set('model', e.target.value)} /></label>
       <label>Reference number<input value={f.reference} onChange={e => set('reference', e.target.value)} /></label>
-      <label>Category *<select value={f.category} onChange={e => set('category', e.target.value)}><option value="">선택…</option>{[...new Set([...productCategories, ...(f.category ? [f.category] : [])])].map(c => <option key={c}>{c}</option>)}</select></label>
+      <label>Category *<select value={f.category} onChange={e => set('category', e.target.value)}><option value="">선택…</option><CategoryOptions current={f.category} fallback={productCategories} /></select></label>
       <label>Subcategory<input value={f.subcategory} onChange={e => set('subcategory', e.target.value)} /></label>
       <label className="wide">Description<textarea rows={4} value={f.description} onChange={e => set('description', e.target.value)} /></label>
       <label className="check"><input type="checkbox" checked={f.featured} onChange={e => set('featured', e.target.checked)} />Featured product</label>
