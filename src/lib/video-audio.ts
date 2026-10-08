@@ -1,39 +1,69 @@
-// Locally synthesized BGM / SFX (no remote audio assets) and audio helpers for the video editor.
-type Bgm = { label: string; bpm: number; root: number; wave: OscillatorType; cutoff: number; chord: number[]; kick: 'four' | 'half' | 'none' | 'trap'; hat: boolean; arp: boolean };
-const M = [1, 1.189, 1.498, 2], MAJ = [1, 1.26, 1.498, 2], SUS = [1, 1.335, 1.498, 2], OPEN = [1, 1.5, 2.378], JAZZ = [1, 1.26, 1.498, 1.888];
-const b = (label: string, bpm: number, root: number, wave: OscillatorType, cutoff: number, chord: number[], kick: Bgm['kick'], hat: boolean, arp: boolean): Bgm => ({ label: `${label} · ${bpm} BPM`, bpm, root, wave, cutoff, chord, kick, hat, arp });
+// Real BGM: royalty-free tracks by Kevin MacLeod (incompetech.com), CC BY 4.0. Each file is trimmed to start exactly on beat 1.
+import t0 from '@/assets/music/local-forecast-elevator.mp3.asset.json';
+import t1 from '@/assets/music/smooth-lovin.mp3.asset.json';
+import t2 from '@/assets/music/bossa-antigua.mp3.asset.json';
+import t3 from '@/assets/music/lobby-time.mp3.asset.json';
+import t4 from '@/assets/music/wallpaper.mp3.asset.json';
+import t5 from '@/assets/music/cipher.mp3.asset.json';
+import t6 from '@/assets/music/funkorama.mp3.asset.json';
+import t7 from '@/assets/music/inspired.mp3.asset.json';
+import t8 from '@/assets/music/carefree.mp3.asset.json';
+import t9 from '@/assets/music/easy-lemon.mp3.asset.json';
+import t10 from '@/assets/music/airport-lounge.mp3.asset.json';
+import t11 from '@/assets/music/backbay-lounge.mp3.asset.json';
+import t12 from '@/assets/music/dreamer.mp3.asset.json';
+import t13 from '@/assets/music/deliberate-thought.mp3.asset.json';
+import t14 from '@/assets/music/cool-vibes.mp3.asset.json';
+import t15 from '@/assets/music/groove-grove.mp3.asset.json';
+import t16 from '@/assets/music/spy-glass.mp3.asset.json';
+import t17 from '@/assets/music/impact-prelude.mp3.asset.json';
+import t18 from '@/assets/music/overcast.mp3.asset.json';
+import t19 from '@/assets/music/danse-morialta.mp3.asset.json';
+import t20 from '@/assets/music/sovereign.mp3.asset.json';
+import t21 from '@/assets/music/chill-wave.mp3.asset.json';
+import t22 from '@/assets/music/arcadia.mp3.asset.json';
+import t23 from '@/assets/music/ice-flow.mp3.asset.json';
+import t24 from '@/assets/music/electro-cabello.mp3.asset.json';
+import t25 from '@/assets/music/dances-and-dames.mp3.asset.json';
+import t26 from '@/assets/music/aitech.mp3.asset.json';
+import t27 from '@/assets/music/werq.mp3.asset.json';
+import t28 from '@/assets/music/pamgaea.mp3.asset.json';
+import t29 from '@/assets/music/jazz-brunch.mp3.asset.json';
+type Bgm = { label: string; title: string; bpm: number; url: string; feel: string };
+const t = (title: string, bpm: number, url: string, feel: string): Bgm => ({ label: `${title} · ${bpm} BPM`, title, bpm, url, feel });
 export const bgmPresets: Record<string, Bgm> = {
-  noir: b('Midnight Noir', 90, 55, 'sawtooth', 900, M, 'four', true, false),
-  gala: b('Gala Pulse', 112, 65.41, 'sawtooth', 1800, M, 'four', true, false),
-  velvet: b('Velvet Ambient', 72, 49, 'sawtooth', 900, OPEN, 'half', false, false),
-  geneva: b('Geneva Morning', 96, 65.41, 'triangle', 2400, MAJ, 'half', false, true),
-  monaco: b('Monaco Nights', 124, 55, 'sawtooth', 2200, M, 'four', true, true),
-  swiss: b('Swiss Precision', 120, 61.74, 'square', 1500, SUS, 'four', true, true),
-  marble: b('Marble Hall', 66, 43.65, 'sine', 1200, OPEN, 'none', false, false),
-  cognac: b('Cognac Lounge', 84, 58.27, 'triangle', 1600, JAZZ, 'half', true, false),
-  diamond: b('Diamond Rain', 100, 73.42, 'sine', 3000, MAJ, 'none', false, true),
-  tourbillon: b('Tourbillon', 128, 51.91, 'sawtooth', 2600, M, 'four', true, true),
-  silk: b('Silk Road', 78, 46.25, 'triangle', 1100, SUS, 'half', false, true),
-  onyx: b('Onyx Trap', 140, 41.2, 'square', 900, M, 'trap', true, false),
-  riviera: b('Riviera Sun', 110, 69.3, 'triangle', 2800, MAJ, 'four', true, true),
-  cathedral: b('Golden Cathedral', 60, 41.2, 'sawtooth', 700, OPEN, 'none', false, false),
-  carbon: b('Carbon Drive', 132, 49, 'square', 1900, SUS, 'four', true, false),
-  pearl: b('Pearl Lullaby', 70, 82.41, 'sine', 2000, MAJ, 'none', false, true),
-  tokyo: b('Tokyo Drift', 118, 55, 'sawtooth', 2400, M, 'four', true, true),
-  saphir: b('Sapphire Glass', 92, 61.74, 'sine', 2600, SUS, 'half', false, true),
-  boardroom: b('Boardroom', 104, 58.27, 'triangle', 1700, MAJ, 'four', false, false),
-  smoke: b('Smoke & Mirrors', 80, 46.25, 'sawtooth', 800, JAZZ, 'half', true, false),
-  aurora: b('Aurora', 76, 65.41, 'sine', 1800, OPEN, 'none', false, true),
-  chrono: b('Chronograph', 126, 61.74, 'square', 2100, M, 'four', true, true),
-  velour: b('Velour R&B', 88, 51.91, 'triangle', 1300, JAZZ, 'trap', true, false),
-  atelier: b('Atelier Piano', 74, 65.41, 'triangle', 2200, MAJ, 'none', false, true),
-  shanghai: b('Shanghai Skyline', 108, 55, 'sawtooth', 2000, SUS, 'four', true, true),
-  regal: b('Regal Strings', 64, 49, 'sawtooth', 1000, MAJ, 'half', false, false),
-  neon: b('Neon Boulevard', 122, 69.3, 'square', 2600, M, 'four', true, true),
-  obsidian: b('Obsidian Bass', 136, 36.71, 'sawtooth', 600, M, 'trap', true, false),
-  champagne: b('Champagne Toast', 116, 73.42, 'triangle', 3000, MAJ, 'four', true, true),
-  horizon: b('Silent Horizon', 68, 43.65, 'sine', 900, SUS, 'none', false, false),
+  'local-forecast-elevator': t("Local Forecast - Elevator", 82, t0.url, "Bouncy, Bright, Grooving"),
+  'smooth-lovin': t("Smooth Lovin", 75, t1.url, "Grooving, Calming, Relaxed"),
+  'bossa-antigua': t("Bossa Antigua", 70, t2.url, "Bright, Grooving, Relaxed"),
+  'lobby-time': t("Lobby Time", 128, t3.url, "Calming, Grooving, Relaxed"),
+  'wallpaper': t("Wallpaper", 92, t4.url, "Bouncy, Bright, Calming, Uplifting"),
+  'cipher': t("Cipher", 150, t5.url, "Bright, Grooving, Uplifting"),
+  'funkorama': t("Funkorama", 101, t6.url, "Grooving, Uplifting"),
+  'inspired': t("Inspired", 120, t7.url, "Bright, Relaxed, Calming, Uplifting"),
+  'carefree': t("Carefree", 96, t8.url, "Bouncy, Bright, Calming, Uplifting"),
+  'easy-lemon': t("Easy Lemon", 82, t9.url, "Bright, Calming, Relaxed"),
+  'airport-lounge': t("Airport Lounge", 129, t10.url, "Bouncy, Calming, Relaxed"),
+  'backbay-lounge': t("Backbay Lounge", 120, t11.url, "Bright, Grooving, Relaxed"),
+  'dreamer': t("Dreamer", 100, t12.url, "Calming, Relaxed"),
+  'deliberate-thought': t("Deliberate Thought", 69, t13.url, "Calming, Relaxed"),
+  'cool-vibes': t("Cool Vibes", 83, t14.url, "Calming, Relaxed"),
+  'groove-grove': t("Groove Grove", 70, t15.url, "Calming, Grooving, Mysterious, Relaxed"),
+  'spy-glass': t("Spy Glass", 110, t16.url, "Grooving, Mysterious"),
+  'impact-prelude': t("Impact Prelude", 80, t17.url, "Calming, Grooving, Mysterious"),
+  'overcast': t("Overcast", 120, t18.url, "Bouncy, Bright, Grooving"),
+  'danse-morialta': t("Danse Morialta", 70, t19.url, "Calming, Relaxed, Somber, Uplifting"),
+  'sovereign': t("Sovereign", 109, t20.url, "Dark, Calming"),
+  'chill-wave': t("Chill Wave", 100, t21.url, "Grooving, Relaxed"),
+  'arcadia': t("Arcadia", 80, t22.url, "Eerie, Epic, Mysterious, Mystical, Unnerving, Uplifting"),
+  'ice-flow': t("Ice Flow", 70, t23.url, "Grooving, Intense"),
+  'electro-cabello': t("Electro Cabello", 117, t24.url, "Bouncy, Grooving"),
+  'dances-and-dames': t("Dances and Dames", 120, t25.url, "Grooving, Mysterious, Suspenseful"),
+  'aitech': t("Aitech", 105, t26.url, "Grooving, Bright"),
+  'werq': t("Werq", 125, t27.url, "Bright, Grooving, Relaxed"),
+  'pamgaea': t("Pamgaea", 94, t28.url, "Bouncy, Grooving, Relaxed"),
+  'jazz-brunch': t("Jazz Brunch", 100, t29.url, "Bright, Grooving, Relaxed"),
 };
+export const bgmCredit = 'Music: Kevin MacLeod (incompetech.com) · CC BY 4.0';
 export type BgmId = keyof typeof bgmPresets;
 export type SfxType = 'tick' | 'unbox' | 'chime';
 export const sfxPresets: Record<SfxType, { label: string; length: number }> = {
@@ -58,21 +88,21 @@ function scheduleSfx(ctx: BaseAudioContext, out: AudioNode, type: SfxType, at: n
     [880, 1318.5, 1760, 2637].forEach((fr, i) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = fr; g.gain.setValueAtTime(0.18 / (i + 1), at); g.gain.exponentialRampToValueAtTime(0.0005, at + 2.3); o.connect(g).connect(out); o.start(at); o.stop(at + 2.4); });
   }
 }
-/** Renders BGM + SFX into one buffer for preview and export. */
+/** Decoded track cache so switching music never re-downloads. */
+const decoded = new Map<string, Promise<AudioBuffer>>();
+const loadTrack = (url: string) => { let p = decoded.get(url); if (!p) { p = fetch(url).then(r => { if (!r.ok) throw new Error('음원을 불러오지 못했습니다.'); return r.arrayBuffer(); }).then(b => new OfflineAudioContext(2, 1, 44100).decodeAudioData(b)); p.catch(() => decoded.delete(url)); decoded.set(url, p); } return p; };
+export const preloadBgm = (id: BgmId) => { void loadTrack(bgmPresets[id]!.url).catch(() => undefined); };
+/** Whole-bar loop length so a looped track keeps the beat grid intact. */
+export const loopLength = (bpm: number, bufferSeconds: number) => { const bar = (60 / bpm) * 4; return Math.max(bar, Math.floor(bufferSeconds / bar) * bar); };
+/** Renders the real BGM track (beat 1 at t=0) + SFX into one buffer exactly `duration` seconds long. */
 export async function renderSoundtrack(duration: number, bgm: BgmId | null, bgmVolume: number, sfx: { type: SfxType; at: number }[]) {
-  const rate = 22050, ctx = new OfflineAudioContext(2, Math.max(1, Math.ceil(rate * Math.max(0.5, duration))), rate);
-  const master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination);
+  const rate = 44100, len = Math.max(1, Math.round(rate * Math.max(0.5, duration))), ctx = new OfflineAudioContext(2, len, rate);
+  const master = ctx.createGain(); master.connect(ctx.destination);
   if (bgm) {
-    const p = bgmPresets[bgm]!, { bpm, root } = p, step = 60 / bpm, bus = ctx.createGain(); bus.gain.value = bgmVolume; bus.connect(master);
-    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = p.cutoff; lp.connect(bus);
-    const lvl = p.wave === 'sine' ? 0.07 : p.wave === 'triangle' ? 0.055 : 0.035;
-    p.chord.forEach(m => [-4, 4].forEach(det => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = p.wave; o.frequency.value = root * 2 * m; o.detune.value = det; g.gain.setValueAtTime(0, 0); g.gain.linearRampToValueAtTime(lvl, 1.5); g.gain.setValueAtTime(lvl, Math.max(1.6, duration - 1)); g.gain.linearRampToValueAtTime(0, duration); o.connect(g).connect(lp); o.start(0); o.stop(duration); }));
-    beatTimes(bpm, duration).forEach((t, i) => {
-      const kick = p.kick === 'four' || (p.kick === 'half' && i % 2 === 0) || (p.kick === 'trap' && (i % 4 === 0 || i % 8 === 3));
-      if (kick) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.18); g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25); o.connect(g).connect(bus); o.start(t); o.stop(t + 0.3); }
-      if (p.hat) { const hits = p.kick === 'trap' ? [0.25, 0.5, 0.75] : [0.5]; hits.forEach(fr => { const h = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), ht = t + step * fr; h.buffer = noiseBuffer(ctx, 0.05); f.type = 'highpass'; f.frequency.value = 7000; g.gain.setValueAtTime(0.1, ht); g.gain.exponentialRampToValueAtTime(0.001, ht + 0.05); h.connect(f).connect(g).connect(bus); h.start(ht); }); }
-      if (p.arp) { const n = p.chord[i % p.chord.length]!, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = root * 8 * n; g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + step * 0.9); o.connect(g).connect(bus); o.start(t); o.stop(t + step); }
-    });
+    const p = bgmPresets[bgm]!, buf = await loadTrack(p.url), src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = buf; const loop = loopLength(p.bpm, buf.duration); if (duration > loop) { src.loop = true; src.loopStart = 0; src.loopEnd = loop; }
+    const fade = Math.min(1, duration / 4); g.gain.setValueAtTime(bgmVolume, 0); g.gain.setValueAtTime(bgmVolume, Math.max(0, duration - fade)); g.gain.linearRampToValueAtTime(0, duration);
+    src.connect(g).connect(master); src.start(0); src.stop(duration);
   }
   sfx.forEach(s => scheduleSfx(ctx, master, s.type, s.at));
   return ctx.startRendering();
