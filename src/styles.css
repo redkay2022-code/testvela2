@@ -859,3 +859,4 @@
 .catalog-stats strong{font-size:22px;color:var(--primary)}
 .catalog-stats span{font-size:12px;color:var(--muted-foreground)}
 .catalog-low td{background:color-mix(in oklab, var(--destructive) 8%, transparent)}
+.shorts-music-credit{font-size:11px;color:var(--muted-foreground);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
