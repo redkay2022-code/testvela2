@@ -4,6 +4,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MAX_VIDEO_SECONDS } from '@/lib/listing-media';
+import { MusicPicker, type SelectedMusic } from './music-picker';
 import { beatTimes, bgmCredit, bgmPresets, preloadBgm, clipsToWavBase64, renderSoundtrack, snapToBeat, type BgmId, type SfxType } from '@/lib/video-audio';
 import { transcribeVideoAudio } from '@/lib/video-captions.functions';
 
@@ -27,7 +28,8 @@ const uid = () => crypto.randomUUID();
 const readDuration = (url: string) => new Promise<number>((res, rej) => { const v = document.createElement('video'); v.preload = 'metadata'; v.muted = true; v.onloadedmetadata = () => { if (Number.isFinite(v.duration)) return res(v.duration); v.ondurationchange = () => { if (Number.isFinite(v.duration)) res(v.duration); }; v.currentTime = 1e7; }; v.onerror = () => rej(new Error('영상을 읽을 수 없어요.')); v.src = url; });
 
 /** Full-screen seller video editor: trims/orders clips, crops 9:16, adds BGM/SFX, captions, text, filters and product tags, then exports one file. */
-export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; catalog: { id: string; title: string }[]; onDone: (r: { file: File; tags: VideoTag[] }) => void; onCancel: () => void }) {
+export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicChange }: { file: File; catalog: { id: string; title: string }[]; onDone: (r: { file: File; tags: VideoTag[] }) => void; onCancel: () => void; music?: SelectedMusic | null; onMusicChange?: (m: SelectedMusic | null) => void }) {
+  const [pickerOpen, setPickerOpen] = useState(false); const musicAudio = useRef<HTMLAudioElement | null>(null);
   const transcribe = useServerFn(transcribeVideoAudio);
   const [clips, setClips] = useState<Clip[]>([]);
   const [layer, setLayer] = useState<Layer>('clips');
@@ -38,6 +40,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
   const [sfx, setSfx] = useState<{ id: string; type: SfxType; at: number }[]>([]);
   const [tags, setTags] = useState<{ id: string; postId: string; title: string; at: number }[]>([]);
   const [t, setT] = useState(0); const [playing, setPlaying] = useState(false);
+  useEffect(() => { const a = musicAudio.current; if (!a) return; if (playing) { void a.play().catch(() => undefined); } else a.pause(); }, [playing, music?.music_audio_url]);
   const [busy, setBusy] = useState(''); const [err, setErr] = useState('');
   const [draft, setDraft] = useState({ text: '', style: 'gold-serif' as TextStyle }); const [tagPick, setTagPick] = useState(catalog[0]?.id ?? '');
   const videoRef = useRef<HTMLVideoElement>(null); const audioCtx = useRef<AudioContext | null>(null); const audioSrc = useRef<AudioBufferSourceNode | null>(null);
@@ -178,9 +181,10 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
             <label className="editor-row">세로 위치<input type="range" min={8} max={90} value={x.y} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, y: Number(e.target.value) } : y))}/></label></div>)}
         </>}
         {layer === 'music' && <>
-          <div className="grid gap-2">{([null, ...Object.keys(bgmPresets)] as (BgmId | null)[]).map(id => <button key={id ?? 'none'} type="button" className={`editor-option ${bgm === id ? 'active' : ''}`} onPointerEnter={() => id && preloadBgm(id)} onClick={() => setBgm(id)}><Music size={14}/>{id ? <span className="grid text-left"><span>{bgmPresets[id]!.label}</span><small className="text-muted-foreground">{bgmPresets[id]!.feel}</small></span> : '배경음악 없음'}</button>)}</div>
-          <p className="text-[10px] text-muted-foreground">{bgmCredit}</p>
-          {bgm && <><label className="editor-row">음악 볼륨<input type="range" min={0} max={1} step={0.05} value={bgmVol} onChange={e => setBgmVol(Number(e.target.value))}/></label><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={beatSync} onChange={e => setBeatSync(e.target.checked)}/>비트 싱크 · 텍스트·태그를 박자에 맞춰 배치</label></>}
+          <div className="editor-card"><div className="flex flex-wrap items-center gap-2"><Music size={16} className="text-primary"/><strong className="text-sm">음악 추가</strong><Button size="sm" variant="goldOutline" className="ml-auto" disabled={!onMusicChange} onClick={() => setPickerOpen(true)}>{music ? '음악 변경' : '음악 선택'}</Button></div>
+            {music && <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground" data-no-translate>♪ {music.music_title} - {music.music_artist}<Button size="icon" variant="ghost" className="ml-auto size-7" aria-label="음악 제거" onClick={() => onMusicChange?.(null)}><Trash2/></Button></div>}
+            {music && <audio ref={musicAudio} src={music.music_audio_url} loop preload="auto" />}</div>
+          {pickerOpen && onMusicChange && <MusicPicker onClose={() => setPickerOpen(false)} onSelect={m => { onMusicChange(m); setPickerOpen(false); }}/>}
           <label className="editor-row">원본 소리<input type="range" min={0} max={1} step={0.05} value={origVol} onChange={e => { setOrigVol(Number(e.target.value)); if (videoRef.current) videoRef.current.volume = Number(e.target.value); }}/></label>
         </>}
         {layer === 'filter' && <div className="grid grid-cols-2 gap-2">{(Object.keys(luxuryFilters) as FilterId[]).map(f => <button key={f} type="button" className={`editor-option ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}><span className="editor-swatch" style={{ filter: luxuryFilters[f].css }}/>{luxuryFilters[f].label}</button>)}</div>}
