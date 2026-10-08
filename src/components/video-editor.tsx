@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
 import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
   };
 
   const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['text', '텍스트·자막', Type], ['music', '음악·효과음', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
-  return <div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
+  return createPortal(<div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
     <header className="video-editor-head"><Button variant="ghost" size="icon" aria-label="편집 취소" onClick={onCancel} disabled={busy === 'export'}><X/></Button><h2>영상 편집</h2><Button variant="gold" size="sm" disabled={!clips.length || !!busy || total > MAX_VIDEO_SECONDS + 0.05} onClick={() => void exportVideo()}>{busy === 'export' ? <><Loader2 className="animate-spin"/>만드는 중…</> : '편집 완료'}</Button></header>
     <div className="video-editor-body">
       <div className={`video-editor-stage ${vertical ? 'is-vertical' : ''}`}>
@@ -192,5 +193,5 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
         </>}
       </section>
     </div>
-  </div>;
+  </div>, document.body);
 }
