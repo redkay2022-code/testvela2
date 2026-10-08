@@ -37,7 +37,7 @@ import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
 import { seedPosts } from '@/lib/seed-sellers';
 import { rankRecommended } from '@/lib/feed-ranking';
-import { filterFeed } from '@/lib/feed-filters';
+import { filterFeed, type FeedFilter } from '@/lib/feed-filters';
 import { FeedFilters } from './feed-filters';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
 
@@ -59,7 +59,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
  const update=(values:Partial<typeof search>)=>{if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,...values}),resetScroll:false});else void navigate({to:helpPath ?? base,search:prev=>({...prev,...values}),resetScroll:false});};
   const closeCategories=()=>{if(categoriesPushed.current){categoriesPushed.current=false;router.history.back();}else void navigate({to:'/',search:prev=>({...prev,categoriesOpen:undefined}),replace:true,resetScroll:false});};
   const selectCategory=(id:string)=>{categoriesPushed.current=false;void navigate({to:'/',search:prev=>({...prev,feedCategory:id==='recommend'?undefined:id,categoriesOpen:undefined,category:undefined,feedTopic:undefined}),replace:Boolean(search.categoriesOpen),resetScroll:false});};
-  const closeSearch=()=>{if(searchPushed.current){searchPushed.current=false;router.history.back();}else if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,searchOpen:undefined}),replace:true,resetScroll:false});else void navigate({to:helpPath ?? base,search:prev=>({...prev,searchOpen:undefined}),replace:true,resetScroll:false});};
+ const closeSearch=()=>{if(searchPushed.current){searchPushed.current=false;router.history.back();}else if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,searchOpen:undefined}),replace:true,resetScroll:false});else void navigate({to:helpPath ?? base,search:prev=>({...prev,searchOpen:undefined}),replace:true,resetScroll:false});};
+ const setFeedFilter=(f:FeedFilter)=>{const next={fq:f.fq,ffactory:f.ffactory,fmin:f.fmin,fmax:f.fmax,fshorts:f.fshorts};if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,...next}),replace:true,resetScroll:false});else void navigate({to:helpPath ?? base,search:prev=>({...prev,...next}),replace:true,resetScroll:false});};
  const close=()=>{if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,auth:undefined,menu:undefined,panel:undefined}),replace:true,resetScroll:false});else void navigate({to:helpPath ?? base,search:prev=>({...prev,...(search.auth?{auth:undefined}:search.menu?{menu:undefined}:search.panel?{panel:undefined}:{post:undefined,detailTab:undefined})}),replace:true,resetScroll:false});};
  let posts=all.filter(p=>!preview.hidden.includes(p.id)&&(!search.q||`${p.title} ${p.creator} ${p.factory} ${p.category}`.toLowerCase().includes(search.q.toLowerCase()))&&(!search.category||search.category==='All'||p.category===search.category||p.factory===search.category));
  if(search.tab==='following') posts=posts.filter(p=>preview.isFollowing(sellerIdentity(p))).sort((a,b)=>(Date.parse(b.source?.created_at ?? '')||0)-(Date.parse(a.source?.created_at ?? '')||0));
@@ -76,6 +77,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
  if(cleanHome&&search.tab!=='reviews')posts=filterFeed(posts,search);
  const selected=all.find(p=>p.id===(shortsId || search.post));
  const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
+ const feedFilterResults=filterFeed(all.filter(p=>!preview.hidden.includes(p.id)),search);
  return <>
  <header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <div className="lux-header-inner">
@@ -87,7 +89,6 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
    {cleanHome&&<FeedCategoryPicker selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
  </header>
   <main className={`lux-shell ${cleanHome?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`}>
- {cleanHome&&search.tab!=='reviews'&&<FeedFilters value={{fq:search.fq,ffactory:search.ffactory,fmin:search.fmin,fmax:search.fmax,fshorts:search.fshorts}} count={posts.length} onChange={f=>void navigate({to:'/',search:prev=>({...prev,fq:f.fq,ffactory:f.ffactory,fmin:f.fmin,fmax:f.fmax,fshorts:f.fshorts}),replace:true,resetScroll:false})}/>}
  {!help&&(mode==='explore'||mode==='market')&&<>
   {mode==='market'&&<div className="mt-6 flex flex-wrap items-center gap-3"><Button asChild variant={search.collection!=='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'watches'}}>시계 컬렉션</Link></Button><Button asChild variant={search.collection==='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'accessories'}}>액세서리 컬렉션</Link></Button>{search.collection!=='accessories'&&<select className="form-input max-w-52" aria-label="시계 유형" value={search.watchType ?? 'all'} onChange={e=>update({watchType:marketSearch.shape.watchType.parse(e.target.value)})}>{watchTypes.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>}</div>}
  {mode==='explore'&&<form className="lux-search" onSubmit={e=>{e.preventDefault();update({q:query || undefined});}}><Search size={18}/><input autoFocus aria-label="Search watches" placeholder="Search watches, factories, studios…" value={query} onChange={e=>setQuery(e.target.value)}/><Button variant="ghost" size="icon" type="submit" aria-label="Search"><ArrowRight/></Button></form>}
