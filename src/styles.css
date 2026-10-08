@@ -910,3 +910,7 @@
 .product-detail-header strong{font-size:14px;}
 .shorts-floating-header{display:flex;justify-content:space-between;}
 .shorts-header-tools{margin-left:auto;}
+
+.shorts-video-copy {color:var(--media-label);overflow-wrap:anywhere;}
+.shorts-video-copy h2 {font-size:18px;font-weight:600;line-height:1.45;}
+.shorts-video-copy p {margin-top:8px;font-size:13px;line-height:1.65;white-space:pre-wrap;max-height:24dvh;overflow-y:auto;overscroll-behavior:contain;}

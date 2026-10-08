@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detailMedia, postMediaRoute, postPhotos } from '@/lib/post-media';
+import { detailMedia, isHybridPost, postMediaRoute, postPhotos } from '@/lib/post-media';
 import { luxuryPosts } from '@/lib/luxury-market';
 import type { Post } from '@/lib/market';
 
@@ -18,14 +18,19 @@ describe('Post media navigation',()=>{
  it('opens photo-only posts on the product page',()=>{
   expect(postMediaRoute(post({media_urls:['/photo.jpg']}))).toBe('/post/$id');
  });
- it('opens hybrid posts on the product page',()=>{
-  expect(postMediaRoute(post({media_urls:['/photo.jpg'],video_url:'/video.mp4'}))).toBe('/post/$id');
+ it('opens hybrid posts in Shorts first',()=>{
+  expect(postMediaRoute(post({media_urls:['/photo.jpg'],video_url:'/video.mp4'}))).toBe('/shorts/$id');
  });
  it('opens video-only posts in Shorts without counting generated posters as photos',()=>{
   const item=post({video_url:'/video.mp4'});
   expect(item.images).toEqual(['/poster.jpg']);
   expect(postPhotos(item)).toEqual([]);
   expect(postMediaRoute(item)).toBe('/shorts/$id');
+ });
+ it('offers product detail navigation only for videos with uploaded photos',()=>{
+  expect(isHybridPost(post({media_urls:['/photo.jpg'],video_url:'/video.mp4'}))).toBe(true);
+  expect(isHybridPost(post({video_url:'/video.mp4'}))).toBe(false);
+  expect(isHybridPost(post({media_urls:['/photo.jpg']}))).toBe(false);
  });
  it('combines one video and uploaded photos in one ordered gallery',()=>{
   expect(detailMedia(post({video_url:'/video.mp4',media_urls:['/one.jpg','/two.jpg']}))).toEqual([
