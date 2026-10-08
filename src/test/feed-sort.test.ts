@@ -18,3 +18,6 @@ describe('upload limits', () => {
     expect(photoTooLarge({ size: 10 * 1024 * 1024 + 1 })).toBe(true);
   });
 });
+
+import { MAX_LISTING_PHOTOS as MAX_P } from '@/lib/listing-media';
+describe('listing media limit', () => { it('allows 9 photos with 1 video', () => { expect(MAX_P).toBe(9); }); });
