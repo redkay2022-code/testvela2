@@ -65,7 +65,12 @@ export const decideSellerApplication = createServerFn({ method: 'POST' })
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const { data: app, error } = await supabaseAdmin.from('seller_applications').update({ status: data.approve ? 'approved' : 'rejected', reviewed_at: new Date().toISOString() }).eq('id', data.id).select('user_id').single();
     if (error || !app) throw new Error('Could not update application.');
-    if (data.approve) await supabaseAdmin.from('user_roles').upsert({ user_id: app.user_id, role: 'seller' }, { onConflict: 'user_id,role', ignoreDuplicates: true });
+    if (data.approve) {
+      await supabaseAdmin.from('user_roles').upsert({ user_id: app.user_id, role: 'seller' }, { onConflict: 'user_id,role', ignoreDuplicates: true });
+      const w = await import('./seller-welcome');
+      const { count } = await supabaseAdmin.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', app.user_id).eq('kind', w.SELLER_WELCOME_KIND);
+      if (!count) await supabaseAdmin.from('notifications').insert({ user_id: app.user_id, kind: w.SELLER_WELCOME_KIND, title: w.SELLER_WELCOME_TITLE, body: w.sellerWelcomeBody('ko'), cta_label: w.sellerWelcomeCopy.ko.cta, cta_url: w.SELLER_WELCOME_CTA_URL });
+    }
     else await supabaseAdmin.from('user_roles').delete().eq('user_id', app.user_id).eq('role', 'seller');
     return { ok: true };
   });
