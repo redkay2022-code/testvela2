@@ -37,4 +37,4 @@
 - Signed media self-heals via src/lib/media-refresh.ts.
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
 
-- Seller Studio reuses trusted metrics/listings/QC with URL tabs and shared shell notifications to avoid duplicate subscriptions.
+- Seller Studio reuses trusted metrics/listings/QC, URL tabs and shell notifications, avoiding duplicate subscriptions.
