@@ -33,3 +33,4 @@
 - Help/privacy use public leaves; profile/shipping use URL-tabbed settings. Presentation: src/components/AGENTS.md.
 - USDT display estimates USD parity; keep stored prices and payment networks unchanged.
 - Seed stores/products live in the database (data_source SEED), not local arrays. Catalog is Seller → Store → Product: products extend `posts` (store_id, product_status, inventory, data_source) with `product_images`/`product_qc`; a DB trigger owns status/stock transitions and syncs legacy `status`, so existing feed/search/buy code keeps reading `posts`. Inactive stores hide their products via a restrictive RLS policy.
+- Categories live in public.categories (admin-managed parent/child rows); forms render them via CategoryOptions and posts keep the category name, so renames also update posts. Video uploads auto-generate a JPEG frame into posts.thumbnail_url in the browser so feeds never load video just for a cover.
