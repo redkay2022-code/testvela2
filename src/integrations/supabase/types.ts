@@ -107,6 +107,165 @@ export type Database = {
           },
         ]
       }
+      loyalty_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      loyalty_budget: {
+        Row: {
+          allocated_budget: number
+          commission_amount: number
+          outstanding_liability: number
+          period: string
+          points_issued: number
+          points_redeemed: number
+          updated_at: string
+        }
+        Insert: {
+          allocated_budget?: number
+          commission_amount?: number
+          outstanding_liability?: number
+          period: string
+          points_issued?: number
+          points_redeemed?: number
+          updated_at?: string
+        }
+        Update: {
+          allocated_budget?: number
+          commission_amount?: number
+          outstanding_liability?: number
+          period?: string
+          points_issued?: number
+          points_redeemed?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_config: {
+        Row: {
+          commission_rate_pct: number
+          expiration_months: number
+          id: number
+          loyalty_budget_pct: number
+          max_earn_rate_pct: number
+          max_outstanding_liability_usd: number
+          max_redemption_pct: number
+          monthly_point_budget_usd: number
+          point_value_usd: number
+          points_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          commission_rate_pct?: number
+          expiration_months?: number
+          id?: number
+          loyalty_budget_pct?: number
+          max_earn_rate_pct?: number
+          max_outstanding_liability_usd?: number
+          max_redemption_pct?: number
+          monthly_point_budget_usd?: number
+          point_value_usd?: number
+          points_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          commission_rate_pct?: number
+          expiration_months?: number
+          id?: number
+          loyalty_budget_pct?: number
+          max_earn_rate_pct?: number
+          max_outstanding_liability_usd?: number
+          max_redemption_pct?: number
+          monthly_point_budget_usd?: number
+          point_value_usd?: number
+          points_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_settings: {
+        Row: {
+          earn_rate: number
+          insurance_discount: number
+          insurance_rate: number
+          sort_order: number
+          spend_max: number | null
+          spend_min: number
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          earn_rate: number
+          insurance_discount: number
+          insurance_rate: number
+          sort_order: number
+          spend_max?: number | null
+          spend_min: number
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          earn_rate?: number
+          insurance_discount?: number
+          insurance_rate?: number
+          sort_order?: number
+          spend_max?: number | null
+          spend_min?: number
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      memberships: {
+        Row: {
+          rolling_12_month_spend: number
+          tier: string
+          tier_end_date: string
+          tier_start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          rolling_12_month_spend?: number
+          tier?: string
+          tier_end_date?: string
+          tier_start_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          rolling_12_month_spend?: number
+          tier?: string
+          tier_end_date?: string
+          tier_start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_messages: {
         Row: {
           areas: string[]
@@ -190,6 +349,7 @@ export type Database = {
         Row: {
           amount_usd: number
           buyer_id: string
+          cancelled_at: string | null
           courier: string | null
           created_at: string
           dispute_open: boolean
@@ -199,7 +359,16 @@ export type Database = {
           network: string | null
           order_no: string
           payment_verified_at: string | null
+          points_discount_usd: number
+          points_earn_base: number
+          points_earn_rate: number | null
+          points_earned: number
+          points_pending: number
+          points_redeemed: number
           post_id: string | null
+          product_amount_usd: number | null
+          purchase_confirmed_at: string | null
+          refunded_amount_usd: number
           seller_id: string | null
           seller_name: string
           stage: string
@@ -213,6 +382,7 @@ export type Database = {
         Insert: {
           amount_usd?: number
           buyer_id: string
+          cancelled_at?: string | null
           courier?: string | null
           created_at?: string
           dispute_open?: boolean
@@ -222,7 +392,16 @@ export type Database = {
           network?: string | null
           order_no?: string
           payment_verified_at?: string | null
+          points_discount_usd?: number
+          points_earn_base?: number
+          points_earn_rate?: number | null
+          points_earned?: number
+          points_pending?: number
+          points_redeemed?: number
           post_id?: string | null
+          product_amount_usd?: number | null
+          purchase_confirmed_at?: string | null
+          refunded_amount_usd?: number
           seller_id?: string | null
           seller_name?: string
           stage?: string
@@ -236,6 +415,7 @@ export type Database = {
         Update: {
           amount_usd?: number
           buyer_id?: string
+          cancelled_at?: string | null
           courier?: string | null
           created_at?: string
           dispute_open?: boolean
@@ -245,7 +425,16 @@ export type Database = {
           network?: string | null
           order_no?: string
           payment_verified_at?: string | null
+          points_discount_usd?: number
+          points_earn_base?: number
+          points_earn_rate?: number | null
+          points_earned?: number
+          points_pending?: number
+          points_redeemed?: number
           post_id?: string | null
+          product_amount_usd?: number | null
+          purchase_confirmed_at?: string | null
+          refunded_amount_usd?: number
           seller_id?: string | null
           seller_name?: string
           stage?: string
@@ -301,6 +490,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      point_transactions: {
+        Row: {
+          admin_id: string | null
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          expires_at: string | null
+          id: string
+          note: string | null
+          order_id: string | null
+          remaining: number
+          source: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          remaining?: number
+          source?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          remaining?: number
+          source?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      point_wallets: {
+        Row: {
+          available_points: number
+          lifetime_earned: number
+          lifetime_redeemed: number
+          pending_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_points?: number
+          lifetime_earned?: number
+          lifetime_redeemed?: number
+          pending_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_points?: number
+          lifetime_earned?: number
+          lifetime_redeemed?: number
+          pending_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       posts: {
         Row: {
@@ -813,6 +1077,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _loyalty_budget_add: {
+        Args: { _commission: number; _issued: number; _redeemed: number }
+        Returns: undefined
+      }
+      _loyalty_expires: { Args: never; Returns: string }
+      _loyalty_tx: {
+        Args: {
+          _admin: string
+          _amount: number
+          _expires: string
+          _note: string
+          _order: string
+          _source: string
+          _type: string
+          _uid: string
+        }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -828,6 +1110,19 @@ export type Database = {
         Args: { _order_id: string; _uid: string }
         Returns: boolean
       }
+      loyalty_admin_adjust: {
+        Args: {
+          _bonus?: boolean
+          _points: number
+          _reason: string
+          _user: string
+        }
+        Returns: number
+      }
+      loyalty_admin_overview: { Args: never; Returns: Json }
+      loyalty_expire_user: { Args: { _uid: string }; Returns: undefined }
+      loyalty_my_summary: { Args: never; Returns: Json }
+      loyalty_refresh_membership: { Args: { _uid: string }; Returns: string }
       store_is_visible: { Args: { _store_id: string }; Returns: boolean }
     }
     Enums: {
