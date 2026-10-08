@@ -35,3 +35,4 @@
 - Categories live in public.categories (admin-managed parent/child rows); forms render them via CategoryOptions and posts keep the category name, so renames also update posts. Video uploads auto-generate a JPEG frame into posts.thumbnail_url in the browser so feeds never load video just for a cover.
 - Details at /post/$id, Shorts at /shorts/$id (?post= redirects); leaf head() sets per-post title/image for share previews.
 - Expired signed media self-heals via query refetch (interval, focus, media-error listener in src/lib/media-refresh.ts).
+- VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
