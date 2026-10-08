@@ -330,6 +330,7 @@ export type Database = {
           stock_qty: number
           store_id: string | null
           subcategory: string
+          thumbnail_url: string | null
           title: string
           updated_at: string
           user_id: string | null
@@ -363,6 +364,7 @@ export type Database = {
           stock_qty?: number
           store_id?: string | null
           subcategory?: string
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
           user_id?: string | null
@@ -396,6 +398,7 @@ export type Database = {
           stock_qty?: number
           store_id?: string | null
           subcategory?: string
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
           user_id?: string | null
