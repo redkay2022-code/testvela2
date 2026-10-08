@@ -235,10 +235,10 @@ const uploadSpecFields: [string,string,string][] = [
   ['model','모델','예: Submariner 126610LN'],
   ['material','케이스 소재','예: 904L 스틸'],
   ['movement','무브먼트','예: 3235 · 72시간'],
+  ['powerReserve','파워리저브','예: 72시간'],
   ['caseSize','다이암터','예: 41mm'],
   ['waterResistance','방수','예: 50m / 5ATM'],
   ['glass','글라스/크리스탈','예: 사파이어 크리스탈'],
-  ['condition','상태','예: S급 · 98%'],
 ];
 
 export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;requestAuth:()=>void;onPosted:()=>void}) {
