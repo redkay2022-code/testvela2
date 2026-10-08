@@ -31,7 +31,7 @@ export function NotificationBell({ user }: { user: User | null }) {
   };
   const lang = activeLang() === 'ko' ? 'ko' : 'en';
   return <Dialog.Root open={open} onOpenChange={o => { setOpen(o); if (o) void markRead(); }}>
-    <Dialog.Trigger asChild><Button variant="ghost" size="icon" aria-label={unread ? `알림 (읽지 않음 ${unread}개)` : '알림'} className="relative">
+    <Dialog.Trigger asChild><Button variant="ghost" size="icon" aria-label={unread ? `알림 (읽지 않음 ${unread}개)` : '알림'} className="relative h-10 w-8">
       <Bell />{unread > 0 && <span className="absolute right-1 top-1 min-w-4 rounded-full bg-primary px-1 text-[10px] font-bold leading-4 text-primary-foreground">{unread > 9 ? '9+' : unread}</span>}
     </Button></Dialog.Trigger>
     <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-50 bg-background/70" />
