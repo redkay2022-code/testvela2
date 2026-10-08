@@ -38,7 +38,7 @@ function StudioTierTab(){
 }
 export function Dashboard({kind,posts}:{kind:'admin'|'seller';posts:LuxuryPost[]}){
  const search=marketSearch.parse(useRouterState({select:s=>s.location.search})); const p=useMarketPreview();const [message,setMessage]=useState('');
- const role=search.role || 'buyer';if((kind==='admin'&&role!=='admin')||(kind==='seller'&&role!=='seller'&&role!=='admin'))return <div className="dashboard-gate"><ShieldCheck size={34}/><h1>{kind==='admin'?'Platform back office':'Seller studio'}</h1><p>Choose the matching sample role to explore this view.</p><RoleSwitcher/><p className="text-xs">This preview contains sample data only.</p></div>;
+ const role=search.role || 'buyer';if((kind==='admin'&&role!=='admin')||(kind==='seller'&&role!=='seller'&&role!=='admin'))return <div className="dashboard-gate"><ShieldCheck size={34}/><h1>{kind==='admin'?'Platform back office':'Seller studio'}</h1><p>승인된 계정으로 로그인하면 이용할 수 있습니다.</p></div>;
  if(kind==='admin')return <AdminDashboard posts={posts}/>;
  const tabs=sellerTabs;const section=search.section || 'overview';
  const decide=(id:string,state:string)=>{p.decide(id,state);setMessage(`${state} · Sample record updated`);};
