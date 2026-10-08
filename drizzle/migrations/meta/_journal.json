@@ -127,6 +127,13 @@
       "when": 1791468169637,
       "tag": "0017_catalog_sellers_stores_products",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791470659794,
+      "tag": "0018_categories_and_payment_transactions",
+      "breakpoints": true
     }
   ]
 }

@@ -36,7 +36,7 @@ import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
 import { rankRecommended } from '@/lib/feed-ranking';
-import { filterFeed, postFactory, type FeedFilter } from '@/lib/feed-filters';
+import { filterFeed, sortFeed, postFactory, type FeedFilter } from '@/lib/feed-filters';
 import { FeedFilters } from './feed-filters';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
 

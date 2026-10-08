@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          collection: string
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          sort_order: number
+        }
+        Insert: {
+          collection?: string
+          created_at?: string
+          id: string
+          name: string
+          parent_id?: string | null
+          sort_order?: number
+        }
+        Update: {
+          collection?: string
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           body: string
@@ -222,6 +257,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          amount_usd: number
+          created_at: string
+          escrow_status: string
+          id: string
+          network: string
+          order_id: string
+          submitted_by: string
+          txid: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string
+          escrow_status?: string
+          id?: string
+          network: string
+          order_id: string
+          submitted_by: string
+          txid: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string
+          escrow_status?: string
+          id?: string
+          network?: string
+          order_id?: string
+          submitted_by?: string
+          txid?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       posts: {
         Row: {
