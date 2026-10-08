@@ -10,7 +10,7 @@ import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-ro
 import { useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronRight, Compass, Eye, Heart, Home, Menu, MessageCircle, Play, Plus, Search, Share2, ShieldCheck, ShoppingBag, SlidersHorizontal, Store, User, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bell, Bookmark, Check, ChevronRight, Compass, Eye, Heart, Home, Menu, MessageCircle, Play, Plus, Search, Share2, ShieldCheck, ShoppingBag, SlidersHorizontal, Store, User, X } from 'lucide-react';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { marketSearch, paths, postsQuery, storesQuery, type Mode } from '@/lib/market';
@@ -29,7 +29,7 @@ import { FeedCategoryPicker } from './feed-category-picker';
 import { matchesFeedCategory } from '@/lib/feed-categories';
 import { SellerDirectory } from './seller-directory';
 import { CurrencySelect } from './currency';
-import { NotificationBell } from './notification-bell';
+import { NotificationInbox, useNotifications } from './notification-bell';
 import { t } from '@/lib/i18n';
 import { insuredPurchase } from '@/lib/insurance';
 import { cashPayment } from '@/lib/loyalty';
@@ -53,6 +53,9 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   const sheetPushed=useRef(false),searchPushed=useRef(false),categoriesPushed=useRef(false);
  const [query,setQuery]=useState(search.q || ''),[toast,setToast]=useState(''),[user,setUser]=useState<AuthUser|null>(null),[newest,setNewest]=useState(false);
  const [welcomeAuth,setWelcomeAuth]=useState(false);
+ const notifications=useNotifications(user);
+ const notificationPushed=useRef(false);
+ const closeNotifications=()=>{if(notificationPushed.current){notificationPushed.current=false;router.history.back();}else update({notice:undefined});};
  useEffect(()=>{void supabase.auth.getSession().then(({data})=>{if(!data.session&&!sessionStorage.getItem('vela-auth-dismissed'))setWelcomeAuth(true);});const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{setUser(session?.user || null);if(session)setWelcomeAuth(false);});return ()=>subscription.unsubscribe();},[]);
  const queryClient=useQueryClient();
  useMediaRefresh();
@@ -88,10 +91,10 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  return <>
  <header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <div className="lux-header-inner">
-  <Button variant="ghost" size="icon" aria-label="Open menu" onClick={()=>update({menu:true})}><Menu/></Button>
+  <Button variant="ghost" size="icon" className="relative" aria-label={notifications.unread?`메뉴 열기 · 읽지 않은 알림 ${notifications.unread}개`:'메뉴 열기'} onClick={()=>update({menu:true})}><Menu/>{notifications.unread>0&&<span aria-hidden="true" className="absolute right-0 top-1 size-2 rounded-full bg-destructive"/>}</Button>
     <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>
     <nav className="lux-header-tabs" aria-label="Feed tabs">{[['following','팔로잉'],['discover','추천'],['reviews','리뷰']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,feedCategory:search.feedCategory,tab:tab as 'following'|'discover'|'reviews'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false}>{label}</Link></Button>)}</nav>
-   <CurrencySelect/><span className="flex items-center"><NotificationBell user={user}/><Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button></span>
+   <CurrencySelect/><Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button>
   </div>
    {cleanHome&&<FeedCategoryPicker selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
  </header>
@@ -119,7 +122,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  <AnimatePresence>{selected&&!shortsId&&<ProductDetail key={selected.id} post={selected} user={user} requestAuth={()=>update({auth:true})} close={close} buy={box=>void navigate({to:'/buy/$id',params:{id:selected.id},search:{checkoutBox:box||undefined}})} notify={setToast}/>}</AnimatePresence>
   {shortsId&&(shorts.some(p=>p.id===shortsId)?<ShortsPlayer posts={shorts} selectedId={shortsId} sheet={search.shortSheet} shortTab={search.shortTab || 'recommend'} onTab={shortTab=>update({shortTab})} onSearch={()=>{searchPushed.current=true;update({searchOpen:true});}} user={user} close={()=>void navigate({to:'/',search:{role:search.role},replace:true})} closeSheet={()=>{if(sheetPushed.current){sheetPushed.current=false;router.history.back();}else void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,shortSheet:undefined,shortPhoto:undefined,detailTab:undefined}),replace:true,resetScroll:false});}} change={id=>void navigate({to:'/shorts/$id',params:{id},search:prev=>({...prev,shorts:undefined,detailTab:undefined}),replace:true,resetScroll:false})} openSheet={shortSheet=>{sheetPushed.current=true;update({shortSheet});}} requestAuth={()=>update({auth:true})} buy={box=>void navigate({to:'/buy/$id',params:{id:shortsId},search:{checkoutBox:box||undefined}})} notify={setToast}/>:<Overlay title="Short unavailable" close={()=>void navigate({to:'/',search:{role:search.role},replace:true})}><Button asChild variant="goldOutline"><Link to="/" search={{role:search.role}}>Return Home</Link></Button></Overlay>)}
   {search.searchOpen&&<Dialog.Root open onOpenChange={open=>{if(!open)closeSearch();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className="lux-search-overlay" aria-describedby={undefined}><div className="lux-search-overlay-inner"><div className="lux-search-top"><Dialog.Title className="text-lg font-semibold">Search</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close search" onClick={closeSearch}><X/></Button></div><FeedFilters value={{fq:search.fq,ffactory:search.ffactory,fmin:search.fmin,fmax:search.fmax,fshorts:search.fshorts,fsort:search.fsort}} count={feedFilterResults.length} onChange={setFeedFilter}/><div className="lux-search-keywords" data-no-translate role="group" aria-label="빠른 검색 키워드"><span>빠른 검색</span>{quickKeywords.map(k=><Button key={k} variant="ghost" className="lux-chip" aria-pressed={search.fq===k} onClick={()=>setFeedFilter({fq:search.fq===k?undefined:k})}>{k}</Button>)}</div><div className="lux-search-results"><Feed posts={feedFilterResults} base={base} search={{role:search.role}}/></div></div></Dialog.Content></Dialog.Portal></Dialog.Root>}
-  {search.menu&&<Overlay title="VELA" close={close} side><ProductionMenu role={search.role}/></Overlay>}
+  {search.menu&&!search.notice&&<Overlay title="VELA" close={close} side><ProductionMenu role={search.role} notifications={<Button variant="ghost" className="min-h-11 w-full justify-start gap-3 px-2" aria-label={notifications.unread?`알림함 · 읽지 않음 ${notifications.unread}개`:'알림함'} onClick={()=>{notificationPushed.current=true;update({notice:true});}}><Bell className="size-4 text-muted-foreground"/><span className="flex-1 text-start">알림함</span>{notifications.unread>0&&<span className="rounded-full bg-destructive px-2 text-xs text-destructive-foreground">{notifications.unread>99?'99+':notifications.unread}</span>}<ChevronRight className="size-4 text-muted-foreground"/></Button>}/></Overlay>}
+  <NotificationInbox user={user} open={Boolean(search.notice)} onClose={closeNotifications} notifications={notifications}/>
  {(search.post||postId)&&!selected&&<Overlay title="Product unavailable" close={close}><p className="py-6 text-sm text-muted-foreground">This listing is no longer available.</p></Overlay>}
  {search.auth?<AuthDialog onClose={close} onSignedIn={close}/>:welcomeAuth&&!user&&<AuthDialog initialSignup onClose={()=>{sessionStorage.setItem('vela-auth-dismissed','1');setWelcomeAuth(false);}} onSignedIn={()=>setWelcomeAuth(false)}/>}
   {search.panel&&(search.panel==='orders'&&!user?<Overlay title="주문 내역 · 에스크로 상태" close={close}><p className="my-5 text-sm text-muted-foreground">로그인하면 내 주문의 QC 자료, 에스크로 상태와 배송 추적을 확인할 수 있습니다.</p><Button variant="goldOutline" onClick={()=>update({panel:undefined,auth:true})}>로그인하고 내 주문 확인</Button></Overlay>:<CommercePanel posts={all} onBuy={post=>update({checkoutItem:post.id,panel:'checkout'})} panel={search.panel} user={user} selected={search.panel==='checkout'&&search.checkoutItem?all.find(post=>post.id===search.checkoutItem):selected} close={close} onPanel={panel=>update({panel})} notify={setToast}/>)}
