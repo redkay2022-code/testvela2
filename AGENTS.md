@@ -37,4 +37,4 @@
 - Media self-heals via src/lib/media-refresh.ts.
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
 
-- Seller pages share trusted queries; studioTab URL state separates details to limit scrolling.
+- Seller pages share trusted queries; studioTab URL state separates details to limit scrolling. Shared PullToRefresh invalidates active queries from top-only document/nested gestures; discoveryListings excludes sold stock only from discovery, retaining storefront history.
