@@ -37,4 +37,4 @@
 - Media self-heals via src/lib/media-refresh.ts.
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
 
-- Seller routes split store/messages/studio; share trusted queries, payment totals and QC-gated replacements.
+- Seller pages share trusted queries; studioTab URL state separates details to limit scrolling.
