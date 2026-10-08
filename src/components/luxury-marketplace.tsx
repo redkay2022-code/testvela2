@@ -13,7 +13,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronRight, Compass, Eye, Heart, Home, Menu, MessageCircle, Play, Plus, Search, Share2, ShieldCheck, ShoppingBag, SlidersHorizontal, Store, User, X } from 'lucide-react';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
-import { marketSearch, paths, postsQuery, type Mode } from '@/lib/market';
+import { marketSearch, paths, postsQuery, storesQuery, type Mode } from '@/lib/market';
 import { dollars, luxuryCategories, luxuryPosts, watchImages, type LuxuryPost } from '@/lib/luxury-market';
 import { useMarketPreview } from './market-preview';
 import { AuthDialog, UploadForm } from './marketplace';
