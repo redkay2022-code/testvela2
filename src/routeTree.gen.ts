@@ -21,6 +21,7 @@ import { Route as StoreRouteImport } from './routes/store'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as BuyIdRouteImport } from './routes/buy.$id'
+import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as ShortsIdRouteImport } from './routes/shorts.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -83,6 +84,11 @@ const BuyIdRoute = BuyIdRouteImport.update({
   path: '/buy/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PostIdRoute = PostIdRouteImport.update({
+  id: '/post/$id',
+  path: '/post/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShortsIdRoute = ShortsIdRouteImport.update({
   id: '/shorts/$id',
   path: '/shorts/$id',
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
   '/buy/$id': typeof BuyIdRoute
+  '/post/$id': typeof PostIdRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesByTo {
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
   '/buy/$id': typeof BuyIdRoute
+  '/post/$id': typeof PostIdRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesById {
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
   '/buy/$id': typeof BuyIdRoute
+  '/post/$id': typeof PostIdRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRouteTypes {
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/upload'
     | '/buy/$id'
+    | '/post/$id'
     | '/shorts/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/upload'
     | '/buy/$id'
+    | '/post/$id'
     | '/shorts/$id'
   id:
     | '__root__'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/upload'
     | '/buy/$id'
+    | '/post/$id'
     | '/shorts/$id'
   fileRoutesById: FileRoutesById
 }
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   UploadRoute: typeof UploadRoute
   BuyIdRoute: typeof BuyIdRoute
+  PostIdRoute: typeof PostIdRoute
   ShortsIdRoute: typeof ShortsIdRoute
 }
 
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/post/$id': {
+      id: '/post/$id'
+      path: '/post/$id'
+      fullPath: '/post/$id'
+      preLoaderRoute: typeof PostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shorts/$id': {
       id: '/shorts/$id'
       path: '/shorts/$id'
@@ -308,6 +328,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   UploadRoute: UploadRoute,
   BuyIdRoute: BuyIdRoute,
+  PostIdRoute: PostIdRoute,
   ShortsIdRoute: ShortsIdRoute,
 }
 export const routeTree = rootRouteImport

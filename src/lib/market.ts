@@ -16,8 +16,8 @@ export const marketSearch = z.object({
   feedTopic:z.enum(['recommend','videos','trend','live','football','VS Factory','PPF','3K','APS']).optional(),
   category:z.string().optional(), q:z.string().optional(), fq:z.string().optional(), ffactory:z.string().optional(), fmin:z.number().optional(), fmax:z.number().optional(), fshorts:z.boolean().optional(), fsort:z.enum(['newest','price_desc','price_asc']).optional(), tab:z.enum(['discover','following','reviews','nearby','likes','posts']).optional(),
 });
-export const storesQuery = queryOptions({queryKey:['stores'],queryFn:() => getStores(),staleTime:30_000});
-export const postsQuery = queryOptions({queryKey:['posts'],queryFn:() => getPosts(),staleTime:30_000});
+export const storesQuery = queryOptions({queryKey:['stores'],queryFn:() => getStores(),staleTime:30_000,refetchInterval:45*60_000});
+export const postsQuery = queryOptions({queryKey:['posts'],queryFn:() => getPosts(),staleTime:30_000,refetchInterval:45*60_000,refetchIntervalInBackground:false});
 export const pageHead = (title:string,description:string) => ({ meta:[
   {title:`${title} · velamarket 벨라마켓`},
   {name:'description',content:description},

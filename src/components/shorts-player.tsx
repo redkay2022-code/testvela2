@@ -60,7 +60,8 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  useEffect(()=>{const v=video.current;if(!v||!videoTags.length)return;const on=()=>setClock(v.currentTime);v.addEventListener('timeupdate',on);return()=>v.removeEventListener('timeupdate',on);},[videoTags.length]);
  const shownTag=videoTags.find(tg=>clock>=tg.at&&clock<=tg.at+3);
  const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
- const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
+ useEffect(()=>{setFailed(false);},[post.video]);
+  const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
  const following=preview.isFollowing(identity);
  const read=useServerFn(getComments);
  const {data:comments}=useQuery({queryKey:['comments',post.id],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
@@ -70,7 +71,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  <div className="shorts-shade"/>
  {post.video&&!failed&&<button type="button" className="shorts-sound-toggle" aria-label={sound?'소리 끄기':'소리 켜기'} aria-pressed={sound} onClick={()=>{const v=video.current;if(!v)return;const next=!sound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}{!sound&&<span>소리 켜기</span>}</button>}
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
- {shownTag&&<Link to="/" search={{post:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>}
+ {shownTag&&<Link to="/post/$id" params={{id:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>}
  <div className="shorts-product-overlay">
  <div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
  <div className="shorts-seller-row">
