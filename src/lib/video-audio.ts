@@ -29,39 +29,40 @@ import t26 from '@/assets/music/aitech.mp3.asset.json';
 import t27 from '@/assets/music/werq.mp3.asset.json';
 import t28 from '@/assets/music/pamgaea.mp3.asset.json';
 import t29 from '@/assets/music/jazz-brunch.mp3.asset.json';
-type Bgm = { label: string; title: string; bpm: number; url: string; feel: string };
-const t = (title: string, bpm: number, url: string, feel: string): Bgm => ({ label: `${title} · ${bpm} BPM`, title, bpm, url, feel });
+/** offset = measured position (s) of beat 1 inside the file; the editor's beat grid starts there. */
+type Bgm = { label: string; title: string; bpm: number; url: string; feel: string; offset: number };
+const t = (title: string, bpm: number, url: string, feel: string, offset: number): Bgm => ({ label: `${title} · ${Math.round(bpm)} BPM`, title, bpm, url, feel, offset });
 export const bgmPresets: Record<string, Bgm> = {
-  'local-forecast-elevator': t("Local Forecast - Elevator", 82, t0.url, "Bouncy, Bright, Grooving"),
-  'smooth-lovin': t("Smooth Lovin", 75, t1.url, "Grooving, Calming, Relaxed"),
-  'bossa-antigua': t("Bossa Antigua", 70, t2.url, "Bright, Grooving, Relaxed"),
-  'lobby-time': t("Lobby Time", 128, t3.url, "Calming, Grooving, Relaxed"),
-  'wallpaper': t("Wallpaper", 92, t4.url, "Bouncy, Bright, Calming, Uplifting"),
-  'cipher': t("Cipher", 150, t5.url, "Bright, Grooving, Uplifting"),
-  'funkorama': t("Funkorama", 101, t6.url, "Grooving, Uplifting"),
-  'inspired': t("Inspired", 120, t7.url, "Bright, Relaxed, Calming, Uplifting"),
-  'carefree': t("Carefree", 96, t8.url, "Bouncy, Bright, Calming, Uplifting"),
-  'easy-lemon': t("Easy Lemon", 82, t9.url, "Bright, Calming, Relaxed"),
-  'airport-lounge': t("Airport Lounge", 129, t10.url, "Bouncy, Calming, Relaxed"),
-  'backbay-lounge': t("Backbay Lounge", 120, t11.url, "Bright, Grooving, Relaxed"),
-  'dreamer': t("Dreamer", 100, t12.url, "Calming, Relaxed"),
-  'deliberate-thought': t("Deliberate Thought", 69, t13.url, "Calming, Relaxed"),
-  'cool-vibes': t("Cool Vibes", 83, t14.url, "Calming, Relaxed"),
-  'groove-grove': t("Groove Grove", 70, t15.url, "Calming, Grooving, Mysterious, Relaxed"),
-  'spy-glass': t("Spy Glass", 110, t16.url, "Grooving, Mysterious"),
-  'impact-prelude': t("Impact Prelude", 80, t17.url, "Calming, Grooving, Mysterious"),
-  'overcast': t("Overcast", 120, t18.url, "Bouncy, Bright, Grooving"),
-  'danse-morialta': t("Danse Morialta", 70, t19.url, "Calming, Relaxed, Somber, Uplifting"),
-  'sovereign': t("Sovereign", 109, t20.url, "Dark, Calming"),
-  'chill-wave': t("Chill Wave", 100, t21.url, "Grooving, Relaxed"),
-  'arcadia': t("Arcadia", 80, t22.url, "Eerie, Epic, Mysterious, Mystical, Unnerving, Uplifting"),
-  'ice-flow': t("Ice Flow", 70, t23.url, "Grooving, Intense"),
-  'electro-cabello': t("Electro Cabello", 117, t24.url, "Bouncy, Grooving"),
-  'dances-and-dames': t("Dances and Dames", 120, t25.url, "Grooving, Mysterious, Suspenseful"),
-  'aitech': t("Aitech", 105, t26.url, "Grooving, Bright"),
-  'werq': t("Werq", 125, t27.url, "Bright, Grooving, Relaxed"),
-  'pamgaea': t("Pamgaea", 94, t28.url, "Bouncy, Grooving, Relaxed"),
-  'jazz-brunch': t("Jazz Brunch", 100, t29.url, "Bright, Grooving, Relaxed"),
+  'local-forecast-elevator': t("Local Forecast - Elevator", 82, t0.url, "Bouncy, Bright, Grooving", 0.7039),
+  'smooth-lovin': t("Smooth Lovin", 75, t1.url, "Grooving, Calming, Relaxed", 0.7706),
+  'bossa-antigua': t("Bossa Antigua", 70, t2.url, "Bright, Grooving, Relaxed", 0.8258),
+  'lobby-time': t("Lobby Time", 128, t3.url, "Calming, Grooving, Relaxed", 0.4412),
+  'wallpaper': t("Wallpaper", 92.55, t4.url, "Bouncy, Bright, Calming, Uplifting", 0.4847),
+  'cipher': t("Cipher", 150, t5.url, "Bright, Grooving, Uplifting", 0.3715),
+  'funkorama': t("Funkorama", 101, t6.url, "Grooving, Uplifting", 0.5645),
+  'inspired': t("Inspired", 120, t7.url, "Bright, Relaxed, Calming, Uplifting", 0.4717),
+  'carefree': t("Carefree", 96, t8.url, "Bouncy, Bright, Calming, Uplifting", 0.5936),
+  'easy-lemon': t("Easy Lemon", 82, t9.url, "Bright, Calming, Relaxed", 0.7155),
+  'airport-lounge': t("Airport Lounge", 129.77, t10.url, "Bouncy, Calming, Relaxed", 0.045),
+  'backbay-lounge': t("Backbay Lounge", 120, t11.url, "Bright, Grooving, Relaxed", 0.4731),
+  'dreamer': t("Dreamer", 100, t12.url, "Calming, Relaxed", 0.5732),
+  'deliberate-thought': t("Deliberate Thought", 69, t13.url, "Calming, Relaxed", 0.8403),
+  'cool-vibes': t("Cool Vibes", 83, t14.url, "Calming, Relaxed", 0.698),
+  'groove-grove': t("Groove Grove", 70, t15.url, "Calming, Grooving, Mysterious, Relaxed", 0.6124),
+  'spy-glass': t("Spy Glass", 110, t16.url, "Grooving, Mysterious", 0.5152),
+  'impact-prelude': t("Impact Prelude", 80, t17.url, "Calming, Grooving, Mysterious", 0.3454),
+  'overcast': t("Overcast", 120, t18.url, "Bouncy, Bright, Grooving", 0.4717),
+  'danse-morialta': t("Danse Morialta", 70.42, t19.url, "Calming, Relaxed, Somber, Uplifting", 0.3991),
+  'sovereign': t("Sovereign", 109.33, t20.url, "Dark, Calming", 0.5471),
+  'chill-wave': t("Chill Wave", 100, t21.url, "Grooving, Relaxed", 0.2902),
+  'arcadia': t("Arcadia", 79.84, t22.url, "Eerie, Epic, Mysterious, Mystical, Unnerving, Uplifting", 0.6908),
+  'ice-flow': t("Ice Flow", 70, t23.url, "Grooving, Intense", 0.8272),
+  'electro-cabello': t("Electro Cabello", 117, t24.url, "Bouncy, Grooving", 0.4804),
+  'dances-and-dames': t("Dances and Dames", 120, t25.url, "Grooving, Mysterious, Suspenseful", 0.4702),
+  'aitech': t("Aitech", 105, t26.url, "Grooving, Bright", 0.5399),
+  'werq': t("Werq", 125, t27.url, "Bright, Grooving, Relaxed", 0.4484),
+  'pamgaea': t("Pamgaea", 94, t28.url, "Bouncy, Grooving, Relaxed", 0.6168),
+  'jazz-brunch': t("Jazz Brunch", 100, t29.url, "Bright, Grooving, Relaxed", 0.5703),
 };
 export const bgmCredit = 'Music: Kevin MacLeod (incompetech.com) · CC BY 4.0';
 export type BgmId = keyof typeof bgmPresets;
@@ -100,9 +101,9 @@ export async function renderSoundtrack(duration: number, bgm: BgmId | null, bgmV
   const master = ctx.createGain(); master.connect(ctx.destination);
   if (bgm) {
     const p = bgmPresets[bgm]!, buf = await loadTrack(p.url), src = ctx.createBufferSource(), g = ctx.createGain();
-    src.buffer = buf; const loop = loopLength(p.bpm, buf.duration); if (duration > loop) { src.loop = true; src.loopStart = 0; src.loopEnd = loop; }
+    src.buffer = buf; const loop = loopLength(p.bpm, buf.duration - p.offset - 2.5); if (duration > loop) { src.loop = true; src.loopStart = p.offset; src.loopEnd = p.offset + loop; }
     const fade = Math.min(1, duration / 4); g.gain.setValueAtTime(bgmVolume, 0); g.gain.setValueAtTime(bgmVolume, Math.max(0, duration - fade)); g.gain.linearRampToValueAtTime(0, duration);
-    src.connect(g).connect(master); src.start(0); src.stop(duration);
+    src.connect(g).connect(master); src.start(0, p.offset); src.stop(duration);
   }
   sfx.forEach(s => scheduleSfx(ctx, master, s.type, s.at));
   return ctx.startRendering();
