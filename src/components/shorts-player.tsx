@@ -60,9 +60,8 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  useEffect(()=>{const v=video.current,a=bgm.current;if(!v||!a)return;const sync=()=>{a.muted=v.muted;if(v.paused)a.pause();else{const d=a.duration||1e9;if(Math.abs(a.currentTime-(v.currentTime%d))>0.4)a.currentTime=v.currentTime%d;void a.play().catch(()=>undefined);}};const ev=['play','pause','playing','volumechange','seeked'];ev.forEach(e=>v.addEventListener(e,sync));sync();return()=>{ev.forEach(e=>v.removeEventListener(e,sync));a.pause();};},[active,videoSrc,src?.music_audio_url]);
  useEffect(()=>{const v=video.current;if(!v||!videoTags.length)return;const on=()=>setClock(v.currentTime);v.addEventListener('timeupdate',on);return()=>v.removeEventListener('timeupdate',on);},[videoTags.length]);
  const shownTag=videoTags.find(tg=>clock>=tg.at&&clock<=tg.at+3);
- const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
- const videoSrc=stableMediaSrc(post.video,failed);
-  useEffect(()=>{setFailed(false);},[post.video]);
+ const [failed,setFailed]=useState(false);const videoSrc=stableMediaSrc(post.video,failed);const [blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
+ useEffect(()=>{setFailed(false);},[post.video]);
   const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
  const following=preview.isFollowing(identity);
  const read=useServerFn(getComments);
