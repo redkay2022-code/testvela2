@@ -227,17 +227,30 @@ export type Database = {
         Row: {
           base_likes: number
           box_price: number | null
+          brand: string
           category: string
           created_at: string
           creator: string
+          currency: string
+          data_source: string
           description: string
           duration: string | null
+          featured: boolean
           id: string
           image_key: string
+          low_stock_threshold: number
           media_urls: string[]
+          model: string
           price: number | null
+          product_status: string | null
+          reference: string
+          reserved_qty: number
+          sku: string
           specs: Json
           status: string
+          stock_qty: number
+          store_id: string | null
+          subcategory: string
           title: string
           updated_at: string
           user_id: string | null
@@ -247,17 +260,30 @@ export type Database = {
         Insert: {
           base_likes?: number
           box_price?: number | null
+          brand?: string
           category?: string
           created_at?: string
           creator?: string
+          currency?: string
+          data_source?: string
           description?: string
           duration?: string | null
+          featured?: boolean
           id?: string
           image_key: string
+          low_stock_threshold?: number
           media_urls?: string[]
+          model?: string
           price?: number | null
+          product_status?: string | null
+          reference?: string
+          reserved_qty?: number
+          sku?: string
           specs?: Json
           status?: string
+          stock_qty?: number
+          store_id?: string | null
+          subcategory?: string
           title: string
           updated_at?: string
           user_id?: string | null
@@ -267,24 +293,118 @@ export type Database = {
         Update: {
           base_likes?: number
           box_price?: number | null
+          brand?: string
           category?: string
           created_at?: string
           creator?: string
+          currency?: string
+          data_source?: string
           description?: string
           duration?: string | null
+          featured?: boolean
           id?: string
           image_key?: string
+          low_stock_threshold?: number
           media_urls?: string[]
+          model?: string
           price?: number | null
+          product_status?: string | null
+          reference?: string
+          reserved_qty?: number
+          sku?: string
           specs?: Json
           status?: string
+          stock_qty?: number
+          store_id?: string | null
+          subcategory?: string
           title?: string
           updated_at?: string
           user_id?: string | null
           video_tags?: Json
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "posts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_images: {
+        Row: {
+          created_at: string
+          id: string
+          is_main: boolean
+          kind: string
+          path: string
+          post_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_main?: boolean
+          kind?: string
+          path: string
+          post_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_main?: boolean
+          kind?: string
+          path?: string
+          post_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_qc: {
+        Row: {
+          inspection_notes: string
+          post_id: string
+          qc_available: boolean
+          qc_video: string | null
+          timegrapher: Json
+          updated_at: string
+        }
+        Insert: {
+          inspection_notes?: string
+          post_id: string
+          qc_available?: boolean
+          qc_video?: string | null
+          timegrapher?: Json
+          updated_at?: string
+        }
+        Update: {
+          inspection_notes?: string
+          post_id?: string
+          qc_available?: boolean
+          qc_video?: string | null
+          timegrapher?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_qc_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: true
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -430,6 +550,119 @@ export type Database = {
         }
         Relationships: []
       }
+      sellers: {
+        Row: {
+          account_id: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          country: string
+          created_at: string
+          id: string
+          seller_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          id?: string
+          seller_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          id?: string
+          seller_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stores: {
+        Row: {
+          avatar: string | null
+          city: string
+          country: string
+          cover_image: string | null
+          created_at: string
+          data_source: string
+          description: string
+          featured: boolean
+          id: string
+          logo: string | null
+          response_time: string
+          seller_id: string
+          shipping_information: string
+          shipping_regions: string[]
+          slug: string
+          specialties: string[]
+          status: string
+          store_name: string
+          updated_at: string
+          verification_status: string
+        }
+        Insert: {
+          avatar?: string | null
+          city?: string
+          country?: string
+          cover_image?: string | null
+          created_at?: string
+          data_source?: string
+          description?: string
+          featured?: boolean
+          id?: string
+          logo?: string | null
+          response_time?: string
+          seller_id: string
+          shipping_information?: string
+          shipping_regions?: string[]
+          slug: string
+          specialties?: string[]
+          status?: string
+          store_name: string
+          updated_at?: string
+          verification_status?: string
+        }
+        Update: {
+          avatar?: string | null
+          city?: string
+          country?: string
+          cover_image?: string | null
+          created_at?: string
+          data_source?: string
+          description?: string
+          featured?: boolean
+          id?: string
+          logo?: string | null
+          response_time?: string
+          seller_id?: string
+          shipping_information?: string
+          shipping_regions?: string[]
+          slug?: string
+          specialties?: string[]
+          status?: string
+          store_name?: string
+          updated_at?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stores_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "sellers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -498,6 +731,7 @@ export type Database = {
         Args: { _order_id: string; _uid: string }
         Returns: boolean
       }
+      store_is_visible: { Args: { _store_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "seller" | "user"

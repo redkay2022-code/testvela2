@@ -13,7 +13,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronRight, Compass, Eye, Heart, Home, Menu, MessageCircle, Play, Plus, Search, Share2, ShieldCheck, ShoppingBag, SlidersHorizontal, Store, User, X } from 'lucide-react';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
-import { marketSearch, paths, postsQuery, type Mode } from '@/lib/market';
+import { marketSearch, paths, postsQuery, storesQuery, type Mode } from '@/lib/market';
 import { dollars, luxuryCategories, luxuryPosts, watchImages, type LuxuryPost } from '@/lib/luxury-market';
 import { useMarketPreview } from './market-preview';
 import { AuthDialog, UploadForm } from './marketplace';
@@ -35,7 +35,6 @@ import { InsuranceBanner, InsuranceBreakdown, InsuranceTeaser } from './insuranc
 import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
-import { seedPosts } from '@/lib/seed-sellers';
 import { rankRecommended } from '@/lib/feed-ranking';
 import { filterFeed, postFactory, type FeedFilter } from '@/lib/feed-filters';
 import { FeedFilters } from './feed-filters';
@@ -43,7 +42,7 @@ import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;help?:'escrow'|'support'|'privacy'}) {
- const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const all=withLiveRatings([...luxuryPosts(data),...seedPosts],ratingMap.data); const preview=useMarketPreview();
+ const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const all=withLiveRatings(luxuryPosts(data),ratingMap.data); const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
  const helpPath=help==='escrow'?'/escrow-guide':help==='support'?'/support':help==='privacy'?'/privacy':undefined;
  const navigate=useNavigate(),router=useRouter(); const base=mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
@@ -67,7 +66,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
   const {data:reviewRows}=useQuery({queryKey:['review-counts'],queryFn:async()=>{const {data:rows}=await supabase.from('reviews').select('seller_id');return rows ?? [];},staleTime:30_000});
   const postRatings=usePostRatings();
   const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
-  if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {});
+  if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {}).sort((a,b)=>Number(Boolean(b.featured))-Number(Boolean(a.featured)));
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
@@ -124,7 +123,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
 function Feed({posts,base,search}:{posts:LuxuryPost[];base:'/'|'/explore'|'/market'|'/me'|'/upload'|'/store'|'/seller'|'/admin';search:ReturnType<typeof marketSearch.parse>}) {
  const preview=useMarketPreview();const compact=base==='/';const columns=compact?2:3;
  return posts.length?<div className={`lux-waterfall ${compact?'red-home-waterfall':''}`}>{Array.from({length:columns},(_,i)=>i).map(column=><div className="lux-column" key={column}>{posts.filter((_,i)=>i%columns===column).map((post,i)=><article className="lux-post" key={post.id}>
-  <Link to={post.short?'/shorts/$id':base} params={post.short?{id:post.id}:{}} search={post.short?{role:search.role}:{...search,post:post.id,shorts:undefined}} resetScroll={false} className={`lux-post-media shape-${(column+i)%3}`} aria-label={post.title}>{post.video?<FeedVideo post={post}/>:<img src={post.images[0]} alt={post.title} width={512} height={512} loading={i===0?'eager':'lazy'} onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src=watchImages[0] ?? '';}}/>}{!compact&&<><span className="lux-views"><Eye size={12}/>{post.views}<span className="views-word"> views</span></span><span className="lux-bag"><ShoppingBag size={15}/></span></>}</Link>
+  <Link to={post.short?'/shorts/$id':base} params={post.short?{id:post.id}:{}} search={post.short?{role:search.role}:{...search,post:post.id,shorts:undefined}} resetScroll={false} className={`lux-post-media shape-${(column+i)%3}`} aria-label={post.title}>{post.video?<FeedVideo post={post}/>:<img src={post.images[0]} alt={post.title} width={512} height={512} loading={i===0?'eager':'lazy'} onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src=watchImages[0] ?? '';}}/>}{post.outOfStock&&<span className="lux-soldout">품절</span>}{!compact&&<><span className="lux-views"><Eye size={12}/>{post.views}<span className="views-word"> views</span></span><span className="lux-bag"><ShoppingBag size={15}/></span></>}</Link>
  <div className="lux-post-copy">{!compact&&<div className="lux-post-tags"><span>{post.factory}</span>{(preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified)&&<ShieldCheck size={12}/>}</div>}<Link to={post.short?'/shorts/$id':base} params={post.short?{id:post.id}:{}} search={post.short?{role:search.role}:{...search,post:post.id,shorts:undefined}} resetScroll={false}><h2>{post.title}</h2></Link>{!compact&&post.price!==null&&<p className="lux-card-price">{dollars(post.price)}</p>}<div className="lux-post-creator" data-no-translate><Link to="/store" search={{role:search.role,seller:sellerIdentity(post)}}><img src={post.images[0]} width={20} height={20} alt=""/><span>{post.creator}</span><SellerBadge reputation={post.reputation} compact/></Link><Button variant="ghost" className={`lux-heart ${preview.saved.includes(post.id)?'active':''}`} aria-label={`Save ${post.title}`} aria-pressed={preview.saved.includes(post.id)} onClick={()=>preview.toggleSaved(post.id)}><Heart/>{compact?new Intl.NumberFormat('ko-KR',{notation:'compact',maximumFractionDigits:1}).format(post.likes+(preview.saved.includes(post.id)?1:0)):post.likes+(preview.saved.includes(post.id)?1:0)}</Button></div></div>
  </article>)}</div>)}</div>:<div className="lux-empty"><Compass/><h2>No finds here yet.</h2><p>Follow a studio or choose another category.</p><Button asChild variant="goldOutline"><Link to="/store">Explore VS Watch Studio<ArrowRight/></Link></Button></div>;
 }
@@ -151,7 +150,13 @@ function CommercePanel({posts,onBuy,panel,user,selected,close,onPanel,notify}:{u
 }
 function SellerStoreHeader({post,count,search}:{post:LuxuryPost|undefined;count:number;search:ReturnType<typeof marketSearch.parse>}) {
  const preview=useMarketPreview(),following=post?preview.isFollowing(sellerIdentity(post)):false;
- return <><div className="store-profile mt-8">{post&&<img src={post.images[0]} className="store-avatar" alt={post.creator}/>}<div className="store-title" data-no-translate><h1>{post?.creator || 'Seller unavailable'}{post&&<SellerBadge reputation={post.reputation} withRating/>}</h1>{post&&<Button variant="goldOutline" aria-pressed={following} onClick={()=>preview.toggleSeller(sellerIdentity(post))}>{following?<Check/>:<Plus/>}{following?'Following':'Follow'}</Button>}</div>{post&&<p className="store-bio">{post.sample?'Independent watch curation. Thoughtful details, precise movements.':post.description}</p>}<div className="store-stats"><span><strong>{count}</strong> Products</span></div>{post&&<SellerRatings reputation={post.reputation}/>}</div><nav className="lux-tabs store-tabs">{(['products','shorts','reviews'] as const).map(tab=><Button key={tab} asChild variant="ghost" className={`lux-tab ${(search.storeTab || 'products')===tab?'active':''}`}><Link to="/store" search={{role:search.role,seller:search.seller,storeTab:tab}}>{tab==='reviews'?'Customer Reviews':`${tab[0]?.toUpperCase()}${tab.slice(1)}`}</Link></Button>)}</nav></>;
+ return <><div className="store-profile mt-8">{post&&<img src={post.images[0]} className="store-avatar" alt={post.creator}/>}<div className="store-title" data-no-translate><h1>{post?.creator || 'Seller unavailable'}{post&&<SellerBadge reputation={post.reputation} withRating/>}</h1>{post&&<Button variant="goldOutline" aria-pressed={following} onClick={()=>preview.toggleSeller(sellerIdentity(post))}>{following?<Check/>:<Plus/>}{following?'Following':'Follow'}</Button>}</div>{post&&<p className="store-bio">{post.sample?'Independent watch curation. Thoughtful details, precise movements.':post.description}</p>}<div className="store-stats"><span><strong>{count}</strong> Products</span></div><StoreInfo name={post?.creator}/>{post&&<SellerRatings reputation={post.reputation}/>}</div><nav className="lux-tabs store-tabs">{(['products','shorts','reviews'] as const).map(tab=><Button key={tab} asChild variant="ghost" className={`lux-tab ${(search.storeTab || 'products')===tab?'active':''}`}><Link to="/store" search={{role:search.role,seller:search.seller,storeTab:tab}}>{tab==='reviews'?'Customer Reviews':`${tab[0]?.toUpperCase()}${tab.slice(1)}`}</Link></Button>)}</nav></>;
+}
+function StoreInfo({name}:{name:string|undefined}){
+ const {data}=useQuery(storesQuery); const store=data?.find(s=>s.store_name===name);
+ if(!store)return null;
+ const place=[store.city,store.country].filter(Boolean).join(', ');
+ return <div className="store-info" data-no-translate>{store.cover_image&&<img src={store.cover_image} alt="" className="store-cover"/>}{store.verification_status!=='UNVERIFIED'&&<span className="store-verify"><ShieldCheck size={13}/>{store.verification_status}</span>}{place&&<p><strong>Location</strong> {place}</p>}{store.specialties.length>0&&<p><strong>Specialties</strong> {store.specialties.join(' · ')}</p>}{store.response_time&&<p><strong>Response</strong> {store.response_time}</p>}{(store.shipping_regions.length>0||store.shipping_information)&&<p><strong>Shipping</strong> {[store.shipping_regions.join(', '),store.shipping_information].filter(Boolean).join(' — ')}</p>}</div>;
 }
 function Reviews(){const memberships:BuyerTier[]=['gold','silver','member'];return <div className="review-list">{[['A. Chen','Beautiful finishing. The studio shared detailed photos before shipping.'],['J. Park','Quick communication and a carefully packed watch.'],['M. Lee','The dial looks even better in person.']].map(([name,text],index)=><article key={name}><div className="flex justify-between"><div className="review-author"><strong>{name}</strong><BuyerBadge tier={memberships[index] ?? 'member'}/></div><span className="text-primary">★★★★★</span></div><p className="mt-3 text-sm leading-7 text-muted-foreground">{text}</p><span className="mt-3 block text-xs text-muted-foreground">Sample review · Verified purchase preview</span></article>)}</div>;}
 
