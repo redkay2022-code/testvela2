@@ -129,10 +129,7 @@ function Feed({posts,base,search}:{posts:LuxuryPost[];base:'/'|'/explore'|'/mark
  </article>)}</div>)}</div>:<div className="lux-empty"><Compass/><h2>No finds here yet.</h2><p>Follow a studio or choose another category.</p><Button asChild variant="goldOutline"><Link to="/store">Explore VS Watch Studio<ArrowRight/></Link></Button></div>;
 }
 function FeedVideo({post}:{post:LuxuryPost}) {
- const ref=useRef<HTMLVideoElement>(null),[visible,setVisible]=useState(false),[ready,setReady]=useState(false);
- useEffect(()=>{const el=ref.current;if(!el)return;const observer=new IntersectionObserver(([entry])=>setVisible(Boolean(entry?.isIntersecting)),{rootMargin:'240px 0px',threshold:.05});observer.observe(el);return()=>observer.disconnect();},[]);
- useEffect(()=>{const el=ref.current;if(!el)return;if(visible){el.preload='auto';el.load();void el.play().catch(()=>undefined);}else el.pause();},[visible,post.video]);
- return <span className={`feed-video-frame ${ready?'is-ready':''}`}><img src={post.images[0]} alt="" aria-hidden="true"/><video ref={ref} src={post.video ?? undefined} poster={post.images[0]} muted loop playsInline preload="none" aria-label={`${post.title} 영상`} onLoadedData={e=>{setReady(true);void e.currentTarget.play().catch(()=>undefined);}}/>{!ready&&<span className="feed-video-loading" aria-hidden="true"/>}</span>;
+ return <span className="feed-video-frame"><img src={post.images[0]} alt={`${post.title} 영상 썸네일`} loading="lazy"/><span className="feed-video-play" aria-hidden="true"><Play size={18} fill="currentColor"/></span></span>;
 }
 function ProductDetail({post,user,requestAuth,close,buy,notify}:{post:LuxuryPost;user:AuthUser|null;requestAuth:()=>void;close:()=>void;buy:(box:boolean)=>void;notify:(s:string)=>void}) {
  const reduced=useReducedMotion();
