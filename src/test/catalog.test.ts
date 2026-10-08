@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { availableQty, isCustomerVisible, publishBlockers, resolveProductStatus } from '@/lib/catalog';
+import { availableQty, discoveryListings, isCustomerVisible, publishBlockers, resolveProductStatus } from '@/lib/catalog';
 
 describe('catalog rules', () => {
+  it('hides sold-out products from discovery without removing storefront history', () => {
+    const store = [{ id: 'active', outOfStock: false }, { id: 'completed', outOfStock: true }];
+    expect(discoveryListings(store).map(p => p.id)).toEqual(['active']);
+    expect(store.map(p => p.id)).toEqual(['active', 'completed']);
+  });
   it('available quantity is stock minus reserved', () => {
     expect(availableQty(5, 2)).toBe(3);
   });
