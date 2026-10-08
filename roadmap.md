@@ -1,4 +1,5 @@
 # velamarket
+- [x] Add 11-language registration selection and a dedicated menu notifications section with a real unread hamburger indicator; language switching and authenticated inbox/Back navigation verified, 70 tests pass. Live new-notification delivery not exercised.
 - [x] Nav aria-labels, /post/$id + /shorts/$id addresses with per-post share meta, translated meta descriptions, signed-media auto refresh, 2+ char required post title.
 - [x] Complete Dutch, Russian, Latin and Arabic locale dictionaries; verified Korean, English, Chinese, Japanese, German, French, Italian, Dutch and Russian across Home, Seller, Admin, My VELA and Purchase with no page errors.
 - [x] Move inline account editing behind the profile-adjacent Edit button with URL-backed profile/shipping tabs; authenticated profile save/readback, shipping session save/reopen and browser Back verified without page errors.
