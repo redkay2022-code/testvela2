@@ -1,5 +1,6 @@
 # velamarket
 - [ ] Show Home without automatic signup; require registration on signed-out product selection and verify guest entry without changing prelaunch catalog permissions.
+- [ ] Add explicit registration and login tabs to signed-out My VELA.
 - [x] Automatically open the seller dashboard after trusted approval, refresh account/feed state, and verify redirect rules (6 tests pass; authenticated admin stays on admin). Seller approval-to-redirect end-to-end check requires the seller's session.
 - [x] Add 11-language registration selection and a dedicated menu notifications section with a real unread hamburger indicator; language switching and authenticated inbox/Back navigation verified, 70 tests pass. Live new-notification delivery not exercised.
 - [x] Nav aria-labels, /post/$id + /shorts/$id addresses with per-post share meta, translated meta descriptions, signed-media auto refresh, 2+ char required post title.
