@@ -8,7 +8,7 @@ import { ReviewList } from './customer-reviews';
 import { AdminCryptoOrders, AdminDisputeRooms } from './live-orders';
 import { useMarketPreview } from './market-preview';
 import { marketSearch } from '@/lib/market';
-import { seedSellers, seedPosts } from '@/lib/seed-sellers';
+import { AdminCatalog, type CatalogSection } from './admin-catalog';
 import type { LuxuryPost } from '@/lib/luxury-market';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,21 +20,30 @@ const tabs = [
   ['disputes', '분쟁 중재', Scale],
   ['moderation', '피드 & 리뷰 관리', FileCheck],
 ] as const;
+const mainTabs = [['dashboard','Dashboard'],['stores','Stores'],['products','Products'],['categories','Categories'],['inventory','Inventory'],['orders','Orders'],['settings','Settings']] as const;
+const legacyKeys = ['sellers','verification','crypto','settlements','disputes','moderation'];
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 
 export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
+  const search = marketSearch.parse(useRouterState({ select: s => s.location.search }));
+  const top = !search.section ? 'dashboard' : legacyKeys.includes(search.section) ? 'settings' : search.section;
+  const nav = <nav className="dashboard-tabs flex-wrap" aria-label="관리자 메뉴">{mainTabs.map(([key, label]) => <Button asChild variant="ghost" key={key} className={top === key ? 'active' : ''}><Link to="/admin" search={{ role: 'admin', section: key === 'settings' ? 'sellers' : key }} resetScroll={false}>{label}</Link></Button>)}</nav>;
+  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
+  return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1></div></div>{nav}<LegacyAdmin posts={posts}/></div>;
+}
+
+function LegacyAdmin({ posts }: { posts: LuxuryPost[] }) {
   const search = marketSearch.parse(useRouterState({ select: s => s.location.search }));
   const p = useMarketPreview();
   const section = search.section === 'verification' ? 'crypto' : tabs.some(t => t[0] === search.section) ? search.section : 'sellers';
   const [message, setMessage] = useState('');
   const [reviewTab, setReviewTab] = useState(false);
   const { data: reviewCount } = useQuery({ queryKey: ['admin-review-count'], queryFn: async () => { const { count, error } = await supabase.from('reviews').select('id', { count: 'exact', head: true }); if (error) throw error; return count ?? 0; } });
-  const listings = [...seedPosts, ...posts];
+  const listings = posts;
   const studios = new Set(listings.map(sellerIdentity)).size;
   const held = p.orders.filter(o => !o.released);
   const decide = (id: string, state: string) => { p.decide(id, state); setMessage(`${state} · 샘플 상태만 변경되었습니다.`); };
-  return <div className="dashboard admin-core">
-    <div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>가상화폐 에스크로 · 익명 계정</p></div><Button asChild variant="goldOutline"><Link to="/store" search={{ role: 'admin' }}>판매자 스토어<Store/></Link></Button></div>
+  return <div>
     <div className="sample-notice">판매자 신청은 실제 계정으로 처리합니다. 주문·정산·분쟁은 샘플이며, 실제 블록체인 검증이나 송금은 실행되지 않습니다.</div>
     <div className="dashboard-stats">{[
       ['총 거래량 (USD 환산)', usd(p.orders.reduce((sum, o) => sum + o.amount, 0)), TrendingUp, '샘플 주문 합계'],
@@ -46,9 +55,7 @@ export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
     {message && <div role="status" className="dashboard-message"><Check size={15}/>{message}</div>}
     {section === 'sellers' ? <>
       <div className="section-heading"><h2>신규 판매자 신청</h2><span>시스템 ID · 닉네임만 확인</span></div><AdminApplications/>
-      <div className="section-heading mt-8"><h2>초기 승인 판매자</h2><span>시계 10 · 액세서리 3 · 샘플</span></div>
-      <div className="management-list">{seedSellers.map(s => <div className="management-row" key={s.name}><div className="studio-initial"><Store size={20}/></div><div><strong>{s.name}</strong><small>{s.kind === 'watch' ? '시계' : '액세서리'} · 쇼케이스 판매자 · 실제 계정 아님</small></div><span className="record-status">{p.audits[`seed-seller:${s.name}`] ?? '승인됨'}</span><div className="record-actions"><Button asChild variant="ghost" size="sm"><Link to="/store" search={{ role: 'admin', seller: s.name }}>스토어</Link></Button><Button variant="goldOutline" size="sm" onClick={() => decide(`seed-seller:${s.name}`, p.audits[`seed-seller:${s.name}`] === '일시 중지' ? '승인됨' : '일시 중지')}>{p.audits[`seed-seller:${s.name}`] === '일시 중지' ? '승인 복원' : '샘플 승인 중지'}</Button></div></div>)}</div>
-    </> : section === 'crypto' ? <>
+          </> : section === 'crypto' ? <>
       <div className="section-heading"><h2>구매자 TXID 검증</h2><span>USDT TRC-20 / ERC-20 · BTC · ETH</span></div>
       <AdminCryptoOrders/><div className="section-heading mt-8"><h2>샘플 주문</h2><span>미리보기 전용</span></div>
       <div className="management-list">{held.map(o => <div className="management-row" key={o.id}><div><strong>{o.title}</strong><small>{o.id} · {o.sellerName} · 샘플 주문</small><small>TXID / 네트워크 / 입금 확인: 미연결</small></div><strong>{usd(o.amount)}</strong><Button variant="goldOutline" size="sm" disabled><ShieldCheck/>검증 자료 없음</Button></div>)}</div>
