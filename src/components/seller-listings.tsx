@@ -45,6 +45,7 @@ export function SellerListings() {
     },
   });
   const [editing, setEditing] = useState<Listing | 'new' | null>(null);
+  const [replacing, setReplacing] = useState<string | null>(null);
   const refresh = () => { void qc.invalidateQueries({ queryKey: ['my-listings'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); };
 
   if (!user) return <section className="seller-flow-card"><h2 className="text-lg font-semibold">내 상품 관리</h2><p className="mt-2 text-sm text-muted-foreground">상품을 등록하려면 “나” 탭에서 로그인해 주세요.</p></section>;
@@ -52,7 +53,6 @@ export function SellerListings() {
   if (!canSell) return <section className="seller-flow-card"><h2 className="text-lg font-semibold">내 상품 관리</h2><p className="mt-2 text-sm text-muted-foreground">승인된 셀러만 상품을 등록할 수 있어요. “나” 탭에서 셀러 계정을 신청해 주세요.</p></section>;
 
   const toggle = async (l: Listing) => { await supabase.from('posts').update({ status: l.status === 'published' ? 'draft' : 'published', updated_at: new Date().toISOString() }).eq('id', l.id); refresh(); };
-  const [replacing, setReplacing] = useState<string | null>(null);
   const replaceVideo = async (l: Listing, file: File) => {
     if (!isListingVideo(file)) { alert('영상 파일(MP4/WEBM/MOV)을 선택해 주세요.'); return; }
     try { await validateListingFiles([file]); } catch (err) { alert(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; }
