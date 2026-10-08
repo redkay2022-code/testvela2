@@ -2,6 +2,7 @@ import { validatePostTitle } from '@/lib/post-title';
 import { formatDate } from '@/lib/i18n';
 import { useEffect, useRef, useState } from 'react';
 import { PHONE_COUNTRIES, detectPhoneCountry, toE164 } from '@/lib/phone-countries';
+const filterCountries = (q: string) => { const k = q.trim().toLowerCase().replace(/^\+/, ''); return k ? PHONE_COUNTRIES.filter(c => c.name.toLowerCase().includes(k) || c.iso.toLowerCase() === k || c.dial.startsWith(k)) : PHONE_COUNTRIES; };
 import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
 import { useQuery, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -210,6 +211,7 @@ export function AuthDialog({onClose,onSignedIn}:{onClose:()=>void;onSignedIn:()=
   const phone = toE164(country, localPhone);
   const [password,setPassword] = useState('');
   const [name,setName] = useState('');
+  const [countryQuery,setCountryQuery] = useState('');
   const [avatar,setAvatar] = useState<File|null>(null);
   const [avatarPreview,setAvatarPreview] = useState('');
   useEffect(() => { if(!avatar) {setAvatarPreview('');return;} const u = URL.createObjectURL(avatar); setAvatarPreview(u); return () => URL.revokeObjectURL(u); },[avatar]);
