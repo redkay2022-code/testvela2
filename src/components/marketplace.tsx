@@ -24,7 +24,7 @@ import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFile
 import { SpecsTable } from './specs-table';
 import { SourceFactoryField, type SourceType } from './source-factory';
 import { VideoEditor, type VideoTag } from './video-editor';
-import { MusicPicker, type SelectedMusic } from './music-picker';
+import { type SelectedMusic } from './music-picker';
 
 function imageFor(post: Post) { return post.media_urls[0] || media[post.image_key]; }
 
@@ -266,7 +266,6 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
   const [editing,setEditing] = useState<File|null>(null);
   const [videoTags,setVideoTags] = useState<VideoTag[]>([]);
   const [music,setMusic] = useState<SelectedMusic|null>(null);
-  const [musicOpen,setMusicOpen] = useState(false);
   useEffect(() => {const urls = files.map(f => URL.createObjectURL(f));setPreviews(urls);return () => urls.forEach(u => URL.revokeObjectURL(u));},[files]);
   const submit = async (e:React.FormEvent) => {
     e.preventDefault();if(!user) {requestAuth();return;}
