@@ -31,9 +31,13 @@ export function SellerApprovalRedirect({ user, applying }: { user: User | null; 
   useEffect(() => {
     if (previous.current.userId !== (user?.id ?? null)) previous.current = { userId: user?.id ?? null, seller: null };
     if (!user || !account) return;
-    const redirect = shouldOpenSellerDashboard(account, previous.current.seller, pathname, applying);
+    const key = `vela-seller-dashboard-opened:${user.id}`;
+    const opened = typeof window !== 'undefined' && window.localStorage.getItem(key) === '1';
+    const redirect = !opened && shouldOpenSellerDashboard(account, previous.current.seller, pathname, applying);
     previous.current.seller = account.roles.includes('seller');
+    if (account.roles.includes('seller') && pathname === '/seller') window.localStorage.setItem(key, '1');
     if (!redirect) return;
+    window.localStorage.setItem(key, '1');
     void qc.invalidateQueries({ queryKey: ['posts'] });
     void qc.invalidateQueries({ queryKey: ['stores'] });
     void navigate({ to: '/seller', search: { role: 'seller' }, replace: true });
