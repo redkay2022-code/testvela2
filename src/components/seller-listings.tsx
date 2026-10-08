@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useMyAccount } from './seller-account';
 import { formatMoney } from '@/lib/currency';
 import { VideoEditor, type VideoTag } from './video-editor';
+import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string; sourceType?: string; factory?: string };
@@ -61,7 +62,7 @@ export function SellerListings() {
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: up } = await supabase.storage.from('market-media').upload(path, file);
       if (up) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.');
-      const { error: e } = await supabase.from('posts').update({ video_url: path, video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
+      const { error: e } = await supabase.from('posts').update({ video_url: path, thumbnail_url: await uploadVideoThumbnail(file, user.id), video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
       if (e) { await supabase.storage.from('market-media').remove([path]); throw new Error('게시물을 수정하지 못했어요.'); }
       if (l.video_url) await supabase.storage.from('market-media').remove([l.video_url]);
       refresh();
@@ -136,7 +137,8 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     const uploaded: string[] = [];
     try {
       let nextVideo = video?.path ?? null;
-      if (video?.file) { const ext = video.file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${user.id}/${crypto.randomUUID()}.${ext}`; const { error: e } = await supabase.storage.from('market-media').upload(path, video.file); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; }
+      let nextThumb: string | null | undefined = video?.file ? null : undefined;
+      if (video?.file) { const ext = video.file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${user.id}/${crypto.randomUUID()}.${ext}`; const { error: e } = await supabase.storage.from('market-media').upload(path, video.file); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(video.file, user.id); if (nextThumb) uploaded.push(nextThumb); }
       const photoPaths: string[] = [];
       for (const photo of photos) {
         if (photo.path) { photoPaths.push(photo.path); continue; }
@@ -151,7 +153,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       cleanSpecs.sourceType = sourceType;
       if (sourceType === 'custom') delete cleanSpecs.factory;
       else cleanSpecs.factory = factory.trim().slice(0, 80);
-      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, media_urls: photoPaths, video_url: nextVideo, video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
+      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
         const retained = new Set(photoPaths); const removed = [...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await supabase.storage.from('market-media').remove(removed);

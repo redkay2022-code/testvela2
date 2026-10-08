@@ -15,6 +15,7 @@ import { marketSearch, paths, postsQuery, type Mode, type Post } from '@/lib/mar
 import { addComment, getComments, setLike } from '@/lib/market.functions';
 import { signInWithPhone, signUpWithPhone } from '@/lib/phone-auth.functions';
 import { uploadAvatar } from '@/lib/avatar';
+import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 import { SpecsTable } from './specs-table';
 import { SourceFactoryField, type SourceType } from './source-factory';
@@ -275,9 +276,11 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
         if(uploadError) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
         uploaded.push(path);
       }
+      const thumb = video ? await uploadVideoThumbnail(video, user.id) : null;
+      if(thumb) uploaded.push(thumb);
       const imagePaths = uploaded.filter((_,i) => files[i] ? isListingPhoto(files[i]) : false);
       const videoIndex = files.findIndex(isListingVideo);
-      const {error:saveError} = await supabase.from('posts').insert({user_id:user.id,title:title.trim(),description:description.trim(),category,creator:String((await supabase.from('profiles').select('nickname').eq('user_id',user.id).maybeSingle()).data?.nickname || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex] ?? null:null,price:product?Number(price):null,box_price:product&&boxPrice?Number(boxPrice):null,specs:product?{...Object.fromEntries(Object.entries(specs).map(([k,v]) => [k,v.trim().slice(0,80)]).filter(([,v]) => v)),sourceType,...(sourceType!=='custom'?{factory:factory.trim().slice(0,80)}:{})}:({}),video_tags:videoTags});
+      const {error:saveError} = await supabase.from('posts').insert({user_id:user.id,title:title.trim(),description:description.trim(),category,creator:String((await supabase.from('profiles').select('nickname').eq('user_id',user.id).maybeSingle()).data?.nickname || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex] ?? null:null,thumbnail_url:thumb,price:product?Number(price):null,box_price:product&&boxPrice?Number(boxPrice):null,specs:product?{...Object.fromEntries(Object.entries(specs).map(([k,v]) => [k,v.trim().slice(0,80)]).filter(([,v]) => v)),sourceType,...(sourceType!=='custom'?{factory:factory.trim().slice(0,80)}:{})}:({}),video_tags:videoTags});
       if(saveError) throw new Error('게시물을 저장하지 못했어요. 다시 시도해 주세요.');
       onPosted();
     } catch(err) {if(uploaded.length) await supabase.storage.from('market-media').remove(uploaded);setError(err instanceof Error?err.message:'잠시 후 다시 시도해 주세요.');}

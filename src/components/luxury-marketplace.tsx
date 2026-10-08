@@ -128,7 +128,8 @@ function Feed({posts,base,search}:{posts:LuxuryPost[];base:'/'|'/explore'|'/mark
  </article>)}</div>)}</div>:<div className="lux-empty"><Compass/><h2>No finds here yet.</h2><p>Follow a studio or choose another category.</p><Button asChild variant="goldOutline"><Link to="/store">Explore VS Watch Studio<ArrowRight/></Link></Button></div>;
 }
 function FeedVideo({post}:{post:LuxuryPost}) {
- return <span className="feed-video-frame"><img src={post.images[0]} alt={`${post.title} 영상 썸네일`} loading="lazy"/><span className="feed-video-play" aria-hidden="true"><Play size={18} fill="currentColor"/></span></span>;
+ const hasPhoto=Boolean(post.sample||post.source?.thumbnail_url||post.source?.media_urls.length);
+ return <span className="feed-video-frame">{hasPhoto||!post.video?<img src={post.images[0]} alt={`${post.title} 영상 썸네일`} loading="lazy"/>:<video src={`${post.video}#t=0.5`} preload="metadata" muted playsInline aria-label={`${post.title} 영상 썸네일`}/>}<span className="feed-video-play" aria-hidden="true"><Play size={18} fill="currentColor"/></span></span>;
 }
 function ProductDetail({post,user,requestAuth,close,buy,notify}:{post:LuxuryPost;user:AuthUser|null;requestAuth:()=>void;close:()=>void;buy:(box:boolean)=>void;notify:(s:string)=>void}) {
  const reduced=useReducedMotion();

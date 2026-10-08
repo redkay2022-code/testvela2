@@ -29,14 +29,14 @@ export function luxuryPosts(posts:FeedPost[]):LuxuryPost[] {
   const extra={outOfStock:post.product_status==='OUT_OF_STOCK',featured:post.featured,storeSlug:post.store?.slug,storeFeatured:Boolean(post.store?.featured),verified:post.store?post.store.verification_status!=='UNVERIFIED':false};
   if(post.image_key==='seed'||(post.store_id&&post.image_key==='uploaded')){
    const v=post.video_url?(seedVideos[post.video_url] ?? [post.video_url,undefined] as const):undefined; const imgs=post.media_urls.map(u=>u.startsWith('seed:')?seedImage(u):u); const specs=(post.specs ?? {}) as Record<string,unknown>;
-   return {...extra,id:post.id,source:post,sample:false,reputation:unknownReputation,title:post.title,creator:post.creator,description:post.description,images:imgs.length?imgs:[watch0],video:v?.[0] ?? null,videoFallback:v?.[1],short:Boolean(v),boxPrice:post.box_price ?? null,price:post.price,factory:typeof specs['factory']==='string'?specs['factory']:post.category,category:post.category,views:'0',likes:post.base_likes};
+   return {...extra,id:post.id,source:post,sample:false,reputation:unknownReputation,title:post.title,creator:post.creator,description:post.description,images:imgs.length?imgs:[post.thumbnail_url||watch0],video:v?.[0] ?? null,videoFallback:v?.[1],short:Boolean(v),boxPrice:post.box_price ?? null,price:post.price,factory:typeof specs['factory']==='string'?specs['factory']:post.category,category:post.category,views:'0',likes:post.base_likes};
   }
   const index=ids.indexOf(post.id), sample=index>=0, i=sample?index:0;
   const photo=watchImages[i%6] ?? watch0;
    return {...extra,id:post.id,source:post,sample,reputation:unknownReputation,title:sample?titles[i] ?? post.title:post.title,
    creator:post.creator,
    description:sample?'Precision in every detail. A 1:1 specification studio sample, individually inspected for finish, alignment and movement performance. Full inspection photos are available before shipping.':post.description,
-   images:sample?[photo,watchImages[(i+5)%6] ?? photo,photo]:post.media_urls.length?post.media_urls:[media[post.image_key] || watch0],
+   images:sample?[photo,watchImages[(i+5)%6] ?? photo,photo]:post.media_urls.length?post.media_urls:[post.thumbnail_url||media[post.image_key] || watch0],
     video:sample&&[3,5,8,11].includes(i)?(i===3?studioShort:i===8?studioShort2:studioShort5):post.video_url,short:sample?[3,5,8,11].includes(i):Boolean(post.video_url),
    videoFallback:sample&&[3,5,8,11].includes(i)?(i===3?shortMp4:i===8?short2Mp4:short5Mp4):undefined,
    boxPrice:sample?50:(post.box_price ?? null),

@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { watchImages } from '@/lib/luxury-market';
+import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import {
   availableQty, imageKinds, productCategories, productStatuses, publishBlockers, slugify, verificationStatuses, watchSpecFields,
   type ImageKind, type ProductStatus,
@@ -305,7 +306,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
         store_id: f.store_id, creator: store?.store_name ?? 'VELA', title: f.title.trim(), brand: f.brand, model: f.model, reference: f.reference, category: f.category || '기타',
         subcategory: f.subcategory, description: f.description, price, box_price: f.box_price === '' ? null : Number(f.box_price), currency: 'USD', sku: f.sku,
         stock_qty: stock, reserved_qty: reserved, low_stock_threshold: Number(f.low_stock_threshold || 0), featured: f.featured, specs: cleanSpecs,
-        media_urls: gallery, video_url: f.video_url, image_key: gallery.length && allSeed ? 'seed' : 'uploaded', product_status: requested,
+        media_urls: gallery, video_url: f.video_url, thumbnail_url: f.video_url ? thumb : null, image_key: gallery.length && allSeed ? 'seed' : 'uploaded', product_status: requested,
       };
       let postId = existing?.id;
       if (existing) {
@@ -359,7 +360,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
         <label className="catalog-image grid place-items-center text-center"><ImagePlus />이미지 추가<input type="file" hidden multiple accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => void addFiles(e.target.files, 'gallery')} /></label>
       </div>
       <p className="wide text-xs text-muted-foreground">끌어서 순서를 바꾸고, 대표(Main) 이미지를 하나 지정하세요. QC·Movement 이미지는 고객 갤러리에서 제외됩니다.</p>
-      <label>Product video (선택)<input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy} onChange={async e => { const file = e.target.files?.[0]; if (file) { setBusy(true); try { set('video_url', await uploadMedia(file, 'catalog')); } finally { setBusy(false); } } }} /></label>
+      <label>Product video (선택)<input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={busy} onChange={async e => { const file = e.target.files?.[0]; if (file) { setBusy(true); try { set('video_url', await uploadMedia(file, 'catalog')); const { data: { user } } = await supabase.auth.getUser(); setThumb(user ? await uploadVideoThumbnail(file, `${user.id}/catalog`) : null); } finally { setBusy(false); } } }} /></label>
       {f.video_url && <Button type="button" variant="ghost" size="sm" onClick={() => set('video_url', null)}><Trash2 />영상 제거</Button>}
     </fieldset>
     <fieldset><legend>4 · WATCH SPECIFICATIONS (선택)</legend>
