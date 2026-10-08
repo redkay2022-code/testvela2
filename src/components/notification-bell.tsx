@@ -40,7 +40,7 @@ export function NotificationList({ notifications, onNavigate }: { notifications:
   const lang = activeLang() === 'ko' ? 'ko' : 'en';
   return <div>{notifications.data.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">새 알림이 없습니다.</p> : notifications.data.map(n => {
           const welcome = n.kind === SELLER_WELCOME_KIND ? sellerWelcomeCopy[lang] : null;
-          return <article key={n.id} className="mb-3 rounded-xl border border-border p-4">
+          return <article key={n.id} className="mb-3 rounded-md border border-border p-4">
             <h3 className="font-semibold text-primary">{n.title}</h3>
             <small className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleString()}</small>
             {welcome ? <div className="mt-3 space-y-3 text-sm"><p>{welcome.intro}</p>{welcome.rules.map(([h, b]) => <div key={h}><strong className="block text-foreground">{h}</strong><p className="text-muted-foreground">{b}</p></div>)}</div>
@@ -53,7 +53,6 @@ export function NotificationList({ notifications, onNavigate }: { notifications:
 export function NotificationInbox({ user, open, onClose, notifications }: { user: User | null; open: boolean; onClose: () => void; notifications: ReturnType<typeof useNotifications> }) {
   const { unread, markRead } = notifications;
   useEffect(() => { if (open && unread) void markRead(); }, [open, unread]);
-  const lang = activeLang() === 'ko' ? 'ko' : 'en';
   return <Dialog.Root open={open} onOpenChange={o => { if (!o) onClose(); }}>
     <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-50 bg-background/70" />
       <Dialog.Content aria-describedby={undefined} className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl border border-border bg-card p-4">
