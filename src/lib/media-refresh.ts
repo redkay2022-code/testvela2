@@ -23,3 +23,14 @@ export function useMediaRefresh() {
     return () => { window.removeEventListener('error', onError, true); document.removeEventListener('visibilitychange', onVisible); };
   }, [queryClient]);
 }
+
+/** Keeps the same signed URL while the underlying file is unchanged, so a data refetch (new token) doesn't restart a playing video. Swaps only after a media error. */
+const stableCache = new Map<string, string>();
+export function stableMediaSrc(url: string | undefined | null, refresh = false) {
+  if (!url) return url ?? undefined;
+  const key = url.split('?')[0]!;
+  const prev = stableCache.get(key);
+  if (prev && !refresh) return prev;
+  stableCache.set(key, url);
+  return url;
+}
