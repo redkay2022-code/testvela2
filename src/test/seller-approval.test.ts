@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { accountSellerTier, shouldOpenSellerDashboard } from '@/lib/seller-approval';
+import { accountSellerTier, accountUploadRole, shouldOpenSellerDashboard } from '@/lib/seller-approval';
+
+describe('account center navigation', () => {
+  it('switches to product upload as soon as the trusted seller role is granted', () => {
+    expect(accountUploadRole({roles:['user']})).toBeNull();
+    expect(accountUploadRole({roles:['user','seller']})).toBe('seller');
+  });
+  it('keeps the cart for guests and pending customers', () => {
+    expect(accountUploadRole(undefined)).toBeNull();
+    expect(accountUploadRole({roles:['user']})).toBeNull();
+  });
+  it('retains product upload for trusted administrators', () => {
+    expect(accountUploadRole({roles:['admin']})).toBe('admin');
+  });
+});
 
 describe('seller approval dashboard navigation', () => {
   const approved = { roles: ['seller'], application: { status: 'approved' } };

@@ -2,7 +2,8 @@ import { createLiveOrder, LiveOrderBoard } from './live-orders';
 import { ProductionMenu } from './production-menu';
 import { MarketHelp } from './market-help';
 import { matchesCollection, watchTypes } from '@/lib/collection-filters';
-import { SellerOnboarding, SellerApprovalRedirect } from './seller-account';
+import { SellerOnboarding, SellerApprovalRedirect, useMyAccount } from './seller-account';
+import { accountUploadRole } from '@/lib/seller-approval';
 import { ProfileSettings } from './profile-settings';
 import { EscrowGuarantee } from './escrow';
 import { useEffect, useRef, useState } from 'react';
@@ -54,6 +55,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   const sheetPushed=useRef(false),searchPushed=useRef(false),categoriesPushed=useRef(false);
  const [query,setQuery]=useState(search.q || ''),[toast,setToast]=useState(''),[user,setUser]=useState<AuthUser|null>(null),[newest,setNewest]=useState(false);
  const [authReady,setAuthReady]=useState(false);
+  const account=useMyAccount(user);
+  const uploadRole=accountUploadRole(user?account.data:undefined);
  const notifications=useNotifications(user);
  const notificationPushed=useRef(false);
  const closeNotifications=()=>{if(notificationPushed.current){notificationPushed.current=false;router.history.back();}else update({notice:undefined});};
@@ -120,7 +123,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  <nav className="lux-bottom-nav" aria-label="Main navigation"><div>
   <Button asChild variant="ghost" className={`lux-nav-item ${mode==='home'&&!search.panel?'active':''}`}><Link to="/" search={{role:search.role}} aria-label="메인 페이지"><Home aria-hidden="true"/><span>메인 페이지</span></Link></Button>
   <Button asChild variant="ghost" className={`lux-nav-item ${mode==='store'?'active':''}`}><Link to="/store" search={{role:search.role}} aria-label="스토어"><Store aria-hidden="true"/><span>스토어</span></Link></Button>
-  {search.role==='seller'||search.role==='admin'?<Button asChild variant="gold" className="lux-upload"><Link to="/upload" search={{role:search.role}} aria-label="상품 올리기"><Plus aria-hidden="true"/><span className="sr-only">상품 올리기</span></Link></Button>:<Button asChild variant="gold" className="lux-upload lux-buyer-bag"><Link to="/me" search={{role:search.role,panel:'cart'}} aria-label={preview.cart.length?`장바구니 (${preview.cart.length}개)`:'장바구니'}><ShoppingBag aria-hidden="true"/><span className="sr-only">장바구니</span>{preview.cart.length>0&&<span className="bag-count" aria-hidden="true">{preview.cart.length}</span>}</Link></Button>}
+  {uploadRole?<Button asChild variant="gold" className="lux-upload"><Link to="/upload" search={{role:uploadRole}} aria-label="상품 올리기"><Plus aria-hidden="true"/><span className="sr-only">상품 올리기</span></Link></Button>:<Button asChild variant="gold" className="lux-upload lux-buyer-bag"><Link to="/me" search={{role:search.role,panel:'cart'}} aria-label={preview.cart.length?`장바구니 (${preview.cart.length}개)`:'장바구니'}><ShoppingBag aria-hidden="true"/><span className="sr-only">장바구니</span>{preview.cart.length>0&&<span className="bag-count" aria-hidden="true">{preview.cart.length}</span>}</Link></Button>}
   <Button asChild variant="ghost" className={`lux-nav-item ${search.panel==='chat'?'active':''}`}><Link to={base} search={prev=>({...prev,panel:'chat'})} resetScroll={false} aria-label="메시지"><MessageCircle aria-hidden="true"/><span>메시지</span></Link></Button>
   <Button asChild variant="ghost" className={`lux-nav-item ${mode==='me'?'active':''}`}><Link to="/me" search={{role:search.role}} aria-label="나"><User aria-hidden="true"/><span>나</span></Link></Button>
 </div></nav>
