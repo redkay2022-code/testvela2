@@ -1,0 +1,36 @@
+import { useQuery } from '@tanstack/react-query';
+import { Link, useRouter, useRouterState } from '@tanstack/react-router';
+import type { User } from '@supabase/supabase-js';
+import { Heart, Users, MessageCircle, Plus, Truck, ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { marketSearch } from '@/lib/market';
+import { useSellerWorkflows } from '@/lib/use-seller-workflows';
+import { useMyAccount } from './seller-account';
+import { Button } from './ui/button';
+import { SellerListings } from './seller-listings';
+import { LiveOrderBoard, Composer } from './live-orders';
+import { ProductComments } from './product-comments';
+import { NotificationList, useSharedNotifications } from './notification-bell';
+import { SellerStudio } from './seller-studio';
+
+export function SellerWorkflowPage({ page }: { page: 'store' | 'messages' | 'studio' }) {
+ const auth=useQuery({queryKey:['auth-user'],queryFn:async()=>(await supabase.auth.getUser()).data.user}), account=useMyAccount(auth.data??null);
+ if(auth.isLoading||(auth.data&&account.isLoading))return <div className="lux-empty">계정을 확인하는 중…</div>;
+ if(!auth.data||!account.data?.roles.some(r=>r==='seller'||r==='admin'))return <div className="lux-empty"><h1>셀러 전용 페이지</h1><p>승인된 셀러 계정으로 로그인해 주세요.</p><Button asChild variant="goldOutline"><Link to="/me" search={{auth:true}}>로그인</Link></Button></div>;
+ return page==='store'?<StoreManager user={auth.data}/>:page==='messages'?<SellerMessages user={auth.data}/>:<SellerStudio user={auth.data}/>;
+}
+function Questions({user}:{user:User}) {
+ const q=useSellerWorkflows(user.id), search=marketSearch.parse(useRouterState({select:s=>s.location.search}));
+ return <section className="seller-section"><h2>질문 게시판</h2>{q.isError?<p role="alert">문의를 불러오지 못했습니다.</p>:q.isLoading?<p>불러오는 중…</p>:!q.activity?.comments.length?<p className="seller-empty">접수된 상품 문의가 없습니다.</p>:q.activity.comments.map(c=><article className="seller-thread-row" key={c.id}><div><strong>{c.title}</strong><small>{c.creator} · {new Date(c.created_at).toLocaleDateString('ko-KR')}</small><p>{c.body}</p></div><Button asChild variant="goldOutline" size="sm"><Link to="/seller-store" search={prev=>({...prev,sellerView:'qna',question:c.post_id})}>답변<ArrowRight size={14}/></Link></Button></article>)}{search.question&&<ProductComments postId={search.question} user={user} requestAuth={()=>{}} qna/>}</section>;
+}
+function StoreManager({user}:{user:User}) {
+ const search=marketSearch.parse(useRouterState({select:s=>s.location.search})),view=search.sellerView??'inventory';
+ return <div className="seller-studio" lang="ko" data-no-translate><div className="studio-title-row"><div><span className="lux-eyebrow">상품 운영</span><h1>스토어 관리</h1></div></div><nav className="seller-action-tabs" aria-label="스토어 작업"><Button asChild variant="gold"><Link to="/upload"><Plus/>상품 등록</Link></Button><Button asChild variant={view==='qna'?'goldOutline':'ghost'}><Link to="/seller-store" search={{sellerView:'qna'}}><MessageCircle/>질문 게시판</Link></Button><Button asChild variant={view==='shipping'?'goldOutline':'ghost'}><Link to="/seller-store" search={{sellerView:'shipping'}}><Truck/>물류/배송</Link></Button></nav>{view!=='inventory'&&<Button asChild variant="ghost" className="mb-4"><Link to="/seller-store">상품 목록</Link></Button>}{view==='qna'?<Questions user={user}/>:view==='shipping'?<><h2 className="text-lg font-semibold">물류·배송 및 출고 검수</h2><p className="my-3 text-sm text-primary">출고 전 QC 사진 9장 + 영상 1개 필수</p><LiveOrderBoard as="seller"/></>:<SellerListings/>}</div>;
+}
+function SellerMessages({user}:{user:User}) {
+ const q=useSellerWorkflows(user.id),search=marketSearch.parse(useRouterState({select:s=>s.location.search})),router=useRouter(),notices=useSharedNotifications();
+ const counts=[q.activity?.products.reduce((s,p)=>s+p.likes+p.saves,0)??0,q.activity?.followers.length??0,q.activity?.comments.length??0];
+ const cards=[['likes','좋아요/저장',Heart],['followers','새 팔로워',Users],['comments','댓글/문의',MessageCircle]] as const;
+ const orders=q.data?.orders??[], selected=orders.find(o=>o.id===search.conversation);
+ return <div className="seller-studio" lang="ko" data-no-translate><div className="studio-title-row"><div><span className="lux-eyebrow">고객과의 연결</span><h1>메시지함</h1></div></div>{q.isError?<p role="alert">활동 정보를 불러오지 못했습니다.</p>:<><div className="seller-social-grid">{cards.map(([id,label,Icon],i)=><Button asChild variant="ghost" key={id} className={`seller-social-card ${search.activity===id?'active':''}`}><Link to="/seller-messages" search={prev=>({...prev,activity:id})}><Icon/><span>{label}</span><strong>{q.isLoading?'—':counts[i]}</strong></Link></Button>)}</div>{search.activity&&<section className="seller-section"><h2>{cards.find(c=>c[0]===search.activity)?.[1]}</h2>{search.activity==='likes'?q.activity?.products.filter(p=>p.likes+p.saves>0).map(p=><div key={p.id} className="seller-thread-row"><strong>{p.title}</strong><span>좋아요 {p.likes} · 장바구니 저장 {p.saves}</span></div>):search.activity==='followers'?q.activity?.followers.map(f=><div key={f.id} className="seller-thread-row"><Users/><strong>{f.nickname}</strong><small>{new Date(f.created_at).toLocaleDateString('ko-KR')}</small></div>):q.activity?.comments.map(c=><div key={c.id} className="seller-thread-row"><div><strong>{c.creator} · {c.title}</strong><p>{c.body}</p></div><Button asChild variant="ghost" size="sm"><Link to="/seller-store" search={{sellerView:'qna',question:c.post_id}}>답변</Link></Button></div>)}{counts[cards.findIndex(c=>c[0]===search.activity)]===0&&<p className="seller-empty">아직 활동이 없습니다.</p>}</section>}<section className="seller-section"><h2>구매자 1:1 대화</h2>{orders.length?orders.map(o=>{const last=q.data?.messages.find(m=>m.order_id===o.id);return <Button asChild variant="ghost" className="seller-conversation" key={o.id}><Link to="/seller-messages" search={prev=>({...prev,conversation:o.id})}><MessageCircle/><span><strong>{o.title}</strong><small>{o.order_no} · {last?.body??'대화를 시작하세요'}</small></span><ArrowRight/></Link></Button>}):<p className="seller-empty">구매자 대화가 없습니다.</p>}</section></>}{selected&&<section className="seller-section" aria-label="구매자 대화"><div className="flex justify-between"><h2>{selected.title}</h2><Button variant="ghost" onClick={()=>router.history.back()}>닫기</Button></div>{q.data?.messages.filter(m=>m.order_id===selected.id).slice().reverse().map(m=><div className={`chat-bubble ${m.author_role==='seller'?'outgoing':''}`} key={m.id}><small>{m.author_role==='seller'?'셀러':'구매자'}</small><p>{m.body}</p></div>)}<Composer orderId={selected.id} role="seller" onSent={()=>void q.refetch()}/></section>}<section className="seller-section"><h2>알림 및 정책 안내 {notices?.unread?`· ${notices.unread}`:''}</h2>{notices&&<NotificationList notifications={notices}/>}</section></div>;
+}
