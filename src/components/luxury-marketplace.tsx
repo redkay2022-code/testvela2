@@ -2,7 +2,7 @@ import { createLiveOrder, LiveOrderBoard } from './live-orders';
 import { ProductionMenu } from './production-menu';
 import { MarketHelp } from './market-help';
 import { matchesCollection, watchTypes } from '@/lib/collection-filters';
-import { SellerOnboarding } from './seller-account';
+import { SellerOnboarding, SellerApprovalRedirect } from './seller-account';
 import { ProfileSettings } from './profile-settings';
 import { EscrowGuarantee } from './escrow';
 import { useEffect, useRef, useState } from 'react';
@@ -89,6 +89,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const feedFilterResults=sortFeed(filterFeed(all.filter(p=>!preview.hidden.includes(p.id)),search),search.fsort);
  const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);} ))].slice(0,10);
  return <>
+ <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
  <header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <div className="lux-header-inner">
   <Button variant="ghost" size="icon" className="relative" aria-label={notifications.unread?`메뉴 열기 · 읽지 않은 알림 ${notifications.unread}개`:'메뉴 열기'} onClick={()=>update({menu:true})}><Menu/>{notifications.unread>0&&<span aria-hidden="true" className="absolute right-0 top-1 size-2 rounded-full bg-destructive"/>}</Button>

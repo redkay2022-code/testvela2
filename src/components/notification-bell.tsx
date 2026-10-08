@@ -19,7 +19,10 @@ export function useNotifications(user: User | null) {
   } });
   useEffect(() => {
     if (!user) return;
-    const ch = supabase.channel(`notifications-${user.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => void qc.invalidateQueries({ queryKey: ['notifications', user.id] })).subscribe();
+    const ch = supabase.channel(`notifications-${user.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
+      void qc.invalidateQueries({ queryKey: ['notifications', user.id] });
+      void qc.invalidateQueries({ queryKey: ['my-account', user.id] });
+    }).subscribe();
     return () => { void supabase.removeChannel(ch); };
   }, [user?.id, qc]);
   const unread = user ? data.filter(n => !n.read_at).length : 0;

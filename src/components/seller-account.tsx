@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Check, ShieldCheck, UserRound, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,34 @@ import { automatedTier, sellerTiers, studioNames, type SellerTier } from '@/lib/
 import { liveReputation } from '@/lib/studio-metrics';
 import { StudioTierBadge } from './reputation';
 import { uploadAvatar, useAvatarUrl } from '@/lib/avatar';
+import { shouldOpenSellerDashboard } from '@/lib/seller-approval';
 
 export function useMyAccount(user: User | null) {
   const fn = useServerFn(getMyAccount);
-  return useQuery({ queryKey: ['my-account', user?.id], queryFn: () => fn(), enabled: !!user });
+  return useQuery({ queryKey: ['my-account', user?.id], queryFn: () => fn(), enabled: !!user, refetchOnMount: 'always', refetchOnWindowFocus: 'always', refetchInterval: query => {
+    const account = query.state.data;
+    return account?.application && !account.roles.includes('seller') && account.application.status !== 'rejected' ? 5000 : false;
+  } });
+}
+
+/** React to trusted approval while keeping all write permissions server-enforced. */
+export function SellerApprovalRedirect({ user, applying }: { user: User | null; applying: boolean }) {
+  const { data: account } = useMyAccount(user);
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: state => state.location.pathname });
+  const qc = useQueryClient();
+  const previous = useRef<{ userId: string | null; seller: boolean | null }>({ userId: null, seller: null });
+  useEffect(() => {
+    if (previous.current.userId !== (user?.id ?? null)) previous.current = { userId: user?.id ?? null, seller: null };
+    if (!user || !account) return;
+    const redirect = shouldOpenSellerDashboard(account, previous.current.seller, pathname, applying);
+    previous.current.seller = account.roles.includes('seller');
+    if (!redirect) return;
+    void qc.invalidateQueries({ queryKey: ['posts'] });
+    void qc.invalidateQueries({ queryKey: ['stores'] });
+    void navigate({ to: '/seller', search: { role: 'seller' }, replace: true });
+  }, [account, user?.id, pathname, applying, navigate, qc]);
+  return null;
 }
 
 /** Real admin toggle: only shown to accounts holding the admin role. */

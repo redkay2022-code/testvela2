@@ -8,7 +8,7 @@ import { SellerListings } from '@/components/seller-listings';
 export const Route=createFileRoute('/seller')({
  validateSearch:marketSearch,
  loader:({context})=>context.queryClient.ensureQueryData(postsQuery),
- head:()=>pageHead('Studio dashboard','Manage your sample watch listings, shipping and studio earnings.'),
+ head:()=>pageHead('VELA Studio dashboard','Manage your VELA product listings, quality control, shipping and studio earnings.'),
  errorComponent:()=> <div className="lux-empty">This view could not load. Please try again.</div>,
  notFoundComponent:()=> <div className="lux-empty">This view is unavailable.</div>,
  component:DashboardPage,
