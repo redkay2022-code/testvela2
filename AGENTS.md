@@ -12,9 +12,9 @@
 ## Application architecture
 - Use TanStack Router and validated search state for tabs, overlays, search and feed filters; Back unwinds one UI layer. Match category/brand aliases to listings without inventing affiliations.
 - Load the public feed through TanStack Query with a server-function loader; public SSR must never require an account.
-- Keep marketplace data in Cloud with owner-scoped write policies; authenticated writes must use the caller's identity.
+- Cloud writes use owner-scoped policies and caller identity.
 - Bundle editorial media and icons locally; uploaded private storage media are served with signed URLs after matching published post paths.
-- Use manifest-only home-screen support; no offline service worker unless offline operation is explicitly requested.
+- Use manifest-only home-screen support; no service worker without an offline request.
 - Isolate demo role previews and commerce/moderation actions in a shared React provider; they never grant Cloud privileges or change production rows.
 - Share photo/Shorts detail content; product Q&A uses authenticated post comments and validated detailTab for Back navigation, separate from simulated commerce.
 - Shorts use /shorts/$id with validated nested sheets; swipes replace the ID so Back exits rather than replaying swipes.
@@ -34,7 +34,7 @@
 - Seed stores/products live in the database (data_source SEED), not local arrays. Catalog is Seller → Store → Product: products extend `posts` (store_id, product_status, inventory, data_source) with `product_images`/`product_qc`; a DB trigger owns status/stock transitions and syncs legacy `status`, so existing feed/search/buy code keeps reading `posts`. Inactive stores hide their products via a restrictive RLS policy.
 - Categories live in public.categories (admin-managed parent/child rows); forms render them via CategoryOptions and posts keep the category name, so renames also update posts. Video uploads auto-generate a JPEG frame into posts.thumbnail_url in the browser so feeds never load video just for a cover.
 - Shorts share seller controls: hybrid details use /post/$id; video-only uses URL sheets and ProductComments. Posters are not photos. Leaf head() sets share metadata.
-- Media self-heals via src/lib/media-refresh.ts.
+- Media self-heals via src/lib/media-refresh.ts. Comments use scoped profile RPCs and authorized signed avatars; no private fields.
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
 
 - Seller pages share trusted queries; studioTab limits scrolling. PullToRefresh invalidates active queries from top-only document/nested gestures. discoveryListings excludes sold stock only from discovery, retaining storefront history.
