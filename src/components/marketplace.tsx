@@ -268,7 +268,6 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
     const uploaded:string[]=[];
     try {
       const video = files.find(isListingVideo);
-      if(video && !files.some(isListingPhoto)) throw new Error('영상과 함께 표지 및 상세 사진도 1장 이상 선택해 주세요.');
       for(const file of files) {
         const extension = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g,'') || 'bin';
         const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
