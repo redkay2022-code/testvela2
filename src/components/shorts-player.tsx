@@ -40,7 +40,6 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  <Dialog.Title className="sr-only">VELA Shorts</Dialog.Title>
  <header className="shorts-floating-header">
  <Button variant="ghost" size="icon" aria-label="Close Shorts and return Home" title="홈으로 돌아가기" onClick={close}><ArrowLeft/></Button>
- <nav className="shorts-feed-tabs" aria-label="숏폼 피드 선택">{([['following','팔로잉'],['recommend','추천']] as const).map(([tab,label])=><Button key={tab} variant="ghost" aria-pressed={shortTab===tab} onClick={()=>onTab(tab)}>{label}</Button>)}</nav>
  <div className="shorts-header-tools"><Button variant="ghost" size="icon" aria-label="Open search" title="검색" onClick={onSearch}><Search/></Button><Button variant="ghost" size="icon" aria-label="Share short" title="공유" onClick={share}><Share2/></Button></div>
  </header>
  <div className={`shorts-snap ${sheet?'shorts-locked':''}`} ref={mountFeed} onScroll={e=>{if(sheet||syncing.current)return;const el=e.currentTarget;const index=Math.round(el.scrollTop/el.clientHeight),next=posts[index];if(next&&Math.abs(el.scrollTop-index*el.clientHeight)<el.clientHeight*.35&&next.id!==activeId.current){activeId.current=next.id;setActive(next.id);change(next.id);}}} tabIndex={0} aria-label="Shorts video feed" onKeyDown={e=>{if(sheet)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();feed.current?.scrollBy({top:(e.key==='ArrowDown'?1:-1)*e.currentTarget.clientHeight,behavior:reduced?'instant':'smooth'});}}}>

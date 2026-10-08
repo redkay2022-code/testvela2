@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
-import { ArrowLeft, ArrowRight, Bookmark, Check, Eye, MessageCircle, Plus, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, Check, Eye, MessageCircle, Plus, ShieldCheck, Share2, UserRound } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 import { useMarketPreview } from './market-preview';
@@ -16,6 +16,7 @@ import { dollars, type LuxuryPost } from '@/lib/luxury-market';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { t } from '@/lib/i18n';
 import { usePostRatings } from '@/lib/studio-tier';
+import { detailMedia } from '@/lib/post-media';
 
 export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=false}:{post:LuxuryPost;user:User|null;requestAuth:()=>void;buy:(box:boolean)=>void;notify:(text:string)=>void;shorts?:boolean}) {
  const preview=useMarketPreview(),navigate=useNavigate(),router=useRouter();
@@ -26,11 +27,12 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  const qna=search.detailTab==='qna',boxPrice=post.boxPrice ?? 0;
  const openQna=()=>{pushed.current=true;void navigate({to:'.',search:prev=>({...prev,detailTab:'qna'}),resetScroll:false});};
  const closeQna=()=>{if(pushed.current){pushed.current=false;router.history.back();}else void navigate({to:'.',search:prev=>({...prev,detailTab:undefined}),replace:true,resetScroll:false});};
+ const share=async()=>{try{const url=new URL(`/post/${post.id}`,window.location.origin).href;if(navigator.share)await navigator.share({title:post.title,url});else{await navigator.clipboard.writeText(url);notify('상품 링크를 복사했습니다.');}}catch{/* Share dismissed */}};
  return <>
- <div className="shorts-sheet-seller"><span className="shorts-anonymous-avatar shrink-0"><UserRound/></span><div data-no-translate><strong>{post.creator}</strong><SellerBadge reputation={post.reputation} withRating/></div><Button variant="goldOutline" size="sm" aria-pressed={preview.isFollowing(sellerIdentity(post))} onClick={()=>preview.toggleSeller(sellerIdentity(post))}>{preview.isFollowing(sellerIdentity(post))?<Check size={13}/>:<Plus size={13}/>} {preview.isFollowing(sellerIdentity(post))?'팔로잉':'팔로우'}</Button><Button asChild variant="goldOutline" size="sm"><Link to="/store" search={{role:search.role,seller:sellerIdentity(post),storeTab:'products'}}>셀러샵</Link></Button></div>
+ <header className={shorts?"shorts-sheet-seller":"shorts-sheet-seller product-detail-header"} aria-label="판매자 정보"><span className="shorts-anonymous-avatar shrink-0"><UserRound/></span><div data-no-translate><strong>{post.creator}</strong>{shorts&&<SellerBadge reputation={post.reputation} withRating/>}</div><Button variant="goldOutline" size="sm" aria-pressed={preview.isFollowing(sellerIdentity(post))} onClick={()=>preview.toggleSeller(sellerIdentity(post))}>{preview.isFollowing(sellerIdentity(post))?<Check size={13}/>:<Plus size={13}/>} {preview.isFollowing(sellerIdentity(post))?'팔로잉':'팔로우'}</Button>{shorts?<Button asChild variant="goldOutline" size="sm"><Link to="/store" search={{role:search.role,seller:sellerIdentity(post),storeTab:'products'}}>셀러샵</Link></Button>:<Button variant="ghost" size="icon" aria-label="상품 공유" title="공유" onClick={share}><Share2/></Button>}</header>
  <div className={shorts?'shorts-sheet-body':'lux-detail-scroll'}>
  {qna?<div className="lux-detail-copy"><Button variant="ghost" size="sm" onClick={closeQna}><ArrowLeft size={16}/>제품 상세</Button><h2 className="mt-4 text-lg font-semibold">{post.title}</h2><ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} qna/></div>:<>
- {!shorts&&post.video&&<video className="lux-detail-video" src={post.video} poster={post.images[0]} controls playsInline muted autoPlay loop preload="metadata" aria-label={`${post.title} 상품 영상`}/>}{!post.sample&&post.video&&!post.source.media_urls?.length?null:shorts?<ShortsGallery key={post.id} images={post.images} title={post.title}/>:<ProductPhotos post={post} verified={verified}/>}
+ {shorts?<ShortsGallery key={post.id} images={post.images} title={post.title}/>:<ProductPhotos post={post} verified={verified}/>}
  <div className="lux-detail-copy"><div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">{post.price!==null&&<p className="lux-price min-w-0" data-no-translate>{dollars(post.price+(box?boxPrice:0))}</p>}<span className="text-xs text-muted-foreground"><Eye size={13} className="mr-1 inline"/>{post.views} views</span></div>
  {post.price!==null&&boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>{t('addBox')}</span><strong data-no-translate>+{dollars(boxPrice)}</strong></label>}
  {post.price!==null&&<dl className="insurance-breakdown" aria-label="안전배송보험"><div><dt><ShieldCheck size={15} className="mr-1 inline"/>{t('deliveryInsurance')} (10%)</dt><dd data-no-translate>+{dollars(insuredPurchase(post.price).insurance)}</dd></div><div className="insurance-total"><dt>{t('total')}</dt><dd data-no-translate>{dollars(insuredPurchase(post.price,box?boxPrice:0).total)}</dd></div></dl>}
@@ -43,6 +45,8 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  </>;
 }
 function ProductPhotos({post,verified}:{post:LuxuryPost;verified:boolean}) {
- const carousel=useRef<HTMLDivElement>(null),[slide,setSlide]=useState(0);
- return <><div className="lux-carousel-wrap"><div className="lux-carousel" ref={carousel} onScroll={e=>setSlide(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))}>{post.images.map((src,i)=><img key={i} src={src} width={512} height={512} alt={`${post.title} · 상세 사진 ${i+1}`}/>)}</div><span className="lux-counter">{slide+1}/{post.images.length}</span>{verified&&<span className="lux-verified"><ShieldCheck size={14}/> VELA VERIFIED</span>}</div>{post.images.length>1&&<div className="carousel-controls"><Button size="icon" variant="ghost" aria-label="Previous media" disabled={slide===0} onClick={()=>carousel.current?.scrollBy({left:-carousel.current.clientWidth,behavior:'smooth'})}><ArrowLeft/></Button>{post.images.map((_,i)=><span key={i} className={`carousel-dot ${slide===i?'active':''}`}/>)}<Button size="icon" variant="ghost" aria-label="Next media" disabled={slide===post.images.length-1} onClick={()=>carousel.current?.scrollBy({left:carousel.current.clientWidth,behavior:'smooth'})}><ArrowRight/></Button></div>}</>;
+ const carousel=useRef<HTMLDivElement>(null),video=useRef<HTMLVideoElement>(null),[slide,setSlide]=useState(0);
+ const media=detailMedia(post);
+ const onSlide=(index:number)=>{setSlide(index);if(index!==0)video.current?.pause();};
+ return <><div className="lux-carousel-wrap"><div className="lux-carousel" ref={carousel} onScroll={e=>onSlide(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))}>{media.map((item,i)=>item.kind==='video'?<video key="video" ref={video} className="lux-detail-video" src={item.src} poster={post.images[0]} controls playsInline muted loop preload="metadata" aria-label={`${post.title} 상품 영상`}/>:<img key={i} src={item.src} width={512} height={512} alt={`${post.title} · 상세 사진 ${post.video?i:i+1}`}/>)}</div><span className="lux-counter">{slide+1}/{media.length}</span>{verified&&<span className="lux-verified"><ShieldCheck size={14}/> VELA VERIFIED</span>}</div>{media.length>1&&<div className="carousel-controls"><Button size="icon" variant="ghost" aria-label="이전 미디어" disabled={slide===0} onClick={()=>carousel.current?.scrollBy({left:-carousel.current.clientWidth,behavior:'smooth'})}><ArrowLeft/></Button>{media.map((_,i)=><span key={i} className={`carousel-dot ${slide===i?'active':''}`}/>)}<Button size="icon" variant="ghost" aria-label="다음 미디어" disabled={slide===media.length-1} onClick={()=>carousel.current?.scrollBy({left:carousel.current.clientWidth,behavior:'smooth'})}><ArrowRight/></Button></div>}</>;
 }

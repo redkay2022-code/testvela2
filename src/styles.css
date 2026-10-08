@@ -904,3 +904,9 @@
 .lux-soldout{left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 14px;border-radius:4px;color:var(--foreground);background:color-mix(in oklab,var(--background) 88%,transparent);border:1px solid var(--foreground);font-size:16px;letter-spacing:0;white-space:nowrap;}
 @media(max-width:720px){.lux-detail-page .lux-carousel>* ,.lux-detail-video{height:clamp(380px,68dvh,780px);}.lux-detail-page .lux-detail-copy{padding-inline:12px;}.lux-soldout{font-size:13px;padding:8px 10px;}}
 @media(prefers-reduced-motion:reduce){.lux-pull-refresh svg{animation:none;transition:none;}}
+
+.product-detail-header{padding: max(12px,env(safe-area-inset-top)) 12px 12px;gap:10px;background:var(--background);}
+.product-detail-header>button{flex-shrink:0;}
+.product-detail-header strong{font-size:14px;}
+.shorts-floating-header{justify-content:space-between;}
+.shorts-header-tools{margin-left:auto;}
