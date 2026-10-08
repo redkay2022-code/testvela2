@@ -1,5 +1,5 @@
 # velamarket
-- [ ] Enlarge product detail media, add global pull-to-refresh, live registration count and Home/store sold-out presentation; verify rules and authenticated screens.
+- [x] Enlarge detail media (1200×960 desktop, 390×574 phone), shared top-only pull refresh, live registration count and discovery/store sold-out presentation; 23 tests pass, authenticated admin main-page/nested-detail refresh checks pass without errors/overflow. Actual seller sold-status mutation/readback awaits a seller session with inventory.
 - [x] Compact My Studio KPIs, escrow, analytics and three URL-backed detail tabs; authenticated admin tab/modal/Back and 390px layout pass with no runtime errors, 13 tests pass, build OK. Actual seller tier/review readback awaits seller session; crypto withdrawal remains disconnected.
 - [x] Separate seller Store Manager/Messages/My Studio routes; inventory visibility, real activity/conversations, sales/escrow and QC-gated replacement workflows connected; 31 tests pass, admin-session page/modal checks pass. Actual seller inventory publication/replacement readback awaits seller session.
 - [x] Keep Home header and use only a back icon on other bottom tabs and cart/chat panels; browser tab entry/return and /store,/me,/seller,/upload direct fallback pass without page errors; 22 tests pass.

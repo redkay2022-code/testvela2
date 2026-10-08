@@ -14,7 +14,7 @@ export function PullToRefresh({ disabled = false, onError }: { disabled?: boolea
     const reset = () => { start = undefined; pull = 0; setDistance(0); };
     const begin = (event: TouchEvent) => {
       if (busy.current || event.touches.length !== 1 || !(event.target instanceof Element)) return;
-      if (event.target.closest('input,textarea,select,video,[role="slider"]')) return;
+      if (event.target.closest('input,textarea,select,[role="slider"]')) return;
       let node: Element | null = event.target;
       let nestedScroller = false;
       while (node && node !== document.documentElement) {
