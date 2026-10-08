@@ -25,7 +25,7 @@ import { formatMoney } from '@/lib/currency';
 function SellerStats(){
  const q=useQuery({queryKey:['seller-stats'],queryFn:async()=>{const {data,error}=await supabase.rpc('seller_dashboard_stats');if(error)throw error;return data as Record<string,number>|null;},refetchInterval:30000});
  const d=q.data;const v=(k:string)=>d?String(d[k]??0):'—';
- const items:[string,string,typeof Users][]=[['팔로워',v('followers'),Users],['판매 중',v('selling'),Store],['판매 완료',v('sold_out'),Check],['주문 수',v('orders'),Package],['장바구니 담김',v('cart'),Heart],['제작·검수 진행',v('preparing'),FileCheck],['에스크로 입금 예정',d?formatMoney(Number(d.escrow_pending_usd??0)):'—',DollarSign]];
+ const items:[string,string,typeof Users][]=[['팔로워',v('followers'),Users],['판매 중',v('selling'),Store],['판매 완료',v('sold_out'),Check],['주문 수',v('orders'),Package],['장바구니 담김',v('cart'),Heart],['제작·검수 진행',v('preparing'),FileCheck],['에스크로 입금 예정',d?formatMoney(Number(d['escrow_pending_usd']??0)):'—',DollarSign]];
  return <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 my-4">{items.map(([l,val,Icon])=><div key={l} className="seller-flow-card"><Icon size={16} className="text-primary"/><strong className="mt-1 block text-lg">{val}</strong><small className="text-muted-foreground">{l}</small></div>)}</div>;
 }
 
