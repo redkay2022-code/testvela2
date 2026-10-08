@@ -41,7 +41,10 @@ function StudioTierTab(){
 }
 export function Dashboard({kind,posts}:{kind:'admin'|'seller';posts:LuxuryPost[]}){
  const search=marketSearch.parse(useRouterState({select:s=>s.location.search}));
- const role=search.role || 'buyer';if((kind==='admin'&&role!=='admin')||(kind==='seller'&&role!=='seller'&&role!=='admin'))return <div className="dashboard-gate"><ShieldCheck size={34}/><h1>{kind==='admin'?'Platform back office':'Seller studio'}</h1><p>승인된 계정으로 로그인하면 이용할 수 있습니다.</p></div>;
+ const auth=useQuery({queryKey:['auth-user'],queryFn:async()=>(await supabase.auth.getUser()).data.user});const acct=useMyAccount(auth.data??null);const trustedSeller=!!acct.data?.roles.includes('seller');
+ const role=search.role==='admin'?'admin':kind==='seller'&&trustedSeller?'seller':search.role || 'buyer';
+ if(kind==='seller'&&(auth.isLoading||(auth.data&&acct.isLoading)))return <div className="lux-empty">Loading…</div>;
+ if((kind==='admin'&&role!=='admin')||(kind==='seller'&&role!=='seller'&&role!=='admin'))return <div className="dashboard-gate"><ShieldCheck size={34}/><h1>{kind==='admin'?'Platform back office':'Seller studio'}</h1><p>승인된 계정으로 로그인하면 이용할 수 있습니다.</p></div>;
  if(kind==='admin')return <AdminDashboard posts={posts}/>;
  const tabs=sellerTabs;const section=search.section || 'overview';
  return <div className="dashboard"><div className="dashboard-heading"><div><span className="lux-eyebrow">VS WATCH STUDIO</span><h1>Studio dashboard</h1><p>Every detail of your business, in one place.</p></div><Button asChild variant="goldOutline"><Link to="/store" search={{role}}>View store<ArrowRight/></Link></Button></div><nav className="dashboard-tabs">{tabs.map(([s,label,Icon])=><Button asChild variant="ghost" key={s} className={section===s?'active':''}><Link to="/seller" search={{role,section:s}} resetScroll={false}><Icon/>{label}</Link></Button>)}</nav>
