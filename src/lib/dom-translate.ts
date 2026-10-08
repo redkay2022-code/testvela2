@@ -53,18 +53,25 @@ function tr(text: string, node?: Text): string | null {
     const joined = uniq.join(' · ');
     if (joined !== s) return text.replace(s, joined);
   }
-  if (!node || !LETTERS.test(s) || skipMachine(node.parentElement)) return null;
+  if (!node || !LETTERS.test(s) || skipMachine(node.parentElement) || alreadyTarget(s)) return null;
   const m = loadMachine(lang)[s];
   if (m) return m === s ? null : text.replace(s, m);
   pending.add(s); waiting.add(node);
   if (!timer) timer = setTimeout(flush, 250);
   return null;
 }
+// Skip machine calls for text already written in the target language's script (avoids wasted calls, keeps fallback to original).
+const HANGUL = /[\uac00-\ud7a3]/, CJK = /[\u3040-\u30ff\u4e00-\u9fff]/;
+function alreadyTarget(s: string) {
+  if (lang === 'ko') return HANGUL.test(s) || !/[A-Za-z]{3,}/.test(s);
+  if (lang === 'en') return !HANGUL.test(s) && !CJK.test(s);
+  return false;
+}
 function textNode(n: Text) {
   if (n.parentElement && SKIP.has(n.parentElement.tagName)) return;
   const rec = written.get(n);
   const source = rec && rec.out === n.data ? rec.orig : n.data;
-  const next = (lang === 'en' && !dict[source.trim()] ? null : tr(source, n)) ?? source;
+  const next = tr(source, n) ?? source;
   if (next !== n.data) n.data = next;
   written.set(n, { orig: source, out: next });
 }
