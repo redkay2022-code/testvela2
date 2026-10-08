@@ -27,9 +27,9 @@ export type LuxuryPost = {storeFeatured?:boolean;outOfStock?:boolean;featured?:b
 export function luxuryPosts(posts:FeedPost[]):LuxuryPost[] {
  return posts.map(post => {
   const extra={outOfStock:post.product_status==='OUT_OF_STOCK',featured:post.featured,storeSlug:post.store?.slug,storeFeatured:Boolean(post.store?.featured),verified:post.store?post.store.verification_status!=='UNVERIFIED':false};
-  if(post.image_key==='seed'){
-   const v=post.video_url?seedVideos[post.video_url]:undefined; const specs=(post.specs ?? {}) as Record<string,unknown>;
-   return {...extra,id:post.id,source:post,sample:false,reputation:unknownReputation,title:post.title,creator:post.creator,description:post.description,images:post.media_urls.map(seedImage),video:v?.[0] ?? null,videoFallback:v?.[1],short:Boolean(v),boxPrice:post.box_price ?? null,price:post.price,factory:typeof specs['factory']==='string'?specs['factory']:post.category,category:post.category,views:'0',likes:post.base_likes};
+  if(post.image_key==='seed'||(post.store_id&&post.image_key==='uploaded')){
+   const v=post.video_url?(seedVideos[post.video_url] ?? [post.video_url,undefined] as const):undefined; const imgs=post.media_urls.map(u=>u.startsWith('seed:')?seedImage(u):u); const specs=(post.specs ?? {}) as Record<string,unknown>;
+   return {...extra,id:post.id,source:post,sample:false,reputation:unknownReputation,title:post.title,creator:post.creator,description:post.description,images:imgs.length?imgs:[watch0],video:v?.[0] ?? null,videoFallback:v?.[1],short:Boolean(v),boxPrice:post.box_price ?? null,price:post.price,factory:typeof specs['factory']==='string'?specs['factory']:post.category,category:post.category,views:'0',likes:post.base_likes};
   }
   const index=ids.indexOf(post.id), sample=index>=0, i=sample?index:0;
   const photo=watchImages[i%6] ?? watch0;
