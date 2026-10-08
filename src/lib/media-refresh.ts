@@ -11,7 +11,7 @@ export function useMediaRefresh() {
     const onError = (e: Event) => {
       const el = e.target;
       if (!(el instanceof HTMLImageElement || el instanceof HTMLVideoElement || el instanceof HTMLSourceElement || el instanceof HTMLAudioElement)) return;
-      const src = el.currentSrc || el.getAttribute('src') || '';
+      const src = ('currentSrc' in el ? el.currentSrc : '') || el.getAttribute('src') || '';
       if (!src.includes(SIGNED) || Date.now() - last < 20_000) return;
       last = Date.now();
       void queryClient.invalidateQueries();
