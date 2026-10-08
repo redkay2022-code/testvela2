@@ -34,7 +34,7 @@
 - Seed stores/products live in the database (data_source SEED), not local arrays. Catalog is Seller → Store → Product: products extend `posts` (store_id, product_status, inventory, data_source) with `product_images`/`product_qc`; a DB trigger owns status/stock transitions and syncs legacy `status`, so existing feed/search/buy code keeps reading `posts`. Inactive stores hide their products via a restrictive RLS policy.
 - Categories live in public.categories (admin-managed parent/child rows); forms render them via CategoryOptions and posts keep the category name, so renames also update posts. Video uploads auto-generate a JPEG frame into posts.thumbnail_url in the browser so feeds never load video just for a cover.
 - Details at /post/$id, Shorts at /shorts/$id (?post= redirects); leaf head() sets per-post title/image for share previews.
-- Signed media self-heals via src/lib/media-refresh.ts.
+- Media self-heals via src/lib/media-refresh.ts.
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
 
-- Seller Studio reuses trusted metrics/listings/QC, URL tabs and shell notifications, avoiding duplicate subscriptions.
+- Seller Studio/wallet reuse trusted metrics/listings/QC, URL tabs and shell notifications to avoid duplicate subscriptions.
