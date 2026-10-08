@@ -34,5 +34,5 @@
 - USDT display estimates USD parity; keep stored prices and payment networks unchanged.
 - Seed stores/products live in the database (data_source SEED), not local arrays. Catalog is Seller → Store → Product: products extend `posts` (store_id, product_status, inventory, data_source) with `product_images`/`product_qc`; a DB trigger owns status/stock transitions and syncs legacy `status`, so existing feed/search/buy code keeps reading `posts`. Inactive stores hide their products via a restrictive RLS policy.
 - Categories live in public.categories (admin-managed parent/child rows); forms render them via CategoryOptions and posts keep the category name, so renames also update posts. Video uploads auto-generate a JPEG frame into posts.thumbnail_url in the browser so feeds never load video just for a cover.
-- Product details live at /post/$id and Shorts at /shorts/$id (legacy ?post= redirects); each leaf head() carries that post's title and share image.
-- Signed media URLs are refreshed by refetching queries (45-min interval, tab focus, and a capture-phase media error listener in src/lib/media-refresh.ts) so expired links self-heal.
+- Details at /post/$id, Shorts at /shorts/$id (?post= redirects); leaf head() sets per-post title/image for share previews.
+- Expired signed media self-heals via query refetch (interval, focus, media-error listener in src/lib/media-refresh.ts).
