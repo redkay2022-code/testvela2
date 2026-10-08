@@ -20,6 +20,7 @@ import { Route as SellerRouteImport } from './routes/seller'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as UploadRouteImport } from './routes/upload'
+import { Route as BuyIdRouteImport } from './routes/buy.$id'
 import { Route as ShortsIdRouteImport } from './routes/shorts.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -77,6 +78,11 @@ const UploadRoute = UploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BuyIdRoute = BuyIdRouteImport.update({
+  id: '/buy/$id',
+  path: '/buy/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShortsIdRoute = ShortsIdRouteImport.update({
   id: '/shorts/$id',
   path: '/shorts/$id',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
+  '/buy/$id': typeof BuyIdRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
+  '/buy/$id': typeof BuyIdRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
+  '/buy/$id': typeof BuyIdRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/support'
     | '/upload'
+    | '/buy/$id'
     | '/shorts/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/support'
     | '/upload'
+    | '/buy/$id'
     | '/shorts/$id'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/store'
     | '/support'
     | '/upload'
+    | '/buy/$id'
     | '/shorts/$id'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   StoreRoute: typeof StoreRoute
   SupportRoute: typeof SupportRoute
   UploadRoute: typeof UploadRoute
+  BuyIdRoute: typeof BuyIdRoute
   ShortsIdRoute: typeof ShortsIdRoute
 }
 
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/buy/$id': {
+      id: '/buy/$id'
+      path: '/buy/$id'
+      fullPath: '/buy/$id'
+      preLoaderRoute: typeof BuyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shorts/$id': {
       id: '/shorts/$id'
       path: '/shorts/$id'
@@ -287,6 +307,7 @@ const rootRouteChildren: RootRouteChildren = {
   StoreRoute: StoreRoute,
   SupportRoute: SupportRoute,
   UploadRoute: UploadRoute,
+  BuyIdRoute: BuyIdRoute,
   ShortsIdRoute: ShortsIdRoute,
 }
 export const routeTree = rootRouteImport

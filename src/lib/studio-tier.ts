@@ -48,3 +48,16 @@ export function withLiveRatings(posts: LuxuryPost[], map: { stats: Record<string
     return { ...p, reputation: { approved: true, ratings: null, completedSales: 0, ratingAvg: st?.average ?? null, ratingCount: st?.count ?? 0, override: map.overrides[k] ?? null } };
   });
 }
+
+/** Buyer star ratings per listing (post_id is set server-side from the reviewed order). */
+export function usePostRatings() {
+  return useQuery({
+    queryKey: ['post-ratings'], staleTime: 30_000,
+    queryFn: async () => {
+      const { data } = await supabase.from('reviews').select('post_id, rating').not('rating', 'is', null).not('post_id', 'is', null);
+      const out: Record<string, { average: number; count: number }> = {};
+      (data ?? []).forEach(r => { const k = r.post_id as string, o = out[k] ?? { average: 0, count: 0 }; o.average = (o.average * o.count + (r.rating as number)) / (o.count + 1); o.count += 1; out[k] = o; });
+      return out;
+    },
+  });
+}

@@ -22,7 +22,7 @@ import { AccountView } from './role-views';
 import { ProductDetailContent } from './product-detail-content';
 import { ShortsPlayer } from './shorts-player';
 import { BuyerBadge, SellerBadge, SellerRatings } from './reputation';
-import { useSellerRatingMap, withLiveRatings } from '@/lib/studio-tier';
+import { usePostRatings, useSellerRatingMap, withLiveRatings } from '@/lib/studio-tier';
 import { SpecsTable } from './specs-table';
 import { type BuyerTier } from '@/lib/reputation';
 import { FeedCategoryPicker } from './feed-category-picker';
@@ -65,8 +65,9 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
  let posts=all.filter(p=>!preview.hidden.includes(p.id)&&(!search.q||`${p.title} ${p.creator} ${p.factory} ${p.category}`.toLowerCase().includes(search.q.toLowerCase()))&&(!search.category||search.category==='All'||p.category===search.category||p.factory===search.category));
  if(search.tab==='following') posts=posts.filter(p=>preview.isFollowing(sellerIdentity(p))).sort((a,b)=>(Date.parse(b.source?.created_at ?? '')||0)-(Date.parse(a.source?.created_at ?? '')||0));
   const {data:reviewRows}=useQuery({queryKey:['review-counts'],queryFn:async()=>{const {data:rows}=await supabase.from('reviews').select('seller_id');return rows ?? [];},staleTime:30_000});
+  const postRatings=usePostRatings();
   const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
-  if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts);
+  if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {});
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
@@ -110,8 +111,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
   <Button asChild variant="ghost" className={`lux-nav-item ${mode==='me'?'active':''}`}><Link to="/me" search={{role:search.role}}><User/><span>나</span></Link></Button>
 </div></nav>
 
- <AnimatePresence>{selected&&!shortsId&&<ProductDetail key={selected.id} post={selected} user={user} requestAuth={()=>update({auth:true})} close={close} buy={box=>update({panel:'checkout',checkoutBox:box})} notify={setToast}/>}</AnimatePresence>
-  {shortsId&&(shorts.some(p=>p.id===shortsId)?<ShortsPlayer posts={shorts} selectedId={shortsId} sheet={search.shortSheet} shortTab={search.shortTab || 'recommend'} onTab={shortTab=>update({shortTab})} onSearch={()=>{searchPushed.current=true;update({searchOpen:true});}} user={user} close={()=>void navigate({to:'/',search:{role:search.role},replace:true})} closeSheet={()=>{if(sheetPushed.current){sheetPushed.current=false;router.history.back();}else void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,shortSheet:undefined,shortPhoto:undefined,detailTab:undefined}),replace:true,resetScroll:false});}} change={id=>void navigate({to:'/shorts/$id',params:{id},search:prev=>({...prev,shorts:undefined,detailTab:undefined}),replace:true,resetScroll:false})} openSheet={shortSheet=>{sheetPushed.current=true;update({shortSheet});}} requestAuth={()=>update({auth:true})} buy={box=>update({panel:'checkout',checkoutBox:Boolean(box)})} notify={setToast}/>:<Overlay title="Short unavailable" close={()=>void navigate({to:'/',search:{role:search.role},replace:true})}><Button asChild variant="goldOutline"><Link to="/" search={{role:search.role}}>Return Home</Link></Button></Overlay>)}
+ <AnimatePresence>{selected&&!shortsId&&<ProductDetail key={selected.id} post={selected} user={user} requestAuth={()=>update({auth:true})} close={close} buy={box=>void navigate({to:'/buy/$id',params:{id:selected.id},search:{checkoutBox:box||undefined}})} notify={setToast}/>}</AnimatePresence>
+  {shortsId&&(shorts.some(p=>p.id===shortsId)?<ShortsPlayer posts={shorts} selectedId={shortsId} sheet={search.shortSheet} shortTab={search.shortTab || 'recommend'} onTab={shortTab=>update({shortTab})} onSearch={()=>{searchPushed.current=true;update({searchOpen:true});}} user={user} close={()=>void navigate({to:'/',search:{role:search.role},replace:true})} closeSheet={()=>{if(sheetPushed.current){sheetPushed.current=false;router.history.back();}else void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,shortSheet:undefined,shortPhoto:undefined,detailTab:undefined}),replace:true,resetScroll:false});}} change={id=>void navigate({to:'/shorts/$id',params:{id},search:prev=>({...prev,shorts:undefined,detailTab:undefined}),replace:true,resetScroll:false})} openSheet={shortSheet=>{sheetPushed.current=true;update({shortSheet});}} requestAuth={()=>update({auth:true})} buy={box=>void navigate({to:'/buy/$id',params:{id:shortsId},search:{checkoutBox:box||undefined}})} notify={setToast}/>:<Overlay title="Short unavailable" close={()=>void navigate({to:'/',search:{role:search.role},replace:true})}><Button asChild variant="goldOutline"><Link to="/" search={{role:search.role}}>Return Home</Link></Button></Overlay>)}
   {search.searchOpen&&<Dialog.Root open onOpenChange={open=>{if(!open)closeSearch();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className="lux-search-overlay" aria-describedby={undefined}><div className="lux-search-overlay-inner"><div className="lux-search-top"><Dialog.Title className="text-lg font-semibold">Search</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close search" onClick={closeSearch}><X/></Button></div><FeedFilters value={{fq:search.fq,ffactory:search.ffactory,fmin:search.fmin,fmax:search.fmax,fshorts:search.fshorts}} count={feedFilterResults.length} onChange={setFeedFilter}/><div className="lux-search-keywords" data-no-translate role="group" aria-label="빠른 검색 키워드"><span>빠른 검색</span>{quickKeywords.map(k=><Button key={k} variant="ghost" className="lux-chip" aria-pressed={search.fq===k} onClick={()=>setFeedFilter({fq:search.fq===k?undefined:k})}>{k}</Button>)}</div><div className="lux-search-results"><Feed posts={feedFilterResults} base={base} search={{role:search.role}}/></div></div></Dialog.Content></Dialog.Portal></Dialog.Root>}
   {search.menu&&<Overlay title="VELA" close={close} side><ProductionMenu role={search.role}/></Overlay>}
  {search.post&&!selected&&<Overlay title="Product unavailable" close={close}><p className="py-6 text-sm text-muted-foreground">This listing is no longer available.</p></Overlay>}
@@ -151,7 +152,7 @@ function SellerStoreHeader({post,count,search}:{post:LuxuryPost|undefined;count:
 }
 function Reviews(){const memberships:BuyerTier[]=['gold','silver','member'];return <div className="review-list">{[['A. Chen','Beautiful finishing. The studio shared detailed photos before shipping.'],['J. Park','Quick communication and a carefully packed watch.'],['M. Lee','The dial looks even better in person.']].map(([name,text],index)=><article key={name}><div className="flex justify-between"><div className="review-author"><strong>{name}</strong><BuyerBadge tier={memberships[index] ?? 'member'}/></div><span className="text-primary">★★★★★</span></div><p className="mt-3 text-sm leading-7 text-muted-foreground">{text}</p><span className="mt-3 block text-xs text-muted-foreground">Sample review · Verified purchase preview</span></article>)}</div>;}
 
-function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
+export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
  const preview=useMarketPreview(),p=preview.profile;
  const checkoutSearch=useRouterState({select:s=>marketSearch.parse(s.location.search)});
  const [box,setBox]=useState(Boolean(checkoutSearch.checkoutBox));
