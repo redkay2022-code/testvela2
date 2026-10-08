@@ -150,7 +150,7 @@ export function AdminLoyalty() {
     <div className="section-heading mt-6"><h2>최근 포인트 원장</h2></div>
     <div className="management-list">{o.recent.length ? o.recent.map(r => <div className="management-row" key={r.id}><div className="min-w-0"><strong>{typeLabel[r.type] ?? r.type}</strong><small className="break-all" data-no-translate>{r.user_id} · {r.source} · {new Date(r.created_at).toLocaleString()}</small></div><strong data-no-translate>{r.amount > 0 ? '+' : ''}{formatPoints(r.amount)}</strong><small data-no-translate>→ {formatPoints(r.balance_after)}</small></div>) : <p className="text-sm text-muted-foreground">아직 거래가 없습니다.</p>}</div>
     <div className="section-heading mt-6"><h2>Audit Log</h2></div>
-    <div className="management-list">{o.audit.length ? o.audit.map(a => <div className="management-row" key={a.id}><div className="min-w-0"><strong>{a.action}</strong><small className="break-all" data-no-translate>{new Date(a.created_at).toLocaleString()} {a.target_user_id ?? ''} {typeof a.details?.reason === 'string' ? `· ${a.details.reason}` : ''}</small></div></div>) : <p className="text-sm text-muted-foreground">기록이 없습니다.</p>}</div>
+    <div className="management-list">{o.audit.length ? o.audit.map(a => <div className="management-row" key={a.id}><div className="min-w-0"><strong>{a.action}</strong><small className="break-all" data-no-translate>{new Date(a.created_at).toLocaleString()} {a.target_user_id ?? ''} {typeof a.details?.['reason'] === 'string' ? `· ${a.details['reason']}` : ''}</small></div></div>) : <p className="text-sm text-muted-foreground">기록이 없습니다.</p>}</div>
   </div>;
 }
 
@@ -163,7 +163,7 @@ function LoyaltySettingsForm({ rules, onSaved }: { rules: Rules; onSaved: () => 
     for (const t of rules.tiers) { const r = Number(rates[t.tier]) / 100; if (r !== Number(t.earn_rate)) { const { error } = await supabase.from('loyalty_settings').update({ earn_rate: r }).eq('tier', t.tier); if (error) return toast.error(error.message); } }
     const { error } = await supabase.from('loyalty_config').update({ max_redemption_pct: Number(cfg.max_redemption_pct), expiration_months: Number(cfg.expiration_months), commission_rate_pct: Number(cfg.commission_rate_pct), loyalty_budget_pct: Number(cfg.loyalty_budget_pct), max_earn_rate_pct: Number(cfg.max_earn_rate_pct), monthly_point_budget_usd: Number(cfg.monthly_point_budget_usd), max_outstanding_liability_usd: Number(cfg.max_outstanding_liability_usd), points_enabled: cfg.points_enabled }).eq('id', 1);
     if (error) return toast.error(error.message);
-    toast.success('설정을 저장했습니다. 새 주문부터 적용됩니다.'); onSaved();
+    toast.success('설정을 저장했습니다. 새 주문부터 적용됩니다.'); onSaved(); return undefined;
   };
   const field = (k: Exclude<keyof typeof cfg, 'points_enabled'>, label: string) => <label key={k} className="grid gap-1 text-xs"><span>{label}</span><input className="form-input" inputMode="decimal" value={cfg[k]} onChange={e => setCfg(p => ({ ...p, [k]: e.target.value }))}/></label>;
   return <section className="mt-6">
@@ -191,7 +191,7 @@ function OrderPointTools({ onDone }: { onDone: () => void }) {
     const { data, error } = await supabase.from('orders').update(patch).eq('order_no', no.trim()).select('id');
     if (error) return toast.error(error.message);
     if (!data?.length) return toast.error('주문을 찾을 수 없습니다.');
-    toast.success('처리했습니다.'); onDone();
+    toast.success('처리했습니다.'); onDone(); return undefined;
   };
   return <section className="mt-6"><div className="section-heading"><h2>주문 취소 · 환불 포인트 처리</h2></div>
     <div className="grid gap-2"><input className="form-input" placeholder="주문번호" value={no} onChange={e => setNo(e.target.value)} data-no-translate/>
@@ -206,7 +206,7 @@ function AdjustForm({ onDone }: { onDone: () => void }) {
     if (!/^[0-9a-f-]{36}$/i.test(id)) { const { data } = await supabase.from('profiles').select('user_id').eq('system_code', id).maybeSingle(); if (!data) return toast.error('사용자를 찾을 수 없습니다.'); id = data.user_id; }
     const { error } = await supabase.rpc('loyalty_admin_adjust', { _user: id, _points: Math.trunc(Number(pts)), _reason: reason, _bonus: bonus });
     if (error) return toast.error(error.message);
-    toast.success('조정했습니다. Audit Log에 기록되었습니다.'); setPts(''); setReason(''); onDone();
+    toast.success('조정했습니다. Audit Log에 기록되었습니다.'); setPts(''); setReason(''); onDone(); return undefined;
   };
   return <section className="mt-6"><div className="section-heading"><h2>수동 포인트 조정</h2><span>사유 필수 · 감사 기록</span></div>
     <div className="grid gap-2"><input className="form-input" placeholder="시스템 ID 또는 사용자 ID" value={who} onChange={e => setWho(e.target.value)} data-no-translate/>
