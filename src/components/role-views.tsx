@@ -23,6 +23,7 @@ import { MembershipCard } from './loyalty';
 import { MyActivity } from './my-activity';
 import { LiveOrderBoard } from './live-orders';
 import { formatMoney } from '@/lib/currency';
+import { SellerStudio } from './seller-studio';
 
 function SellerStats(){
  const q=useQuery({queryKey:['seller-stats'],queryFn:async()=>{const {data,error}=await supabase.rpc('seller_dashboard_stats');if(error)throw error;return data as Record<string,number>|null;},refetchInterval:30000});
@@ -62,6 +63,7 @@ export function Dashboard({kind,posts}:{kind:'admin'|'seller';posts:LuxuryPost[]
  if(kind==='seller'&&(auth.isLoading||(auth.data&&acct.isLoading)))return <div className="lux-empty">Loading…</div>;
  if((kind==='admin'&&role!=='admin')||(kind==='seller'&&role!=='seller'&&role!=='admin'))return <div className="dashboard-gate"><ShieldCheck size={34}/><h1>{kind==='admin'?'Platform back office':'Seller studio'}</h1><p>승인된 계정으로 로그인하면 이용할 수 있습니다.</p></div>;
  if(kind==='admin')return <AdminDashboard posts={posts}/>;
+ if(auth.data)return <SellerStudio user={auth.data}/>;
  const tabs=sellerTabs;const section=search.section || 'overview';
  return <div className="dashboard"><div className="dashboard-heading"><div><span className="lux-eyebrow">VS WATCH STUDIO</span><h1>Studio dashboard</h1><p>Every detail of your business, in one place.</p></div><Button asChild variant="goldOutline"><Link to="/store" search={{role}}>View store<ArrowRight/></Link></Button></div><nav className="dashboard-tabs">{tabs.map(([s,label,Icon])=><Button asChild variant="ghost" key={s} className={section===s?'active':''}><Link to="/seller" search={{role,section:s}} resetScroll={false}><Icon/>{label}</Link></Button>)}</nav><StudioHeader user={auth.data??null} role={role}/>
  {section==='tier'?<StudioTierTab/>:section==='orders'?<><div className="section-heading"><h2>주문 · 제작 현황 · QC 검수</h2><span>단계 업데이트 및 검수 사진/영상 업로드</span></div><LiveOrderBoard as="seller"/></>:<><div className="studio-tools"><Button asChild variant="gold"><Link to="/upload" search={{role}}><Plus/>상품 등록 (영상 1 + 사진 9)</Link></Button><Button asChild variant="goldOutline"><Link to="/upload" search={{role}}><Video/>숏폼 영상 편집기</Link></Button></div><SellerStats/></>}
