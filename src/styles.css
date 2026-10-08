@@ -908,5 +908,5 @@
 .product-detail-header{padding: max(12px,env(safe-area-inset-top)) 12px 12px;gap:10px;background:var(--background);}
 .product-detail-header>button{flex-shrink:0;}
 .product-detail-header strong{font-size:14px;}
-.shorts-floating-header{justify-content:space-between;}
+.shorts-floating-header{display:flex;justify-content:space-between;}
 .shorts-header-tools{margin-left:auto;}
