@@ -14,6 +14,32 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           collection: string
@@ -926,6 +952,24 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          seller_key: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          seller_key: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          seller_key?: string
+        }
+        Relationships: []
+      }
       seller_tier_overrides: {
         Row: {
           seller_id: string
@@ -1159,6 +1203,7 @@ export type Database = {
       loyalty_expire_user: { Args: { _uid: string }; Returns: undefined }
       loyalty_my_summary: { Args: never; Returns: Json }
       loyalty_refresh_membership: { Args: { _uid: string }; Returns: string }
+      seller_dashboard_stats: { Args: never; Returns: Json }
       store_is_visible: { Args: { _store_id: string }; Returns: boolean }
     }
     Enums: {
