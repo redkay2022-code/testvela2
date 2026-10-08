@@ -401,11 +401,58 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
 }
 
 function Categories({ products }: { products: PostRow[] }) {
-  const cats = [...new Set([...productCategories, ...products.map(p => p.category)])];
-  return <div className="catalog mt-4"><div className="section-heading"><h2>CATEGORIES</h2><span>기존 카테고리 구조 유지</span></div>
-    <div className="catalog-scroll"><table className="catalog-table"><thead><tr><th>Category</th><th>Published</th><th>Total</th></tr></thead><tbody>
-      {cats.map(c => <tr key={c}><td>{c}</td><td>{products.filter(p => p.category === c && (p.product_status === 'PUBLISHED' || p.product_status === 'OUT_OF_STOCK')).length}</td><td>{products.filter(p => p.category === c).length}</td></tr>)}
-    </tbody></table></div></div>;
+  const qc = useQueryClient();
+  const { data: rows = [], isLoading } = useCategories();
+  const [draft, setDraft] = useState({ name: '', parent_id: '', collection: 'watches' });
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const [msg, setMsg] = useState('');
+  const reload = () => qc.invalidateQueries({ queryKey: categoriesQueryKey });
+  const count = (name: string, live = false) => products.filter(p => p.category === name && (!live || p.product_status === 'PUBLISHED' || p.product_status === 'OUT_OF_STOCK')).length;
+  const parents = rows.filter(r => !r.parent_id);
+  const add = async () => {
+    const name = draft.name.trim(); if (!name) return;
+    const parent = parents.find(p => p.id === draft.parent_id);
+    const id = `${slugify(name) || 'cat'}-${crypto.randomUUID().slice(0, 6)}`;
+    const siblings = rows.filter(r => (r.parent_id ?? '') === draft.parent_id).length;
+    const { error } = await supabase.from('categories').insert({ id, name, parent_id: parent?.id ?? null, collection: parent?.collection ?? draft.collection, sort_order: siblings + 1 });
+    setMsg(error ? '카테고리를 추가하지 못했습니다.' : `${name} 추가됨`); if (!error) setDraft(d => ({ ...d, name: '' })); await reload();
+  };
+  const rename = async (r: CategoryRow) => {
+    const name = edits[r.id]?.trim(); if (!name || name === r.name) return;
+    const { error } = await supabase.from('categories').update({ name }).eq('id', r.id);
+    if (!error && r.parent_id) await supabase.from('posts').update({ category: name }).eq('category', r.name);
+    setMsg(error ? '이름을 바꾸지 못했습니다.' : `${r.name} → ${name}`); setEdits(e => { const n = { ...e }; delete n[r.id]; return n; }); await reload(); await qc.invalidateQueries({ queryKey: ['admin-products'] });
+  };
+  const move = async (r: CategoryRow, dir: -1 | 1) => {
+    const sib = rows.filter(x => x.parent_id === r.parent_id); const i = sib.findIndex(x => x.id === r.id); const other = sib[i + dir]; if (!other) return;
+    await Promise.all([supabase.from('categories').update({ sort_order: other.sort_order }).eq('id', r.id), supabase.from('categories').update({ sort_order: r.sort_order }).eq('id', other.id)]);
+    await reload();
+  };
+  const remove = async (r: CategoryRow) => {
+    if (rows.some(x => x.parent_id === r.id)) { setMsg('하위 카테고리를 먼저 삭제해 주세요.'); return; }
+    if (count(r.name)) { setMsg(`${r.name}에 상품 ${count(r.name)}개가 있어 삭제할 수 없습니다.`); return; }
+    if (!confirm(`${r.name} 카테고리를 삭제할까요?`)) return;
+    const { error } = await supabase.from('categories').delete().eq('id', r.id);
+    setMsg(error ? '삭제하지 못했습니다.' : `${r.name} 삭제됨`); await reload();
+  };
+  const row = (r: CategoryRow, child: boolean) => <tr key={r.id}>
+    <td style={{ paddingLeft: child ? 28 : undefined }}><input aria-label="카테고리 이름" value={edits[r.id] ?? r.name} onChange={e => setEdits(x => ({ ...x, [r.id]: e.target.value }))} onBlur={() => void rename(r)} onKeyDown={e => { if (e.key === 'Enter') void rename(r); }} /></td>
+    <td>{child ? '하위' : '상위'}</td><td>{child ? count(r.name, true) : '—'}</td><td>{child ? count(r.name) : '—'}</td>
+    <td className="whitespace-nowrap"><Button type="button" variant="ghost" size="sm" aria-label="위로" onClick={() => void move(r, -1)}>↑</Button><Button type="button" variant="ghost" size="sm" aria-label="아래로" onClick={() => void move(r, 1)}>↓</Button><Button type="button" variant="ghost" size="sm" aria-label="삭제" onClick={() => void remove(r)}><Trash2 /></Button></td>
+  </tr>;
+  return <div className="catalog mt-4"><div className="section-heading"><h2>CATEGORIES</h2><span>상위 · 하위 카테고리 관리</span></div>
+    {msg && <p role="status" className="dashboard-message">{msg}</p>}
+    <div className="catalog-toolbar flex flex-wrap gap-2">
+      <input aria-label="새 카테고리 이름" placeholder="새 카테고리 이름" value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} />
+      <select aria-label="상위 카테고리" value={draft.parent_id} onChange={e => setDraft(d => ({ ...d, parent_id: e.target.value }))}><option value="">상위 카테고리로 추가</option>{parents.map(p => <option key={p.id} value={p.id}>{p.name}의 하위</option>)}</select>
+      {!draft.parent_id && <select aria-label="컬렉션" value={draft.collection} onChange={e => setDraft(d => ({ ...d, collection: e.target.value }))}><option value="watches">Watches</option><option value="accessories">Accessories</option></select>}
+      <Button type="button" variant="gold" onClick={() => void add()}><Plus />추가</Button>
+    </div>
+    {isLoading ? <p className="mt-4 text-sm text-muted-foreground">불러오는 중…</p> :
+    <div className="catalog-scroll"><table className="catalog-table"><thead><tr><th>Category</th><th>Level</th><th>Published</th><th>Total</th><th></th></tr></thead><tbody>
+      {parents.flatMap(p => [row(p, false), ...rows.filter(r => r.parent_id === p.id).map(r => row(r, true))])}
+    </tbody></table></div>}
+  </div>;
 }
 
 function Inventory({ products, stores }: { products: PostRow[]; stores: StoreRow[] }) {
