@@ -20,7 +20,7 @@ function publicClient() {
 }
 
 export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
-  const { data, error } = await publicClient().from('posts').select('*').order('created_at', { ascending: false }).order('id');
+  const { data, error } = await publicClient().from('posts').select('*, store:stores(id,slug,store_name,verification_status,featured)').order('created_at', { ascending: false }).order('id');
   if (error) throw new Error('피드를 불러오지 못했습니다.');
   const uploaded = data.filter(p => p.image_key === 'uploaded');
   if (uploaded.length) {

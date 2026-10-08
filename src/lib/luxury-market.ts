@@ -13,7 +13,7 @@ import studioShort5 from '@/assets/studio-short-5.webm';
 import studioShort2 from '@/assets/studio-short-2.webm';
 import { media } from './market-media';
 import type { Post } from './market';
-import { studioReputation, unknownReputation, type SellerReputation } from './reputation';
+import { unknownReputation, type SellerReputation } from './reputation';
 
 export const watchImages = [watch0,watch1,watch2,watch3,watch4,watch5];
 export const luxuryCategories = ['All','News','Ready to Ship','Customizing','VS Factory','3K','APS','PPF'];

@@ -66,7 +66,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
   const {data:reviewRows}=useQuery({queryKey:['review-counts'],queryFn:async()=>{const {data:rows}=await supabase.from('reviews').select('seller_id');return rows ?? [];},staleTime:30_000});
   const postRatings=usePostRatings();
   const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
-  if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {});
+  if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {}).sort((a,b)=>Number(Boolean(b.featured))-Number(Boolean(a.featured)));
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);

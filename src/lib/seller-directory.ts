@@ -4,7 +4,7 @@ import { ratingAverage } from './reputation';
 
 export const storeFilters = [['all','전체'],['watches','시계 전문'],['accessories','주얼리/악세사리'],['custom','커스텀'],['solid-gold','18K 골드'],['top','인기 셀러']] as const;
 export type StoreCategory = typeof storeFilters[number][0];
-export const sellerIdentity = (post: LuxuryPost) => post.sample ? post.creator : post.source.user_id ?? post.creator;
+export const sellerIdentity = (post: LuxuryPost) => post.sample || post.source.store_id ? post.creator : post.source.user_id ?? post.creator;
 export const sellerKey = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 export const sellerMatches = (post: LuxuryPost, seller: string) => {
   const target = sellerKey(seller);
@@ -21,8 +21,7 @@ export function directorySellers(posts: LuxuryPost[]): DirectorySeller[] {
     const post = items[0];
     if (!post) return null;
     return { id, post, items, rating: ratingAverage(post.reputation),
-      bio: post.sample ? 'Independent watch curation. Thoughtful details, precise movements.' : post.description,
-      reviews: post.sample ? 3 : null, followers: post.sample ? 12800 : null };
+      bio: post.description, reviews: null, followers: null };
   }).filter((seller): seller is DirectorySeller => seller !== null);
 }
 export function matchesStoreCategory(seller: DirectorySeller, category: StoreCategory) {

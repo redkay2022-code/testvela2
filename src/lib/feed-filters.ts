@@ -21,7 +21,8 @@ export function filterFeed(posts: LuxuryPost[], f: FeedFilter): LuxuryPost[] {
     const fac = postFactory(p);
     if (q) {
       const specs = (p.source?.specs ?? {}) as Record<string, unknown>;
-      const hay = norm([p.creator, p.title, fac, specs['brand'], specs['model']].filter(v => typeof v === 'string').join(' '));
+      const src = p.source as Partial<{brand:string;model:string;reference:string}> | undefined;
+      const hay = norm([p.creator, p.title, fac, p.category, specs['brand'], specs['model'], src?.brand, src?.model, src?.reference].filter(v => typeof v === 'string').join(' '));
       if (!q.split(' ').every(word => hay.includes(word))) return false;
     }
     if (factory && !norm(fac).includes(factory)) return false;
