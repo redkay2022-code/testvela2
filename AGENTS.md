@@ -29,10 +29,12 @@
 - Real roles live in public.user_roles checked via has_role(); seller applications carry only system_code + nickname and approvals go through admin-verified server functions in src/lib/seller-accounts.functions.ts.
 - Listings store photos in media_urls and one optional video in video_url; selectors append media and use VideoStartPreview posters to preserve edits and avoid black previews.
 - Real orders, QC media and the buyer/seller QC board live in Cloud (orders, order_qc_media, order_messages, private qc-media bucket); a database trigger enforces role-based stage changes and the 9-photo + 1-video QC minimum so clients cannot skip steps. Live courier status comes from 17TRACK via a cached authenticated server function (TRACK17_API_KEY).
-- Help/privacy use public leaves; profile/shipping use URL-tabbed settings. Presentation: src/components/AGENTS.md.
-- USDT display estimates USD parity; keep stored prices and payment networks unchanged.
+- Help/privacy are public; settings use URL tabs. Presentation: src/components/AGENTS.md.
+- USDT display estimates parity; stored prices/networks stay unchanged.
 - Seed stores/products live in the database (data_source SEED), not local arrays. Catalog is Seller → Store → Product: products extend `posts` (store_id, product_status, inventory, data_source) with `product_images`/`product_qc`; a DB trigger owns status/stock transitions and syncs legacy `status`, so existing feed/search/buy code keeps reading `posts`. Inactive stores hide their products via a restrictive RLS policy.
 - Categories live in public.categories (admin-managed parent/child rows); forms render them via CategoryOptions and posts keep the category name, so renames also update posts. Video uploads auto-generate a JPEG frame into posts.thumbnail_url in the browser so feeds never load video just for a cover.
 - Details at /post/$id, Shorts at /shorts/$id (?post= redirects); leaf head() sets per-post title/image for share previews.
-- Expired signed media self-heals via query refetch (interval, focus, media-error listener in src/lib/media-refresh.ts).
+- Media self-heals via src/lib/media-refresh.ts.
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
+
+- Studio/wallet share trusted metrics/listings/QC, URL tabs and shell notifications; avoid duplicate subscriptions.

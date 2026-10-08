@@ -30,7 +30,7 @@ import { FeedCategoryPicker } from './feed-category-picker';
 import { matchesFeedCategory } from '@/lib/feed-categories';
 import { SellerDirectory } from './seller-directory';
 import { CurrencySelect } from './currency';
-import { NotificationInbox, useNotifications } from './notification-bell';
+import { NotificationInbox, NotificationsContext, useNotifications } from './notification-bell';
 import { t } from '@/lib/i18n';
 import { insuredPurchase } from '@/lib/insurance';
 import { cashPayment } from '@/lib/loyalty';
@@ -45,6 +45,7 @@ import { FeedFilters } from './feed-filters';
 import { useMediaRefresh } from '@/lib/media-refresh';
 import { productEntry } from '@/lib/product-entry';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
+import { SellerEscrowWallet } from './seller-wallet';
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;postId?:string;help?:'escrow'|'support'|'privacy'}) {
@@ -58,6 +59,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   const account=useMyAccount(user);
   const uploadRole=accountUploadRole(user?account.data:undefined);
   const myPage=accountPage(user?account.data:undefined);
+ const sellerNavigation=myPage==='/seller';
  const notifications=useNotifications(user);
  const notificationPushed=useRef(false);
  const closeNotifications=()=>{if(notificationPushed.current){notificationPushed.current=false;router.history.back();}else update({notice:undefined});};
@@ -97,7 +99,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
  const feedFilterResults=sortFeed(filterFeed(all.filter(p=>!preview.hidden.includes(p.id)),search),search.fsort);
  const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);} ))].slice(0,10);
- return <>
+  return <NotificationsContext.Provider value={notifications}>
  <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
  <header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <div className="lux-header-inner">
@@ -122,11 +124,11 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   mode==='admin'||mode==='seller'?children:<div className="lux-feed-transition" key={search.tab || 'discover'}><Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/></div>}
  </main>
  <nav className="lux-bottom-nav" aria-label="Main navigation"><div>
-  <Button asChild variant="ghost" className={`lux-nav-item ${mode==='home'&&!search.panel?'active':''}`}><Link to="/" search={{role:search.role}} aria-label="메인 페이지"><Home aria-hidden="true"/><span>메인 페이지</span></Link></Button>
-  <Button asChild variant="ghost" className={`lux-nav-item ${mode==='store'?'active':''}`}><Link to="/store" search={{role:search.role}} aria-label="스토어"><Store aria-hidden="true"/><span>스토어</span></Link></Button>
+  <Button asChild variant="ghost" className={`lux-nav-item ${mode==='home'&&!search.panel?'active':''}`}><Link to="/" search={{role:search.role}} aria-label={sellerNavigation?'홈':'메인 페이지'}><Home aria-hidden="true"/><span>{sellerNavigation?'홈':'메인 페이지'}</span></Link></Button>
+  <Button asChild variant="ghost" className={`lux-nav-item ${(sellerNavigation?mode==='seller'&&search.section==='feed':mode==='store')?'active':''}`}><Link to={sellerNavigation?'/seller':'/store'} search={sellerNavigation?{role:'seller',section:'feed'}:{role:search.role}} aria-label={sellerNavigation?'스토어 관리':'스토어'}><Store aria-hidden="true"/><span>{sellerNavigation?'스토어 관리':'스토어'}</span></Link></Button>
   {uploadRole?<Button asChild variant="gold" className="lux-upload"><Link to="/upload" search={{role:uploadRole}} aria-label="상품 올리기"><Plus aria-hidden="true"/><span className="sr-only">상품 올리기</span></Link></Button>:<Button asChild variant="gold" className="lux-upload lux-buyer-bag"><Link to="/me" search={{role:search.role,panel:'cart'}} aria-label={preview.cart.length?`장바구니 (${preview.cart.length}개)`:'장바구니'}><ShoppingBag aria-hidden="true"/><span className="sr-only">장바구니</span>{preview.cart.length>0&&<span className="bag-count" aria-hidden="true">{preview.cart.length}</span>}</Link></Button>}
-  <Button asChild variant="ghost" className={`lux-nav-item ${search.panel==='chat'?'active':''}`}><Link to={base} search={prev=>({...prev,panel:'chat'})} resetScroll={false} aria-label="메시지"><MessageCircle aria-hidden="true"/><span>메시지</span></Link></Button>
-  <Button asChild variant="ghost" className={`lux-nav-item ${mode==='me'||mode==='seller'?'active':''}`}><Link to={myPage} search={{role:myPage==='/seller'&&search.role!=='admin'?'seller':search.role}} aria-label="나"><User aria-hidden="true"/><span>나</span></Link></Button>
+  <Button asChild variant="ghost" className={`lux-nav-item ${(sellerNavigation?mode==='seller'&&search.section==='inbox':search.panel==='chat')?'active':''}`}><Link to={sellerNavigation?'/seller':base} search={prev=>sellerNavigation?{role:'seller',section:'inbox'}:({...prev,panel:'chat'})} resetScroll={false} aria-label={sellerNavigation?'메시지함':'메시지'}><span className="relative"><MessageCircle aria-hidden="true"/>{sellerNavigation&&notifications.unread>0&&<span className="absolute -right-1 -top-1 size-2 rounded-full bg-destructive"/>}</span><span>{sellerNavigation?'메시지함':'메시지'}</span></Link></Button>
+  <Button asChild variant="ghost" className={`lux-nav-item ${(sellerNavigation?mode==='seller'&&!['feed','inbox'].includes(search.section??''):mode==='me'||mode==='seller')?'active':''}`}><Link to={myPage} search={{role:myPage==='/seller'&&search.role!=='admin'?'seller':search.role}} aria-label={sellerNavigation?'내 스튜디오':'나'}><User aria-hidden="true"/><span>{sellerNavigation?'내 스튜디오':'나'}</span></Link></Button>
 </div></nav>
 
  <AnimatePresence>{entry==='product'&&selected&&!shortsId&&<ProductDetail key={selected.id} post={selected} user={user} requestAuth={()=>update({auth:true})} close={close} buy={box=>void navigate({to:'/buy/$id',params:{id:selected.id},search:{checkoutBox:box||undefined}})} notify={setToast}/>}</AnimatePresence>
@@ -138,7 +140,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  {(search.auth||productSignup)&&<AuthDialog key={search.authSignup?'signup':'login'} initialSignup={Boolean(search.authSignup||productSignup)} onClose={closeAuth} onSignedIn={close}/>}
   {search.panel&&(search.panel==='orders'&&!user?<Overlay title="주문 내역 · 에스크로 상태" close={close}><p className="my-5 text-sm text-muted-foreground">로그인하면 내 주문의 QC 자료, 에스크로 상태와 배송 추적을 확인할 수 있습니다.</p><Button variant="goldOutline" onClick={()=>update({panel:undefined,auth:true})}>로그인하고 내 주문 확인</Button></Overlay>:<CommercePanel posts={all} onBuy={post=>update({checkoutItem:post.id,panel:'checkout'})} panel={search.panel} user={user} selected={search.panel==='checkout'&&search.checkoutItem?all.find(post=>post.id===search.checkoutItem):selected} close={close} onPanel={panel=>update({panel})} notify={setToast}/>)}
  {toast&&<div className="lux-toast" role="status"><Check size={16}/>{toast}</div>}
- </>;
+ </NotificationsContext.Provider>;
 }
 function Feed({posts,base,search,onSelectProduct}:{onSelectProduct?:(event:React.MouseEvent<HTMLAnchorElement>)=>void;posts:LuxuryPost[];base:'/'|'/explore'|'/market'|'/me'|'/upload'|'/store'|'/seller'|'/admin';search:ReturnType<typeof marketSearch.parse>}) {
  const preview=useMarketPreview();const compact=base==='/';const columns=compact?2:3;
@@ -159,13 +161,14 @@ export function Overlay({title,close,children,side=false}:{title:string;close:()
  return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className={side?'lux-menu':'lux-dialog'} aria-describedby={undefined}><div className="flex items-center justify-between gap-3"><Dialog.Title className="text-xl font-semibold">{title}</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close dialog" onClick={close}><X/></Button></div>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 function CommercePanel({posts,onBuy,panel,user,selected,close,onPanel,notify}:{user:AuthUser|null;posts:LuxuryPost[];onBuy:(post:LuxuryPost)=>void;panel:string;selected:LuxuryPost|undefined;close:()=>void;onPanel:(panel:'checkout')=>void;notify:(s:string)=>void}) {
+ const account=useMyAccount(user);
  const preview=useMarketPreview();const [sent,setSent]=useState(false),[message,setMessage]=useState(''),[messages,setMessages]=useState<string[]>([]);
  const item=selected || preview.cart[0];
  return <Overlay title={({chat:'Chat with studio',cart:'Your shopping bag',wishlist:'저장 상품 · 위시리스트',checkout:'Order preview',settings:'프로필 편집',apply:'Become a Vela seller',orders:'Escrow order board',wallet:'VELA Wallet'} as Record<string,string>)[panel] || 'My Vela'} close={close}>
  {panel==='chat'?<><p className="sample-notice">Sample conversation · Messages are not delivered</p><div className="chat-bubble">VS Watch Studio: Hello. Which details would you like to see?</div>{messages.map((m,i)=><div className="chat-bubble outgoing" key={i}>{m}</div>)}<form className="mt-6 flex gap-2" onSubmit={e=>{e.preventDefault();if(message.trim()){setMessages(p=>[...p,message.trim()]);setMessage('');}}}><input className="form-input" aria-label="Message to seller" value={message} onChange={e=>setMessage(e.target.value)} placeholder="Ask about the watch…"/><Button type="submit" variant="gold" size="icon" aria-label="Send sample message"><ArrowRight/></Button></form></>:
  panel==='wishlist'?<div className="mt-6"><div className="section-heading"><h2>저장 상품</h2><span>{posts.filter(p=>preview.saved.includes(p.id)).length}</span></div><Feed posts={posts.filter(p=>preview.saved.includes(p.id))} base="/me" search={{panel:'wishlist'}}/></div>:panel==='cart'?<ShoppingCollection posts={posts} onBuy={onBuy}/>: panel==='checkout'?sent?<div className="py-8 text-center"><Check className="mx-auto mb-4 text-primary" size={36}/><h2 className="text-lg font-semibold">Sample order created</h2><p className="mt-3 text-sm text-muted-foreground">Awaiting payment. No charge has been made.</p><Button asChild variant="goldOutline" className="mt-6"><Link to="/me" search={{panel:'orders'}}>View orders</Link></Button></div>:<><p className="sample-notice">Preview checkout · Payment is not connected</p>{item?<CheckoutForm item={item} onDone={()=>setSent(true)}/>:<p className="py-8 text-muted-foreground">Add a product to your bag first.</p>}</>:
  panel==='apply'?<SellerOnboarding/>:
- panel==='wallet'?<VelaWallet/>:
+ panel==='wallet'?(user&&account.data?.roles.includes('seller')?<SellerEscrowWallet user={user}/>:<VelaWallet/>):
  panel==='orders'?<><LiveOrderBoard as="buyer"/></>:
  <ProfileSettings user={user}/>}
  </Overlay>;

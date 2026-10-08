@@ -4,13 +4,12 @@ import { marketSearch, pageHead, postsQuery } from '@/lib/market';
 import { Dashboard } from '@/components/role-views';
 import { luxuryPosts } from '@/lib/luxury-market';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { SellerListings } from '@/components/seller-listings';
 export const Route=createFileRoute('/seller')({
  validateSearch:marketSearch,
  loader:({context})=>context.queryClient.ensureQueryData(postsQuery),
- head:()=>pageHead('VELA Studio dashboard','Manage your VELA product listings, quality control, shipping and studio earnings.'),
+ head:()=>pageHead('VELA Seller Studio · 내 스튜디오','셀러 등급, 매출과 고객 리뷰, 상품 등록, 주문·검수·배송 및 메시지를 관리하는 VELA 셀러 스튜디오.'),
  errorComponent:()=> <div className="lux-empty">This view could not load. Please try again.</div>,
  notFoundComponent:()=> <div className="lux-empty">This view is unavailable.</div>,
  component:DashboardPage,
 });
-function DashboardPage(){const {data}=useSuspenseQuery(postsQuery);return <LuxuryMarketplace mode="seller"><SellerListings/><Dashboard kind="seller" posts={luxuryPosts(data)}/></LuxuryMarketplace>;}
+function DashboardPage(){const {data}=useSuspenseQuery(postsQuery);return <LuxuryMarketplace mode="seller"><Dashboard kind="seller" posts={luxuryPosts(data)}/></LuxuryMarketplace>;}

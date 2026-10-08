@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -34,24 +34,30 @@ export function useNotifications(user: User | null) {
   return { data: user ? data : [], unread, markRead };
 }
 
-export function NotificationInbox({ user, open, onClose, notifications }: { user: User | null; open: boolean; onClose: () => void; notifications: ReturnType<typeof useNotifications> }) {
-  const { data, unread, markRead } = notifications;
-  useEffect(() => { if (open && unread) void markRead(); }, [open, unread]);
+export const NotificationsContext = createContext<ReturnType<typeof useNotifications> | null>(null);
+export const useSharedNotifications = () => useContext(NotificationsContext);
+export function NotificationList({ notifications, onNavigate }: { notifications: ReturnType<typeof useNotifications>; onNavigate?: () => void }) {
   const lang = activeLang() === 'ko' ? 'ko' : 'en';
-  return <Dialog.Root open={open} onOpenChange={o => { if (!o) onClose(); }}>
-    <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-50 bg-background/70" />
-      <Dialog.Content aria-describedby={undefined} className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl border border-border bg-card p-4">
-        <div className="mb-3 flex items-center justify-between"><Dialog.Title className="text-base font-semibold">알림함</Dialog.Title><Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="닫기"><X /></Button></Dialog.Close></div>
-        {!user ? <p className="py-8 text-center text-sm text-muted-foreground">로그인하면 알림을 확인할 수 있습니다.</p> : data.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">새 알림이 없습니다.</p> : data.map(n => {
+  return <div>{notifications.data.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">새 알림이 없습니다.</p> : notifications.data.map(n => {
           const welcome = n.kind === SELLER_WELCOME_KIND ? sellerWelcomeCopy[lang] : null;
-          return <article key={n.id} className="mb-3 rounded-xl border border-border p-4">
+          return <article key={n.id} className="mb-3 rounded-md border border-border p-4">
             <h3 className="font-semibold text-primary">{n.title}</h3>
             <small className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleString()}</small>
             {welcome ? <div className="mt-3 space-y-3 text-sm"><p>{welcome.intro}</p>{welcome.rules.map(([h, b]) => <div key={h}><strong className="block text-foreground">{h}</strong><p className="text-muted-foreground">{b}</p></div>)}</div>
               : <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{n.body}</p>}
-            {n.cta_url && <Button asChild variant="gold" className="mt-4 w-full"><Link to={n.cta_url} onClick={onClose}>{welcome?.cta ?? n.cta_label}</Link></Button>}
+            {n.cta_url && <Button asChild variant="gold" className="mt-4 w-full"><Link to={n.cta_url} onClick={onNavigate}>{welcome?.cta ?? n.cta_label}</Link></Button>}
           </article>;
-        })}
+        })}</div>;
+}
+
+export function NotificationInbox({ user, open, onClose, notifications }: { user: User | null; open: boolean; onClose: () => void; notifications: ReturnType<typeof useNotifications> }) {
+  const { unread, markRead } = notifications;
+  useEffect(() => { if (open && unread) void markRead(); }, [open, unread]);
+  return <Dialog.Root open={open} onOpenChange={o => { if (!o) onClose(); }}>
+    <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-50 bg-background/70" />
+      <Dialog.Content aria-describedby={undefined} className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl border border-border bg-card p-4">
+        <div className="mb-3 flex items-center justify-between"><Dialog.Title className="text-base font-semibold">알림함</Dialog.Title><Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="닫기"><X /></Button></Dialog.Close></div>
+        {!user ? <p className="py-8 text-center text-sm text-muted-foreground">로그인하면 알림을 확인할 수 있습니다.</p> : <NotificationList notifications={notifications} onNavigate={onClose}/>}
       </Dialog.Content>
     </Dialog.Portal>
   </Dialog.Root>;

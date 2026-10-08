@@ -56,7 +56,7 @@ function useLive(userId: string | null) {
   });
   useEffect(() => {
     if (!userId) return;
-    const ch = supabase.channel(`orders-live-${userId}`);
+    const ch = supabase.channel(`orders-live-${userId}-${crypto.randomUUID()}`);
     for (const table of ['orders', 'order_messages', 'order_qc_media']) ch.on('postgres_changes', { event: '*', schema: 'public', table }, () => void qc.invalidateQueries({ queryKey: ['live-orders', userId] }));
     ch.subscribe();
     return () => { void supabase.removeChannel(ch); };
