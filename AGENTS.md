@@ -42,3 +42,4 @@
 - Help/privacy use public leaves; profile/shipping use URL-tabbed settings. Presentation: src/components/AGENTS.md.
 - Keep collection and watch-type filters in validated search state and derive types from existing listing content/specs without assigning unknown types.
 - USDT display estimates USD parity; keep stored prices and payment networks unchanged.
+- Catalog is Seller → Store → Product: products extend `posts` (store_id, product_status, inventory, data_source) with `product_images`/`product_qc`; a DB trigger owns status/stock transitions and syncs legacy `status`, so existing feed/search/buy code keeps reading `posts`. Inactive stores hide their products via a restrictive RLS policy.
