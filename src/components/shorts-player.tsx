@@ -19,6 +19,7 @@ import { ShortsGallery } from './shorts-gallery';
 import { SpecsTable } from './specs-table';
 import { marketSearch } from '@/lib/market';
 import { getComments } from '@/lib/market.functions';
+import { stableMediaSrc } from '@/lib/media-refresh';
 import { sellerIdentity } from '@/lib/seller-directory';
 
 const usd=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
@@ -55,11 +56,11 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const videoTags=(Array.isArray(post.source?.video_tags)?post.source.video_tags:[]) as {postId:string;title:string;at:number}[];
  const [clock,setClock]=useState(0);
+ const [failed,setFailed]=useState(false);const videoSrc=stableMediaSrc(post.video,failed);const [blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
  const bgm=useRef<HTMLAudioElement>(null),src=post.source as {music_audio_url?:string|null;music_title?:string|null;music_artist?:string|null}|undefined;
- useEffect(()=>{const v=video.current,a=bgm.current;if(!v||!a)return;const sync=()=>{a.muted=v.muted;if(v.paused)a.pause();else{const d=a.duration||1e9;if(Math.abs(a.currentTime-(v.currentTime%d))>0.4)a.currentTime=v.currentTime%d;void a.play().catch(()=>undefined);}};const ev=['play','pause','playing','volumechange','seeked'];ev.forEach(e=>v.addEventListener(e,sync));sync();return()=>{ev.forEach(e=>v.removeEventListener(e,sync));a.pause();};},[active,post.video,src?.music_audio_url]);
+ useEffect(()=>{const v=video.current,a=bgm.current;if(!v||!a)return;const sync=()=>{a.muted=v.muted;if(v.paused)a.pause();else{const d=a.duration||1e9;if(Math.abs(a.currentTime-(v.currentTime%d))>0.4)a.currentTime=v.currentTime%d;void a.play().catch(()=>undefined);}};const ev=['play','pause','playing','volumechange','seeked'];ev.forEach(e=>v.addEventListener(e,sync));sync();return()=>{ev.forEach(e=>v.removeEventListener(e,sync));a.pause();};},[active,videoSrc,src?.music_audio_url]);
  useEffect(()=>{const v=video.current;if(!v||!videoTags.length)return;const on=()=>setClock(v.currentTime);v.addEventListener('timeupdate',on);return()=>v.removeEventListener('timeupdate',on);},[videoTags.length]);
  const shownTag=videoTags.find(tg=>clock>=tg.at&&clock<=tg.at+3);
- const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
  useEffect(()=>{setFailed(false);},[post.video]);
   const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
  const following=preview.isFollowing(identity);
@@ -67,7 +68,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  const {data:comments}=useQuery({queryKey:['comments',post.id],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
  useEffect(()=>{const v=video.current;if(!v)return;const want=active&&shortsSound;v.muted=!want;if(active)setSound(want);let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(cancelled)return;if(!v.muted){v.muted=true;setSound(false);void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,post.video]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active} inert={!active}>
- {post.video&&!failed?<><img className={`shorts-video-poster ${active&&ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{active&&<video ref={video} src={post.video} playsInline loop muted autoPlay preload="auto" poster={post.images[0]} onLoadedData={()=>setReady(true)} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
+ {post.video&&!failed?<><img className={`shorts-video-poster ${active&&ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{active&&<video ref={video} src={videoSrc} playsInline loop muted autoPlay preload="auto" poster={post.images[0]} onLoadedData={()=>setReady(true)} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
  <div className="shorts-shade"/>
  {post.video&&!failed&&<button type="button" className="shorts-sound-toggle" aria-label={sound?'소리 끄기':'소리 켜기'} aria-pressed={sound} onClick={()=>{const v=video.current;if(!v)return;const next=!sound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}{!sound&&<span>소리 켜기</span>}</button>}
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
