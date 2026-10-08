@@ -178,7 +178,8 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
             <label className="editor-row">세로 위치<input type="range" min={8} max={90} value={x.y} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, y: Number(e.target.value) } : y))}/></label></div>)}
         </>}
         {layer === 'music' && <>
-          <div className="grid gap-2">{([null, ...Object.keys(bgmPresets)] as (BgmId | null)[]).map(id => <button key={id ?? 'none'} type="button" className={`editor-option ${bgm === id ? 'active' : ''}`} onClick={() => setBgm(id)}><Music size={14}/>{id ? bgmPresets[id]!.label : '배경음악 없음'}</button>)}</div>
+          <div className="grid gap-2">{([null, ...Object.keys(bgmPresets)] as (BgmId | null)[]).map(id => <button key={id ?? 'none'} type="button" className={`editor-option ${bgm === id ? 'active' : ''}`} onPointerEnter={() => id && preloadBgm(id)} onClick={() => setBgm(id)}><Music size={14}/>{id ? <span className="grid text-left"><span>{bgmPresets[id]!.label}</span><small className="text-muted-foreground">{bgmPresets[id]!.feel}</small></span> : '배경음악 없음'}</button>)}</div>
+          <p className="text-[10px] text-muted-foreground">{bgmCredit}</p>
           {bgm && <><label className="editor-row">음악 볼륨<input type="range" min={0} max={1} step={0.05} value={bgmVol} onChange={e => setBgmVol(Number(e.target.value))}/></label><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={beatSync} onChange={e => setBeatSync(e.target.checked)}/>비트 싱크 · 텍스트·태그를 박자에 맞춰 배치</label></>}
           <label className="editor-row">원본 소리<input type="range" min={0} max={1} step={0.05} value={origVol} onChange={e => { setOrigVol(Number(e.target.value)); if (videoRef.current) videoRef.current.volume = Number(e.target.value); }}/></label>
         </>}
