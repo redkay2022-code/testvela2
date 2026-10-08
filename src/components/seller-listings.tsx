@@ -49,13 +49,13 @@ export function SellerListings() {
   });
   const [editing, setEditing] = useState<Listing | 'new' | null>(null);
   const [replacing, setReplacing] = useState<string | null>(null);
-  const refresh = () => { void qc.invalidateQueries({ queryKey: ['my-listings'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); };
+  const refresh = () => { void qc.invalidateQueries({ queryKey: ['my-listings'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); void qc.invalidateQueries({ queryKey: ['my-listing-count'] }); };
 
   if (!user) return <section className="seller-flow-card"><h2 className="text-lg font-semibold">내 상품 관리</h2><p className="mt-2 text-sm text-muted-foreground">상품을 등록하려면 “나” 탭에서 로그인해 주세요.</p></section>;
   if (account.isLoading) return <section className="seller-flow-card"><p className="text-sm text-muted-foreground">계정 확인 중…</p></section>;
   if (!canSell) return <section className="seller-flow-card"><h2 className="text-lg font-semibold">내 상품 관리</h2><p className="mt-2 text-sm text-muted-foreground">승인된 셀러만 상품을 등록할 수 있어요. “나” 탭에서 셀러 계정을 신청해 주세요.</p></section>;
 
-  const toggleSold = async (l: Listing, sold: boolean) => { await supabase.from('posts').update({ stock_qty: sold ? (l.reserved_qty ?? 0) : Math.max(1, (l.reserved_qty ?? 0) + 1) }).eq('id', l.id); refresh(); void qc.invalidateQueries({ queryKey: ['seller-stats'] }); };
+  const toggleSold = async (l: Listing, sold: boolean) => { const {error}=await supabase.from('posts').update({ stock_qty: sold ? (l.reserved_qty ?? 0) : Math.max(1, (l.reserved_qty ?? 0) + 1) }).eq('id', l.id).eq('user_id',user.id); if(error){alert('판매 완료 상태를 변경하지 못했습니다.');return;} refresh(); void qc.invalidateQueries({ queryKey: ['seller-stats'] }); };
   const toggle = async (l: Listing) => { const {error} = await supabase.from('posts').update(publicationUpdate(l.status !== 'published')).eq('id', l.id).eq('user_id',user.id); if(error){alert('판매 상태를 변경하지 못했습니다.');return;} refresh(); };
   const replaceVideo = async (l: Listing, file: File) => {
     if (!isListingVideo(file)) { alert('영상 파일(MP4/WEBM/MOV)을 선택해 주세요.'); return; }
@@ -80,7 +80,7 @@ export function SellerListings() {
     {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground">불러오는 중…</p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground">아직 등록한 상품이 없어요.</p> :
       <ul className="seller-inventory-grid mt-5">{listings.data.map(l => <li key={l.id} className="seller-inventory-item">
-        <div className="min-w-0">{l.video ? <VideoStartPreview src={l.video} className="seller-inventory-image" /> : l.thumb ? <img src={l.thumb} alt={l.title} className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}
+        <div className="min-w-0"><figure className={`seller-inventory-media ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`}>{l.video ? <VideoStartPreview src={l.video} className="seller-inventory-image" /> : l.thumb ? <img src={l.thumb} alt={l.title} className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
           <div className="min-w-0"><p className="truncate font-medium">{l.title}</p><p className="text-xs text-muted-foreground">{l.price != null ? formatMoney(l.price) : '가격 없음'} · <span className="record-status">{l.product_status === 'OUT_OF_STOCK' ? '판매 완료' : l.status === 'published' ? '판매 중' : '임시 저장'}</span></p>{l.specs.factory && <span className="text-xs text-primary" data-no-translate>{l.specs.factory}</span>}{l.specs.sourceType === 'custom' && <span className="text-xs text-primary">커스텀 제작</span>}</div></div>
         <div className="record-actions">
           {l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label="판매 완료" checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} />판매 완료</label>}

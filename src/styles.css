@@ -890,3 +890,17 @@
 @media(max-width:360px){.studio-kpi strong{font-size:16px}.studio-kpi>span{font-size:10px}.studio-kpi strong svg{width:13px}.studio-goals{grid-template-columns:1fr}.studio-escrow-metric strong{font-size:19px}}
 .lux-detail-page {position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;background:var(--background);padding-bottom:calc(64px + env(safe-area-inset-bottom));}
 .lux-detail-page .lux-detail-scroll {overflow-y:auto;flex:1;min-height:0;}
+
+/* Immersive full-page product media, retaining complete image framing. */
+.lux-detail-page > .shorts-sheet-seller,.lux-detail-page > .lux-detail-scroll,.lux-detail-page > .product-shopping-actions{width:100%;max-width:1200px;margin-inline:auto;}
+.lux-detail-page .lux-carousel > *,.lux-detail-video{height:clamp(440px,72dvh,960px);width:100%;object-fit:contain;background:var(--card);}
+.lux-detail-page .lux-detail-copy{max-width:960px;margin-inline:auto;padding-inline:16px;}
+.lux-detail-page .lux-detail-scroll{overscroll-behavior-y:contain;}
+.lux-pull-refresh{position:fixed;top:calc(env(safe-area-inset-top) + 18px);left:50%;transform:translateX(-50%);z-index:65;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--popover);color:var(--primary);border:1px solid var(--gold-border);box-shadow:var(--drawer-shadow);pointer-events:none;}
+.lux-pull-refresh svg{width:22px;height:22px;transition:transform .15s;}
+.seller-product-count{font-variant-numeric:tabular-nums;white-space:nowrap;}
+.seller-inventory-media{position:relative;overflow:hidden;}
+.is-sold-out>img,.is-sold-out>video,.is-sold-out>.feed-video-frame{filter:grayscale(1);}
+.lux-soldout{left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 14px;border-radius:4px;color:var(--foreground);background:color-mix(in oklab,var(--background) 88%,transparent);border:1px solid var(--foreground);font-size:16px;letter-spacing:0;white-space:nowrap;}
+@media(max-width:720px){.lux-detail-page .lux-carousel>* ,.lux-detail-video{height:clamp(380px,68dvh,780px);}.lux-detail-page .lux-detail-copy{padding-inline:12px;}.lux-soldout{font-size:13px;padding:8px 10px;}}
+@media(prefers-reduced-motion:reduce){.lux-pull-refresh svg{animation:none;transition:none;}}

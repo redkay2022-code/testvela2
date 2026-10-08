@@ -46,6 +46,8 @@ import { useMediaRefresh } from '@/lib/media-refresh';
 import { productEntry } from '@/lib/product-entry';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
 import { SellerEscrowWallet } from './seller-wallet';
+import { PullToRefresh } from './pull-to-refresh';
+import { discoveryListings } from '@/lib/catalog';
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;postId?:string;help?:'escrow'|'support'|'privacy'}) {
@@ -66,7 +68,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  useEffect(()=>{const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{setUser(session?.user ?? null);setAuthReady(true);});return ()=>subscription.unsubscribe();},[]);
  const queryClient=useQueryClient();
  useMediaRefresh();
- useEffect(()=>{const channel=supabase.channel('posts-live').on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>{void queryClient.invalidateQueries({queryKey:['posts']});}).subscribe();return()=>{void supabase.removeChannel(channel);};},[queryClient]);
+ useEffect(()=>{const channel=supabase.channel('posts-live').on('postgres_changes',{event:'*',schema:'public',table:'posts'},()=>{void queryClient.invalidateQueries({queryKey:['posts']});void queryClient.invalidateQueries({queryKey:['my-listings']});void queryClient.invalidateQueries({queryKey:['my-listing-count']});}).subscribe();return()=>{void supabase.removeChannel(channel);};},[queryClient]);
  useEffect(()=>{if(!search.shortSheet)sheetPushed.current=false;},[search.shortSheet]);
   useEffect(()=>{if(!search.searchOpen)searchPushed.current=false;},[search.searchOpen]);
  useEffect(()=>setQuery(search.q || ''),[search.q]);
@@ -90,18 +92,20 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  if(newest) posts=[...posts].reverse();
  const cleanHome=mode==='home'&&!shortsId;
  const backOnlyHeader=['store','me','seller','upload'].includes(mode)||search.panel==='chat'||search.panel==='cart';
- if(cleanHome)posts=posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
+ if(mode!=='store')posts=discoveryListings(posts);
+  if(cleanHome)posts=posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
  if(cleanHome&&search.tab!=='reviews')posts=filterFeed(posts,search);
  const selected=all.find(p=>p.id===(shortsId || postId || search.post));
  const entry=productEntry(authReady,Boolean(user));
  const productSignup=entry==='signup'&&Boolean(postId||shortsId||search.post);
  const selectProduct=(event:React.MouseEvent<HTMLAnchorElement>)=>{if(entry==='product')return;event.preventDefault();if(entry==='signup')update({auth:true,authSignup:true});};
  const closeAuth=()=>{if(productSignup){void navigate({to:'/',search:{role:search.role},replace:true,resetScroll:false});}else close();};
- const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
- const feedFilterResults=sortFeed(filterFeed(all.filter(p=>!preview.hidden.includes(p.id)),search),search.fsort);
+ const shorts=discoveryListings(all).filter(p=>p.short&&!preview.hidden.includes(p.id));
+ const feedFilterResults=sortFeed(filterFeed(discoveryListings(all).filter(p=>!preview.hidden.includes(p.id)),search),search.fsort);
  const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);} ))].slice(0,10);
   return <NotificationsContext.Provider value={notifications}>
-  <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
+  <PullToRefresh disabled={Boolean(shortsId||search.auth||productSignup||search.menu||search.searchOpen||search.notice)} onError={setToast}/>
+   <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
   {!backOnlyHeader&&<header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <>
   <div className="lux-header-inner">
@@ -149,7 +153,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
 function Feed({posts,base,search,onSelectProduct}:{onSelectProduct?:(event:React.MouseEvent<HTMLAnchorElement>)=>void;posts:LuxuryPost[];base:'/'|'/explore'|'/market'|'/me'|'/upload'|'/store'|'/seller'|'/seller-store'|'/seller-messages'|'/admin';search:ReturnType<typeof marketSearch.parse>}) {
  const preview=useMarketPreview();const compact=base==='/';const columns=compact?2:3;
  return posts.length?<div className={`lux-waterfall ${compact?'red-home-waterfall':''}`}>{Array.from({length:columns},(_,i)=>i).map(column=><div className="lux-column" key={column}>{posts.filter((_,i)=>i%columns===column).map((post,i)=><article className="lux-post" key={post.id}>
-  <Link onClick={onSelectProduct} to={post.short?'/shorts/$id':'/post/$id'} params={{id:post.id}} search={{role:search.role}} className={`lux-post-media shape-${(column+i)%3}`} aria-label={post.title}>{post.video?<FeedVideo post={post}/>:<img src={post.images[0]} alt={post.title} width={512} height={512} loading={i===0?'eager':'lazy'} onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src=watchImages[0] ?? '';}}/>}{post.outOfStock&&<span className="lux-soldout">품절</span>}{!compact&&<><span className="lux-views"><Eye size={12}/>{post.views}<span className="views-word"> views</span></span><span className="lux-bag"><ShoppingBag size={15}/></span></>}</Link>
+  <Link onClick={onSelectProduct} to={post.short?'/shorts/$id':'/post/$id'} params={{id:post.id}} search={{role:search.role}} className={`lux-post-media shape-${(column+i)%3} ${post.outOfStock?'is-sold-out':''}`} aria-label={post.title}>{post.video?<FeedVideo post={post}/>:<img src={post.images[0]} alt={post.title} width={512} height={512} loading={i===0?'eager':'lazy'} onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src=watchImages[0] ?? '';}}/>}{post.outOfStock&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}{!compact&&<><span className="lux-views"><Eye size={12}/>{post.views}<span className="views-word"> views</span></span><span className="lux-bag"><ShoppingBag size={15}/></span></>}</Link>
  <div className="lux-post-copy">{!compact&&<div className="lux-post-tags"><span>{post.factory}</span>{(preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified)&&<ShieldCheck size={12}/>}</div>}<Link onClick={onSelectProduct} to={post.short?'/shorts/$id':'/post/$id'} params={{id:post.id}} search={{role:search.role}}><h2>{post.title}</h2></Link>{!compact&&post.price!==null&&<p className="lux-card-price">{dollars(post.price)}</p>}<div className="lux-post-creator" data-no-translate><Link to="/store" search={{role:search.role,seller:sellerIdentity(post)}}><img src={post.images[0]} width={20} height={20} alt=""/><span>{post.creator}</span><SellerBadge reputation={post.reputation} compact/></Link><Button variant="ghost" className={`lux-heart ${preview.saved.includes(post.id)?'active':''}`} aria-label={`Save ${post.title}`} aria-pressed={preview.saved.includes(post.id)} onClick={()=>preview.toggleSaved(post.id)}><Heart/>{compact?new Intl.NumberFormat('ko-KR',{notation:'compact',maximumFractionDigits:1}).format(post.likes+(preview.saved.includes(post.id)?1:0)):post.likes+(preview.saved.includes(post.id)?1:0)}</Button></div></div>
  </article>)}</div>)}</div>:<div className="lux-empty"><Compass/><h2>No finds here yet.</h2><p>Follow a studio or choose another category.</p><Button asChild variant="goldOutline"><Link to="/store">Explore VS Watch Studio<ArrowRight/></Link></Button></div>;
 }

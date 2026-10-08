@@ -10,14 +10,14 @@
 <!-- LOVABLE:END -->
 
 ## Application architecture
-- Use TanStack Router and validated URL search state for tabs, drawers, dialogs, search, lightboxes and feed/category/collection filters, filtering the existing public feed; browser back unwinds one UI layer at a time. Match category/brand aliases against listing content without inventing affiliations.
+- Use TanStack Router and validated search state for tabs, overlays, search and feed filters; Back unwinds one UI layer. Match category/brand aliases to listings without inventing affiliations.
 - Load the public feed through TanStack Query with a server-function loader; public SSR must never require an account.
 - Keep marketplace data in Cloud with owner-scoped write policies; authenticated writes must use the caller's identity.
 - Bundle editorial media and icons locally; uploaded private storage media are served with signed URLs after matching published post paths.
 - Use manifest-only home-screen support; no offline service worker unless offline operation is explicitly requested.
 - Isolate demo role previews and commerce/moderation actions in a shared React provider; they never grant Cloud privileges or change production rows.
 - Share photo/Shorts detail content; product Q&A uses authenticated post comments and validated detailTab for Back navigation, separate from simulated commerce.
-- Represent Shorts in the /shorts/$id leaf route with nested sheets in validated search state; replace the active ID during vertical swipes so browser back exits instead of replaying swipe history.
+- Shorts use /shorts/$id with validated nested sheets; swipes replace the ID so Back exits rather than replaying swipes.
 - Derive seller reputation and account badges with shared pure functions and local SVG emblems; account badges use trusted roles, not URL view state; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
 - Buyer membership is an explicit trusted tier, not inferred from client orders or metadata; use baseline Member when no earned membership is available.
 - Resolve storefronts from public feed rows by seller identity, creator name and slug-insensitive keys; reviews share that canonical identity so 구매처 opens the correct store. Never attribute sample reputation or reviews to another seller.
@@ -37,4 +37,4 @@
 - Media self-heals via src/lib/media-refresh.ts.
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
 
-- Seller pages share trusted queries; studioTab URL state separates details to limit scrolling.
+- Seller pages share trusted queries; studioTab limits scrolling. PullToRefresh invalidates active queries from top-only document/nested gestures. discoveryListings excludes sold stock only from discovery, retaining storefront history.

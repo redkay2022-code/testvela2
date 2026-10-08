@@ -24,6 +24,9 @@ export function resolveProductStatus(requested: ProductStatus, stock: number, re
 /** Only these statuses are visible to customers. */
 export const isCustomerVisible = (status: ProductStatus | null | undefined) => status === 'PUBLISHED' || status === 'OUT_OF_STOCK';
 
+/** Discovery excludes sold listings; storefronts retain their sales history. */
+export const discoveryListings = <T extends { outOfStock?: boolean }>(posts: T[]): T[] => posts.filter(post => !post.outOfStock);
+
 export type PublishInput = { title: string; storeId: string | null; category: string; price: number | null; stock: number; hasMainImage: boolean };
 /** Required fields before a product may be published: name, store, category, price, stock and main image. */
 export function publishBlockers(p: PublishInput): string[] {
