@@ -293,6 +293,10 @@
 .lux-search-overlay-inner {max-width:1080px;margin:auto;padding:0 16px max(24px,env(safe-area-inset-bottom));}
 .lux-search-top {height:56px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;}
 .lux-search-overlay .lux-search {margin-top:12px;}.lux-search-results {margin-top:24px;}
+.lux-search-keywords {display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px;}
+.lux-search-keywords>span {font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-foreground);margin-right:2px;}
+.lux-search-keywords .lux-chip {border:1px solid var(--input);border-radius:999px;padding:6px 14px;font-size:12px;color:var(--foreground);}
+.lux-search-keywords .lux-chip.active {border-color:var(--primary);color:var(--primary);}
 .cart-count {font-size:10px;color:var(--primary);}
 .lux-tabs {display:flex;justify-content:center;gap:40px;border-bottom:1px solid var(--border);height:65px;}
 .lux-tab {border-radius:0;height:65px;font-size:14px;color:var(--muted-foreground);position:relative;padding:0 4px;}
