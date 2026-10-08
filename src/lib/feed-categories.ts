@@ -13,9 +13,9 @@ const aliases:Record<string,string[]>={
  'richard-mille':['richard mille','리차드 밀'],omega:['omega','오메가'],panerai:['panerai','파네라이'],iwc:['iwc'],
  'chrome-hearts':['chrome hearts','크롬하츠'],'van-cleef':['van cleef','반클리프 앤 아펠'],boucheron:['boucheron','부쉐론'],bvlgari:['bvlgari','bulgari','불가리'],tiffany:['tiffany','티파니'],
 };
-export function matchesFeedCategory(post:{title:string;description:string;category:string;factory:string;sample:boolean},id:string|undefined){
+export function matchesFeedCategory(post:{title:string;description:string;category:string;factory:string;sample:boolean;source?:{brand?:string;model?:string}|undefined},id:string|undefined){
  if(!id||id==='recommend')return true;
  if(id==='watches'&&post.sample)return true;
- const text=`${post.title} ${post.description} ${post.category} ${post.factory}`.toLowerCase();
+ const text=`${post.title} ${post.description} ${post.category} ${post.factory} ${post.source?.brand ?? ''} ${post.source?.model ?? ''}`.toLowerCase();
  return (aliases[id] ?? [id.toLowerCase()]).some(alias=>text.includes(alias));
 }
