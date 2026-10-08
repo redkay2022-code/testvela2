@@ -26,7 +26,7 @@ export function directorySellers(posts: LuxuryPost[]): DirectorySeller[] {
 }
 export function matchesStoreCategory(seller: DirectorySeller, category: StoreCategory) {
   if (category === 'all') return true;
-  if (category === 'top') return seller.post.reputation.approved && (seller.rating ?? 0) >= 4.8;
+  if (category === 'top') return seller.items.some(post => post.storeFeatured) || (seller.post.reputation.approved && (seller.rating ?? 0) >= 4.8);
   return seller.items.some(post => matchesFeedCategory(post, category)
     || (category === 'accessories' && /주얼리|쥬얼리|목걸이|반지|bracelet|necklace/i.test(`${post.title} ${post.category}`) && !matchesFeedCategory(post, 'watches'))
     || (category === 'custom' && /custom|커스텀/i.test(post.category))
