@@ -27,6 +27,11 @@ describe('Post media navigation',()=>{
   expect(postPhotos(item)).toEqual([]);
   expect(postMediaRoute(item)).toBe('/shorts/$id');
  });
+ it('offers product detail navigation only for videos with uploaded photos',()=>{
+  expect(isHybridPost(post({media_urls:['/photo.jpg'],video_url:'/video.mp4'}))).toBe(true);
+  expect(isHybridPost(post({video_url:'/video.mp4'}))).toBe(false);
+  expect(isHybridPost(post({media_urls:['/photo.jpg']}))).toBe(false);
+ });
  it('combines one video and uploaded photos in one ordered gallery',()=>{
   expect(detailMedia(post({video_url:'/video.mp4',media_urls:['/one.jpg','/two.jpg']}))).toEqual([
    {kind:'video',src:'/video.mp4'}, {kind:'photo',src:'/one.jpg'}, {kind:'photo',src:'/two.jpg'},
