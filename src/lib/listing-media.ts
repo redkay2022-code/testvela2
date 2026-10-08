@@ -16,7 +16,13 @@ export async function readVideoDuration(file: File) {
     return await new Promise<number>((resolve, reject) => {
       const video = document.createElement('video');
       video.preload = 'metadata';
-      video.onloadedmetadata = () => resolve(video.duration);
+      video.muted = true;
+      video.onloadedmetadata = () => {
+        if (Number.isFinite(video.duration)) return resolve(video.duration);
+        // Browser-recorded (edited) videos report Infinity until seeked to the end.
+        video.ondurationchange = () => { if (Number.isFinite(video.duration)) resolve(video.duration); };
+        video.currentTime = 1e7;
+      };
       video.onerror = () => reject(new Error('영상 정보를 읽을 수 없습니다. MP4 또는 MOV 파일을 확인해 주세요.'));
       video.src = url;
     });
