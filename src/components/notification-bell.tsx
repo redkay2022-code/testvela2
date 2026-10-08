@@ -19,7 +19,7 @@ export function useNotifications(user: User | null) {
   } });
   useEffect(() => {
     if (!user) return;
-    const ch = supabase.channel(`notifications-${user.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
+    const ch = supabase.channel(`notifications-${user.id}-${Math.random().toString(36).slice(2)}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
       void qc.invalidateQueries({ queryKey: ['notifications', user.id] });
       void qc.invalidateQueries({ queryKey: ['my-account', user.id] });
     }).subscribe();
