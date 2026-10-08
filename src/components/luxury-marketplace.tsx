@@ -45,6 +45,7 @@ import { FeedFilters } from './feed-filters';
 import { useMediaRefresh } from '@/lib/media-refresh';
 import { productEntry } from '@/lib/product-entry';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
+import { SellerEscrowWallet } from './seller-wallet';
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;postId?:string;help?:'escrow'|'support'|'privacy'}) {
@@ -160,13 +161,14 @@ export function Overlay({title,close,children,side=false}:{title:string;close:()
  return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className={side?'lux-menu':'lux-dialog'} aria-describedby={undefined}><div className="flex items-center justify-between gap-3"><Dialog.Title className="text-xl font-semibold">{title}</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close dialog" onClick={close}><X/></Button></div>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 function CommercePanel({posts,onBuy,panel,user,selected,close,onPanel,notify}:{user:AuthUser|null;posts:LuxuryPost[];onBuy:(post:LuxuryPost)=>void;panel:string;selected:LuxuryPost|undefined;close:()=>void;onPanel:(panel:'checkout')=>void;notify:(s:string)=>void}) {
+ const account=useMyAccount(user);
  const preview=useMarketPreview();const [sent,setSent]=useState(false),[message,setMessage]=useState(''),[messages,setMessages]=useState<string[]>([]);
  const item=selected || preview.cart[0];
  return <Overlay title={({chat:'Chat with studio',cart:'Your shopping bag',wishlist:'저장 상품 · 위시리스트',checkout:'Order preview',settings:'프로필 편집',apply:'Become a Vela seller',orders:'Escrow order board',wallet:'VELA Wallet'} as Record<string,string>)[panel] || 'My Vela'} close={close}>
  {panel==='chat'?<><p className="sample-notice">Sample conversation · Messages are not delivered</p><div className="chat-bubble">VS Watch Studio: Hello. Which details would you like to see?</div>{messages.map((m,i)=><div className="chat-bubble outgoing" key={i}>{m}</div>)}<form className="mt-6 flex gap-2" onSubmit={e=>{e.preventDefault();if(message.trim()){setMessages(p=>[...p,message.trim()]);setMessage('');}}}><input className="form-input" aria-label="Message to seller" value={message} onChange={e=>setMessage(e.target.value)} placeholder="Ask about the watch…"/><Button type="submit" variant="gold" size="icon" aria-label="Send sample message"><ArrowRight/></Button></form></>:
  panel==='wishlist'?<div className="mt-6"><div className="section-heading"><h2>저장 상품</h2><span>{posts.filter(p=>preview.saved.includes(p.id)).length}</span></div><Feed posts={posts.filter(p=>preview.saved.includes(p.id))} base="/me" search={{panel:'wishlist'}}/></div>:panel==='cart'?<ShoppingCollection posts={posts} onBuy={onBuy}/>: panel==='checkout'?sent?<div className="py-8 text-center"><Check className="mx-auto mb-4 text-primary" size={36}/><h2 className="text-lg font-semibold">Sample order created</h2><p className="mt-3 text-sm text-muted-foreground">Awaiting payment. No charge has been made.</p><Button asChild variant="goldOutline" className="mt-6"><Link to="/me" search={{panel:'orders'}}>View orders</Link></Button></div>:<><p className="sample-notice">Preview checkout · Payment is not connected</p>{item?<CheckoutForm item={item} onDone={()=>setSent(true)}/>:<p className="py-8 text-muted-foreground">Add a product to your bag first.</p>}</>:
  panel==='apply'?<SellerOnboarding/>:
- panel==='wallet'?<VelaWallet/>:
+ panel==='wallet'?(user&&account.data?.roles.includes('seller')?<SellerEscrowWallet user={user}/>:<VelaWallet/>):
  panel==='orders'?<><LiveOrderBoard as="buyer"/></>:
  <ProfileSettings user={user}/>}
  </Overlay>;
