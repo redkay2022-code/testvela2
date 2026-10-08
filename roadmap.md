@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Display current commenter avatars/nicknames on all post/Shorts comment lists using privacy-safe profile lookup; verify authenticated posting and readback.
 - [x] Unify video-only seller/follow/details overlays and seller→full introduction→comment input/live-list sheet. Real authenticated comment save/reload and 5-second refresh verified; test comments removed, hybrid product entry and sheet Back preserved, 390px layout checked, 13 tests pass and build OK.
 - [x] Open hybrid videos in Shorts first with a product-page details link; simplify video-only overlays to title/description and engagement. Five tests pass; authenticated real hybrid detail entry (9 media), Back to Shorts, video-only likes/save/comments verified without page errors; build OK.
 - [x] Route hybrid posts to product pages with one swipeable media gallery; retain video-only Shorts without feed tabs and simplify the product header to seller/follow/share. Twelve tests pass; authenticated real hybrid (one video + eight photos), photo-only and video-only card entry verified, gallery advances 1/9→2/9, no page errors.
