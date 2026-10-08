@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Redesign Seller My Studio with real profile/tier/sales/rating/reviews, three quick actions, four URL tabs, existing product editing/QC/inbox and dedicated seller navigation; verify signed-in navigation and layouts.
 - [x] Route trusted sellers' ‘나’ entry and direct My VELA visits to /seller, preserving search panels and other navigation; 15 focused tests pass and authenticated admin My navigation has no page errors. Actual seller-session readback remains unavailable with the injected admin session.
 - [x] Keep edited video when adding photos through an adjacent square tile; show its opening frame. Browser editing → photo-add flow verified with a rendered poster, retained edited video, one photo and no page errors; 7 focused tests pass. Actual authenticated listing submission remains unverified.
 - [x] Remove seller dashboard finance/chart/sample payout blocks and switch approved sellers' profile badge to trusted seller tier; 15 focused tests pass and guest Seller→My navigation verified. Real seller badge readback awaits the seller session (two seller accounts exist; no requester match).
