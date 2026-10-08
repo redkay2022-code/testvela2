@@ -1,9 +1,9 @@
 // Real BGM: royalty-free tracks by Kevin MacLeod (incompetech.com), CC BY 4.0. Each file is trimmed to start exactly on beat 1.
 import t0 from '@/assets/music/local-forecast-elevator.mp3.asset.json';
 import t1 from '@/assets/music/smooth-lovin.mp3.asset.json';
-import t2 from '@/assets/music/bossa-antigua.mp3.asset.json';
+import t2 from '@/assets/music/hackbeat.mp3.asset.json';
 import t3 from '@/assets/music/lobby-time.mp3.asset.json';
-import t4 from '@/assets/music/wallpaper.mp3.asset.json';
+import t4 from '@/assets/music/bit-shift.mp3.asset.json';
 import t5 from '@/assets/music/cipher.mp3.asset.json';
 import t6 from '@/assets/music/funkorama.mp3.asset.json';
 import t7 from '@/assets/music/inspired.mp3.asset.json';
@@ -18,7 +18,7 @@ import t15 from '@/assets/music/groove-grove.mp3.asset.json';
 import t16 from '@/assets/music/spy-glass.mp3.asset.json';
 import t17 from '@/assets/music/impact-prelude.mp3.asset.json';
 import t18 from '@/assets/music/overcast.mp3.asset.json';
-import t19 from '@/assets/music/danse-morialta.mp3.asset.json';
+import t19 from '@/assets/music/daily-beetle.mp3.asset.json';
 import t20 from '@/assets/music/sovereign.mp3.asset.json';
 import t21 from '@/assets/music/chill-wave.mp3.asset.json';
 import t22 from '@/assets/music/arcadia.mp3.asset.json';
@@ -27,7 +27,7 @@ import t24 from '@/assets/music/electro-cabello.mp3.asset.json';
 import t25 from '@/assets/music/dances-and-dames.mp3.asset.json';
 import t26 from '@/assets/music/aitech.mp3.asset.json';
 import t27 from '@/assets/music/werq.mp3.asset.json';
-import t28 from '@/assets/music/pamgaea.mp3.asset.json';
+import t28 from '@/assets/music/george-street-shuffle.mp3.asset.json';
 import t29 from '@/assets/music/jazz-brunch.mp3.asset.json';
 /** offset = measured position (s) of beat 1 inside the file; the editor's beat grid starts there. */
 type Bgm = { label: string; title: string; bpm: number; url: string; feel: string; offset: number };
@@ -35,9 +35,9 @@ const t = (title: string, bpm: number, url: string, feel: string, offset: number
 export const bgmPresets: Record<string, Bgm> = {
   'local-forecast-elevator': t("Local Forecast - Elevator", 82, t0.url, "Bouncy, Bright, Grooving", 0.7039),
   'smooth-lovin': t("Smooth Lovin", 75, t1.url, "Grooving, Calming, Relaxed", 0.7706),
-  'bossa-antigua': t("Bossa Antigua", 70, t2.url, "Bright, Grooving, Relaxed", 0.8258),
+  'hackbeat': t("Hackbeat", 80, t2.url, "Bouncy, Grooving, Humorous, Relaxed", 0.029),
   'lobby-time': t("Lobby Time", 128, t3.url, "Calming, Grooving, Relaxed", 0.4412),
-  'wallpaper': t("Wallpaper", 92.55, t4.url, "Bouncy, Bright, Calming, Uplifting", 0.4847),
+  'bit-shift': t("Bit Shift", 130, t4.url, "Bouncy, Bright, Grooving", 0.2932),
   'cipher': t("Cipher", 150, t5.url, "Bright, Grooving, Uplifting", 0.3715),
   'funkorama': t("Funkorama", 101, t6.url, "Grooving, Uplifting", 0.5645),
   'inspired': t("Inspired", 120, t7.url, "Bright, Relaxed, Calming, Uplifting", 0.4717),
@@ -52,7 +52,7 @@ export const bgmPresets: Record<string, Bgm> = {
   'spy-glass': t("Spy Glass", 110, t16.url, "Grooving, Mysterious", 0.5152),
   'impact-prelude': t("Impact Prelude", 80, t17.url, "Calming, Grooving, Mysterious", 0.3454),
   'overcast': t("Overcast", 120, t18.url, "Bouncy, Bright, Grooving", 0.4717),
-  'danse-morialta': t("Danse Morialta", 70.42, t19.url, "Calming, Relaxed, Somber, Uplifting", 0.3991),
+  'daily-beetle': t("Daily Beetle", 100, t19.url, "Calming, Bouncy", 0.3875),
   'sovereign': t("Sovereign", 109.33, t20.url, "Dark, Calming", 0.5471),
   'chill-wave': t("Chill Wave", 100, t21.url, "Grooving, Relaxed", 0.2902),
   'arcadia': t("Arcadia", 79.84, t22.url, "Eerie, Epic, Mysterious, Mystical, Unnerving, Uplifting", 0.6908),
@@ -61,7 +61,7 @@ export const bgmPresets: Record<string, Bgm> = {
   'dances-and-dames': t("Dances and Dames", 120, t25.url, "Grooving, Mysterious, Suspenseful", 0.4702),
   'aitech': t("Aitech", 105, t26.url, "Grooving, Bright", 0.5399),
   'werq': t("Werq", 125, t27.url, "Bright, Grooving, Relaxed", 0.4484),
-  'pamgaea': t("Pamgaea", 94, t28.url, "Bouncy, Grooving, Relaxed", 0.6168),
+  'george-street-shuffle': t("George Street Shuffle", 76.5, t28.url, "Bouncy, Grooving, Relaxed", 0.2249),
   'jazz-brunch': t("Jazz Brunch", 100, t29.url, "Bright, Grooving, Relaxed", 0.5703),
 };
 export const bgmCredit = 'Music: Kevin MacLeod (incompetech.com) · CC BY 4.0';
