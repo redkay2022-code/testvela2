@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shouldOpenSellerDashboard } from '@/lib/seller-approval';
+import { accountSellerTier, shouldOpenSellerDashboard } from '@/lib/seller-approval';
 
 describe('seller approval dashboard navigation', () => {
   const approved = { roles: ['seller'], application: { status: 'approved' } };
@@ -21,5 +21,22 @@ describe('seller approval dashboard navigation', () => {
   });
   it('keeps pending applications on the current page', () => {
     expect(shouldOpenSellerDashboard({ roles: ['user'], application: { status: 'pending' } }, false, '/me', true)).toBe(false);
+  });
+});
+
+describe('approved seller profile badge', () => {
+  it('switches from buyer to STANDARD as soon as the trusted seller role arrives', () => {
+    expect(accountSellerTier({ roles: ['user'] })).toBeNull();
+    expect(accountSellerTier({ roles: ['user', 'seller'] })).toBe('standard');
+  });
+  it('does not turn a pending customer or admin into a seller', () => {
+    expect(accountSellerTier(undefined)).toBeNull();
+    expect(accountSellerTier({ roles: ['admin'] })).toBeNull();
+  });
+  it('uses an earned or administrator-assigned live seller tier', () => {
+    expect(accountSellerTier({ roles: ['seller'] }, { approved: true, ratings: null, completedSales: 0, override: 'master' })).toBe('master');
+  });
+  it('never promotes a real account using sample reputation', () => {
+    expect(accountSellerTier({ roles: ['seller'] }, { approved: true, ratings: null, completedSales: 0, override: 'master', sample: true })).toBe('standard');
   });
 });
