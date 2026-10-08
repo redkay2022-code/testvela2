@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Keep edited video when adding photos through an adjacent square tile; show its opening frame and verify the authenticated editing flow.
 - [x] Remove seller dashboard finance/chart/sample payout blocks and switch approved sellers' profile badge to trusted seller tier; 15 focused tests pass and guest Seller→My navigation verified. Real seller badge readback awaits the seller session (two seller accounts exist; no requester match).
 - [x] Show Home without automatic signup and gate guest product entry behind registration; guest Home/direct-product/Back verified and 21 focused tests pass. Actual card-click E2E cannot run because guest catalog remains empty under unchanged private prelaunch permissions.
 - [x] Add explicit registration and login entries to signed-out My VELA; both correct forms and Back verified without runtime errors, latest build OK.

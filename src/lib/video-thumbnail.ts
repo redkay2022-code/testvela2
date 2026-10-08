@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /** Captures one JPEG frame (~1s in, or the middle of short clips) from a local video file in the browser. */
-export async function captureVideoFrame(file: Blob, maxWidth = 720): Promise<Blob | null> {
+export async function captureVideoFrame(file: Blob, maxWidth = 720, startTime = 1): Promise<Blob | null> {
   const url = URL.createObjectURL(file);
   try {
     return await new Promise<Blob | null>(resolve => {
@@ -12,7 +12,7 @@ export async function captureVideoFrame(file: Blob, maxWidth = 720): Promise<Blo
       video.onerror = () => done(null);
       video.onloadeddata = () => {
         const d = Number.isFinite(video.duration) ? video.duration : 2;
-        video.currentTime = Math.min(1, d / 2);
+        video.currentTime = Math.min(startTime, d / 2);
       };
       video.onseeked = () => {
         const w = video.videoWidth, h = video.videoHeight;

@@ -10,6 +10,14 @@ export function isListingPhoto(file: File) {
   return ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
 }
 
+/** Add media without replacing an existing edited video or photo selection. */
+export function appendListingFiles(existing: File[], selected: File[]): File[] {
+  const next = [...existing, ...selected];
+  if (next.filter(isListingPhoto).length > MAX_LISTING_PHOTOS) throw new Error(`사진은 최대 ${MAX_LISTING_PHOTOS}장까지 올릴 수 있어요.`);
+  if (next.filter(isListingVideo).length > 1) throw new Error('영상은 상품당 1개만 올릴 수 있어요.');
+  return next;
+}
+
 export async function readVideoDuration(file: File) {
   const url = URL.createObjectURL(file);
   try {
