@@ -60,7 +60,7 @@ function scheduleSfx(ctx: BaseAudioContext, out: AudioNode, type: SfxType, at: n
 }
 /** Renders BGM + SFX into one buffer for preview and export. */
 export async function renderSoundtrack(duration: number, bgm: BgmId | null, bgmVolume: number, sfx: { type: SfxType; at: number }[]) {
-  const rate = 44100, ctx = new OfflineAudioContext(2, Math.max(1, Math.ceil(rate * Math.max(0.5, duration))), rate);
+  const rate = 22050, ctx = new OfflineAudioContext(2, Math.max(1, Math.ceil(rate * Math.max(0.5, duration))), rate);
   const master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination);
   if (bgm) {
     const p = bgmPresets[bgm]!, { bpm, root } = p, step = 60 / bpm, bus = ctx.createGain(); bus.gain.value = bgmVolume; bus.connect(master);
