@@ -5,7 +5,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Search, Share2, Star, Tag, UserRound, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Search, Share2, Star, Tag, UserRound, Volume2, VolumeX, X } from 'lucide-react';
+/** Sound preference shared across swipes; starts muted because browsers block autoplay with sound. */
+let shortsSound=false;
 import { Link, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
@@ -55,15 +57,16 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  const [clock,setClock]=useState(0);
  useEffect(()=>{const v=video.current;if(!v||!videoTags.length)return;const on=()=>setClock(v.currentTime);v.addEventListener('timeupdate',on);return()=>v.removeEventListener('timeupdate',on);},[videoTags.length]);
  const shownTag=videoTags.find(tg=>clock>=tg.at&&clock<=tg.at+3);
- const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false);
+ const [failed,setFailed]=useState(false),[blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false),[sound,setSound]=useState(shortsSound);
  const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
  const following=preview.isFollowing(identity);
  const read=useServerFn(getComments);
  const {data:comments}=useQuery({queryKey:['comments',post.id],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
- useEffect(()=>{const v=video.current;if(!v)return;v.muted=true;let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,post.video]);
+ useEffect(()=>{const v=video.current;if(!v)return;const want=active&&shortsSound;v.muted=!want;if(active)setSound(want);let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(cancelled)return;if(!v.muted){v.muted=true;setSound(false);void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,post.video]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active} inert={!active}>
  {post.video&&!failed?<video ref={video} playsInline loop muted preload={active?'auto':'none'} onError={()=>setFailed(true)}><source src={post.video} type={post.videoFallback?'video/webm':undefined}/>{post.videoFallback&&<source src={post.videoFallback} type="video/mp4"/>}</video>:<img src={post.images[0]} alt={post.title}/>}
  <div className="shorts-shade"/>
+ {post.video&&!failed&&<button type="button" className="shorts-sound-toggle" aria-label={sound?'소리 끄기':'소리 켜기'} aria-pressed={sound} onClick={()=>{const v=video.current;if(!v)return;const next=!sound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}{!sound&&<span>소리 켜기</span>}</button>}
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
  {shownTag&&<Link to="/" search={{post:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>}
  <div className="shorts-product-overlay">
