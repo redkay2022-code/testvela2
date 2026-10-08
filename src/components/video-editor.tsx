@@ -4,7 +4,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MAX_VIDEO_SECONDS } from '@/lib/listing-media';
-import { beatTimes, bgmPresets, clipsToWavBase64, renderSoundtrack, sfxPresets, snapToBeat, type BgmId, type SfxType } from '@/lib/video-audio';
+import { beatTimes, bgmPresets, clipsToWavBase64, renderSoundtrack, snapToBeat, type BgmId, type SfxType } from '@/lib/video-audio';
 import { transcribeVideoAudio } from '@/lib/video-captions.functions';
 
 export type VideoTag = { postId: string; title: string; at: number };
@@ -49,7 +49,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
   useEffect(() => () => clips.forEach(c => URL.revokeObjectURL(c.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const total = clips.reduce((s, c) => s + (c.end - c.start), 0);
-  const bpm = bgm ? bgmPresets[bgm].bpm : 0;
+  const bpm = bgm ? bgmPresets[bgm]!.bpm : 0;
   const snap = (x: number) => Math.max(0, Math.min(total, bgm && beatSync ? snapToBeat(x, bpm) : x));
   const locate = (time: number) => { let acc = 0; for (let i = 0; i < clips.length; i++) { const c = clips[i]!, len = c.end - c.start; if (time < acc + len || i === clips.length - 1) return { i, local: c.start + Math.min(len, Math.max(0, time - acc)) }; acc += len; } return { i: 0, local: 0 }; };
   const sfxKey = JSON.stringify(sfx.map(s => [s.type, s.at]));
@@ -178,7 +178,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
             <label className="editor-row">세로 위치<input type="range" min={8} max={90} value={x.y} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, y: Number(e.target.value) } : y))}/></label></div>)}
         </>}
         {layer === 'music' && <>
-          <div className="grid gap-2">{([null, ...Object.keys(bgmPresets)] as (BgmId | null)[]).map(id => <button key={id ?? 'none'} type="button" className={`editor-option ${bgm === id ? 'active' : ''}`} onClick={() => setBgm(id)}><Music size={14}/>{id ? bgmPresets[id].label : '배경음악 없음'}</button>)}</div>
+          <div className="grid gap-2">{([null, ...Object.keys(bgmPresets)] as (BgmId | null)[]).map(id => <button key={id ?? 'none'} type="button" className={`editor-option ${bgm === id ? 'active' : ''}`} onClick={() => setBgm(id)}><Music size={14}/>{id ? bgmPresets[id]!.label : '배경음악 없음'}</button>)}</div>
           {bgm && <><label className="editor-row">음악 볼륨<input type="range" min={0} max={1} step={0.05} value={bgmVol} onChange={e => setBgmVol(Number(e.target.value))}/></label><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={beatSync} onChange={e => setBeatSync(e.target.checked)}/>비트 싱크 · 텍스트·태그·효과음을 박자에 맞춰 배치</label></>}
           <label className="editor-row">원본 소리<input type="range" min={0} max={1} step={0.05} value={origVol} onChange={e => { setOrigVol(Number(e.target.value)); if (videoRef.current) videoRef.current.volume = Number(e.target.value); }}/></label>
         </>}
