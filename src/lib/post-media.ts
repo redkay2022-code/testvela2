@@ -6,7 +6,11 @@ export function postPhotos(post: LuxuryPost): string[] {
 }
 
 export function postMediaRoute(post: LuxuryPost): '/shorts/$id' | '/post/$id' {
-  return post.video && postPhotos(post).length === 0 ? '/shorts/$id' : '/post/$id';
+  return post.video ? '/shorts/$id' : '/post/$id';
+}
+
+export function isHybridPost(post: LuxuryPost): boolean {
+  return Boolean(post.video) && postPhotos(post).length > 0;
 }
 
 export function detailMedia(post: LuxuryPost) {

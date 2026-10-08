@@ -33,7 +33,7 @@
 - USDT display estimates parity; stored prices/networks stay unchanged.
 - Seed stores/products live in the database (data_source SEED), not local arrays. Catalog is Seller → Store → Product: products extend `posts` (store_id, product_status, inventory, data_source) with `product_images`/`product_qc`; a DB trigger owns status/stock transitions and syncs legacy `status`, so existing feed/search/buy code keeps reading `posts`. Inactive stores hide their products via a restrictive RLS policy.
 - Categories live in public.categories (admin-managed parent/child rows); forms render them via CategoryOptions and posts keep the category name, so renames also update posts. Video uploads auto-generate a JPEG frame into posts.thumbnail_url in the browser so feeds never load video just for a cover.
-- Use post-media selectors for hybrid /post/$id vs video-only /shorts/$id and unified detail slides; posters are not photos. Leaf head() sets share metadata.
+- Use post-media selectors: videos enter /shorts/$id; hybrid details link to /post/$id; posters are not photos. Leaf head() sets share metadata.
 - Media self-heals via src/lib/media-refresh.ts.
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
 

@@ -21,6 +21,7 @@ import { marketSearch } from '@/lib/market';
 import { getComments } from '@/lib/market.functions';
 import { stableMediaSrc } from '@/lib/media-refresh';
 import { sellerIdentity } from '@/lib/seller-directory';
+import { isHybridPost } from '@/lib/post-media';
 
 const usd=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean)=>void; notify:(text:string)=>void };
@@ -52,6 +53,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
+ const hybrid=isHybridPost(post);
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const videoTags=(Array.isArray(post.source?.video_tags)?post.source.video_tags:[]) as {postId:string;title:string;at:number}[];
  const [clock,setClock]=useState(0);
@@ -71,20 +73,20 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  <div className="shorts-shade"/>
  {post.video&&!failed&&<button type="button" className="shorts-sound-toggle" aria-label={sound?'소리 끄기':'소리 켜기'} aria-pressed={sound} onClick={()=>{const v=video.current;if(!v)return;const next=!sound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}{!sound&&<span>소리 켜기</span>}</button>}
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
- {shownTag&&<Link to="/post/$id" params={{id:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>}
+ {hybrid&&shownTag&&<Link to="/post/$id" params={{id:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>}
  <div className="shorts-product-overlay">
- <div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
+ {hybrid?<><div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
  <div className="shorts-seller-row">
  <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><span className="shorts-anonymous-avatar"><UserRound/></span><strong>{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'Unfollow creator':'Follow creator'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>
- <Button variant="gold" className="shorts-view-details" onClick={()=>openSheet('product')} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Button>
+ <Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>
  </div>
  </div>
  <footer className="shorts-bottom-bar">
  {active&&<ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} composerOnly/>}
  <aside className="shorts-bottom-actions" aria-label="Shorts actions">
- <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="Like short" title="좋아요" aria-pressed={liked} className={liked?'shorts-liked':''} onClick={()=>setLiked(value=>!value)}><motion.span key={String(liked)} animate={{scale:liked?[1,1.25,1]:1}}><Heart fill={liked?'currentColor':'none'}/></motion.span></Button><span>{post.likes+(liked?1:0)}</span></div>
- <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="Bookmark short" title="즐겨찾기" aria-pressed={saved} className={saved?'shorts-liked':''} onClick={()=>preview.toggleSaved(post.id)}><Star fill={saved?'currentColor':'none'}/></Button><span>{saved?1:0}</span></div>
- <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="Open Shorts comments" title="댓글" onClick={()=>openSheet('comments')}><MessageCircle/></Button><span>{comments?.length ?? '—'}</span></div>
+ <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="좋아요" title="좋아요" aria-pressed={liked} className={liked?'shorts-liked':''} onClick={()=>setLiked(value=>!value)}><motion.span key={String(liked)} animate={{scale:liked?[1,1.25,1]:1}}><Heart fill={liked?'currentColor':'none'}/></motion.span></Button><span>{post.likes+(liked?1:0)}</span></div>
+ <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="저장" title="저장" aria-pressed={saved} className={saved?'shorts-liked':''} onClick={()=>preview.toggleSaved(post.id)}><Star fill={saved?'currentColor':'none'}/></Button><span>{saved?1:0}</span></div>
+ <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="댓글" title="댓글" onClick={()=>openSheet('comments')}><MessageCircle/></Button><span>{comments?.length ?? '—'}</span></div>
  </aside>
  </footer>
  </article>;
