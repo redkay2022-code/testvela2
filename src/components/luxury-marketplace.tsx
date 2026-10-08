@@ -35,7 +35,6 @@ import { InsuranceBanner, InsuranceBreakdown, InsuranceTeaser } from './insuranc
 import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
-import { seedPosts } from '@/lib/seed-sellers';
 import { rankRecommended } from '@/lib/feed-ranking';
 import { filterFeed, postFactory, type FeedFilter } from '@/lib/feed-filters';
 import { FeedFilters } from './feed-filters';
@@ -43,7 +42,7 @@ import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;help?:'escrow'|'support'|'privacy'}) {
- const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const all=withLiveRatings([...luxuryPosts(data),...seedPosts],ratingMap.data); const preview=useMarketPreview();
+ const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const all=withLiveRatings(luxuryPosts(data),ratingMap.data); const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
  const helpPath=help==='escrow'?'/escrow-guide':help==='support'?'/support':help==='privacy'?'/privacy':undefined;
  const navigate=useNavigate(),router=useRouter(); const base=mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
@@ -124,7 +123,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
 function Feed({posts,base,search}:{posts:LuxuryPost[];base:'/'|'/explore'|'/market'|'/me'|'/upload'|'/store'|'/seller'|'/admin';search:ReturnType<typeof marketSearch.parse>}) {
  const preview=useMarketPreview();const compact=base==='/';const columns=compact?2:3;
  return posts.length?<div className={`lux-waterfall ${compact?'red-home-waterfall':''}`}>{Array.from({length:columns},(_,i)=>i).map(column=><div className="lux-column" key={column}>{posts.filter((_,i)=>i%columns===column).map((post,i)=><article className="lux-post" key={post.id}>
-  <Link to={post.short?'/shorts/$id':base} params={post.short?{id:post.id}:{}} search={post.short?{role:search.role}:{...search,post:post.id,shorts:undefined}} resetScroll={false} className={`lux-post-media shape-${(column+i)%3}`} aria-label={post.title}>{post.video?<FeedVideo post={post}/>:<img src={post.images[0]} alt={post.title} width={512} height={512} loading={i===0?'eager':'lazy'} onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src=watchImages[0] ?? '';}}/>}{!compact&&<><span className="lux-views"><Eye size={12}/>{post.views}<span className="views-word"> views</span></span><span className="lux-bag"><ShoppingBag size={15}/></span></>}</Link>
+  <Link to={post.short?'/shorts/$id':base} params={post.short?{id:post.id}:{}} search={post.short?{role:search.role}:{...search,post:post.id,shorts:undefined}} resetScroll={false} className={`lux-post-media shape-${(column+i)%3}`} aria-label={post.title}>{post.video?<FeedVideo post={post}/>:<img src={post.images[0]} alt={post.title} width={512} height={512} loading={i===0?'eager':'lazy'} onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src=watchImages[0] ?? '';}}/>}{post.outOfStock&&<span className="lux-soldout">품절</span>}{!compact&&<><span className="lux-views"><Eye size={12}/>{post.views}<span className="views-word"> views</span></span><span className="lux-bag"><ShoppingBag size={15}/></span></>}</Link>
  <div className="lux-post-copy">{!compact&&<div className="lux-post-tags"><span>{post.factory}</span>{(preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified)&&<ShieldCheck size={12}/>}</div>}<Link to={post.short?'/shorts/$id':base} params={post.short?{id:post.id}:{}} search={post.short?{role:search.role}:{...search,post:post.id,shorts:undefined}} resetScroll={false}><h2>{post.title}</h2></Link>{!compact&&post.price!==null&&<p className="lux-card-price">{dollars(post.price)}</p>}<div className="lux-post-creator" data-no-translate><Link to="/store" search={{role:search.role,seller:sellerIdentity(post)}}><img src={post.images[0]} width={20} height={20} alt=""/><span>{post.creator}</span><SellerBadge reputation={post.reputation} compact/></Link><Button variant="ghost" className={`lux-heart ${preview.saved.includes(post.id)?'active':''}`} aria-label={`Save ${post.title}`} aria-pressed={preview.saved.includes(post.id)} onClick={()=>preview.toggleSaved(post.id)}><Heart/>{compact?new Intl.NumberFormat('ko-KR',{notation:'compact',maximumFractionDigits:1}).format(post.likes+(preview.saved.includes(post.id)?1:0)):post.likes+(preview.saved.includes(post.id)?1:0)}</Button></div></div>
  </article>)}</div>)}</div>:<div className="lux-empty"><Compass/><h2>No finds here yet.</h2><p>Follow a studio or choose another category.</p><Button asChild variant="goldOutline"><Link to="/store">Explore VS Watch Studio<ArrowRight/></Link></Button></div>;
 }

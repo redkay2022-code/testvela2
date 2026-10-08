@@ -6,7 +6,6 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { marketSearch, pageHead, postsQuery } from '@/lib/market';
 import { luxuryPosts } from '@/lib/luxury-market';
-import { seedPosts } from '@/lib/seed-sellers';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { usePostRatings, useSellerRatingMap, withLiveRatings } from '@/lib/studio-tier';
 import { formatDate } from '@/lib/i18n';
@@ -34,7 +33,7 @@ function BuyPage() {
   const navigate = useNavigate();
   const { data } = useSuspenseQuery(postsQuery);
   const ratingMap = useSellerRatingMap();
-  const post = withLiveRatings([...luxuryPosts(data), ...seedPosts], ratingMap.data).find(p => p.id === id);
+  const post = withLiveRatings(luxuryPosts(data), ratingMap.data).find(p => p.id === id);
   const postRatings = usePostRatings();
   const [user, setUser] = useState<User | null>(null), [done, setDone] = useState(false), [ask, setAsk] = useState(false);
   useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUser(data.user)); const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null)); return () => subscription.unsubscribe(); }, []);
@@ -54,6 +53,7 @@ function BuyPage() {
     <section className="mt-4 rounded-lg border border-border bg-card p-4">
       <h2 className="flex items-center gap-2 text-sm font-semibold"><ShieldCheck size={16} className="text-primary" />에스크로 결제</h2>
       {done ? <div className="py-6 text-center"><Check className="mx-auto mb-3 text-primary" size={32} /><p className="font-semibold">주문이 접수되었습니다.</p><p className="mt-2 text-sm text-muted-foreground">관리자가 TXID 입금을 확인하면 판매자가 준비를 시작합니다.</p><Button asChild variant="goldOutline" className="mt-5"><Link to="/me" search={{ panel: 'orders' }}>주문 내역 · 판매자 채팅</Link></Button></div>
+        : post.outOfStock ? <p className="mt-3 text-sm font-semibold text-destructive">품절 · 재입고 후 구매할 수 있습니다.</p>
         : post.price === null ? <p className="mt-3 text-sm text-muted-foreground">판매 가격이 없는 게시물입니다. 판매자에게 문의해 주세요.</p>
         : !user ? <div className="mt-3"><p className="text-sm text-muted-foreground">결제하려면 로그인이 필요합니다.</p><Button variant="gold" className="mt-3 w-full" onClick={requestAuth}>로그인하고 결제하기</Button></div>
         : <CheckoutForm item={post} onDone={() => setDone(true)} />}
