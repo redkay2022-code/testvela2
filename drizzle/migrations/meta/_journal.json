@@ -120,6 +120,13 @@
       "when": 1791465144668,
       "tag": "0016_tighten_public_content_and_media_access",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791468169637,
+      "tag": "0017_catalog_sellers_stores_products",
+      "breakpoints": true
     }
   ]
 }
