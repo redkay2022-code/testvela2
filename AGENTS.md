@@ -27,7 +27,7 @@
 - Translate commerce with src/lib/i18n t() and UI with src/locales via src/lib/dom-translate; the shared locale provider detects device language/currency. Cache live USD rates server-side with fixed fallbacks.
 - Accounts use phone + password via src/lib/phone-auth.functions.ts: the phone is peppered-SHA-256 hashed server-side and only the hash (public.profiles.phone_hash, also the synthetic auth email) is stored, enforcing one account per phone; no social/OAuth sign-in.
 - Real roles live in public.user_roles checked via has_role(); seller applications carry only system_code + nickname and approvals go through admin-verified server functions in src/lib/seller-accounts.functions.ts.
-- Product listings keep photos in media_urls and one optional video in video_url; this preserves ordered photo galleries while making video the feed cover.
+- Listings store photos in media_urls and one optional video in video_url; selectors append media and use VideoStartPreview posters to preserve edits and avoid black previews.
 - Real orders, QC media and the buyer/seller QC board live in Cloud (orders, order_qc_media, order_messages, private qc-media bucket); a database trigger enforces role-based stage changes and the 9-photo + 1-video QC minimum so clients cannot skip steps. Live courier status comes from 17TRACK via a cached authenticated server function (TRACK17_API_KEY).
 - Help/privacy use public leaves; profile/shipping use URL-tabbed settings. Presentation: src/components/AGENTS.md.
 - USDT display estimates USD parity; keep stored prices and payment networks unchanged.

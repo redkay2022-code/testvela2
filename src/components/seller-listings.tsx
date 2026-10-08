@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useMyAccount } from './seller-account';
 import { formatMoney } from '@/lib/currency';
 import { VideoEditor, type VideoTag } from './video-editor';
+import { VideoStartPreview } from './video-start-preview';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 
@@ -167,6 +168,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     finally { setPending(false); }
   };
 
+  const photoPicker = useRef<HTMLInputElement>(null);
   const photoTotal = photos.length;
   return <div className="form-panel mt-4 rounded-lg border border-border p-4">
     {editing && <VideoEditor file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags }) => { if (video?.file) { URL.revokeObjectURL(video.preview); objectUrls.current.delete(video.preview); } setVideo({ file, preview: createPreview(file) }); setVideoTags(tags); setEditing(null); }} />}
@@ -174,7 +176,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-input bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground">영상과 사진 한 번에 선택</span><span className="text-xs text-muted-foreground">영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {photoTotal}/{MAX_LISTING_PHOTOS}</span>
       <input className="sr-only" type="file" accept="image/*,video/*" multiple aria-label="상품 영상과 사진 한 번에 선택" onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} /></label>
     {(video || photos.length > 0) && <div className="mt-3 space-y-3" aria-label="선택한 상품 미디어">
-      {video && <div className="relative overflow-hidden rounded-md border border-primary bg-muted"><video src={video.preview} muted playsInline controls preload="metadata" className="aspect-video w-full object-cover"/><span className="absolute left-2 top-2 rounded bg-background/80 px-2 py-1 text-[11px] font-semibold text-primary">메인 피드 영상</span><Button type="button" size="icon" variant="secondary" className="absolute right-2 top-2 size-7" aria-label="영상 제거" onClick={removeVideo}><X /></Button>{video.file && <Button type="button" size="sm" variant="gold" className="absolute bottom-2 right-2" onClick={() => setEditing(video.file!)}><Scissors />영상 편집</Button>}{videoTags.length > 0 && <span className="absolute bottom-2 left-2 rounded bg-background/80 px-2 py-1 text-[11px] text-primary">상품 태그 {videoTags.length}개</span>}</div>}
+      {video && <div className="grid grid-cols-2 gap-2"><div className="relative overflow-hidden rounded-md border border-primary bg-muted"><VideoStartPreview file={video.file} src={video.preview} className="aspect-square w-full object-cover"/><span className="absolute left-2 top-2 rounded bg-background/80 px-2 py-1 text-[11px] font-semibold text-primary">메인 피드 영상</span><Button type="button" size="icon" variant="secondary" className="absolute right-2 top-2 size-7" aria-label="영상 제거" onClick={removeVideo}><X /></Button>{video.file && <Button type="button" size="sm" variant="gold" className="absolute bottom-2 right-2" onClick={() => { if (video.file) setEditing(video.file); }}><Scissors />영상 편집</Button>}{videoTags.length > 0 && <span className="absolute bottom-2 left-2 rounded bg-background/80 px-2 py-1 text-[11px] text-primary">상품 태그 {videoTags.length}개</span>}</div>{photoTotal < MAX_LISTING_PHOTOS && <Button type="button" variant="outline" className="aspect-square h-auto w-full flex-col gap-2 border-dashed border-primary/50 bg-muted text-primary" aria-label="사진 추가" onClick={() => photoPicker.current?.click()}><ImagePlus className="size-7"/><span className="text-xs">사진 추가</span><span className="text-[11px] text-muted-foreground">{photoTotal}/{MAX_LISTING_PHOTOS}</span></Button>}</div>}
       {photos.length > 0 && <div><p className="mb-2 text-xs text-muted-foreground">상세 사진 갤러리 · 끌어서 또는 화살표로 순서 변경</p><div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {photos.map((photo, index) => <div key={photo.id} draggable onDragStart={() => setDraggedPhoto(photo.id)} onDragEnd={() => setDraggedPhoto(null)} onDragOver={event => event.preventDefault()} onDrop={() => dropPhoto(photo.id)} className={`relative overflow-hidden rounded-md border bg-muted ${draggedPhoto === photo.id ? 'border-primary opacity-60' : 'border-border'}`}>
           {photo.preview ? <img src={photo.preview} alt={`상세 사진 ${index + 1}`} className="aspect-square w-full object-cover"/> : <div className="grid aspect-square place-items-center text-xs text-muted-foreground">사진 {index + 1}</div>}
@@ -184,6 +186,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
         </div>)}
       </div></div>}
     </div>}
+    <input ref={photoPicker} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="추가 사진 선택" onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} />
     <label htmlFor="l-title" className="form-label">상품명</label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
     <label htmlFor="l-cat" className="form-label">카테고리</label><select id="l-cat" className="form-input" value={category} onChange={e => setCategory(e.target.value)}><option value="시계">시계</option><option value="악세사리">악세사리</option></select>
     <div className="grid grid-cols-2 gap-x-3">{specFields.map(([k, label, ph]) => <div key={k}><label htmlFor={`l-${k}`} className="form-label">{label}</label><input id={`l-${k}`} className="form-input" placeholder={ph} maxLength={80} value={specs[k] ?? ''} onChange={e => setSpecs(s => ({ ...s, [k]: e.target.value }))} /></div>)}</div>
