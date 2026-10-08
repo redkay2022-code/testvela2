@@ -134,6 +134,13 @@
       "when": 1791470659794,
       "tag": "0018_categories_and_payment_transactions",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791471315739,
+      "tag": "0019_post_thumbnail",
+      "breakpoints": true
     }
   ]
 }
