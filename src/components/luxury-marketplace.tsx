@@ -111,8 +111,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
    <CurrencySelect/><Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button>
   </div>
    {cleanHome&&<FeedCategoryPicker selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
- </>}
- </header>
+ </>
+ </header>}
   <main className={`lux-shell ${cleanHome&&!backOnlyHeader?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`}>
  {!help&&(mode==='explore'||mode==='market')&&<>
   {mode==='market'&&<div className="mt-6 flex flex-wrap items-center gap-3"><Button asChild variant={search.collection!=='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'watches'}}>시계 컬렉션</Link></Button><Button asChild variant={search.collection==='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'accessories'}}>액세서리 컬렉션</Link></Button>{search.collection!=='accessories'&&<select className="form-input max-w-52" aria-label="시계 유형" value={search.watchType ?? 'all'} onChange={e=>update({watchType:marketSearch.shape.watchType.parse(e.target.value)})}>{watchTypes.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>}</div>}
