@@ -1,7 +1,6 @@
 // Real BGM: royalty-free tracks by Kevin MacLeod (incompetech.com), CC BY 4.0. Each file is trimmed to start exactly on beat 1.
 import t0 from '@/assets/music/local-forecast-elevator.mp3.asset.json';
 import t1 from '@/assets/music/smooth-lovin.mp3.asset.json';
-import t2 from '@/assets/music/hackbeat.mp3.asset.json';
 import t3 from '@/assets/music/lobby-time.mp3.asset.json';
 import t4 from '@/assets/music/bit-shift.mp3.asset.json';
 import t5 from '@/assets/music/cipher.mp3.asset.json';
@@ -35,7 +34,6 @@ const t = (title: string, bpm: number, url: string, feel: string, offset: number
 export const bgmPresets: Record<string, Bgm> = {
   'local-forecast-elevator': t("Local Forecast - Elevator", 82, t0.url, "Bouncy, Bright, Grooving", 0.7039),
   'smooth-lovin': t("Smooth Lovin", 75, t1.url, "Grooving, Calming, Relaxed", 0.7706),
-  'hackbeat': t("Hackbeat", 80, t2.url, "Bouncy, Grooving, Humorous, Relaxed", 0.029),
   'lobby-time': t("Lobby Time", 128, t3.url, "Calming, Grooving, Relaxed", 0.4412),
   'bit-shift': t("Bit Shift", 130, t4.url, "Bouncy, Bright, Grooving", 0.2932),
   'cipher': t("Cipher", 150, t5.url, "Bright, Grooving, Uplifting", 0.3715),
