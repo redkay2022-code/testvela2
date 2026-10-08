@@ -1,11 +1,41 @@
 // Locally synthesized BGM / SFX (no remote audio assets) and audio helpers for the video editor.
-export type BgmId = 'noir' | 'gala' | 'velvet';
-export type SfxType = 'tick' | 'unbox' | 'chime';
-export const bgmPresets: Record<BgmId, { label: string; bpm: number; root: number }> = {
-  noir: { label: 'Midnight Noir · 90 BPM', bpm: 90, root: 55 },
-  gala: { label: 'Gala Pulse · 112 BPM', bpm: 112, root: 65.41 },
-  velvet: { label: 'Velvet Ambient · 72 BPM', bpm: 72, root: 49 },
+type Bgm = { label: string; bpm: number; root: number; wave: OscillatorType; cutoff: number; chord: number[]; kick: 'four' | 'half' | 'none' | 'trap'; hat: boolean; arp: boolean };
+const M = [1, 1.189, 1.498, 2], MAJ = [1, 1.26, 1.498, 2], SUS = [1, 1.335, 1.498, 2], OPEN = [1, 1.5, 2.378], JAZZ = [1, 1.26, 1.498, 1.888];
+const b = (label: string, bpm: number, root: number, wave: OscillatorType, cutoff: number, chord: number[], kick: Bgm['kick'], hat: boolean, arp: boolean): Bgm => ({ label: `${label} · ${bpm} BPM`, bpm, root, wave, cutoff, chord, kick, hat, arp });
+export const bgmPresets: Record<string, Bgm> = {
+  noir: b('Midnight Noir', 90, 55, 'sawtooth', 900, M, 'four', true, false),
+  gala: b('Gala Pulse', 112, 65.41, 'sawtooth', 1800, M, 'four', true, false),
+  velvet: b('Velvet Ambient', 72, 49, 'sawtooth', 900, OPEN, 'half', false, false),
+  geneva: b('Geneva Morning', 96, 65.41, 'triangle', 2400, MAJ, 'half', false, true),
+  monaco: b('Monaco Nights', 124, 55, 'sawtooth', 2200, M, 'four', true, true),
+  swiss: b('Swiss Precision', 120, 61.74, 'square', 1500, SUS, 'four', true, true),
+  marble: b('Marble Hall', 66, 43.65, 'sine', 1200, OPEN, 'none', false, false),
+  cognac: b('Cognac Lounge', 84, 58.27, 'triangle', 1600, JAZZ, 'half', true, false),
+  diamond: b('Diamond Rain', 100, 73.42, 'sine', 3000, MAJ, 'none', false, true),
+  tourbillon: b('Tourbillon', 128, 51.91, 'sawtooth', 2600, M, 'four', true, true),
+  silk: b('Silk Road', 78, 46.25, 'triangle', 1100, SUS, 'half', false, true),
+  onyx: b('Onyx Trap', 140, 41.2, 'square', 900, M, 'trap', true, false),
+  riviera: b('Riviera Sun', 110, 69.3, 'triangle', 2800, MAJ, 'four', true, true),
+  cathedral: b('Golden Cathedral', 60, 41.2, 'sawtooth', 700, OPEN, 'none', false, false),
+  carbon: b('Carbon Drive', 132, 49, 'square', 1900, SUS, 'four', true, false),
+  pearl: b('Pearl Lullaby', 70, 82.41, 'sine', 2000, MAJ, 'none', false, true),
+  tokyo: b('Tokyo Drift', 118, 55, 'sawtooth', 2400, M, 'four', true, true),
+  saphir: b('Sapphire Glass', 92, 61.74, 'sine', 2600, SUS, 'half', false, true),
+  boardroom: b('Boardroom', 104, 58.27, 'triangle', 1700, MAJ, 'four', false, false),
+  smoke: b('Smoke & Mirrors', 80, 46.25, 'sawtooth', 800, JAZZ, 'half', true, false),
+  aurora: b('Aurora', 76, 65.41, 'sine', 1800, OPEN, 'none', false, true),
+  chrono: b('Chronograph', 126, 61.74, 'square', 2100, M, 'four', true, true),
+  velour: b('Velour R&B', 88, 51.91, 'triangle', 1300, JAZZ, 'trap', true, false),
+  atelier: b('Atelier Piano', 74, 65.41, 'triangle', 2200, MAJ, 'none', false, true),
+  shanghai: b('Shanghai Skyline', 108, 55, 'sawtooth', 2000, SUS, 'four', true, true),
+  regal: b('Regal Strings', 64, 49, 'sawtooth', 1000, MAJ, 'half', false, false),
+  neon: b('Neon Boulevard', 122, 69.3, 'square', 2600, M, 'four', true, true),
+  obsidian: b('Obsidian Bass', 136, 36.71, 'sawtooth', 600, M, 'trap', true, false),
+  champagne: b('Champagne Toast', 116, 73.42, 'triangle', 3000, MAJ, 'four', true, true),
+  horizon: b('Silent Horizon', 68, 43.65, 'sine', 900, SUS, 'none', false, false),
 };
+export type BgmId = keyof typeof bgmPresets;
+export type SfxType = 'tick' | 'unbox' | 'chime';
 export const sfxPresets: Record<SfxType, { label: string; length: number }> = {
   tick: { label: '시계 초침 소리', length: 2 },
   unbox: { label: '언박싱 소리', length: 1.2 },
@@ -33,13 +63,15 @@ export async function renderSoundtrack(duration: number, bgm: BgmId | null, bgmV
   const rate = 44100, ctx = new OfflineAudioContext(2, Math.max(1, Math.ceil(rate * Math.max(0.5, duration))), rate);
   const master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination);
   if (bgm) {
-    const { bpm, root } = bgmPresets[bgm], step = 60 / bpm, bus = ctx.createGain(); bus.gain.value = bgmVolume; bus.connect(master);
-    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = bgm === 'gala' ? 1800 : 900; lp.connect(bus);
-    const chord = bgm === 'velvet' ? [1, 1.5, 2.378] : [1, 1.189, 1.498, 2];
-    chord.forEach(m => [-4, 4].forEach(det => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = root * 2 * m; o.detune.value = det; g.gain.setValueAtTime(0, 0); g.gain.linearRampToValueAtTime(0.035, 1.5); g.gain.setValueAtTime(0.035, Math.max(1.6, duration - 1)); g.gain.linearRampToValueAtTime(0, duration); o.connect(g).connect(lp); o.start(0); o.stop(duration); }));
+    const p = bgmPresets[bgm]!, { bpm, root } = p, step = 60 / bpm, bus = ctx.createGain(); bus.gain.value = bgmVolume; bus.connect(master);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = p.cutoff; lp.connect(bus);
+    const lvl = p.wave === 'sine' ? 0.07 : p.wave === 'triangle' ? 0.055 : 0.035;
+    p.chord.forEach(m => [-4, 4].forEach(det => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = p.wave; o.frequency.value = root * 2 * m; o.detune.value = det; g.gain.setValueAtTime(0, 0); g.gain.linearRampToValueAtTime(lvl, 1.5); g.gain.setValueAtTime(lvl, Math.max(1.6, duration - 1)); g.gain.linearRampToValueAtTime(0, duration); o.connect(g).connect(lp); o.start(0); o.stop(duration); }));
     beatTimes(bpm, duration).forEach((t, i) => {
-      if (bgm !== 'velvet' || i % 2 === 0) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.18); g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25); o.connect(g).connect(bus); o.start(t); o.stop(t + 0.3); }
-      if (bgm !== 'velvet') { const h = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), ht = t + step / 2; h.buffer = noiseBuffer(ctx, 0.05); f.type = 'highpass'; f.frequency.value = 7000; g.gain.setValueAtTime(0.12, ht); g.gain.exponentialRampToValueAtTime(0.001, ht + 0.05); h.connect(f).connect(g).connect(bus); h.start(ht); }
+      const kick = p.kick === 'four' || (p.kick === 'half' && i % 2 === 0) || (p.kick === 'trap' && (i % 4 === 0 || i % 8 === 3));
+      if (kick) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.18); g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25); o.connect(g).connect(bus); o.start(t); o.stop(t + 0.3); }
+      if (p.hat) { const hits = p.kick === 'trap' ? [0.25, 0.5, 0.75] : [0.5]; hits.forEach(fr => { const h = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), ht = t + step * fr; h.buffer = noiseBuffer(ctx, 0.05); f.type = 'highpass'; f.frequency.value = 7000; g.gain.setValueAtTime(0.1, ht); g.gain.exponentialRampToValueAtTime(0.001, ht + 0.05); h.connect(f).connect(g).connect(bus); h.start(ht); }); }
+      if (p.arp) { const n = p.chord[i % p.chord.length]!, o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = root * 8 * n; g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + step * 0.9); o.connect(g).connect(bus); o.start(t); o.stop(t + step); }
     });
   }
   sfx.forEach(s => scheduleSfx(ctx, master, s.type, s.at));
