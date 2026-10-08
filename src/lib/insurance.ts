@@ -3,8 +3,8 @@ export const BASE_FEE_RATE = 0.1;
 export const insuranceTiers = [
   { id: 'bronze', label: 'BRONZE', threshold: 0, rate: 0.1, discount: 0, perk: '기본 등급' },
   { id: 'silver', label: 'SILVER', threshold: 2_500, rate: 0.07, discount: 0.3, perk: '보험료 30% 할인' },
-  { id: 'gold', label: 'GOLD', threshold: 6_000, rate: 0.05, discount: 0.5, perk: '월 2회 무료 국제배송' },
-  { id: 'platinum', label: 'PLATINUM', threshold: 12_000, rate: 0.03, discount: 0.7, perk: '무제한 무료 국제배송' },
+  { id: 'gold', label: 'GOLD', threshold: 6_000, rate: 0.05, discount: 0.5, perk: '보험료 50% 할인' },
+  { id: 'platinum', label: 'PLATINUM', threshold: 12_000, rate: 0.03, discount: 0.7, perk: '보험료 70% 할인' },
 ] as const satisfies readonly { id: InsuranceTier; label: string; threshold: number; rate: number; discount: number; perk: string }[];
 export type InsuranceTierInfo = (typeof insuranceTiers)[number];
 export function tierInfo(id: InsuranceTier): InsuranceTierInfo { return insuranceTiers.find(t => t.id === id) ?? insuranceTiers[0]; }
