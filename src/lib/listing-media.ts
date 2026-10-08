@@ -1,4 +1,4 @@
-export const MAX_LISTING_PHOTOS = 10;
+export const MAX_LISTING_PHOTOS = 9;
 export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 export const MAX_VIDEO_SECONDS = 30;
 
