@@ -90,7 +90,6 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  if(newest) posts=[...posts].reverse();
  const cleanHome=mode==='home'&&!shortsId;
  const backOnlyHeader=['store','me','seller','upload'].includes(mode)||search.panel==='chat'||search.panel==='cart';
- const goBack=()=>{if(search.panel==='chat'||search.panel==='cart'){close();return;}if(router.history.canGoBack())router.history.back();else void navigate({to:'/',search:{role:search.role},replace:true});};
  if(cleanHome)posts=posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
  if(cleanHome&&search.tab!=='reviews')posts=filterFeed(posts,search);
  const selected=all.find(p=>p.id===(shortsId || postId || search.post));
@@ -102,9 +101,9 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const feedFilterResults=sortFeed(filterFeed(all.filter(p=>!preview.hidden.includes(p.id)),search),search.fsort);
  const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);} ))].slice(0,10);
   return <NotificationsContext.Provider value={notifications}>
- <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
- <header className={`lux-header ${cleanHome&&!backOnlyHeader?'red-home-header':''}`}>
- {backOnlyHeader?<div className="lux-header-inner"><Button variant="ghost" size="icon" aria-label="뒤로가기" onClick={goBack}><ArrowLeft aria-hidden="true"/></Button></div>:<>
+  <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
+  {!backOnlyHeader&&<header className={`lux-header ${cleanHome?'red-home-header':''}`}>
+  <>
   <div className="lux-header-inner">
   <Button variant="ghost" size="icon" className="relative" aria-label={notifications.unread?`메뉴 열기 · 읽지 않은 알림 ${notifications.unread}개`:'메뉴 열기'} onClick={()=>update({menu:true})}><Menu/>{notifications.unread>0&&<span aria-hidden="true" className="absolute right-0 top-1 size-2 rounded-full bg-destructive"/>}</Button>
     <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>
