@@ -176,6 +176,13 @@
       "when": 1791492182227,
       "tag": "0024_seller_dashboard",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791497818027,
+      "tag": "0025_seller_workflow_activity_replacements",
+      "breakpoints": true
     }
   ]
 }

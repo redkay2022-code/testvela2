@@ -4,6 +4,8 @@ import type { User } from '@supabase/supabase-js';
 import { ArrowLeft, ArrowRight, GripVertical, ImagePlus, Pencil, Plus, Trash2, X, Eye, EyeOff, Video, Scissors, TriangleAlert, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { publicationUpdate } from '@/lib/seller-workflows';
 import { useMyAccount } from './seller-account';
 import { formatMoney } from '@/lib/currency';
 import { VideoEditor, type VideoTag } from './video-editor';
@@ -54,7 +56,7 @@ export function SellerListings() {
   if (!canSell) return <section className="seller-flow-card"><h2 className="text-lg font-semibold">내 상품 관리</h2><p className="mt-2 text-sm text-muted-foreground">승인된 셀러만 상품을 등록할 수 있어요. “나” 탭에서 셀러 계정을 신청해 주세요.</p></section>;
 
   const toggleSold = async (l: Listing, sold: boolean) => { await supabase.from('posts').update({ stock_qty: sold ? (l.reserved_qty ?? 0) : Math.max(1, (l.reserved_qty ?? 0) + 1) }).eq('id', l.id); refresh(); void qc.invalidateQueries({ queryKey: ['seller-stats'] }); };
-  const toggle = async (l: Listing) => { await supabase.from('posts').update({ status: l.status === 'published' ? 'draft' : 'published', updated_at: new Date().toISOString() }).eq('id', l.id); refresh(); };
+  const toggle = async (l: Listing) => { const {error} = await supabase.from('posts').update(publicationUpdate(l.status !== 'published')).eq('id', l.id).eq('user_id',user.id); if(error){alert('판매 상태를 변경하지 못했습니다.');return;} refresh(); };
   const replaceVideo = async (l: Listing, file: File) => {
     if (!isListingVideo(file)) { alert('영상 파일(MP4/WEBM/MOV)을 선택해 주세요.'); return; }
     try { await validateListingFiles([file]); } catch (err) { alert(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; }
@@ -77,12 +79,12 @@ export function SellerListings() {
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">내 상품 관리</h2><Button size="sm" onClick={() => setEditing('new')}><Plus />새 상품</Button></div>
     {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground">불러오는 중…</p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground">아직 등록한 상품이 없어요.</p> :
-      <ul className="management-list mt-3">{listings.data.map(l => <li key={l.id} className="management-row">
-        <div className="flex min-w-0 items-center gap-3">{l.video ? <VideoStartPreview src={l.video} className="size-12 shrink-0 rounded-md object-cover" /> : l.thumb ? <img src={l.thumb} alt="" className="size-12 shrink-0 rounded-md object-cover" /> : <div className="size-12 shrink-0 rounded-md bg-muted" />}
+      <ul className="seller-inventory-grid mt-5">{listings.data.map(l => <li key={l.id} className="seller-inventory-item">
+        <div className="min-w-0">{l.video ? <VideoStartPreview src={l.video} className="seller-inventory-image" /> : l.thumb ? <img src={l.thumb} alt={l.title} className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}
           <div className="min-w-0"><p className="truncate font-medium">{l.title}</p><p className="text-xs text-muted-foreground">{l.price != null ? formatMoney(l.price) : '가격 없음'} · <span className="record-status">{l.product_status === 'OUT_OF_STOCK' ? '판매 완료' : l.status === 'published' ? '판매 중' : '임시 저장'}</span></p>{l.specs.factory && <span className="text-xs text-primary" data-no-translate>{l.specs.factory}</span>}{l.specs.sourceType === 'custom' && <span className="text-xs text-primary">커스텀 제작</span>}</div></div>
         <div className="record-actions">
-          {l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label="판매 완료(Sold)" checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} />Sold</label>}
-          <Button size="icon" variant="ghost" aria-label={l.status === 'published' ? '비공개로 전환' : '게시하기'} onClick={() => void toggle(l)}>{l.status === 'published' ? <EyeOff /> : <Eye />}</Button>
+          {l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label="판매 완료" checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} />판매 완료</label>}
+           <label className="flex items-center gap-2 text-xs"><Switch aria-label={`${l.title} 판매`} checked={l.status==='published'} onCheckedChange={() => void toggle(l)}/>판매</label>
           <Button size="sm" variant="ghost" aria-label="편집" onClick={() => setEditing(l)}><Pencil />편집</Button>
           <Button asChild size="sm" variant="ghost"><label aria-label="영상 재업로드" className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} />{replacing === l.id ? '올리는 중' : '재업로드'}<input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
           <Button size="sm" variant="ghost" aria-label="삭제" onClick={() => void remove(l)}><Trash2 />삭제</Button>

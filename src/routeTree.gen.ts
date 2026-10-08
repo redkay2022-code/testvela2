@@ -17,6 +17,8 @@ import { Route as MarketRouteImport } from './routes/market'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SellerRouteImport } from './routes/seller'
+import { Route as SellerMessagesRouteImport } from './routes/seller-messages'
+import { Route as SellerStoreRouteImport } from './routes/seller-store'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as UploadRouteImport } from './routes/upload'
@@ -64,6 +66,16 @@ const SellerRoute = SellerRouteImport.update({
   path: '/seller',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SellerMessagesRoute = SellerMessagesRouteImport.update({
+  id: '/seller-messages',
+  path: '/seller-messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellerStoreRoute = SellerStoreRouteImport.update({
+  id: '/seller-store',
+  path: '/seller-store',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
@@ -104,6 +116,8 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
+  '/seller-messages': typeof SellerMessagesRoute
+  '/seller-store': typeof SellerStoreRoute
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
@@ -120,6 +134,8 @@ export interface FileRoutesByTo {
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
+  '/seller-messages': typeof SellerMessagesRoute
+  '/seller-store': typeof SellerStoreRoute
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
@@ -137,6 +153,8 @@ export interface FileRoutesById {
   '/me': typeof MeRoute
   '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
+  '/seller-messages': typeof SellerMessagesRoute
+  '/seller-store': typeof SellerStoreRoute
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
   '/upload': typeof UploadRoute
@@ -155,6 +173,8 @@ export interface FileRouteTypes {
     | '/me'
     | '/privacy'
     | '/seller'
+    | '/seller-messages'
+    | '/seller-store'
     | '/store'
     | '/support'
     | '/upload'
@@ -171,6 +191,8 @@ export interface FileRouteTypes {
     | '/me'
     | '/privacy'
     | '/seller'
+    | '/seller-messages'
+    | '/seller-store'
     | '/store'
     | '/support'
     | '/upload'
@@ -187,6 +209,8 @@ export interface FileRouteTypes {
     | '/me'
     | '/privacy'
     | '/seller'
+    | '/seller-messages'
+    | '/seller-store'
     | '/store'
     | '/support'
     | '/upload'
@@ -204,6 +228,8 @@ export interface RootRouteChildren {
   MeRoute: typeof MeRoute
   PrivacyRoute: typeof PrivacyRoute
   SellerRoute: typeof SellerRoute
+  SellerMessagesRoute: typeof SellerMessagesRoute
+  SellerStoreRoute: typeof SellerStoreRoute
   StoreRoute: typeof StoreRoute
   SupportRoute: typeof SupportRoute
   UploadRoute: typeof UploadRoute
@@ -270,6 +296,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SellerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seller-messages': {
+      id: '/seller-messages'
+      path: '/seller-messages'
+      fullPath: '/seller-messages'
+      preLoaderRoute: typeof SellerMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seller-store': {
+      id: '/seller-store'
+      path: '/seller-store'
+      fullPath: '/seller-store'
+      preLoaderRoute: typeof SellerStoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/store': {
       id: '/store'
       path: '/store'
@@ -324,6 +364,8 @@ const rootRouteChildren: RootRouteChildren = {
   MeRoute: MeRoute,
   PrivacyRoute: PrivacyRoute,
   SellerRoute: SellerRoute,
+  SellerMessagesRoute: SellerMessagesRoute,
+  SellerStoreRoute: SellerStoreRoute,
   StoreRoute: StoreRoute,
   SupportRoute: SupportRoute,
   UploadRoute: UploadRoute,

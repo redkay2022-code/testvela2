@@ -407,6 +407,50 @@ export type Database = {
           },
         ]
       }
+      order_replacements: {
+        Row: {
+          courier: string | null
+          created_at: string
+          id: string
+          order_id: string
+          reason: string
+          seller_id: string
+          shipped_at: string | null
+          status: string
+          tracking_number: string | null
+        }
+        Insert: {
+          courier?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          reason: string
+          seller_id: string
+          shipped_at?: string | null
+          status?: string
+          tracking_number?: string | null
+        }
+        Update: {
+          courier?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          reason?: string
+          seller_id?: string
+          shipped_at?: string | null
+          status?: string
+          tracking_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_replacements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           amount_usd: number
@@ -1203,6 +1247,7 @@ export type Database = {
       loyalty_expire_user: { Args: { _uid: string }; Returns: undefined }
       loyalty_my_summary: { Args: never; Returns: Json }
       loyalty_refresh_membership: { Args: { _uid: string }; Returns: string }
+      seller_activity_summary: { Args: never; Returns: Json }
       seller_dashboard_stats: { Args: never; Returns: Json }
       store_is_visible: { Args: { _store_id: string }; Returns: boolean }
     }
