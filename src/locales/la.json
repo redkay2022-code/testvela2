@@ -396,6 +396,7 @@
   "로그아웃": "Exi",
   "로그인": "Ingredi",
   "롤렉스": "Rolex",
+  "리뷰": "Recensiones",
   "리차드 밀": "Richard Mille",
   "린넨": "Linum",
   "링크를 복사했어요.": "Link copiatum est.",
@@ -433,6 +434,7 @@
   "상세 좋아요": "Similia singula",
   "상세보기": "Vide Detaile",
   "상세보기 · Product Details": "Vide Detaile · Detaile Producti",
+  "상품 사양": "Descriptio producti",
   "상품, 공간, 크리에이터 검색": "Quaere res, spatia, creatores",
   "새로운 소식이 생기면 여기서 알려드릴게요.": "Hic te certiorem faciemus cum nova nuntia erunt.",
   "새로운 취향 발견하기": "Nova gustus detegere",
@@ -482,6 +484,7 @@
   "전체 카테고리": "Omnes Categoriae",
   "정렬 변경": "Mutare Ordinem",
   "제목": "Titulus",
+  "제품 소개": "Descriptio producti",
   "제품 준비": "Productum Paratum",
   "좋아요": "Amo",
   "좋아요를 저장하지 못했어요. 다시 시도해 주세요.": "Non potuit salvare placet. Rursus conare.",
@@ -526,8 +529,5 @@
   "홈": "Domus",
   "홈·리빙": "Domus·Vita",
   "확인 이메일을 보냈어요": "Epistula confirmationis missa",
-  "회원가입": "Subscribere",
-  "제품 소개": "Descriptio producti",
-  "상품 사양": "Descriptio producti",
-  "리뷰": "Recensiones"
+  "회원가입": "Subscribere"
 }
