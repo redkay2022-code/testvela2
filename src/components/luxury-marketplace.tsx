@@ -37,7 +37,7 @@ import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
 import { seedPosts } from '@/lib/seed-sellers';
 import { rankRecommended } from '@/lib/feed-ranking';
-import { filterFeed, type FeedFilter } from '@/lib/feed-filters';
+import { filterFeed, postFactory, type FeedFilter } from '@/lib/feed-filters';
 import { FeedFilters } from './feed-filters';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
 
@@ -78,6 +78,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
  const selected=all.find(p=>p.id===(shortsId || search.post));
  const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
  const feedFilterResults=filterFeed(all.filter(p=>!preview.hidden.includes(p.id)),search);
+ const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);})).slice(0,10)];
  return <>
  <header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <div className="lux-header-inner">
@@ -111,7 +112,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
 
  <AnimatePresence>{selected&&!shortsId&&<ProductDetail key={selected.id} post={selected} user={user} requestAuth={()=>update({auth:true})} close={close} buy={box=>update({panel:'checkout',checkoutBox:box})} notify={setToast}/>}</AnimatePresence>
   {shortsId&&(shorts.some(p=>p.id===shortsId)?<ShortsPlayer posts={shorts} selectedId={shortsId} sheet={search.shortSheet} shortTab={search.shortTab || 'recommend'} onTab={shortTab=>update({shortTab})} onSearch={()=>{searchPushed.current=true;update({searchOpen:true});}} user={user} close={()=>void navigate({to:'/',search:{role:search.role},replace:true})} closeSheet={()=>{if(sheetPushed.current){sheetPushed.current=false;router.history.back();}else void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,shortSheet:undefined,shortPhoto:undefined,detailTab:undefined}),replace:true,resetScroll:false});}} change={id=>void navigate({to:'/shorts/$id',params:{id},search:prev=>({...prev,shorts:undefined,detailTab:undefined}),replace:true,resetScroll:false})} openSheet={shortSheet=>{sheetPushed.current=true;update({shortSheet});}} requestAuth={()=>update({auth:true})} buy={box=>update({panel:'checkout',checkoutBox:Boolean(box)})} notify={setToast}/>:<Overlay title="Short unavailable" close={()=>void navigate({to:'/',search:{role:search.role},replace:true})}><Button asChild variant="goldOutline"><Link to="/" search={{role:search.role}}>Return Home</Link></Button></Overlay>)}
-  {search.searchOpen&&<Dialog.Root open onOpenChange={open=>{if(!open)closeSearch();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className="lux-search-overlay" aria-describedby={undefined}><div className="lux-search-overlay-inner"><div className="lux-search-top"><Dialog.Title className="text-lg font-semibold">Search</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close search" onClick={closeSearch}><X/></Button></div><FeedFilters value={{fq:search.fq,ffactory:search.ffactory,fmin:search.fmin,fmax:search.fmax,fshorts:search.fshorts}} count={feedFilterResults.length} onChange={setFeedFilter}/><div className="lux-search-results"><Feed posts={feedFilterResults} base={base} search={{role:search.role}}/></div></div></Dialog.Content></Dialog.Portal></Dialog.Root>}
+  {search.searchOpen&&<Dialog.Root open onOpenChange={open=>{if(!open)closeSearch();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className="lux-search-overlay" aria-describedby={undefined}><div className="lux-search-overlay-inner"><div className="lux-search-top"><Dialog.Title className="text-lg font-semibold">Search</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close search" onClick={closeSearch}><X/></Button></div><FeedFilters value={{fq:search.fq,ffactory:search.ffactory,fmin:search.fmin,fmax:search.fmax,fshorts:search.fshorts}} count={feedFilterResults.length} onChange={setFeedFilter}/><div className="lux-search-keywords" data-no-translate role="group" aria-label="빠른 검색 키워드"><span>빠른 검색</span>{quickKeywords.map(k=><Button key={k} variant="ghost" className="lux-chip" aria-pressed={search.fq===k} onClick={()=>setFeedFilter({fq:search.fq===k?undefined:k})}>{k}</Button>)}</div><div className="lux-search-results"><Feed posts={feedFilterResults} base={base} search={{role:search.role}}/></div></div></Dialog.Content></Dialog.Portal></Dialog.Root>}
   {search.menu&&<Overlay title="VELA" close={close} side><ProductionMenu role={search.role}/></Overlay>}
  {search.post&&!selected&&<Overlay title="Product unavailable" close={close}><p className="py-6 text-sm text-muted-foreground">This listing is no longer available.</p></Overlay>}
  {search.auth&&<AuthDialog onClose={close} onSignedIn={close}/>}
