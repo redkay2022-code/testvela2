@@ -262,7 +262,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
   const [specs, setSpecs] = useState<Record<string, string>>(() => Object.fromEntries(watchSpecFields.map(([k]) => [k, typeof specs0[k] === 'string' ? specs0[k] : ''])));
   const [images, setImages] = useState<Img[]>(() => (existing?.media_urls ?? []).map((path, i) => ({ path, kind: i === 0 ? 'main' : 'gallery' })));
   const [qc, setQc] = useState({ qc_available: false, qc_video: null as string | null, inspection_notes: '', rate: '', amplitude: '', beat_error: '' });
-  const [msg, setMsg] = useState(''), [busy, setBusy] = useState(false), [drag, setDrag] = useState<number | null>(null);
+  const [msg, setMsg] = useState(''), [busy, setBusy] = useState(false), [drag, setDrag] = useState<number | null>(null), [thumb, setThumb] = useState<string | null>(existing?.thumbnail_url ?? null);
   const media = useMediaUrls(images.map(i => i.path));
 
   useEffect(() => {
