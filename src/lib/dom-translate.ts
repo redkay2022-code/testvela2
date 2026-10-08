@@ -104,6 +104,7 @@ export async function applyDomTranslation(next: Lang) {
   const load = loaders[`../locales/${next}.json`];
   dict = load ? (await load()).default : {};
   walk(document.body);
+  translateMeta();
   observer = new MutationObserver(muts => {
     // Never let a translation glitch break the page; skip the node instead.
     for (const m of muts) {
@@ -114,5 +115,31 @@ export async function applyDomTranslation(next: Lang) {
       } catch { /* leave original text */ }
     }
   });
+  headObserver?.disconnect();
+  headObserver = new MutationObserver(() => translateMeta());
+  headObserver.observe(document.head, { subtree: true, childList: true, attributes: true, attributeFilter: ['content'] });
   observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [...ATTRS] });
+}
+
+// Page description meta tags follow the selected language (dictionary first, then cached machine translation).
+let headObserver: MutationObserver | null = null;
+const META = 'meta[name="description"],meta[property="og:description"],meta[name="twitter:description"]';
+const metaOrig = new WeakMap<Element, { orig: string; out: string }>();
+function translateMeta() {
+  document.querySelectorAll(META).forEach(el => {
+    const v = el.getAttribute('content') ?? '';
+    const rec = metaOrig.get(el);
+    const source = rec && rec.out === v ? rec.orig : v;
+    if (!source.trim()) return;
+    const set = (out: string) => { metaOrig.set(el, { orig: source, out }); if (el.getAttribute('content') !== out) el.setAttribute('content', out); };
+    const hit = dict[source] ?? loadMachine(lang)[source];
+    if (hit) return set(hit);
+    if (alreadyTarget(source)) return set(source);
+    set(source);
+    const l = lang;
+    translateTexts({ data: { lang: l, texts: [source] } }).then(([out]) => {
+      if (!out) return; const m = loadMachine(l); m[source] = out; saveMachine(l);
+      if (l === lang && el.isConnected && metaOrig.get(el)?.orig === source) set(out);
+    }).catch(() => { /* keep original */ });
+  });
 }
