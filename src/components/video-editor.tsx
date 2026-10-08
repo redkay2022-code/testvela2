@@ -4,7 +4,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MAX_VIDEO_SECONDS } from '@/lib/listing-media';
-import { beatTimes, bgmPresets, clipsToWavBase64, renderSoundtrack, snapToBeat, type BgmId, type SfxType } from '@/lib/video-audio';
+import { beatTimes, bgmCredit, bgmPresets, preloadBgm, clipsToWavBase64, renderSoundtrack, snapToBeat, type BgmId, type SfxType } from '@/lib/video-audio';
 import { transcribeVideoAudio } from '@/lib/video-captions.functions';
 
 export type VideoTag = { postId: string; title: string; at: number };
