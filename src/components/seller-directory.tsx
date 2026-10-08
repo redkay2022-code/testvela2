@@ -19,7 +19,7 @@ export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost
         <p className="directory-bio">{seller.bio}</p>
         
         <div className="directory-metrics"><span><Star size={13}/><strong>{seller.rating?.toFixed(2) ?? '—'}</strong> Rating</span><span><strong>{seller.reviews ?? '—'}</strong> Reviews</span><span><strong>{seller.followers===null?'—':new Intl.NumberFormat('en',{notation:'compact'}).format(seller.followers+(following?1:0))}</strong> Followers</span></div>
-        <div className="directory-previews" aria-label={`${seller.post.creator} item previews`}>{seller.items.slice(0,4).map(item=><Link key={item.id} to={item.short?'/shorts/$id':'/store'} params={item.short?{id:item.id}:{}} search={item.short?{role}:{role,seller:seller.id,post:item.id}} aria-label={`Preview ${item.title}`}><img src={item.images[0]} width={160} height={160} alt={item.title} loading="lazy"/></Link>)}</div>
+        <div className="directory-previews" aria-label={`${seller.post.creator} item previews`}>{seller.items.slice(0,4).map(item=><Link key={item.id} to={item.short?'/shorts/$id':'/post/$id'} params={{id:item.id}} search={{role}} aria-label={`Preview ${item.title}`}><img src={item.images[0]} width={160} height={160} alt={item.title} loading="lazy"/></Link>)}</div>
         <div className="directory-actions"><Button variant="goldOutline" aria-pressed={following} aria-label={`${following?'Unfollow':'Follow'} ${seller.post.creator}`} onClick={()=>preview.toggleSeller(seller.id)}>{following?<Check/>:<Plus/>}{following?'Following':'Follow'}</Button><Button asChild variant="gold"><Link to="/store" search={{role,seller:seller.id}}>Visit Store<ArrowRight/></Link></Button></div>
       </article>;
     })}</div>
