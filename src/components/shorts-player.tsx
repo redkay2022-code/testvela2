@@ -22,6 +22,7 @@ import { getComments } from '@/lib/market.functions';
 import { stableMediaSrc } from '@/lib/media-refresh';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { isHybridPost } from '@/lib/post-media';
+import { supabase } from '@/integrations/supabase/client';
 
 const usd=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean)=>void; notify:(text:string)=>void };
@@ -65,7 +66,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  useEffect(()=>{setFailed(false);},[post.video]);
   const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
  const read=useServerFn(getComments);
- const {data:comments}=useQuery({queryKey:['comments',post.id],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
+  const {data:comments}=useQuery({queryKey:['comments',post.id,user?.id ?? 'public'],queryFn:async()=>{if(!user)return read({data:{postId:post.id}});const {data,error}=await supabase.from('comments').select('*').eq('post_id',post.id).order('created_at');if(error)throw error;return data;},enabled:active});
  useEffect(()=>{const v=video.current;if(!v)return;const want=active&&shortsSound;v.muted=!want;if(active)setSound(want);let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(cancelled)return;if(!v.muted){v.muted=true;setSound(false);void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,post.video]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active} inert={!active}>
  {post.video&&!failed?<><img className={`shorts-video-poster ${active&&ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{active&&<video ref={video} src={videoSrc} playsInline loop muted autoPlay preload="auto" poster={post.images[0]} onLoadedData={()=>setReady(true)} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
