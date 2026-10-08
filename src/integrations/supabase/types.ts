@@ -320,6 +320,11 @@ export type Database = {
           low_stock_threshold: number
           media_urls: string[]
           model: string
+          music_artist: string | null
+          music_audio_url: string | null
+          music_license_url: string | null
+          music_title: string | null
+          music_track_id: string | null
           price: number | null
           product_status: string | null
           reference: string
@@ -354,6 +359,11 @@ export type Database = {
           low_stock_threshold?: number
           media_urls?: string[]
           model?: string
+          music_artist?: string | null
+          music_audio_url?: string | null
+          music_license_url?: string | null
+          music_title?: string | null
+          music_track_id?: string | null
           price?: number | null
           product_status?: string | null
           reference?: string
@@ -388,6 +398,11 @@ export type Database = {
           low_stock_threshold?: number
           media_urls?: string[]
           model?: string
+          music_artist?: string | null
+          music_audio_url?: string | null
+          music_license_url?: string | null
+          music_title?: string | null
+          music_track_id?: string | null
           price?: number | null
           product_status?: string | null
           reference?: string

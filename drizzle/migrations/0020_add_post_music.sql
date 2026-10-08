@@ -1,0 +1,1 @@
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS music_track_id text, ADD COLUMN IF NOT EXISTS music_title text, ADD COLUMN IF NOT EXISTS music_artist text, ADD COLUMN IF NOT EXISTS music_audio_url text, ADD COLUMN IF NOT EXISTS music_license_url text;
