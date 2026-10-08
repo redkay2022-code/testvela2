@@ -14,9 +14,9 @@ export const searchJamendo = createServerFn({ method: 'GET' })
     try {
       const res = await fetch(`https://api.jamendo.com/v3.0/tracks/?${p}`);
       if (!res.ok) return { tracks: [], error: '음악을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.' };
-      const json = (await res.json()) as { headers?: { status?: string }; results?: Record<string, unknown>[] };
+      const json = (await res.json()) as { headers?: { status?: string }; results?: Array<Record<string, string | number | null>> };
       if (json.headers?.status && json.headers.status !== 'success') return { tracks: [], error: '음악 검색에 실패했습니다.' };
-      return { tracks: (json.results ?? []).map((r) => ({ id: String(r.id), name: String(r.name ?? ''), artist_name: String(r.artist_name ?? ''), duration: Number(r.duration ?? 0), audio: String(r.audio ?? ''), audiodownload: String(r.audiodownload ?? ''), image: String(r.image ?? ''), license_ccurl: String(r.license_ccurl ?? '') })) };
+      return { tracks: (json.results ?? []).map((r: any) => ({ id: String(r.id), name: String(r.name ?? ''), artist_name: String(r.artist_name ?? ''), duration: Number(r.duration ?? 0), audio: String(r.audio ?? ''), audiodownload: String(r.audiodownload ?? ''), image: String(r.image ?? ''), license_ccurl: String(r.license_ccurl ?? '') })) };
     } catch {
       return { tracks: [], error: '네트워크 오류로 음악을 불러오지 못했습니다.' };
     }
