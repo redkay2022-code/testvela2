@@ -78,7 +78,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
  const selected=all.find(p=>p.id===(shortsId || search.post));
  const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
  const feedFilterResults=filterFeed(all.filter(p=>!preview.hidden.includes(p.id)),search);
- const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);})).slice(0,10)];
+ const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);} ))].slice(0,10);
  return <>
  <header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <div className="lux-header-inner">
