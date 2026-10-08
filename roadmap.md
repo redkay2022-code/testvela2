@@ -1,5 +1,5 @@
 # velamarket
-- [ ] Complete Dutch, Russian, Latin and Arabic locale dictionaries, then verify nine non-Korean languages across the main feed, seller products, purchase and admin views.
+- [x] Complete Dutch, Russian, Latin and Arabic locale dictionaries; verified Korean, English, Chinese, Japanese, German, French, Italian, Dutch and Russian across Home, Seller, Admin, My VELA and Purchase with no page errors.
 - [x] Move inline account editing behind the profile-adjacent Edit button with URL-backed profile/shipping tabs; authenticated profile save/readback, shipping session save/reopen and browser Back verified without page errors.
 - [x] Raise the Shorts detail sheet to 90% of the screen and enlarge the inspection-photo window to about half the sheet; verified 90% coverage and a 53% photo window at 320/369/390/1280 widths with no overflow or page errors.
 - [x] Unify video/photo product details, set video sheet to 80dvh and add product-specific Q&A at the left of shopping actions; verified opening, history, checkout and authenticated posting/reload, plus 320/390/707px layouts without page errors; 13 focused tests pass. Temporary test questions removed.

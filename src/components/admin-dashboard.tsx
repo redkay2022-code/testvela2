@@ -33,7 +33,7 @@ export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
   const studios = new Set(listings.map(sellerIdentity)).size;
   const held = p.orders.filter(o => !o.released);
   const decide = (id: string, state: string) => { p.decide(id, state); setMessage(`${state} · 샘플 상태만 변경되었습니다.`); };
-  return <div className="dashboard admin-core" data-no-translate>
+  return <div className="dashboard admin-core">
     <div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>가상화폐 에스크로 · 익명 계정</p></div><Button asChild variant="goldOutline"><Link to="/store" search={{ role: 'admin' }}>판매자 스토어<Store/></Link></Button></div>
     <div className="sample-notice">판매자 신청은 실제 계정으로 처리합니다. 주문·정산·분쟁은 샘플이며, 실제 블록체인 검증이나 송금은 실행되지 않습니다.</div>
     <div className="dashboard-stats">{[
