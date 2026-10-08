@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
 import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
   };
 
   const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['text', '텍스트·자막', Type], ['music', '음악·효과음', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
-  return <div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
+  return createPortal(<div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
     <header className="video-editor-head"><Button variant="ghost" size="icon" aria-label="편집 취소" onClick={onCancel} disabled={busy === 'export'}><X/></Button><h2>영상 편집</h2><Button variant="gold" size="sm" disabled={!clips.length || !!busy || total > MAX_VIDEO_SECONDS + 0.05} onClick={() => void exportVideo()}>{busy === 'export' ? <><Loader2 className="animate-spin"/>만드는 중…</> : '편집 완료'}</Button></header>
     <div className="video-editor-body">
       <div className={`video-editor-stage ${vertical ? 'is-vertical' : ''}`}>
@@ -162,8 +163,8 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
           {vertical && <label className="editor-row">자르기 위치(좌우)<input type="range" min={0} max={100} value={cropX} onChange={e => setCropX(Number(e.target.value))}/></label>}
           {total > MAX_VIDEO_SECONDS + 0.05 && <p className="text-xs text-destructive">전체 길이가 30초를 넘어요. 클립 구간을 줄여 주세요.</p>}
           {clips.map((c, i) => <div key={c.id} className="editor-card"><div className="flex items-center gap-2 text-xs"><strong>클립 {i + 1}</strong><span className="text-muted-foreground">{fmt(c.start)} – {fmt(c.end)} ({(c.end - c.start).toFixed(1)}초)</span><span className="ml-auto flex gap-1"><Button size="icon" variant="ghost" className="size-7" aria-label="앞으로" disabled={i === 0} onClick={() => moveClip(c.id, -1)}><ArrowUp/></Button><Button size="icon" variant="ghost" className="size-7" aria-label="뒤로" disabled={i === clips.length - 1} onClick={() => moveClip(c.id, 1)}><ArrowDown/></Button><Button size="icon" variant="ghost" className="size-7" aria-label="클립 삭제" disabled={clips.length === 1} onClick={() => setClips(cs => cs.filter(x => x.id !== c.id))}><Trash2/></Button></span></div>
-            <label className="editor-row">시작<input type="range" min={0} max={c.duration} step={0.1} value={c.start} onChange={e => updateClip(c.id, { start: Math.min(Number(e.target.value), c.end - 0.5) })}/></label>
-            <label className="editor-row">끝<input type="range" min={0} max={c.duration} step={0.1} value={c.end} onChange={e => updateClip(c.id, { end: Math.max(Number(e.target.value), c.start + 0.5) })}/></label></div>)}
+            <div className="trim-range" style={{ ['--s' as string]: `${(c.start / c.duration) * 100}%`, ['--e' as string]: `${(c.end / c.duration) * 100}%` }}><div className="trim-track"/><input type="range" aria-label="시작 지점" min={0} max={c.duration} step={0.1} value={c.start} onChange={e => updateClip(c.id, { start: Math.min(Number(e.target.value), c.end - 0.5) })}/><input type="range" aria-label="끝 지점" min={0} max={c.duration} step={0.1} value={c.end} onChange={e => updateClip(c.id, { end: Math.max(Number(e.target.value), c.start + 0.5) })}/></div>
+            <div className="flex justify-between text-[11px] text-muted-foreground"><span>0:00</span><span>{fmt(c.duration)}</span></div></div>)}
         </>}
         {layer === 'text' && <>
           <div className="editor-card"><div className="flex flex-wrap items-center gap-2"><Captions size={16} className="text-primary"/><strong className="text-sm">자동 자막</strong><div className="ml-auto flex gap-1"><Button size="sm" variant="goldOutline" disabled={!!busy || !clips.length} onClick={() => void autoCaptions()}>{busy === 'captions' ? <><Loader2 className="animate-spin"/>생성 중…</> : captions.length ? '다시 생성' : '원어 자막'}</Button><Button size="sm" variant="goldOutline" disabled={!!busy || !clips.length} onClick={() => void autoCaptions(true)}>{busy === 'captions-en' ? <><Loader2 className="animate-spin"/>번역 중…</> : '영어 자막 (中→EN)'}</Button></div></div>
@@ -192,5 +193,5 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
         </>}
       </section>
     </div>
-  </div>;
+  </div>, document.body);
 }
