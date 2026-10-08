@@ -141,6 +141,13 @@
       "when": 1791471315739,
       "tag": "0019_post_thumbnail",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791472007820,
+      "tag": "0020_add_post_music",
+      "breakpoints": true
     }
   ]
 }
