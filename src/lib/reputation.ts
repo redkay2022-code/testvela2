@@ -50,3 +50,11 @@ export function nextSellerTier(reputation: SellerReputation) {
 export const studioReputation: SellerReputation = { approved: true, ratings: [4.94, 4.92, 4.82, 4.92], completedSales: 128, volumeUsd: 62400, disputeRate: 0.6, sample: true };
 export const launchReputation: SellerReputation = { approved: true, ratings: null, ratingCount: 0, completedSales: 0, volumeUsd: 0, disputeRate: 0, sample: true };
 export const unknownReputation: SellerReputation = { approved: false, ratings: null, completedSales: 0 };
+/** Rating-driven downgrade alert: the tier earned by sales/volume/disputes whose rating floor the seller now misses. */
+export function ratingDowngradeAlert(reputation: SellerReputation): { tier: SellerTier; required: number; average: number; fallback: SellerTier } | null {
+  const average = ratingAverage(reputation);
+  if (!reputation.approved || average === null) return null;
+  const earned = [...sellerTiers].reverse().find(t => t !== 'standard' && meetsTier({ ...reputation, ratingAvg: 5 }, t));
+  if (!earned || average >= tierRules[earned].rating) return null;
+  return { tier: earned, required: tierRules[earned].rating, average, fallback: automatedTier(reputation) ?? 'standard' };
+}
