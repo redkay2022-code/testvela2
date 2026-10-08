@@ -14,7 +14,7 @@ export const marketSearch = z.object({
   section:z.enum(['sellers','verification','crypto','disputes','moderation','settlements','overview','orders','earnings','tier']).optional(),
    post:z.string().optional(), shorts:z.string().optional(), shortTab:z.enum(['following','recommend']).optional(), shortSheet:z.enum(['product','comments']).optional(), shortPhoto:z.number().int().min(0).max(14).optional(), auth:z.boolean().optional(), notice:z.boolean().optional(),
   feedTopic:z.enum(['recommend','videos','trend','live','football','VS Factory','PPF','3K','APS']).optional(),
-  category:z.string().optional(), q:z.string().optional(), tab:z.enum(['discover','following','reviews','nearby','likes','posts']).optional(),
+  category:z.string().optional(), q:z.string().optional(), fq:z.string().optional(), ffactory:z.string().optional(), fmin:z.number().optional(), fmax:z.number().optional(), fshorts:z.boolean().optional(), tab:z.enum(['discover','following','reviews','nearby','likes','posts']).optional(),
 });
 export const postsQuery = queryOptions({queryKey:['posts'],queryFn:() => getPosts(),staleTime:30_000});
 export const pageHead = (title:string,description:string) => ({ meta:[

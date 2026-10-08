@@ -798,3 +798,14 @@
 .trim-range input::-moz-range-track {background:transparent;}
 
 .shorts-sound-toggle{position:absolute;z-index:6;top:calc(env(safe-area-inset-top) + 64px);right:14px;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid color-mix(in oklab,var(--primary) 55%,transparent);background:color-mix(in oklab,var(--background) 60%,transparent);color:var(--primary);font-size:12px;font-weight:600;backdrop-filter:blur(8px)}
+
+.feed-filters{margin:10px 0 4px;display:grid;gap:8px}
+.feed-filters-row{display:flex;gap:8px;align-items:center}
+.feed-filters-search{flex:1;display:flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--muted-foreground)}
+.feed-filters-search input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--foreground);font-size:14px}
+.feed-filters-panel{display:grid;gap:8px;padding:10px;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+.feed-filters-price{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;color:var(--muted-foreground)}
+.feed-filters-check{display:flex;align-items:center;gap:8px;font-size:13px}
+.feed-filters-summary{display:flex;justify-content:space-between;font-size:12px;color:var(--muted-foreground)}
+.feed-filters-summary button{color:var(--primary);font-weight:600}
+.management-row .record-actions{flex-wrap:wrap;justify-content:flex-end}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
-import { ArrowLeft, ArrowRight, GripVertical, ImagePlus, Pencil, Plus, Trash2, X, Eye, EyeOff, Video, Scissors, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, ArrowRight, GripVertical, ImagePlus, Pencil, Plus, Trash2, X, Eye, EyeOff, Video, Scissors, TriangleAlert, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useMyAccount } from './seller-account';
@@ -51,6 +51,23 @@ export function SellerListings() {
   if (!canSell) return <section className="seller-flow-card"><h2 className="text-lg font-semibold">내 상품 관리</h2><p className="mt-2 text-sm text-muted-foreground">승인된 셀러만 상품을 등록할 수 있어요. “나” 탭에서 셀러 계정을 신청해 주세요.</p></section>;
 
   const toggle = async (l: Listing) => { await supabase.from('posts').update({ status: l.status === 'published' ? 'draft' : 'published', updated_at: new Date().toISOString() }).eq('id', l.id); refresh(); };
+  const [replacing, setReplacing] = useState<string | null>(null);
+  const replaceVideo = async (l: Listing, file: File) => {
+    if (!isListingVideo(file)) { alert('영상 파일(MP4/WEBM/MOV)을 선택해 주세요.'); return; }
+    try { await validateListingFiles([file]); } catch (err) { alert(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; }
+    setReplacing(l.id);
+    try {
+      const ext = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4';
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error: up } = await supabase.storage.from('market-media').upload(path, file);
+      if (up) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.');
+      const { error: e } = await supabase.from('posts').update({ video_url: path, video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
+      if (e) { await supabase.storage.from('market-media').remove([path]); throw new Error('게시물을 수정하지 못했어요.'); }
+      if (l.video_url) await supabase.storage.from('market-media').remove([l.video_url]);
+      refresh();
+    } catch (err) { alert(err instanceof Error ? err.message : '영상 교체에 실패했어요.'); }
+    finally { setReplacing(null); }
+  };
   const remove = async (l: Listing) => { if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : [])]; if (media.length) await supabase.storage.from('market-media').remove(media); refresh(); };
 
   return <section className="seller-flow-card" aria-label="내 상품 관리">
@@ -62,8 +79,9 @@ export function SellerListings() {
           <div className="min-w-0"><p className="truncate font-medium">{l.title}</p><p className="text-xs text-muted-foreground">{l.price != null ? formatMoney(l.price) : '가격 없음'} · <span className="record-status">{l.status === 'published' ? '판매 중' : '임시 저장'}</span></p></div></div>
         <div className="record-actions">
           <Button size="icon" variant="ghost" aria-label={l.status === 'published' ? '비공개로 전환' : '게시하기'} onClick={() => void toggle(l)}>{l.status === 'published' ? <EyeOff /> : <Eye />}</Button>
-          <Button size="icon" variant="ghost" aria-label="수정" onClick={() => setEditing(l)}><Pencil /></Button>
-          <Button size="icon" variant="ghost" aria-label="삭제" onClick={() => void remove(l)}><Trash2 /></Button>
+          <Button size="sm" variant="ghost" aria-label="편집" onClick={() => setEditing(l)}><Pencil />편집</Button>
+          <Button asChild size="sm" variant="ghost"><label aria-label="영상 재업로드" className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} />{replacing === l.id ? '올리는 중' : '재업로드'}<input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
+          <Button size="sm" variant="ghost" aria-label="삭제" onClick={() => void remove(l)}><Trash2 />삭제</Button>
         </div></li>)}</ul>}
   </section>;
 }
@@ -111,7 +129,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   const save = async (status: 'draft' | 'published') => {
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
     const p = Number(price); if (!Number.isFinite(p) || p < 1) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
-    if (photos.length === 0) { setError('영상 표지와 상세 갤러리에 사용할 사진을 1장 이상 추가해 주세요.'); return; }
+    if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
     if (sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
     if (sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
     setError(''); setPending(true);

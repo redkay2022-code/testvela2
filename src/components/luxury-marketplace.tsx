@@ -37,6 +37,8 @@ import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
 import { seedPosts } from '@/lib/seed-sellers';
 import { rankRecommended } from '@/lib/feed-ranking';
+import { filterFeed } from '@/lib/feed-filters';
+import { FeedFilters } from './feed-filters';
 import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
 
 type View=Mode|'store'|'seller'|'admin';
@@ -71,6 +73,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
  if(newest) posts=[...posts].reverse();
  const cleanHome=mode==='home'&&!shortsId;
  if(cleanHome)posts=posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
+ if(cleanHome&&search.tab!=='reviews')posts=filterFeed(posts,search);
  const selected=all.find(p=>p.id===(shortsId || search.post));
  const shorts=all.filter(p=>p.short&&!preview.hidden.includes(p.id));
  return <>
@@ -84,6 +87,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,help}:{mode?:Vi
    {cleanHome&&<FeedCategoryPicker selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
  </header>
   <main className={`lux-shell ${cleanHome?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`}>
+ {cleanHome&&search.tab!=='reviews'&&<FeedFilters value={{fq:search.fq,ffactory:search.ffactory,fmin:search.fmin,fmax:search.fmax,fshorts:search.fshorts}} count={posts.length} onChange={f=>void navigate({to:'/',search:prev=>({...prev,fq:f.fq,ffactory:f.ffactory,fmin:f.fmin,fmax:f.fmax,fshorts:f.fshorts}),replace:true,resetScroll:false})}/>}
  {!help&&(mode==='explore'||mode==='market')&&<>
   {mode==='market'&&<div className="mt-6 flex flex-wrap items-center gap-3"><Button asChild variant={search.collection!=='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'watches'}}>시계 컬렉션</Link></Button><Button asChild variant={search.collection==='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'accessories'}}>액세서리 컬렉션</Link></Button>{search.collection!=='accessories'&&<select className="form-input max-w-52" aria-label="시계 유형" value={search.watchType ?? 'all'} onChange={e=>update({watchType:marketSearch.shape.watchType.parse(e.target.value)})}>{watchTypes.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>}</div>}
  {mode==='explore'&&<form className="lux-search" onSubmit={e=>{e.preventDefault();update({q:query || undefined});}}><Search size={18}/><input autoFocus aria-label="Search watches" placeholder="Search watches, factories, studios…" value={query} onChange={e=>setQuery(e.target.value)}/><Button variant="ghost" size="icon" type="submit" aria-label="Search"><ArrowRight/></Button></form>}
