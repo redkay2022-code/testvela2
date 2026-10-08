@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import type { Database } from '@/integrations/supabase/types';
 
-function publicClient() {
+function publicClient(bearer?: string | null) {
   const url = process.env['SUPABASE_URL'];
   const key = process.env['SUPABASE_PUBLISHABLE_KEY'];
   if (!url || !key) throw new Error('마켓에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.');
@@ -13,14 +13,22 @@ function publicClient() {
     global: { fetch: (input, init) => {
       const headers = new Headers(init?.headers);
       if (headers.get('Authorization') === `Bearer ${key}`) headers.delete('Authorization');
+      if (bearer) headers.set('Authorization', `Bearer ${bearer}`);
       headers.set('apikey', key);
       return fetch(input, { ...init, headers });
     } },
   });
 }
 
+/** Pre-launch: catalog RLS only shows rows to admins/sellers, so reads run as the caller when signed in. */
+async function callerToken() {
+  const { getRequestHeader } = await import('@tanstack/react-start/server');
+  const h = getRequestHeader('authorization') ?? '';
+  return h.startsWith('Bearer ') ? h.slice(7) : null;
+}
+
 export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
-  const { data, error } = await publicClient().from('posts').select('*, store:stores(id,slug,store_name,verification_status,featured)').order('created_at', { ascending: false }).order('id');
+  const { data, error } = await publicClient(await callerToken()).from('posts').select('*, store:stores(id,slug,store_name,verification_status,featured)').order('created_at', { ascending: false }).order('id');
   if (error) throw new Error('피드를 불러오지 못했습니다.');
   const uploaded = data.filter(p => p.image_key === 'uploaded' || p.image_key === 'seed');
   if (uploaded.length) {

@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { MarketPreviewProvider } from '@/components/market-preview';
 import { Toaster } from '@/components/ui/sonner';
 import { OrderNotifier } from '@/components/live-orders';
+import { PrelaunchNotice } from '@/components/prelaunch-notice';
 
 function NotFoundComponent() {
   return (
@@ -127,7 +128,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <MarketPreviewProvider><Outlet /></MarketPreviewProvider>
+      <PrelaunchNotice /><MarketPreviewProvider><Outlet /></MarketPreviewProvider>
       <Toaster position="top-center" richColors />
       <OrderNotifier />
     </QueryClientProvider>
