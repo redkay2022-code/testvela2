@@ -89,6 +89,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  if(mode==='market')posts=posts.filter(p=>matchesCollection(p,search.collection ?? 'watches',search.watchType));
  if(newest) posts=[...posts].reverse();
  const cleanHome=mode==='home'&&!shortsId;
+ const backOnlyHeader=['store','me','seller','upload'].includes(mode)||search.panel==='chat'||search.panel==='cart';
+ const goBack=()=>{if(search.panel==='chat'||search.panel==='cart'){close();return;}if(router.history.canGoBack())router.history.back();else void navigate({to:'/',search:{role:search.role},replace:true});};
  if(cleanHome)posts=posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
  if(cleanHome&&search.tab!=='reviews')posts=filterFeed(posts,search);
  const selected=all.find(p=>p.id===(shortsId || postId || search.post));
@@ -101,7 +103,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);} ))].slice(0,10);
   return <NotificationsContext.Provider value={notifications}>
  <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
- <header className={`lux-header ${cleanHome?'red-home-header':''}`}>
+ <header className={`lux-header ${cleanHome&&!backOnlyHeader?'red-home-header':''}`}>
+ {backOnlyHeader?<div className="lux-header-inner"><Button variant="ghost" size="icon" aria-label="뒤로가기" onClick={goBack}><ArrowLeft aria-hidden="true"/></Button></div>:<>
   <div className="lux-header-inner">
   <Button variant="ghost" size="icon" className="relative" aria-label={notifications.unread?`메뉴 열기 · 읽지 않은 알림 ${notifications.unread}개`:'메뉴 열기'} onClick={()=>update({menu:true})}><Menu/>{notifications.unread>0&&<span aria-hidden="true" className="absolute right-0 top-1 size-2 rounded-full bg-destructive"/>}</Button>
     <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>
@@ -109,8 +112,9 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
    <CurrencySelect/><Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button>
   </div>
    {cleanHome&&<FeedCategoryPicker selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
+ </>}
  </header>
-  <main className={`lux-shell ${cleanHome?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`}>
+  <main className={`lux-shell ${cleanHome&&!backOnlyHeader?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`}>
  {!help&&(mode==='explore'||mode==='market')&&<>
   {mode==='market'&&<div className="mt-6 flex flex-wrap items-center gap-3"><Button asChild variant={search.collection!=='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'watches'}}>시계 컬렉션</Link></Button><Button asChild variant={search.collection==='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'accessories'}}>액세서리 컬렉션</Link></Button>{search.collection!=='accessories'&&<select className="form-input max-w-52" aria-label="시계 유형" value={search.watchType ?? 'all'} onChange={e=>update({watchType:marketSearch.shape.watchType.parse(e.target.value)})}>{watchTypes.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>}</div>}
  {mode==='explore'&&<form className="lux-search" onSubmit={e=>{e.preventDefault();update({q:query || undefined});}}><Search size={18}/><input autoFocus aria-label="Search watches" placeholder="Search watches, factories, studios…" value={query} onChange={e=>setQuery(e.target.value)}/><Button variant="ghost" size="icon" type="submit" aria-label="Search"><ArrowRight/></Button></form>}
@@ -157,14 +161,14 @@ function ProductDetail({post,user,requestAuth,close,buy,notify}:{post:LuxuryPost
  const reduced=useReducedMotion();
  return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Overlay asChild><motion.div className="lux-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}/></Dialog.Overlay><Dialog.Content asChild aria-describedby={undefined}><motion.div className="lux-detail" initial={{y:reduced?0:'100%'}} animate={{y:0}} exit={{y:reduced?0:'100%'}} transition={{type:'spring',damping:32,stiffness:300}}><div className="shorts-sheet-header"><Dialog.Title>제품 상세</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close product" onClick={close}><X/></Button></div><ProductDetailContent post={post} user={user} requestAuth={requestAuth} buy={buy} notify={notify}/></motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
-export function Overlay({title,close,children,side=false}:{title:string;close:()=>void;children:React.ReactNode;side?:boolean}) {
- return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className={side?'lux-menu':'lux-dialog'} aria-describedby={undefined}><div className="flex items-center justify-between gap-3"><Dialog.Title className="text-xl font-semibold">{title}</Dialog.Title><Button variant="ghost" size="icon" aria-label="Close dialog" onClick={close}><X/></Button></div>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;
+export function Overlay({title,close,children,side=false,back=false}:{title:string;close:()=>void;children:React.ReactNode;side?:boolean;back?:boolean}) {
+ return <Dialog.Root open onOpenChange={open=>{if(!open)close();}}><Dialog.Portal><Dialog.Overlay className="lux-backdrop overlay-front"/><Dialog.Content className={side?'lux-menu':'lux-dialog'} aria-describedby={undefined}><div className={`flex items-center gap-3 ${back?'':'justify-between'}`}><Dialog.Title className={back?'sr-only':'text-xl font-semibold'}>{title}</Dialog.Title><Button variant="ghost" size="icon" aria-label={back?'뒤로가기':'Close dialog'} onClick={close}>{back?<ArrowLeft/>:<X/>}</Button></div>{children}</Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 function CommercePanel({posts,onBuy,panel,user,selected,close,onPanel,notify}:{user:AuthUser|null;posts:LuxuryPost[];onBuy:(post:LuxuryPost)=>void;panel:string;selected:LuxuryPost|undefined;close:()=>void;onPanel:(panel:'checkout')=>void;notify:(s:string)=>void}) {
  const account=useMyAccount(user);
  const preview=useMarketPreview();const [sent,setSent]=useState(false),[message,setMessage]=useState(''),[messages,setMessages]=useState<string[]>([]);
  const item=selected || preview.cart[0];
- return <Overlay title={({chat:'Chat with studio',cart:'Your shopping bag',wishlist:'저장 상품 · 위시리스트',checkout:'Order preview',settings:'프로필 편집',apply:'Become a Vela seller',orders:'Escrow order board',wallet:'VELA Wallet'} as Record<string,string>)[panel] || 'My Vela'} close={close}>
+ return <Overlay back={panel==='chat'||panel==='cart'} title={({chat:'Chat with studio',cart:'Your shopping bag',wishlist:'저장 상품 · 위시리스트',checkout:'Order preview',settings:'프로필 편집',apply:'Become a Vela seller',orders:'Escrow order board',wallet:'VELA Wallet'} as Record<string,string>)[panel] || 'My Vela'} close={close}>
  {panel==='chat'?<><p className="sample-notice">Sample conversation · Messages are not delivered</p><div className="chat-bubble">VS Watch Studio: Hello. Which details would you like to see?</div>{messages.map((m,i)=><div className="chat-bubble outgoing" key={i}>{m}</div>)}<form className="mt-6 flex gap-2" onSubmit={e=>{e.preventDefault();if(message.trim()){setMessages(p=>[...p,message.trim()]);setMessage('');}}}><input className="form-input" aria-label="Message to seller" value={message} onChange={e=>setMessage(e.target.value)} placeholder="Ask about the watch…"/><Button type="submit" variant="gold" size="icon" aria-label="Send sample message"><ArrowRight/></Button></form></>:
  panel==='wishlist'?<div className="mt-6"><div className="section-heading"><h2>저장 상품</h2><span>{posts.filter(p=>preview.saved.includes(p.id)).length}</span></div><Feed posts={posts.filter(p=>preview.saved.includes(p.id))} base="/me" search={{panel:'wishlist'}}/></div>:panel==='cart'?<ShoppingCollection posts={posts} onBuy={onBuy}/>: panel==='checkout'?sent?<div className="py-8 text-center"><Check className="mx-auto mb-4 text-primary" size={36}/><h2 className="text-lg font-semibold">Sample order created</h2><p className="mt-3 text-sm text-muted-foreground">Awaiting payment. No charge has been made.</p><Button asChild variant="goldOutline" className="mt-6"><Link to="/me" search={{panel:'orders'}}>View orders</Link></Button></div>:<><p className="sample-notice">Preview checkout · Payment is not connected</p>{item?<CheckoutForm item={item} onDone={()=>setSent(true)}/>:<p className="py-8 text-muted-foreground">Add a product to your bag first.</p>}</>:
  panel==='apply'?<SellerOnboarding/>:
