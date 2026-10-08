@@ -4,7 +4,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MAX_VIDEO_SECONDS } from '@/lib/listing-media';
-import { beatTimes, bgmPresets, clipsToWavBase64, renderSoundtrack, sfxPresets, snapToBeat, type BgmId, type SfxType } from '@/lib/video-audio';
+import { beatTimes, bgmPresets, clipsToWavBase64, renderSoundtrack, snapToBeat, type BgmId, type SfxType } from '@/lib/video-audio';
 import { transcribeVideoAudio } from '@/lib/video-captions.functions';
 
 export type VideoTag = { postId: string; title: string; at: number };
@@ -49,11 +49,11 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
   useEffect(() => () => clips.forEach(c => URL.revokeObjectURL(c.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const total = clips.reduce((s, c) => s + (c.end - c.start), 0);
-  const bpm = bgm ? bgmPresets[bgm].bpm : 0;
+  const bpm = bgm ? bgmPresets[bgm]!.bpm : 0;
   const snap = (x: number) => Math.max(0, Math.min(total, bgm && beatSync ? snapToBeat(x, bpm) : x));
   const locate = (time: number) => { let acc = 0; for (let i = 0; i < clips.length; i++) { const c = clips[i]!, len = c.end - c.start; if (time < acc + len || i === clips.length - 1) return { i, local: c.start + Math.min(len, Math.max(0, time - acc)) }; acc += len; } return { i: 0, local: 0 }; };
   const sfxKey = JSON.stringify(sfx.map(s => [s.type, s.at]));
-  useEffect(() => { let off = false; void renderSoundtrack(total, bgm, bgmVol, sfx).then(b => { if (!off) soundtrack.current = b; }); return () => { off = true; }; }, [total, bgm, bgmVol, sfxKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { let off = false; void renderSoundtrack(total, bgm, bgmVol, sfx).then(b => { if (off) return; soundtrack.current = b; const ac = audioCtx.current; if (audioSrc.current && ac) { try { audioSrc.current.stop(); } catch { /* stopped */ } const s = ac.createBufferSource(); s.buffer = b; s.connect(ac.destination); s.start(0, Math.min(tRef.current, b.duration)); audioSrc.current = s; } }); return () => { off = true; }; }, [total, bgm, bgmVol, sfxKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const seek = (time: number) => { const clamped = Math.max(0, Math.min(total, time)); tRef.current = clamped; setT(clamped); const v = videoRef.current; if (!v || !clips.length) return; const { i, local } = locate(clamped); const c = clips[i]!; if (v.dataset['clip'] !== c.id) { v.src = c.url; v.dataset['clip'] = c.id; } v.currentTime = local; };
   useEffect(() => { if (clips.length) seek(Math.min(tRef.current, total)); }, [clips]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -130,7 +130,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
     } catch (e) { setErr(e instanceof Error ? e.message : '영상을 만들지 못했어요.'); } finally { setBusy(''); }
   };
 
-  const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['text', '텍스트·자막', Type], ['music', '음악·효과음', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
+  const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['text', '텍스트·자막', Type], ['music', '배경음악', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
   return createPortal(<div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
     <header className="video-editor-head"><Button variant="ghost" size="icon" aria-label="편집 취소" onClick={onCancel} disabled={busy === 'export'}><X/></Button><h2>영상 편집</h2><Button variant="gold" size="sm" disabled={!clips.length || !!busy || total > MAX_VIDEO_SECONDS + 0.05} onClick={() => void exportVideo()}>{busy === 'export' ? <><Loader2 className="animate-spin"/>만드는 중…</> : '편집 완료'}</Button></header>
     <div className="video-editor-body">
@@ -178,11 +178,9 @@ export function VideoEditor({ file, catalog, onDone, onCancel }: { file: File; c
             <label className="editor-row">세로 위치<input type="range" min={8} max={90} value={x.y} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, y: Number(e.target.value) } : y))}/></label></div>)}
         </>}
         {layer === 'music' && <>
-          <div className="grid gap-2">{([null, ...Object.keys(bgmPresets)] as (BgmId | null)[]).map(id => <button key={id ?? 'none'} type="button" className={`editor-option ${bgm === id ? 'active' : ''}`} onClick={() => setBgm(id)}><Music size={14}/>{id ? bgmPresets[id].label : '배경음악 없음'}</button>)}</div>
-          {bgm && <><label className="editor-row">음악 볼륨<input type="range" min={0} max={1} step={0.05} value={bgmVol} onChange={e => setBgmVol(Number(e.target.value))}/></label><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={beatSync} onChange={e => setBeatSync(e.target.checked)}/>비트 싱크 · 텍스트·태그·효과음을 박자에 맞춰 배치</label></>}
+          <div className="grid gap-2">{([null, ...Object.keys(bgmPresets)] as (BgmId | null)[]).map(id => <button key={id ?? 'none'} type="button" className={`editor-option ${bgm === id ? 'active' : ''}`} onClick={() => setBgm(id)}><Music size={14}/>{id ? bgmPresets[id]!.label : '배경음악 없음'}</button>)}</div>
+          {bgm && <><label className="editor-row">음악 볼륨<input type="range" min={0} max={1} step={0.05} value={bgmVol} onChange={e => setBgmVol(Number(e.target.value))}/></label><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={beatSync} onChange={e => setBeatSync(e.target.checked)}/>비트 싱크 · 텍스트·태그를 박자에 맞춰 배치</label></>}
           <label className="editor-row">원본 소리<input type="range" min={0} max={1} step={0.05} value={origVol} onChange={e => { setOrigVol(Number(e.target.value)); if (videoRef.current) videoRef.current.volume = Number(e.target.value); }}/></label>
-          <div className="editor-card"><strong className="text-sm">럭셔리 효과음</strong><div className="mt-2 flex flex-wrap gap-2">{(Object.keys(sfxPresets) as SfxType[]).map(s => <Button key={s} size="sm" variant="goldOutline" onClick={() => setSfx(x => [...x, { id: uid(), type: s, at: snap(t) }])}>+ {sfxPresets[s].label}</Button>)}</div>
-            {sfx.map(x => <div key={x.id} className="mt-2 flex items-center gap-2 text-xs"><span>{sfxPresets[x.type].label}</span><span className="text-muted-foreground">{fmt(x.at)}</span><Button size="icon" variant="ghost" className="ml-auto size-7" aria-label="효과음 삭제" onClick={() => setSfx(s => s.filter(y => y.id !== x.id))}><Trash2/></Button></div>)}</div>
         </>}
         {layer === 'filter' && <div className="grid grid-cols-2 gap-2">{(Object.keys(luxuryFilters) as FilterId[]).map(f => <button key={f} type="button" className={`editor-option ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}><span className="editor-swatch" style={{ filter: luxuryFilters[f].css }}/>{luxuryFilters[f].label}</button>)}</div>}
         {layer === 'tags' && <>
