@@ -232,7 +232,8 @@
 .empty-state svg {margin:0 auto 20px;color:var(--primary);}
 .profile-summary {text-align:center;margin:30px 0;}
 .profile-avatar {width:76px;height:76px;border-radius:50%;background:var(--accent);color:var(--primary);display:grid;place-items:center;margin:0 auto 15px;font-size:32px;font-weight:750;}
-.auth-dialog {position:fixed;z-index:61;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 36px);max-width:410px;padding:28px;background:var(--background);border-radius:8px;box-shadow:var(--drawer-shadow);}
+.auth-dialog {position:fixed;z-index:61;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:calc(100% - 36px);max-width:410px;max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;padding:28px 28px 40vh;background:var(--background);border-radius:8px;box-shadow:var(--drawer-shadow);}
+.auth-dialog input, .auth-dialog select {scroll-margin:96px;}
 .auth-backdrop {z-index:60;}
 .mobile-search {display:none;}
 .page-topline {font-size:24px;font-weight:750;margin:24px 0;}
