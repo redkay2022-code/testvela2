@@ -1,5 +1,5 @@
 export const categoryGroups:readonly {label:string;items:readonly (readonly [string,string])[]}[] = [
- {label:'카테고리',items:[['recommend','추천'],['news','뉴스'],['ready','바로발송'],['watches','시계'],['accessories','악세사리'],['custom','커스터마이징'],['solid-gold','18K 솔리드 골드']]},
+ {label:'카테고리',items:[['recommend','전체'],['news','뉴스'],['ready','바로발송'],['watches','시계'],['accessories','악세사리'],['custom','커스터마이징'],['solid-gold','18K 솔리드 골드']]},
  {label:'시계 브랜드',items:[['rolex','롤렉스'],['cartier','까르띠에'],['audemars-piguet','오데마 피게'],['patek-philippe','파텍 필립'],['richard-mille','리차드 밀'],['omega','오메가'],['panerai','파네라이'],['iwc','IWC']]},
  {label:'명품 악세사리 브랜드',items:[['chrome-hearts','크롬하츠'],['van-cleef','반클리프 앤 아펠'],['boucheron','부쉐론'],['bvlgari','불가리'],['tiffany','티파니']]},
 ] as const;
