@@ -32,7 +32,9 @@ export const saveReplacement = createServerFn({ method: 'POST' }).middleware([re
     if (!order || order.seller_id !== context.userId || !order.dispute_open) throw new Error('본인의 불량 신고 주문만 처리할 수 있습니다.');
     if (data.tracking) {
       if (!data.courier) throw new Error('택배사를 입력해 주세요.');
-      const { data: media, error } = await context.supabase.from('order_qc_media').select('kind,round').eq('order_id', order.id);
+      const { data: replacement } = await context.supabase.from('order_replacements').select('created_at,status').eq('order_id', order.id).maybeSingle();
+      if (!replacement || replacement.status === 'shipped') throw new Error('교환 준비를 먼저 등록해 주세요.');
+      const { data: media, error } = await context.supabase.from('order_qc_media').select('kind,round').eq('order_id', order.id).eq('uploader_id', context.userId).gte('created_at', replacement.created_at);
       if (error) throw new Error('교환 QC 자료를 확인하지 못했습니다.');
       const round = Math.max(0, ...(media ?? []).map(m => m.round));
       const latest = (media ?? []).filter(m => m.round === round);
