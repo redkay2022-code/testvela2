@@ -21,7 +21,7 @@ export function directorySellers(posts: LuxuryPost[]): DirectorySeller[] {
     const post = items[0];
     if (!post) return null;
     return { id, post, items, rating: ratingAverage(post.reputation),
-      bio: post.description, reviews: null, followers: null };
+      bio: post.description, reviews: null as number | null, followers: null as number | null };
   }).filter((seller): seller is DirectorySeller => seller !== null);
 }
 export function matchesStoreCategory(seller: DirectorySeller, category: StoreCategory) {

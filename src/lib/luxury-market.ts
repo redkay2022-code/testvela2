@@ -23,7 +23,7 @@ export type StoreSummary = {id:string;slug:string;store_name:string;verification
 export type FeedPost = Post & {store?: StoreSummary | null};
 const seedVideos:Record<string,[string,string]>={'seed:short-0':[studioShort,shortMp4],'seed:short-1':[studioShort5,short5Mp4],'seed:short-2':[studioShort2,short2Mp4]};
 const seedImage=(token:string)=>watchImages[Number(token.replace('seed:watch-',''))] ?? watch0;
-export type LuxuryPost = {storeFeatured?:boolean;outOfStock?:boolean;featured?:boolean;storeSlug?:string;id:string;title:string;description:string;creator:string;images:string[];video:string|null;videoFallback?:string|undefined;short:boolean;price:number|null;boxPrice:number|null;factory:string;category:string;views:string;likes:number;verified:boolean;sample:boolean;source:Post;reputation:SellerReputation};
+export type LuxuryPost = {storeFeatured?:boolean;outOfStock?:boolean;featured?:boolean;storeSlug?:string|undefined;id:string;title:string;description:string;creator:string;images:string[];video:string|null;videoFallback?:string|undefined;short:boolean;price:number|null;boxPrice:number|null;factory:string;category:string;views:string;likes:number;verified:boolean;sample:boolean;source:Post;reputation:SellerReputation};
 export function luxuryPosts(posts:FeedPost[]):LuxuryPost[] {
  return posts.map(post => {
   const extra={outOfStock:post.product_status==='OUT_OF_STOCK',featured:post.featured,storeSlug:post.store?.slug,storeFeatured:Boolean(post.store?.featured),verified:post.store?post.store.verification_status!=='UNVERIFIED':false};
