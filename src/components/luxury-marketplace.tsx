@@ -45,7 +45,7 @@ import { filterFeed, sortFeed, postFactory, type FeedFilter } from '@/lib/feed-f
 import { FeedFilters } from './feed-filters';
 import { useMediaRefresh } from '@/lib/media-refresh';
 import { productEntry } from '@/lib/product-entry';
-import { CryptoDepositDialog, CryptoNetworkPicker, type CryptoNetwork } from './crypto-payment';
+import { CryptoDepositDialog, CryptoNetworkPicker, CryptoPaymentTabs, type CryptoNetwork, type CryptoPaymentTab } from './crypto-payment';
 import { SellerEscrowWallet } from './seller-wallet';
 import { PullToRefresh } from './pull-to-refresh';
 import { discoveryListings } from '@/lib/catalog';
@@ -207,7 +207,7 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
  const filled=Boolean(p.recipient&&p.phone&&p.address);
  const set=(k:keyof typeof f)=>(e:{target:{value:string}})=>setF(prev=>({...prev,[k]:e.target.value}));
  const price=item.price ?? 0, boxPrice=item.boxPrice ?? 0;
- const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [deposit,setDeposit]=useState(false); const [points,setPoints]=useState(0);
+  const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [paymentTab,setPaymentTab]=useState<CryptoPaymentTab>('direct'); const [deposit,setDeposit]=useState(false); const [points,setPoints]=useState(0);
  const productUsd=price+(box?boxPrice:0), purchase=insuredPurchase(price,box?boxPrice:0), cash=cashPayment(purchase.total,points);
  return <form onSubmit={e=>{e.preventDefault();setDeposit(true);}}>
   <div className="cart-line"><img src={item.images[0]} width={64} height={64} alt=""/><div><p>{item.title}</p><p className="mt-2 text-primary">{dollars(price)}</p></div></div>
@@ -215,6 +215,11 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   <InsuranceBreakdown price={price} box={box?boxPrice:0} format={dollars}/>
   <CheckoutPoints product={productUsd} points={points} onChange={setPoints}/>
   <CheckoutSummary product={productUsd} insurance={purchase.insurance} total={purchase.total} points={points}/>
+  <section className="mt-6" aria-labelledby="payment-method-title">
+    <div className="mb-3 flex items-center justify-between gap-3"><h3 id="payment-method-title" className="text-sm font-semibold">결제 방법 3가지</h3><span className="text-xs text-primary">USDT 에스크로</span></div>
+    <CryptoPaymentTabs value={paymentTab} onChange={tab=>{setPaymentTab(tab);if(tab==='card')setNetwork('USDT-TRC20');}} />
+    <p className="mt-2 text-xs leading-5 text-muted-foreground">원하는 결제 방법을 고른 뒤 아래 배송정보를 확인하고 결제창을 열어 주세요.</p>
+  </section>
   <h3 className="mt-6 text-sm font-semibold">{t('shippingInfo')}</h3>
   <p className="mt-1 text-xs text-muted-foreground">{filled?t('autofilled'):t('manualEntry')}</p>
   <label className="form-label" htmlFor="checkout-name">{t('recipient')}</label><input id="checkout-name" className="form-input" required maxLength={60} autoComplete="name" value={f.recipient} onChange={set('recipient')}/>
@@ -224,7 +229,7 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   <label className="form-label" htmlFor="checkout-region">{t('destination')}</label><select id="checkout-region" className="form-input" value={f.region} onChange={set('region')}><option>Mainland China</option><option>South Korea</option><option>Global</option></select>
   <CryptoNetworkPicker value={network} onChange={setNetwork}/>
   <p className="my-5 text-xs leading-6 text-muted-foreground">{t('shippingNote')}</p>
-  <Button variant="gold" className="w-full" type="submit">암호화폐로 결제하기<ArrowRight/></Button>
-  {deposit&&<CryptoDepositDialog network={network} usd={cash} onNetwork={setNetwork} onClose={()=>setDeposit(false)} onSubmit={txid=>{setDeposit(false);preview.order(item);void createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:purchase.total,product_amount_usd:productUsd,points_redeemed:points,seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid}).catch(console.error);onDone();}}/>}
+  <Button variant="gold" className="w-full" type="submit">3개 결제 방법 창 열기<ArrowRight/></Button>
+  {deposit&&<CryptoDepositDialog network={network} usd={cash} initialTab={paymentTab} onNetwork={setNetwork} onClose={()=>setDeposit(false)} onSubmit={txid=>{setDeposit(false);preview.order(item);void createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:purchase.total,product_amount_usd:productUsd,points_redeemed:points,seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid}).catch(console.error);onDone();}}/>}
  </form>;
 }

@@ -70,19 +70,37 @@ function CardPay({ usd, amount, onSubmit }: { usd: number; amount: string; onSub
   </div>;
 }
 
-export function CryptoDepositDialog({ network, usd, onClose, onSubmit, onNetwork }: { network: CryptoNetwork; usd: number; onClose: () => void; onSubmit: (txid: string) => void; onNetwork?: (n: CryptoNetwork) => void }) {
+export type CryptoPaymentTab = 'direct' | 'card' | 'auto';
+
+export const cryptoPaymentTabs = [
+  { id: 'direct', label: 'USDT 직접 송금', description: 'QR·입금 주소' },
+  { id: 'card', label: '카드·Apple Pay', description: 'MoonPay에서 USDT 구매' },
+  { id: 'auto', label: '지갑 연결', description: 'MetaMask·TronLink' },
+] as const;
+
+export function CryptoPaymentTabs({ value, onChange, compact = false }: { value: CryptoPaymentTab; onChange: (tab: CryptoPaymentTab) => void; compact?: boolean }) {
+  const icons = { direct: QrCode, card: CreditCard, auto: Zap } as const;
+  return <div role="tablist" aria-label="결제 방법" className="grid grid-cols-3 gap-1 rounded-lg border border-border p-1">
+    {cryptoPaymentTabs.map(({ id, label, description }) => {
+      const Icon = icons[id];
+      return <Button key={id} type="button" role="tab" aria-selected={value === id} variant={value === id ? 'gold' : 'ghost'} onClick={() => onChange(id)} className="h-auto min-h-14 flex-col gap-1 whitespace-normal px-1 py-2 text-center text-[10px] leading-tight sm:text-xs">
+        <span className="inline-flex items-center justify-center gap-1"><Icon size={13} />{label}</span>
+        {!compact && <span className={value === id ? 'text-primary-foreground/80' : 'text-muted-foreground'}>{description}</span>}
+      </Button>;
+    })}
+  </div>;
+}
+
+export function CryptoDepositDialog({ network, usd, initialTab = 'direct', onClose, onSubmit, onNetwork }: { network: CryptoNetwork; usd: number; initialTab?: CryptoPaymentTab; onClose: () => void; onSubmit: (txid: string) => void; onNetwork?: (n: CryptoNetwork) => void }) {
   const n = cryptoNetworks.find(x => x.id === network)! as Net;
-  const [tab, setTab] = useState<'direct' | 'card' | 'auto'>('direct');
+  const [tab, setTab] = useState<CryptoPaymentTab>(initialTab);
   const amount = convert(usd, 'USD').toFixed(2);
-  const tabs = [['direct', '크립토 지갑 송금', QrCode], ['card', '카드/애플페이', CreditCard], ['auto', '지갑 연결', Zap]] as const;
   return <div role="dialog" aria-modal="true" aria-label="USDT 결제" className="fixed inset-0 z-[100] flex items-end justify-center bg-background/85 p-3 sm:items-center">
     <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-xl border border-primary/40 bg-card p-5 shadow-2xl">
       <div className="flex items-center justify-between"><h2 className="flex items-center gap-2 font-semibold"><ShieldCheck className="text-primary" size={18} />USDT 에스크로 결제</h2><Button type="button" variant="ghost" size="icon" aria-label="닫기" onClick={onClose}><X /></Button></div>
       <div className="mt-3 rounded-lg border border-primary/30 bg-background/50 p-3 text-center"><p className="text-xs text-muted-foreground">결제 금액</p><p className="mt-1 text-2xl font-semibold text-primary" data-no-translate>{amount} USDT</p><p className="text-xs text-muted-foreground">≈ ${usd.toFixed(2)}</p></div>
       <TrustBanner />
-      <div role="tablist" className="mt-4 grid grid-cols-3 gap-1 rounded-lg border border-border p-1">
-        {tabs.map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setTab(id); if (id === 'card') onNetwork?.('USDT-TRC20'); }} className={`rounded-md px-1 py-2 text-[11px] ${tab === id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><Icon size={13} className="mx-auto mb-0.5" />{label}</button>)}
-      </div>
+      <div className="mt-4"><CryptoPaymentTabs compact value={tab} onChange={id => { setTab(id); if (id === 'card') onNetwork?.('USDT-TRC20'); }} /></div>
       {tab !== 'card' && onNetwork && <div className="mt-4 grid grid-cols-2 gap-2">{cryptoNetworks.map(x => <button type="button" key={x.id} onClick={() => onNetwork(x.id)} className={`rounded-md border p-2 text-left text-xs ${x.id === network ? 'border-primary text-primary' : 'border-border text-muted-foreground'}`}><strong className="block">{x.label}</strong><span className="text-[10px]">{x.chain}</span></button>)}</div>}
       {tab === 'card' ? <CardPay usd={usd} amount={amount} onSubmit={onSubmit} /> : tab === 'auto' ? <AutoPay key={n.id} n={n} amount={amount} onPaid={onSubmit} /> : <DirectPay key={n.id} n={n} amount={amount} onSubmit={onSubmit} />}
       {tab !== 'card' && <p className="mt-4 text-xs text-destructive">반드시 선택한 네트워크({n.chain})로 보내주세요. 다른 네트워크로 보내면 자산을 잃을 수 있습니다.</p>}
