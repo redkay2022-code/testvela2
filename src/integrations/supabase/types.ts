@@ -961,6 +961,24 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_shipping: {
+        Row: {
+          shipping: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          shipping?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          shipping?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       seller_applications: {
         Row: {
           bio: string

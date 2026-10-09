@@ -232,6 +232,13 @@
       "when": 1791560700781,
       "tag": "0032_order_shipping_details",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791560959790,
+      "tag": "0033_saved_shipping",
+      "breakpoints": true
     }
   ]
 }
