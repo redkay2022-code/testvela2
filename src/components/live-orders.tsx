@@ -1,3 +1,6 @@
+import { Link, useRouterState } from '@tanstack/react-router';
+import { marketSearch, postsQuery } from '@/lib/market';
+import { SpecsTable } from './specs-table';
 import { useEffect, useRef, useState } from 'react';
 import { ReviewModal } from './customer-reviews';
 import { Star } from 'lucide-react';
@@ -14,7 +17,7 @@ import { EscrowTimeline } from './escrow';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1;
 const BUCKET = 'qc-media';
-type Order = { id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean };
+type Order = { id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null };
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
 type Msg = { id: string; order_id: string; author_role: string; kind: string; body: string; areas: string[]; created_at: string };
 
@@ -42,7 +45,7 @@ function useLive(userId: string | null) {
   const q = useQuery({
     queryKey: ['live-orders', userId], enabled: !!userId,
     queryFn: async () => {
-      const { data: orders, error } = await supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open').order('created_at', { ascending: false });
+      const { data: orders, error } = await supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id').order('created_at', { ascending: false });
       if (error) throw error;
       const ids = (orders ?? []).map(o => o.id);
       const [m, msgs] = ids.length ? await Promise.all([
@@ -89,7 +92,7 @@ function Thread({ msgs }: { msgs: Msg[] }) {
 
 export function Composer({ orderId, role, onSent }: { orderId: string; role: 'buyer' | 'seller' | 'admin'; onSent?: () => void }) {
   const [v, setV] = useState(''); const [busy, setBusy] = useState(false);
-  return <form className="ship-form mt-2" onSubmit={async e => { e.preventDefault(); if (!v.trim()) return; setBusy(true); const { data } = await supabase.auth.getUser(); await supabase.from('order_messages').insert({ order_id: orderId, author_id: data.user!.id, author_role: role, body: v.trim().slice(0, 1000) }); setV(''); setBusy(false); onSent?.(); }}>
+  return <form className="ship-form mt-2" onSubmit={async e => { e.preventDefault(); if (!v.trim()) return; setBusy(true); try { const { data } = await supabase.auth.getUser(); if(!data.user) throw new Error('로그인이 필요합니다.'); const {error}=await supabase.from('order_messages').insert({ order_id: orderId, author_id: data.user.id, author_role: role, body: v.trim().slice(0, 1000) }); if(error) throw error; setV(''); toast.success('요청을 전달했습니다.'); onSent?.(); } catch { toast.error('요청을 보내지 못했습니다. 다시 시도해 주세요.'); } finally { setBusy(false); } }}>
     <input className="form-input" maxLength={1000} value={v} onChange={e => setV(e.target.value)} placeholder="메시지 남기기" aria-label="메시지" /><Button variant="goldOutline" type="submit" disabled={busy}><Send />보내기</Button></form>;
 }
 
@@ -158,27 +161,36 @@ function ShipForm({ o }: { o: Order }) {
 
 /** Persistent QC board: seller QC uploads, buyer approval / extra-photo requests, tracking. */
 export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
+  const search=marketSearch.parse(useRouterState({select:s=>s.location.search}));
+  const catalog=useQuery(postsQuery);
   const { user, admin } = useUser();
   const q = useLive(user?.id ?? null);
   const [asking, setAsking] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [chat, setChat] = useState<string | null>(null);
   if (!user) return null;
-  const orders = (q.data?.orders ?? []).filter(o => as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin)));
+  const orders = (q.data?.orders ?? []).filter(o => (as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin))) && (!search.orderId||o.id===search.orderId));
   const setStage = (id: string, stage: EscrowStage) => void supabase.from('orders').update({ stage }).eq('id', id);
-  return <section className="escrow-board mb-6" aria-label="QC 게시판">
+  return <section className="escrow-board mb-6" aria-label="QC 게시판" lang="ko" data-no-translate>
     {reviewing && <ReviewModal orderId={reviewing} close={() => setReviewing(null)} requestAuth={() => setReviewing(null)} />}
     <div className="section-heading"><h2><MessageSquareText size={16} className="mr-1 inline" />QC 게시판</h2><span>실시간 저장</span></div>
-    {!orders.length && <p className="py-6 text-center text-sm text-muted-foreground">{as === 'buyer' ? '결제한 실제 주문이 여기에 표시됩니다.' : '받은 실제 주문이 여기에 표시됩니다.'}</p>}
+    {q.isError&&<p role="alert" className="text-destructive">주문 정보를 불러오지 못했습니다.</p>}
+    {q.isLoading&&<p>주문을 불러오는 중…</p>}
+    {!q.isLoading&&!orders.length && <p className="py-6 text-center text-sm text-muted-foreground">{as === 'buyer' ? '결제한 실제 주문이 여기에 표시됩니다.' : '받은 실제 주문이 여기에 표시됩니다.'}</p>}
     {orders.map(o => {
       const media = (q.data?.media ?? []).filter(m => m.order_id === o.id);
       const msgs = (q.data?.msgs ?? []).filter(m => m.order_id === o.id);
       const round = media.reduce((r, m) => Math.max(r, m.round), 0);
       const stage = o.stage as EscrowStage;
       const isSeller = as === 'seller';
+      const product=catalog.data?.find(p=>p.id===o.post_id);
       return <article className="escrow-order" key={o.id}>
         <div className="escrow-order-head">{o.image_url ? <img src={o.image_url} width={52} height={52} alt="" /> : <Camera className="text-primary" />}<div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small>{stageLabel(stage)} · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
         <EscrowTimeline stage={stage} />
+        {search.orderView==='tracking'&&!o.tracking_number&&<p className="escrow-wait">송장번호가 아직 등록되지 않았습니다.</p>}
+        {search.orderView==='qc'&&!media.length&&<p className="escrow-wait">출고 QC 사진·영상이 아직 등록되지 않았습니다.</p>}
+        {search.orderView==='specs'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold mb-3">보증 안내·제품 스펙</h3>{product?<SpecsTable specs={product.specs} fallback={<p className="text-sm text-muted-foreground">등록된 상품 사양이 없습니다.</p>}/>:<p className="text-sm text-muted-foreground">이 상품의 스펙 정보를 불러올 수 없습니다.</p>}<p className="text-xs text-muted-foreground my-3">주문에 연결된 상품 정보와 출고 QC 자료입니다. 별도로 발급된 보증서가 없으면 보증서가 제공되지 않습니다.</p><Button asChild variant="goldOutline"><Link to="/escrow-guide">VELA 구매 보호 안내</Link></Button></section>}
+        {search.orderView==='defect'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold">초기 불량·교환 접수</h3><p className="my-2 text-sm text-muted-foreground">불량 증상과 교환 요청을 남기면 이 주문의 판매자에게 전달됩니다.</p><Thread msgs={msgs}/><Composer orderId={o.id} role={as}/></section>}
         {media.length > 0 && <><h4 className="escrow-sub"><Camera size={14} /> QC 사진·영상 {media.length}개</h4><Gallery media={media} /></>}
         {isSeller && stage === 'placed' && <Button variant="gold" onClick={() => setStage(o.id, 'preparing')}>제품 준비 시작</Button>}
         {isSeller && stage === 'preparing' && <Button variant="gold" onClick={() => setStage(o.id, 'qc')}>QC 검수 시작</Button>}
@@ -238,7 +250,7 @@ export function OrderNotifier() {
 function useAdminOrders(filter: 'crypto' | 'disputes') {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['admin-orders', filter], retry: false, queryFn: async () => {
-    let b = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open').order('created_at', { ascending: false });
+    let b = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id').order('created_at', { ascending: false });
     b = filter === 'crypto' ? b.not('txid', 'is', null) : b.eq('dispute_open', true);
     const { data, error } = await b; if (error) throw error;
     const orders = (data ?? []) as Order[];

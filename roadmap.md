@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Refactor customer My VELA: saved-first URL tabs, distinct heart/Star engagement, two-column saved purchase feed, order-specific tracking/QC/specs/defect access and one membership/wallet card; verify real saved flow and responsive layouts.
 - [x] Display current commenter avatars/nicknames on all post/Shorts comment lists using privacy-safe profile lookup; authenticated real comment posting, loaded avatar, nickname/time, reload, Shorts details/comments and product Q&A verified without page errors; test comment removed, 16 tests pass and build OK.
 - [x] Unify video-only seller/follow/details overlays and seller→full introduction→comment input/live-list sheet. Real authenticated comment save/reload and 5-second refresh verified; test comments removed, hybrid product entry and sheet Back preserved, 390px layout checked, 13 tests pass and build OK.
 - [x] Open hybrid videos in Shorts first with a product-page details link; simplify video-only overlays to title/description and engagement. Five tests pass; authenticated real hybrid detail entry (9 media), Back to Shorts, video-only likes/save/comments verified without page errors; build OK.

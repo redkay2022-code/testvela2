@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { Bookmark, ChevronRight, CircleDollarSign, Globe, Heart, LifeBuoy, LockKeyhole, Package, ShieldCheck, Sparkles, Store, Watch } from 'lucide-react';
+import { Star, ChevronRight, CircleDollarSign, Globe, Heart, LifeBuoy, LockKeyhole, Package, ShieldCheck, Sparkles, Store, Watch } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCurrency } from './currency';
 import { isLang, langLabels, langs } from '@/lib/i18n';
@@ -11,7 +11,7 @@ export function ProductionMenu({role,notifications}: {role:Search['role'];notifi
  const {currency,lang,setCurrency,setLang}=useCurrency();
  const groups=[
   {title:'둘러보기',items:[{label:'시계 컬렉션',to:'/market',search:{collection:'watches'},icon:Watch},{label:'액세서리 컬렉션',to:'/market',search:{collection:'accessories'},icon:Sparkles},{label:'추천 스튜디오 · 인기 셀러',to:'/store',search:{storeCategory:'top'},icon:Store}]},
-  {title:'My VELA',items:[{label:'주문 내역 · 에스크로 · 배송 추적',to:'/me',search:{panel:'orders'},icon:Package},{label:'저장 상품 · 위시리스트',to:'/me',search:{panel:'wishlist'},icon:Bookmark},{label:'팔로잉 스튜디오',to:'/',search:{tab:'following'},icon:Heart}]},
+  {title:'My VELA',items:[{label:'주문 내역 · 에스크로 · 배송 추적',to:'/me',search:{customerTab:'orders'},icon:Package},{label:'저장 상품 · 위시리스트',to:'/me',search:{customerTab:'saved'},icon:Star},{label:'팔로잉 스튜디오',to:'/',search:{tab:'following'},icon:Heart}]},
   {title:'도움말 · 에스크로',items:[{label:'가상화폐 에스크로 이용 안내',to:'/escrow-guide',search:{},icon:ShieldCheck},{label:'1:1 지원 · 분쟁 센터',to:'/support',search:{},icon:LifeBuoy},{label:'개인정보 보호 · SHA-256',to:'/privacy',search:{},icon:LockKeyhole}]},
  ] satisfies {title:string;items:{label:string;to:'/'|'/market'|'/store'|'/me'|'/escrow-guide'|'/support'|'/privacy';search:Search;icon:typeof Watch}[]}[];
  return <div className="production-menu">{notifications&&<section className="border-b border-border py-4"><h2 className="mb-2 px-2 text-xs font-semibold text-primary">알림</h2>{notifications}</section>}<nav aria-label="VELA 메뉴">{groups.map(group=><section key={group.title} className="border-b border-border py-4"><h2 className="mb-2 px-2 text-xs font-semibold text-primary">{group.title}</h2><div className="grid gap-1">{group.items.map(item=><Button asChild variant="ghost" className="h-auto min-h-11 w-full justify-start gap-3 px-2 py-2 text-start text-sm" key={item.label}><Link to={item.to} search={{role,...item.search}}><item.icon className="size-4 shrink-0 text-muted-foreground"/><span className="min-w-0 flex-1 whitespace-normal leading-5">{item.label}</span><ChevronRight className="size-4 shrink-0 text-muted-foreground"/></Link></Button>)}</div></section>)}</nav>
