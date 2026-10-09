@@ -114,7 +114,7 @@ export function CryptoDepositDialog({ network, usd, initialTab = 'direct', onClo
       <CryptoPaymentTabs compact value={tab} onChange={id => { setTab(id); if (id === 'card') onNetwork?.('USDT-TRC20'); }} />
       {tab !== 'card' && onNetwork && <CryptoNetworkPicker value={network} onChange={onNetwork} />}
       {tab === 'card' ? <CardPay usd={usd} amount={amount} onSubmit={onSubmit} /> : tab === 'auto' ? <AutoPay key={n.id} n={n} amount={amount} onPaid={onSubmit} /> : <DirectPay key={n.id} n={n} amount={amount} onSubmit={onSubmit} />}
-      {tab !== 'card' && <p className="mt-3 text-[11px] text-destructive">{n.chain}로만 송금하세요. 다른 네트워크로 보내면 자산을 잃을 수 있습니다.</p>}
+      {tab !== 'card' && <p className="mt-3 text-[11px] text-destructive">송금 시 {n.chain} 외 다른 네트워크를 사용하면 자산을 잃을 수 있습니다.</p>}
     </div></div></div>;
 }
 
