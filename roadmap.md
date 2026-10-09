@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Compact checkout, single payment selector and truthful trust notice; verify signed-in flow and MoonPay launch without payment.
 - [x] Align main-feed avatar/name/badge and grouped heart/count + star/count; browser-local save toggle/reload/My VELA readback and 390/707/1280px one-row layout verified, four tests pass, build OK.
 - [ ] Global feed like/save totals and authenticated toggle verification: existing reads are owner-only and saves are browser-local; public aggregates/cloud bookmarks need authorized support outside this presentation-only change, and requester has no matching auth session. Counters explicitly show personal 0/1 state, not global totals.
 - [x] Implement saved-first customer URL tabs, heart likes/Star saves, two-column collection with purchase CTA, order-specific tracking/QC/specs/defect entry and consolidated membership/wallet. Guest save/reload, actual photo load, purchase entry and 390px no-overflow verified; 35 distinct focused tests pass, build OK. Saves are per-account browser-local, not cross-device.

@@ -10,8 +10,9 @@
 <!-- LOVABLE:END -->
 
 ## Application architecture
-- Use TanStack Router and validated search state for tabs, overlays, search and feed filters; Back unwinds one UI layer. Match category/brand aliases to listings without inventing affiliations.
-- Load the public feed through TanStack Query with a server-function loader; public SSR must never require an account.
+- Use validated TanStack search for UI layers; Back unwinds one layer. Match aliases without invented affiliations.
+- Public feed uses a TanStack Query/server loader; SSR never requires login.
+- Scope checkout CSS locally; selectors live only in the shared payment dialog to avoid duplicates.
 - Cloud writes use owner-scoped policies and caller identity.
 - Bundle editorial media and icons locally; uploaded private storage media are served with signed URLs after matching published post paths.
 - Use manifest-only home-screen support; no service worker without an offline request.
