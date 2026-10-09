@@ -33,27 +33,24 @@ export function useLoyaltySummary() {
 }
 
 export function MembershipCard({ onWallet }: { onWallet?: () => void }) {
-  const { uid, data: s } = useLoyaltySummary(); const rules = useLoyaltyRules().data;
-  if (!uid || !s || !rules) return null;
-  const tiers = rules.tiers, value = Number(rules.config?.point_value_usd ?? 0.001);
-  const idx = Math.max(0, tiers.findIndex(t => t.tier === s.tier)), cur = tiers[idx], next = tiers[idx + 1];
-  if (!cur) return null;
-  const range = cur.spend_max ? `${usd(Number(cur.spend_min) ? Number(cur.spend_min) + 1 : 0)} – ${usd(Number(cur.spend_max))}` : `${usd(Number(cur.spend_min) + 1)}+`;
-  const remaining = next ? Math.max(0, Number(next.spend_min) + 1 - Number(s.spend)) : 0;
-  return <section className="tier-benefits" aria-label="VELA Membership">
-    <div className="section-heading"><h2 data-no-translate>{icons[cur.tier]} {cur.tier.toUpperCase()}</h2><span data-no-translate>{range}</span></div>
-    {next ? <p className="text-sm text-muted-foreground">Purchase <strong className="text-primary" data-no-translate>{usd(remaining)}</strong> more to reach <span data-no-translate>{next.tier.toUpperCase()}</span>.</p> : <p className="text-sm text-muted-foreground">최고 등급입니다.</p>}
-    <p className="mt-1 text-xs text-muted-foreground">최근 12개월 결제 완료 금액 <span data-no-translate>{usd(Number(s.spend))}</span> · 취소·환불 제외</p>
-    <h3 className="mt-4 text-sm font-semibold">Your Benefits</h3>
-    <ul className="mt-2 grid gap-1 text-sm" data-no-translate>
-      <li><Check size={14} className="mr-1 inline text-primary"/>{+(Number(cur.earn_rate) * 100).toFixed(2)}% Point Rewards</li>
-      {Number(cur.insurance_discount) > 0 && <li><Check size={14} className="mr-1 inline text-primary"/>{Math.round(Number(cur.insurance_discount) * 100)}% Insurance Discount</li>}
-      <li><Check size={14} className="mr-1 inline text-primary"/>{Math.round(Number(cur.insurance_rate) * 100)}% Insurance Rate</li>
-    </ul>
-    <button type="button" className="mt-4 flex w-full items-center justify-between rounded-md border border-border p-3 text-left" onClick={onWallet}>
-      <span className="flex items-center gap-2"><Wallet size={18} className="text-primary"/><strong>VELA Wallet</strong></span>
-      <span className="text-sm" data-no-translate>{formatPointsUsd(s.available, value)}</span>
-    </button>
+  const summary=useLoyaltySummary(), rulesQuery=useLoyaltyRules();
+  const s=summary.data, rules=rulesQuery.data;
+  if(!summary.uid) return null;
+  if(summary.isError||rulesQuery.isError) return <p role="alert" className="py-5 text-sm text-destructive">멤버십 정보를 불러오지 못했습니다.</p>;
+  if(!s||!rules) return <p className="py-5 text-sm text-muted-foreground">멤버십을 불러오는 중…</p>;
+  const tiers=rules.tiers, value=Number(rules.config?.point_value_usd ?? 0.001);
+  const idx=Math.max(0,tiers.findIndex(t=>t.tier===s.tier)),cur=tiers[idx],next=tiers[idx+1];
+  if(!cur) return null;
+  const remaining=next?Math.max(0,Number(next.spend_min)+1-Number(s.spend)):0;
+  const progress=next?Math.min(100,Math.max(0,(Number(s.spend)-Number(cur.spend_min))/(Number(next.spend_min)+1-Number(cur.spend_min))*100)):100;
+  return <section className="customer-membership" aria-label="VELA 멤버십과 지갑" lang="ko" data-no-translate>
+    <div className="section-heading"><h2>멤버십 · VELA 지갑</h2><ShieldCheck className="text-primary"/></div>
+    <div className="flex justify-between items-end gap-3"><strong className="text-2xl text-primary">{cur.tier.toUpperCase()}</strong><span className="text-xs text-muted-foreground">최근 12개월 구매 {usd(Number(s.spend))}</span></div>
+    <progress className="customer-tier-progress" max={100} value={progress} aria-label="다음 등급까지 구매 진행률"/>
+    <p className="text-xs text-muted-foreground">{next?<>{next.tier.toUpperCase()}까지 <strong className="text-primary">{usd(remaining)}</strong></>:'최고 등급입니다.'}</p>
+    <ul className="flex flex-wrap gap-x-5 gap-y-2 my-4 text-sm"><li>보험료 {Math.round(Number(cur.insurance_discount)*100)}% 할인</li><li>상품금액 {+(Number(cur.earn_rate)*100).toFixed(2)}% 포인트 적립</li></ul>
+    <div className="customer-wallet-row"><div><span className="text-xs text-muted-foreground">사용 가능한 VELA 포인트</span><p className="text-lg font-semibold">{formatPoints(s.available)} <small className="text-xs text-muted-foreground">({usd(pointsToUsd(s.available,value))})</small></p><p className="text-xs text-muted-foreground">적립 대기 {formatPoints(s.pending)}</p></div><Button variant="goldOutline" onClick={onWallet}><Wallet/>내역 보기</Button></div>
+    <div className="customer-wallet-row"><div><span className="text-xs text-muted-foreground">암호화폐 잔액</span><p className="text-sm">지갑 연결 대기</p></div><div className="flex gap-1"><Button variant="ghost" aria-disabled="true" onClick={()=>toast.info('암호화폐 입금 기능은 아직 연결되지 않았습니다.')}>입금</Button><Button variant="ghost" aria-disabled="true" onClick={()=>toast.info('암호화폐 출금 기능은 아직 연결되지 않았습니다.')}>출금</Button></div></div><p className="text-xs text-muted-foreground mt-2">포인트는 암호화폐가 아니며 현금화·출금할 수 없습니다.</p>
   </section>;
 }
 

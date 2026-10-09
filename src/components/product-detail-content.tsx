@@ -1,7 +1,7 @@
 import { isImmediateDispatch } from '@/lib/dispatch';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
-import { ArrowLeft, ArrowRight, Bookmark, Check, Eye, MessageCircle, Plus, ShieldCheck, Share2, UserRound } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Star, Check, Eye, MessageCircle, Plus, ShieldCheck, Share2, UserRound } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 import { useMarketPreview } from './market-preview';
@@ -42,7 +42,7 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  <SpecsTable specs={post.source.specs} fallback={post.sample?<dl className="lux-specs"><div><dt>Specification</dt><dd>1:1 studio specification</dd></div><div><dt>Case & bracelet</dt><dd>Stainless steel</dd></div><div><dt>Crystal</dt><dd>Sapphire</dd></div><div><dt>Movement</dt><dd>Automatic mechanical</dd></div></dl>:<p className="mt-5 text-sm text-muted-foreground">등록된 사양이 없습니다.</p>}/>
  <div className="mt-7 border-t border-border pt-5"><h3 className="text-sm font-medium">Studio notes</h3><p className="mt-2 text-xs leading-6 text-muted-foreground">{post.sample?'Sample product, pricing and verification. No brand affiliation or real inspection claim.':'Contact the studio to confirm specifications and availability.'}</p></div><EscrowGuarantee/><SellerRatings reputation={post.reputation}/><ProductComments postId={post.id} user={user} requestAuth={requestAuth}/></div></>}
  </div>
- <footer className="product-shopping-actions"><Button variant="ghost" className="product-qna-button" aria-label="상품 Q&A 열기" aria-pressed={qna} title="상품 Q&A" onClick={()=>qna?closeQna():openQna()}><MessageCircle size={20}/><span>Q&A</span></Button><Button variant="ghost" size="icon" aria-label="Save product" aria-pressed={preview.saved.includes(post.id)} onClick={()=>preview.toggleSaved(post.id)}><Bookmark fill={preview.saved.includes(post.id)?'currentColor':'none'}/></Button>{post.price!==null&&<><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('장바구니에 담았습니다.');}}>{t('addCart')}</Button><Button variant="gold" onClick={()=>buy(box)}>{t('buyNow')}<ArrowRight size={14}/></Button></>}</footer>
+ <footer className="product-shopping-actions"><Button variant="ghost" className="product-qna-button" aria-label="상품 Q&A 열기" aria-pressed={qna} title="상품 Q&A" onClick={()=>qna?closeQna():openQna()}><MessageCircle size={20}/><span>Q&A</span></Button><Button variant="ghost" size="icon" aria-label="상품 저장" title="저장" aria-pressed={preview.saved.includes(post.id)} onClick={()=>preview.toggleSaved(post.id)}><Star fill={preview.saved.includes(post.id)?'currentColor':'none'}/></Button>{post.price!==null&&<><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('장바구니에 담았습니다.');}}>{t('addCart')}</Button><Button variant="gold" onClick={()=>buy(box)}>{t('buyNow')}<ArrowRight size={14}/></Button></>}</footer>
  </>;
 }
 function ProductPhotos({post,verified}:{post:LuxuryPost;verified:boolean}) {

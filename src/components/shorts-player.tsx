@@ -21,6 +21,7 @@ import { marketSearch } from '@/lib/market';
 import { getComments } from '@/lib/market.functions';
 import { stableMediaSrc } from '@/lib/media-refresh';
 import { sellerIdentity } from '@/lib/seller-directory';
+import { useEngagement } from '@/lib/use-engagement';
 import { isHybridPost } from '@/lib/post-media';
 
 const usd=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
@@ -53,11 +54,11 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
- const hybrid=isHybridPost(post);
+ const hybrid=isHybridPost(post);const engagement=useEngagement(),liked=engagement.likedIds.has(post.id);
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const videoTags=(Array.isArray(post.source?.video_tags)?post.source.video_tags:[]) as {postId:string;title:string;at:number}[];
  const [clock,setClock]=useState(0);
- const [failed,setFailed]=useState(false);const videoSrc=stableMediaSrc(post.video,failed);const [blocked,setBlocked]=useState(false),[liked,setLiked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
+ const [failed,setFailed]=useState(false);const videoSrc=stableMediaSrc(post.video,failed);const [blocked,setBlocked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
  const bgm=useRef<HTMLAudioElement>(null),src=post.source as {music_audio_url?:string|null;music_title?:string|null;music_artist?:string|null}|undefined;
  useEffect(()=>{const v=video.current,a=bgm.current;if(!v||!a)return;const sync=()=>{a.muted=v.muted;if(v.paused)a.pause();else{const d=a.duration||1e9;if(Math.abs(a.currentTime-(v.currentTime%d))>0.4)a.currentTime=v.currentTime%d;void a.play().catch(()=>undefined);}};const ev=['play','pause','playing','volumechange','seeked'];ev.forEach(e=>v.addEventListener(e,sync));sync();return()=>{ev.forEach(e=>v.removeEventListener(e,sync));a.pause();};},[active,videoSrc,src?.music_audio_url]);
  useEffect(()=>{const v=video.current;if(!v||!videoTags.length)return;const on=()=>setClock(v.currentTime);v.addEventListener('timeupdate',on);return()=>v.removeEventListener('timeupdate',on);},[videoTags.length]);
@@ -83,7 +84,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  <footer className="shorts-bottom-bar">
  {active&&<ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} composerOnly/>}
  <aside className="shorts-bottom-actions" aria-label="Shorts actions">
- <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="좋아요" title="좋아요" aria-pressed={liked} className={liked?'shorts-liked':''} onClick={()=>setLiked(value=>!value)}><motion.span key={String(liked)} animate={{scale:liked?[1,1.25,1]:1}}><Heart fill={liked?'currentColor':'none'}/></motion.span></Button><span>{post.likes+(liked?1:0)}</span></div>
+ <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="좋아요" title="좋아요" aria-pressed={liked} className={liked?'shorts-liked':''} disabled={engagement.busy} onClick={()=>engagement.toggleLike(post.id)}><motion.span key={String(liked)} animate={{scale:liked?[1,1.25,1]:1}}><Heart fill={liked?'currentColor':'none'}/></motion.span></Button><span>{post.likes+(liked?1:0)}</span></div>
  <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="저장" title="저장" aria-pressed={saved} className={saved?'shorts-liked':''} onClick={()=>preview.toggleSaved(post.id)}><Star fill={saved?'currentColor':'none'}/></Button><span>{saved?1:0}</span></div>
  <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="댓글" title="댓글" onClick={()=>openSheet('comments')}><MessageCircle/></Button><span>{comments?.length ?? '—'}</span></div>
  </aside>

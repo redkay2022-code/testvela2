@@ -38,3 +38,5 @@
 - VELA Points are a platform-wide ledger (point_transactions) driven by orders triggers and SECURITY DEFINER RPCs; clients only read, so balances can't be forged.
 
 - Seller pages share trusted queries; studioTab limits scrolling. PullToRefresh invalidates active queries from top-only document/nested gestures. discoveryListings excludes sold stock only from discovery, retaining storefront history.
+
+- Customer activity uses validated customerTab/orderId/orderView; share owner-scoped likes and account-keyed local saved collections across feed/details/Shorts, and reuse authorized live order/QC/message reads instead of creating simulated purchases or wallets.

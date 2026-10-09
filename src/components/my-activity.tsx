@@ -1,33 +1,46 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
-import { Bookmark, Heart, MessageSquare, Package } from 'lucide-react';
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
+import { Star, Heart, MessageSquare, Package, ArrowRight, Truck, Camera, ShieldCheck, AlertTriangle, Check } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { dollars, type LuxuryPost } from '@/lib/luxury-market';
+import { type LuxuryPost } from '@/lib/luxury-market';
+import { formatMoney } from '@/lib/currency';
+import { isImmediateDispatch } from '@/lib/dispatch';
+import { customerTabs, purchaseMilestones } from '@/lib/customer-dashboard';
+import { marketSearch } from '@/lib/market';
+import { postMediaRoute } from '@/lib/post-media';
+import { useEngagement } from '@/lib/use-engagement';
 import { useMarketPreview } from './market-preview';
+import { Button } from './ui/button';
 
-type Tab = 'orders' | 'qna' | 'likes' | 'saved';
-const stageKo: Record<string, string> = { placed: '결제 확인 중', preparing: '상품 준비', qc: 'QC 진행', qc_done: 'QC 확인 대기', qc_requested: '추가 사진 요청', shipping_prep: '발송 준비', shipped: '배송 중', delivered: '배송 완료' };
-
-export function MyActivity({ user, posts, onOrders }: { user: User | null; posts: LuxuryPost[]; onOrders: () => void }) {
-  const p = useMarketPreview();
-  const [tab, setTab] = useState<Tab>('orders');
-  const uid = user?.id;
-  const byId = new Map(posts.map(x => [x.id, x]));
-  const orders = useQuery({ queryKey: ['my-orders', uid], enabled: !!uid, queryFn: async () => (await supabase.from('orders').select('id,order_no,title,image_url,amount_usd,stage,created_at').eq('buyer_id', uid!).order('created_at', { ascending: false })).data ?? [] });
-  const qna = useQuery({ queryKey: ['my-qna', uid], enabled: !!uid, queryFn: async () => (await supabase.from('comments').select('id,post_id,body,created_at').eq('user_id', uid!).order('created_at', { ascending: false })).data ?? [] });
-  const likes = useQuery({ queryKey: ['my-likes', uid], enabled: !!uid, queryFn: async () => (await supabase.from('likes').select('post_id').eq('user_id', uid!)).data ?? [] });
-  const saved = posts.filter(x => p.saved.includes(x.id));
-  const liked = (likes.data ?? []).map(l => byId.get(l.post_id)).filter(Boolean) as LuxuryPost[];
-  const tabs: [Tab, string, typeof Package, number][] = [['orders', '구매 현황', Package, orders.data?.length ?? 0], ['qna', 'Q&A', MessageSquare, qna.data?.length ?? 0], ['likes', '좋아요', Heart, liked.length], ['saved', '저장', Bookmark, saved.length]];
-  const grid = (list: LuxuryPost[], empty: string) => list.length ? <div className="saved-grid">{list.map(post => <Link key={post.id} to="/me" search={{ post: post.id }}><img src={post.images[0]} width={512} height={512} alt={post.title} /><h3>{post.title}</h3><p>{dollars(post.price ?? 0)}</p></Link>)}</div> : <p className="saved-empty">{empty}</p>;
-  return <section id="saved-collection" className="mt-1">
-    <div className="section-heading"><h2>내 활동</h2></div>
-    <div className="grid grid-cols-4 gap-1 mb-4" role="tablist">{tabs.map(([k, label, Icon, n]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`flex flex-col items-center gap-1 rounded-md border py-2 text-xs ${tab === k ? 'border-primary text-primary' : 'border-border text-muted-foreground'}`}><Icon size={18} /><span>{label}</span><strong>{n}</strong></button>)}</div>
-    {!user && tab !== 'saved' ? <p className="saved-empty">로그인하면 확인할 수 있어요.</p> :
-      tab === 'orders' ? <div className="space-y-2">{[...(orders.data ?? []).map(o => ({ id: o.id, title: o.title, img: o.image_url, amt: Number(o.amount_usd), stage: stageKo[o.stage] ?? o.stage, no: o.order_no }))].map(o => <button key={o.id} onClick={onOrders} className="flex w-full items-center gap-3 rounded-md border border-border p-2 text-left">{o.img && <img src={o.img} alt="" className="size-12 rounded object-cover" />}<div className="min-w-0 flex-1"><p className="truncate text-sm">{o.title}</p><p className="text-xs text-muted-foreground" data-no-translate>{o.no} · {dollars(o.amt)}</p></div><span className="text-xs text-primary">{o.stage}</span></button>)}{!orders.data?.length && <p className="saved-empty">구매한 제품이 없습니다.</p>}</div>
-      : tab === 'qna' ? <div className="space-y-2">{(qna.data ?? []).map(c => { const post = byId.get(c.post_id); return <Link key={c.id} to="/me" search={{ post: c.post_id, detailTab: 'qna' }} className="block rounded-md border border-border p-3"><p className="text-xs text-primary truncate">{post?.title ?? '상품'}</p><p className="text-sm">{c.body}</p><p className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</p></Link>; })}{!qna.data?.length && <p className="saved-empty">작성한 Q&A가 없습니다.</p>}</div>
-      : tab === 'likes' ? grid(liked, '좋아요한 상품이 없습니다.') : grid(saved, '저장한 상품이 없습니다.')}
+export function MyActivity({ user, posts }: { user: User | null; posts: LuxuryPost[]; onOrders?: () => void }) {
+  const p = useMarketPreview(), navigate = useNavigate();
+  const search = marketSearch.parse(useRouterState({select:s=>s.location.search}));
+  const tab = search.customerTab ?? 'saved', uid = user?.id;
+  const engagement = useEngagement();
+  const orders = useQuery({queryKey:['my-orders',uid],enabled:Boolean(uid),refetchInterval:15000,queryFn:async()=>{
+    if(!uid) return [];
+    const {data,error}=await supabase.from('orders').select('id,order_no,title,image_url,amount_usd,stage,created_at,payment_verified_at,tracking_number,post_id,cancelled_at').eq('buyer_id',uid).order('created_at',{ascending:false});
+    if(error) throw error; return data ?? [];
+  }});
+  const qna = useQuery({queryKey:['my-qna',uid],enabled:Boolean(uid),queryFn:async()=>{
+    if(!uid) return [];
+    const {data,error}=await supabase.from('comments').select('id,post_id,body,created_at').eq('user_id',uid).order('created_at',{ascending:false});
+    if(error) throw error; return data ?? [];
+  }});
+  const saved=p.saved.flatMap(id=>{const post=posts.find(post=>post.id===id);return post?[post]:[];});
+  const liked=posts.filter(post=>engagement.likedIds.has(post.id));
+  const counts={saved:saved.length,orders:orders.data?.length ?? 0,qna:qna.data?.length ?? 0,likes:liked.length};
+  const labels={saved:'저장한 컬렉션',orders:'구매한 제품 정보',qna:'문의 내역',likes:'좋아요한 게시물'};
+  const icons={saved:Star,orders:Package,qna:MessageSquare,likes:Heart};
+  const openOrder=(id:string,view:'tracking'|'qc'|'specs'|'defect')=>void navigate({to:'/me',search:prev=>({...prev,panel:'orders',orderId:id,orderView:view}),resetScroll:false});
+  const grid=(list:LuxuryPost[])=>list.length?<div className="customer-saved-grid">{list.map(post=><article key={post.id} className="customer-product">
+    <div className="customer-product-media"><Link to={postMediaRoute(post)} params={{id:post.id}} aria-label={post.title}><img src={post.images[0]} alt={post.title} loading="lazy" className={post.outOfStock?'grayscale':''}/></Link>{post.outOfStock?<span className="lux-soldout">품절</span>:isImmediateDispatch(post)&&<span className="lux-ready-badge">바로 발송</span>}<Button variant="ghost" size="icon" className="customer-save-toggle" title="저장 해제" aria-label={`저장 해제 ${post.title}`} aria-pressed={p.saved.includes(post.id)} onClick={()=>p.toggleSaved(post.id)}><Star fill={p.saved.includes(post.id)?'currentColor':'none'}/></Button></div>
+    <div className="customer-product-copy"><Link to={postMediaRoute(post)} params={{id:post.id}}><h3>{post.title}</h3></Link>{post.price!==null&&<p className="text-primary font-semibold" data-no-translate>{formatMoney(post.price,'USD')} <span className="text-xs text-muted-foreground">≈ {post.price.toLocaleString('en-US')} USDT</span></p>}{post.price!==null?<Button asChild variant="gold" className="w-full mt-3" disabled={post.outOfStock}><Link to={post.outOfStock?'/post/$id':'/buy/$id'} params={{id:post.id}} aria-disabled={post.outOfStock}>{post.outOfStock?'품절':'구매하기'}<ArrowRight/></Link></Button>:<Button asChild variant="goldOutline" className="w-full mt-3"><Link to={postMediaRoute(post)} params={{id:post.id}}>게시물 보기<ArrowRight/></Link></Button>}</div>
+  </article>)}</div>:<div className="customer-empty"><Star size={30} className="text-primary"/><h3>{tab==='saved'?'아직 저장한 컬렉션이 없습니다.':'좋아요한 게시물이 없습니다.'}</h3><Button asChild variant="goldOutline"><Link to="/">상품 둘러보기<ArrowRight/></Link></Button></div>;
+  return <section id="saved-collection" className="customer-activity" lang="ko" data-no-translate>
+    <nav className="customer-tabs" aria-label="내 VELA 활동" role="tablist">{customerTabs.map(key=>{const Icon=icons[key];return <Button key={key} asChild variant="ghost" className={tab===key?'active':''}><Link to="/me" search={prev=>({...prev,customerTab:key})} role="tab" aria-selected={tab===key} resetScroll={false}><Icon size={18}/><span>{labels[key]}</span><strong>{counts[key]}</strong></Link></Button>;})}</nav>
+    <div className="section-heading"><h2>{labels[tab]}</h2><span>{counts[tab]}개</span></div>
+    {!user&&tab!=='saved'?<p className="saved-empty">로그인하면 확인할 수 있습니다.</p>:tab==='saved'?grid(saved):tab==='likes'?grid(liked):tab==='qna'?<div className="space-y-3">{qna.isError?<p role="alert">문의 내역을 불러오지 못했습니다.</p>:qna.isLoading?<p>문의 내역을 불러오는 중…</p>:qna.data?.length?qna.data.map(c=><Link key={c.id} to="/post/$id" params={{id:c.post_id}} search={{detailTab:'qna'}} className="block border-b border-border py-3"><h3 className="text-sm text-primary">{posts.find(post=>post.id===c.post_id)?.title ?? '상품 문의'}</h3><p className="mt-2 text-sm whitespace-pre-wrap">{c.body}</p><time className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('ko-KR')}</time></Link>):<p className="saved-empty">작성한 문의가 없습니다.</p>}</div>:<div className="space-y-4">{orders.isError?<p role="alert">구매 내역을 불러오지 못했습니다.</p>:orders.isLoading?<p>구매 내역을 불러오는 중…</p>:orders.data?.length?orders.data.map(o=><article key={o.id} className="customer-order"><div className="flex gap-3 items-center">{o.image_url&&<img src={o.image_url} alt={o.title} className="size-20 rounded object-cover"/>}<div className="min-w-0"><p className="text-xs text-muted-foreground">{o.order_no}</p><h3 className="text-sm font-semibold my-1">{o.title}</h3><p className="text-primary font-semibold">{formatMoney(Number(o.amount_usd),'USD')}</p></div></div>{o.cancelled_at?<p className="mt-4 text-destructive">취소된 주문</p>:<ol className="customer-timeline" aria-label="주문 진행 상태">{purchaseMilestones(o).map((done,i)=><li key={i} className={done?'complete':''}><span>{done?<Check size={12}/>:i+1}</span><p>{['결제 확인','출고 QC 승인','배송 중','배송 완료'][i]}</p></li>)}</ol>}<div className="customer-order-actions"><Button variant="goldOutline" onClick={()=>openOrder(o.id,'tracking')}><Truck/>배송 추적</Button><Button variant="goldOutline" onClick={()=>openOrder(o.id,'qc')}><Camera/>출고 QC 사진·영상</Button><Button variant="ghost" onClick={()=>openOrder(o.id,'specs')}><ShieldCheck/>보증 안내·제품 스펙</Button><Button variant="ghost" onClick={()=>openOrder(o.id,'defect')}><AlertTriangle/>초기 불량·교환 접수</Button></div></article>):<p className="saved-empty">구매한 제품이 없습니다.</p>}</div>}
   </section>;
 }
