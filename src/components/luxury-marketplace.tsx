@@ -205,28 +205,20 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
  const preview=useMarketPreview(),p=preview.profile;
  const checkoutSearch=useRouterState({select:s=>marketSearch.parse(s.location.search)});
  const [box,setBox]=useState(Boolean(checkoutSearch.checkoutBox));
- const [f,setF]=useState({recipient:p.recipient||'',phone:p.phone.startsWith('@')?'':p.phone,line1:p.address,line2:'',city:'',state:'',postal:p.postal,country:''});
- const set=(k:keyof typeof f)=>(e:{target:{value:string}})=>setF(prev=>({...prev,[k]:e.target.value}));
- const price=item.price ?? 0, boxPrice=item.boxPrice ?? 0;
+ const ship=useSavedShipping();
+ const [f,setF]=useState<ShippingInput>(emptyShipping); const [remember,setRemember]=useState(true); const loaded=useRef(false);
+ useEffect(()=>{if(loaded.current||ship.loading)return;loaded.current=true;if(ship.saved)setF(ship.saved);else setF({...emptyShipping,recipient:p.recipient||'',phone:p.phone.startsWith('@')?'':p.phone,line1:p.address,postal:p.postal});},[ship.loading,ship.saved,p]);
+  const price=item.price ?? 0, boxPrice=item.boxPrice ?? 0;
   const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [deposit,setDeposit]=useState(false); const [points,setPoints]=useState(0); const [err,setErr]=useState('');
   const qc=useQueryClient();
   const productUsd=price+(box?boxPrice:0), purchase=insuredPurchase(price,box?boxPrice:0), cash=cashPayment(purchase.total,points);
-  const field=(k:keyof typeof f,label:string,props:Record<string,unknown>={})=><label htmlFor={`checkout-${k}`}>{label}<input id={`checkout-${k}`} className="form-input" maxLength={120} value={f[k]} onChange={set(k)} {...props}/></label>;
  return <form className="checkout-form" onSubmit={e=>{e.preventDefault();const bad=shippingError(f);setErr(bad);if(!bad)setDeposit(true);}}>
   <TrustBanner/>
   <div className="cart-line"><img src={item.images[0]} width={64} height={64} alt=""/><div><p>{item.title}</p><p className="mt-2 text-primary">{dollars(price)}</p></div></div>
   {boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>{t('addBox')}</span><strong>+{dollars(boxPrice)}</strong></label>}
-  <h3 className="text-sm font-semibold">배송 정보 <span className="text-[11px] font-normal text-muted-foreground">· 모든 항목 필수</span></h3>
-  <div className="checkout-shipping">
-    {field('recipient','수령인 이름 (실명)',{required:true,autoComplete:'name',maxLength:60})}
-    {field('phone','연락처 (택배 수령용 전화번호)',{required:true,type:'tel',inputMode:'tel',autoComplete:'tel',placeholder:'+82 10 1234 5678',maxLength:24})}
-    <div className="checkout-wide">{field('line1','도로명 주소',{required:true,autoComplete:'address-line1'})}</div>
-    <div className="checkout-wide">{field('line2','건물명 / 동·호수',{required:true,autoComplete:'address-line2'})}</div>
-    {field('city','도시',{required:true,autoComplete:'address-level2',maxLength:60})}
-    {field('state','주 / 도',{required:true,autoComplete:'address-level1',maxLength:60})}
-    {field('postal','우편번호',{required:true,autoComplete:'postal-code',maxLength:12})}
-    {field('country','국가 / 지역',{required:true,autoComplete:'country-name',maxLength:60})}
-  </div>
+  <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">배송 정보 <span className="text-[11px] font-normal text-muted-foreground">· 모든 항목 필수</span></h3>{ship.saved&&<Button type="button" variant="ghost" size="sm" onClick={()=>ship.saved&&setF(ship.saved)}>저장된 배송지 불러오기</Button>}</div>
+  <ShippingFields value={f} onChange={setF} idPrefix="checkout"/>
+  <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="size-4 accent-primary" checked={remember} onChange={e=>setRemember(e.target.checked)}/>이 배송지를 내 페이지에 저장</label>
   {err&&<p role="alert" className="text-xs text-destructive">{err}</p>}
   <details><summary>결제 명세 · 포인트 사용</summary>
     <CheckoutPoints product={productUsd} points={points} onChange={setPoints}/>
