@@ -706,13 +706,14 @@
 @media(max-width:480px) {.lux-header-tabs,.red-home-header .lux-header-tabs {gap:10px;}.lux-header-tabs .lux-tab {font-size:11px;padding:0 1px;}}
 @media(max-width:400px) {.lux-header-tabs,.red-home-header .lux-header-tabs {gap:6px;}.lux-header-tabs .lux-tab,.red-home-header .lux-header-tabs .lux-tab {font-size:10.5px;padding:0;letter-spacing:-.01em;}.red-home-header .lux-tab.active::after {left:0;right:0;}}
 
-.product-shopping-actions {display:grid;grid-template-columns:44px 36px minmax(0,1fr) minmax(0,1fr);align-items:center;gap:8px;padding:12px 16px max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--background);flex-shrink:0;}
-.product-shopping-actions>button {min-width:0;height:44px;padding-inline:8px;white-space:normal;overflow-wrap:anywhere;font-size:12px;}
-.product-qna-button {display:flex;flex-direction:column;gap:2px;color:var(--primary);font-size:10px;}
+.product-shopping-actions {display:grid;grid-template-columns:40px 40px 36px minmax(0,1fr) minmax(0,1fr);align-items:center;gap:8px;padding:12px 16px max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--background);flex-shrink:0;}
+.product-shopping-actions>button {min-width:0;width:100%;height:44px;padding-inline:6px;white-space:normal;overflow-wrap:anywhere;font-size:12px;line-height:1.3;gap:4px;}
+.product-shopping-actions>button svg {flex-shrink:0;}
+.product-shopping-actions>.product-qna-button {display:flex;flex-direction:column;gap:2px;padding-inline:0;color:var(--primary);font-size:10px;}
 .shorts-sheet .lux-detail-copy {padding:16px 0;}
 .shorts-sheet .shorts-gallery-photo {height:min(48dvh,108vw,460px);aspect-ratio:auto;}
 .lux-detail-scroll {min-height:0;flex:1;}
-@media(max-width:360px) {.product-shopping-actions {gap:4px;padding-inline:10px;grid-template-columns:40px 32px minmax(0,1fr) minmax(0,1fr);}.product-shopping-actions>button {font-size:11px;}.shorts-sheet-seller {gap:5px;}.shorts-sheet-seller button,.shorts-sheet-seller>a {padding-inline:7px;font-size:10px;}}
+@media(max-width:360px) {.product-shopping-actions {gap:4px;padding-inline:8px;grid-template-columns:32px 32px 32px minmax(0,1fr) minmax(0,1fr);}.product-shopping-actions>button {font-size:11px;padding-inline:4px;}.shorts-sheet-seller {gap:5px;}.shorts-sheet-seller button,.shorts-sheet-seller>a {padding-inline:7px;font-size:10px;}}
 .tier-spend{font-size:11px;color:var(--muted-foreground);margin:4px 0}
 /* Studio (seller) tier badges */
 .seller-badge.studio-standard {color:var(--muted-foreground);}
