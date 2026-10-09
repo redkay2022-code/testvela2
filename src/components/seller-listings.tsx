@@ -12,7 +12,7 @@ import { formatMoney } from '@/lib/currency';
 import { VideoEditor, type VideoTag } from './video-editor';
 import { VideoStartPreview } from './video-start-preview';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
-import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
+import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string; sourceType?: string; factory?: string };
 type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
@@ -129,11 +129,19 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     const selectedPhotos = selected.filter(isListingPhoto);
     const selectedVideos = selected.filter(isListingVideo);
     if (photos.length + selectedPhotos.length > MAX_LISTING_PHOTOS || Number(Boolean(video)) + selectedVideos.length > 1) { setError(`사진은 최대 ${MAX_LISTING_PHOTOS}장, 영상은 1개까지 선택할 수 있어요.`); return; }
-    try { await validateListingFiles(selected); }
-    catch (err) { setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.'); return; }
-    if (selectedVideos[0]) { setVideo({ file: selectedVideos[0], preview: createPreview(selectedVideos[0]) }); setEditing(selectedVideos[0]); }
-    setPhotos(current => [...current, ...selectedPhotos.map(file => ({ id: crypto.randomUUID(), file, preview: createPreview(file) }))]);
+    /* Show the previews immediately; the slower duration check runs in the background. */
+    const quick = selected.filter(f => !isListingPhoto(f) && !isListingVideo(f)).length ? '사진은 JPG·PNG·WEBP, 영상은 MP4·MOV·WEBM 형식만 지원해요.' : selectedPhotos.some(photoTooLarge) ? '사진은 장당 최대 10MB까지 올릴 수 있어요.' : selectedVideos[0] && selectedVideos[0].size > MAX_VIDEO_BYTES ? '영상은 최대 100MB까지 올릴 수 있어요.' : '';
+    if (quick) { setError(quick); return; }
+    const newVideo = selectedVideos[0] ? { file: selectedVideos[0], preview: createPreview(selectedVideos[0]) } : null;
+    const newPhotos = selectedPhotos.map(file => ({ id: crypto.randomUUID(), file, preview: createPreview(file) }));
+    if (newVideo) { setVideo(newVideo); setEditing(newVideo.file); }
+    if (newPhotos.length) setPhotos(current => [...current, ...newPhotos]);
     setError('');
+    if (newVideo) validateListingFiles([newVideo.file]).catch(err => {
+      setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.');
+      URL.revokeObjectURL(newVideo.preview); objectUrls.current.delete(newVideo.preview);
+      setVideo(cur => (cur?.preview === newVideo.preview ? null : cur)); setEditing(cur => (cur === newVideo.file ? null : cur));
+    });
   };
 
   const save = async (status: 'draft' | 'published') => {

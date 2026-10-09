@@ -45,7 +45,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  <div className="shorts-header-tools"><Button variant="ghost" size="icon" aria-label="Open search" title="검색" onClick={onSearch}><Search/></Button><Button variant="ghost" size="icon" aria-label="Share short" title="공유" onClick={share}><Share2/></Button></div>
  </header>
  <div className={`shorts-snap ${sheet?'shorts-locked':''}`} ref={mountFeed} onScroll={e=>{if(sheet||syncing.current)return;const el=e.currentTarget;const index=Math.round(el.scrollTop/el.clientHeight),next=posts[index];if(next&&Math.abs(el.scrollTop-index*el.clientHeight)<el.clientHeight*.35&&next.id!==activeId.current){activeId.current=next.id;setActive(next.id);change(next.id);}}} tabIndex={0} aria-label="Shorts video feed" onKeyDown={e=>{if(sheet)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();feed.current?.scrollBy({top:(e.key==='ArrowDown'?1:-1)*e.currentTarget.clientHeight,behavior:reduced?'instant':'smooth'});}}}>
- {posts.map(p=><ShortScene key={p.id} post={p} active={p.id===active} openSheet={openSheet} notify={notify} user={user} requestAuth={requestAuth}/>)}
+ {posts.map((p,i)=><ShortScene key={p.id} post={p} active={p.id===active} near={Math.abs(i-Math.max(0,posts.findIndex(x=>x.id===active)))<=1} openSheet={openSheet} notify={notify} user={user} requestAuth={requestAuth}/>)}
  {!posts.length&&<div className="shorts-follow-empty"><UserRound/><h2>팔로잉한 셀러의 영상이 없습니다.</h2><Button variant="goldOutline" onClick={()=>onTab('recommend')}>추천 영상 보기</Button></div>}
  </div>
  <AnimatePresence>{sheet&&post&&<ShortSheet key={sheet} kind={sheet} close={closeSheet}>
@@ -53,7 +53,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  </ShortSheet>}</AnimatePresence>
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
-function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
+function ShortScene({post,active,near,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;near:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
  const hybrid=isHybridPost(post);const engagement=useEngagement(),liked=engagement.likedIds.has(post.id);
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const videoTags=(Array.isArray(post.source?.video_tags)?post.source.video_tags:[]) as {postId:string;title:string;at:number}[];
@@ -67,9 +67,20 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
   const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
  const read=useServerFn(getComments);
   const {data:comments}=useQuery({queryKey:['comments',post.id,user?.id ?? 'public'],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
- useEffect(()=>{const v=video.current;if(!v)return;const want=active&&shortsSound;v.muted=!want;if(active)setSound(want);let cancelled=false;const play=()=>{if(active&&!document.hidden){void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(cancelled)return;if(!v.muted){v.muted=true;setSound(false);void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch(()=>{if(!cancelled)setBlocked(true);});}else setBlocked(true);});}else v.pause();};play();document.addEventListener('visibilitychange',play);return()=>{cancelled=true;v.pause();document.removeEventListener('visibilitychange',play);};},[active,post.video]);
+ useEffect(()=>{const v=video.current;if(!v)return;
+  if(!active){v.pause();try{v.currentTime=0;}catch{/* not seekable yet */}return;}
+  const want=shortsSound;v.muted=!want;setSound(want);let cancelled=false;
+  const play=()=>{if(cancelled||document.hidden||!v.isConnected)return;
+   void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch((err:unknown)=>{if(cancelled)return;
+    const name=err instanceof DOMException?err.name:'';
+    if(name==='NotAllowedError'){if(!v.muted){v.muted=true;setSound(false);play();}else setBlocked(true);}
+    /* AbortError / not loaded yet: retry as soon as the data is ready */
+    else{v.addEventListener('canplay',play,{once:true});}});};
+  const onVis=()=>{if(document.hidden)v.pause();else play();};
+  play();v.addEventListener('loadeddata',play,{once:true});document.addEventListener('visibilitychange',onVis);
+  return()=>{cancelled=true;v.removeEventListener('loadeddata',play);v.removeEventListener('canplay',play);document.removeEventListener('visibilitychange',onVis);};},[active,post.video,videoSrc]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active} inert={!active}>
- {post.video&&!failed?<><img className={`shorts-video-poster ${active&&ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{active&&<video ref={video} src={videoSrc} playsInline loop muted autoPlay preload="auto" poster={post.images[0]} onLoadedData={()=>setReady(true)} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
+ {post.video&&!failed?<><img className={`shorts-video-poster ${active&&ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{near&&<video ref={video} src={videoSrc} playsInline loop muted autoPlay={active} preload="auto" poster={post.images[0]} onLoadedData={()=>setReady(true)} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
  <div className="shorts-shade"/>
  {post.video&&!failed&&<button type="button" className="shorts-sound-toggle" aria-label={sound?'소리 끄기':'소리 켜기'} aria-pressed={sound} onClick={()=>{const v=video.current;if(!v)return;const next=!sound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}{!sound&&<span>소리 켜기</span>}</button>}
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
@@ -84,7 +95,7 @@ function ShortScene({post,active,openSheet,notify,user,requestAuth}:{post:Luxury
  <footer className="shorts-bottom-bar">
  {active&&<ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} composerOnly/>}
  <aside className="shorts-bottom-actions" aria-label="Shorts actions">
- <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="좋아요" title="좋아요" aria-pressed={liked} className={liked?'shorts-liked':''} disabled={engagement.busy} onClick={()=>engagement.toggleLike(post.id)}><motion.span key={String(liked)} animate={{scale:liked?[1,1.25,1]:1}}><Heart fill={liked?'currentColor':'none'}/></motion.span></Button><span>{post.likes+(liked?1:0)}</span></div>
+ <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="좋아요" title="좋아요" aria-pressed={liked} className={liked?'shorts-liked':''} onClick={()=>{if(!user){requestAuth();return;}engagement.toggleLike(post.id);}}><motion.span key={String(liked)} animate={{scale:liked?[1,1.25,1]:1}}><Heart fill={liked?'currentColor':'none'}/></motion.span></Button><span>{post.likes+(liked?1:0)}</span></div>
  <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="저장" title="저장" aria-pressed={saved} className={saved?'shorts-liked':''} onClick={()=>preview.toggleSaved(post.id)}><Star fill={saved?'currentColor':'none'}/></Button><span>{saved?1:0}</span></div>
  <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="댓글" title="댓글" onClick={()=>openSheet('comments')}><MessageCircle/></Button><span>{comments?.length ?? '—'}</span></div>
  </aside>

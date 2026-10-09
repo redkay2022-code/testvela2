@@ -2,7 +2,7 @@ import type { ShippingInput } from '@/lib/shipping';
 
 const fields: [keyof ShippingInput, string, Record<string, unknown>, boolean?][] = [
   ['recipient', '수령인 이름 (실명)', { autoComplete: 'name', maxLength: 60 }],
-  ['phone', '연락처 (택배 수령용 전화번호)', { type: 'tel', inputMode: 'tel', autoComplete: 'tel', placeholder: '+82 10 1234 5678', maxLength: 24 }],
+  ['phone', '연락처 (택배 수령용 전화번호)', { type: 'tel', inputMode: 'tel', autoComplete: 'tel', placeholder: '+44 7911 123456', maxLength: 24 }],
   ['line1', '도로명 주소', { autoComplete: 'address-line1' }, true],
   ['line2', '건물명 / 동·호수', { autoComplete: 'address-line2' }, true],
   ['city', '도시', { autoComplete: 'address-level2', maxLength: 60 }],

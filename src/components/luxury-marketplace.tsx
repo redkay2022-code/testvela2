@@ -40,7 +40,7 @@ import { t } from '@/lib/i18n';
 import { insuredPurchase } from '@/lib/insurance';
 import { cashPayment } from '@/lib/loyalty';
 import { CheckoutPoints, CheckoutSummary, VelaWallet } from './loyalty';
-import { InsuranceBanner, InsuranceBreakdown, InsuranceTeaser } from './insurance';
+import { InsuranceBreakdown, InsuranceTeaser } from './insurance';
 import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
@@ -137,7 +137,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  {help?<MarketHelp kind={help} user={user} requestAuth={()=>update({auth:true})}/>:cleanHome&&search.tab==='reviews'?<section className="mt-4 grid gap-4"><ReviewComposer requestAuth={()=>update({auth:true})}/><ReviewList role={search.role} posts={posts}/></section>:
  mode==='me'?(user&&(!account.data||myPage==='/seller')?<div className="lux-empty">Loading…</div>:<AccountView posts={all} user={user} onPanel={panel=>update({panel})} requestAuth={signup=>update({auth:true,authSignup:signup||undefined})}/>):
  mode==='upload'?<><div className="sample-notice">Product publishing · Account sign-in required</div><UploadForm user={user} requestAuth={()=>update({auth:true})} onPosted={()=>{void router.invalidate();void navigate({to:'/me',search:{role:search.role}});}}/></>:
-  mode==='store'?search.seller?<><SellerStoreHeader post={storePosts[0]} count={storePosts.length} search={search} notify={setToast}/>{search.storeTab==='reviews'?<><h2 className="mt-6 text-base font-semibold">고객 리뷰</h2><ReviewList posts={posts} sellerId={search.seller} role={search.role}/></>:<Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/>}</>:<><InsuranceBanner role={search.role}/><SellerDirectory posts={all.filter(p=>!preview.hidden.includes(p.id))} category={search.storeCategory} role={search.role}/></>:
+  mode==='store'?search.seller?<><SellerStoreHeader post={storePosts[0]} count={storePosts.length} search={search} notify={setToast}/>{search.storeTab==='reviews'?<><h2 className="mt-6 text-base font-semibold">고객 리뷰</h2><ReviewList posts={posts} sellerId={search.seller} role={search.role}/></>:<Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/>}</>:<><SellerDirectory posts={all.filter(p=>!preview.hidden.includes(p.id))} category={search.storeCategory} role={search.role}/></>:
   mode==='admin'||mode==='seller'?children:<div className="lux-feed-transition" key={search.tab || 'discover'}><Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/></div>}
  </main>
  <nav className="lux-bottom-nav" aria-label="Main navigation" lang={sellerNavigation?'ko':undefined} data-no-translate={sellerNavigation?true:undefined}><div>

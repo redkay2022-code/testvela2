@@ -5,21 +5,11 @@ const flagOf = (iso: string) => String.fromCodePoint(...[...iso].map(c => 0x1f1a
 const names = (() => { try { return new Intl.DisplayNames(['ko'], { type: 'region' }); } catch { return null; } })();
 /** Every country/territory calling code, sorted by Korean name. */
 export const PHONE_COUNTRIES: PhoneCountry[] = RAW.map(([iso, dial]) => ({ iso, dial, name: names?.of(iso) ?? iso, flag: flagOf(iso) }))
-  .sort((a, b) => (a.iso === 'KR' ? -1 : b.iso === 'KR' ? 1 : a.name.localeCompare(b.name, 'ko')));
+  .sort((a, b) => (a.iso === 'GB' ? -1 : b.iso === 'GB' ? 1 : a.name.localeCompare(b.name, 'ko')));
 
-const LANG_DEFAULT: Record<string, string> = { ko: 'KR', zh: 'CN', ja: 'JP', en: 'US', de: 'DE', fr: 'FR', it: 'IT', nl: 'NL', ru: 'RU', ar: 'AE', la: 'VA' };
-
-/** Pick the country from the device locale region, then its language. */
+/** First sign-up / sign-in always starts with the United Kingdom (+44). */
 export function detectPhoneCountry(): string {
-  if (typeof navigator === 'undefined') return 'KR';
-  for (const tag of navigator.languages ?? [navigator.language]) {
-    const [lang, region] = tag.split('-');
-    const r = region?.toUpperCase();
-    if (r && PHONE_COUNTRIES.some(c => c.iso === r)) return r;
-    const d = lang ? LANG_DEFAULT[lang.toLowerCase()] : undefined;
-    if (d) return d;
-  }
-  return 'KR';
+  return 'GB';
 }
 
 /** Build E.164: drop a leading trunk 0 from the local number. */
