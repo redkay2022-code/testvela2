@@ -323,6 +323,9 @@
 .lux-post h2 {font-size:13px;font-weight:500;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .lux-card-price {font-size:14px;color:var(--soft-gold);font-weight:500;margin-top:7px;}
 .lux-post-creator {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px;align-items:center;margin-top:13px;}
+.lux-post-engagement {display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-shrink:0;white-space:nowrap;}
+.lux-post-engagement .lux-heart {min-width:28px;flex-shrink:0;border-radius:4px;font-variant-numeric:tabular-nums;}
+.lux-post-creator>a .lux-card-seller-name {flex:0 1 auto;min-width:0;}
 .lux-post-creator>a {display:flex;gap:6px;align-items:center;font-size:9px;color:var(--muted-foreground);min-width:0;}.lux-post-creator>a span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.lux-post-creator img {width:18px;height:18px;object-fit:cover;border-radius:50%;flex-shrink:0;}
 .lux-heart {font-size:9px;padding:0;height:26px;gap:4px;color:var(--muted-foreground);}.lux-heart svg {width:13px;height:13px;}.lux-heart.active {color:var(--primary);}.lux-heart.active svg {fill:var(--primary);}
 .lux-bottom-nav {position:fixed;z-index:30;bottom:0;left:0;right:0;border-top:1px solid var(--border);background:var(--background);box-shadow:var(--shell-shadow);padding-bottom:env(safe-area-inset-bottom);}
@@ -510,7 +513,7 @@
 .red-home-waterfall .lux-post-creator {margin-top:8px;gap:5px;}
 .red-home-waterfall .lux-post-creator>a {gap:4px;font-size:10px;}
 .red-home-waterfall .lux-post-creator img {height:18px;width:18px;}
-.red-home-waterfall .lux-post-creator>a>span:not(.seller-badge) {flex:1;min-width:0;}
+.red-home-waterfall .lux-post-creator>a>span:not(.seller-badge) {flex:0 1 auto;min-width:0;}
 .red-home-waterfall .lux-heart {height:26px;gap:3px;font-size:10px;}
 .red-home-waterfall .lux-heart svg {height:14px;width:14px;}
 .red-home-waterfall .lux-play {width:26px;height:26px;top:8px;right:8px;}
