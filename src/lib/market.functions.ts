@@ -78,7 +78,7 @@ export const getComments = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) => z.object({ postId: z.string().max(100) }).parse(data))
   .handler(async ({data}) => {
     const client = publicClient(await callerToken());
-    const { data: rows, error } = await client.from('comments').select('id,user_id,body,created_at').eq('post_id',data.postId).order('created_at').order('id');
+    const { data: rows, error } = await client.from('comments').select('id,user_id,body,created_at,parent_id').eq('post_id',data.postId).order('created_at').order('id');
     if (error) throw new Error('댓글을 불러오지 못했습니다.');
     if (!rows.length) return [];
     const { data: profiles, error: profileError } = await client.rpc('comment_author_profiles', { _post_id: data.postId });
@@ -97,7 +97,7 @@ export const getComments = createServerFn({ method: 'GET' })
     return rows.map(row => {
       const profile = byId.get(row.user_id);
       const path = profile ? commentAvatarPath(profile) : null;
-      return { id: row.id, body: row.body, created_at: row.created_at, nickname: commentNickname(profile), avatar_url: path ? urls.get(path) ?? null : null };
+      return { id: row.id, parent_id: row.parent_id, body: row.body, created_at: row.created_at, nickname: commentNickname(profile), avatar_url: path ? urls.get(path) ?? null : null };
     });
   });
 
@@ -123,12 +123,12 @@ export const getPublicReviews = createServerFn({ method: 'GET' })
 
 export const addComment = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ postId:z.string().max(100), body:z.string().trim().min(1).max(1000) }).parse(data))
+  .inputValidator((data: unknown) => z.object({ postId:z.string().max(100), body:z.string().trim().min(1).max(1000), parentId:z.string().uuid().optional() }).parse(data))
   .handler(async ({data,context}) => {
     const { data: profile, error: profileError } = await context.supabase.from('profiles').select('nickname').eq('user_id',context.userId).maybeSingle();
     if (profileError) throw new Error('프로필을 불러오지 못했습니다.');
     const creator = (profile?.nickname.trim() || 'VELA 회원').slice(0,40);
-    const {error} = await context.supabase.from('comments').insert({post_id:data.postId,user_id:context.userId,creator,body:data.body});
+    const {error} = await context.supabase.from('comments').insert({post_id:data.postId,user_id:context.userId,creator,body:data.body,parent_id:data.parentId ?? null});
     if(error) throw new Error('댓글을 저장하지 못했습니다.');
     return {ok:true};
   });
