@@ -100,6 +100,9 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  if(cleanHome&&search.tab!=='reviews')posts=filterFeed(posts,search);
  const selected=all.find(p=>p.id===(shortsId || postId || search.post));
  const entry=productEntry(authReady,Boolean(user));
+ const guest=authReady&&!user;
+ const guestSignup=()=>update({auth:true,authSignup:true});
+ const guardGuest=(event:React.MouseEvent)=>{if(!guest)return;event.preventDefault();guestSignup();};
  const productSignup=entry==='signup'&&Boolean(postId||shortsId||search.post);
  const selectProduct=(event:React.MouseEvent<HTMLAnchorElement>)=>{if(entry==='product')return;event.preventDefault();if(entry==='signup')update({auth:true,authSignup:true});};
  const closeAuth=()=>{if(productSignup){void navigate({to:'/',search:{role:search.role},replace:true,resetScroll:false});}else close();};
