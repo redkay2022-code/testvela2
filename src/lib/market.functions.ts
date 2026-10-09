@@ -81,6 +81,7 @@ export const getComments = createServerFn({ method: 'GET' })
     const { data: rows, error } = await client.from('comments').select('id,user_id,body,created_at,parent_id').eq('post_id',data.postId).order('created_at').order('id');
     if (error) throw new Error('댓글을 불러오지 못했습니다.');
     if (!rows.length) return [];
+    const { data: postRow } = await client.from('posts').select('user_id,store_id,creator').eq('id',data.postId).maybeSingle();
     const { data: profiles, error: profileError } = await client.rpc('comment_author_profiles', { _post_id: data.postId });
     if (profileError) throw new Error('댓글 프로필을 불러오지 못했습니다.');
     const authors = new Set(rows.map(row => row.user_id));
@@ -97,7 +98,9 @@ export const getComments = createServerFn({ method: 'GET' })
     return rows.map(row => {
       const profile = byId.get(row.user_id);
       const path = profile ? commentAvatarPath(profile) : null;
-      return { id: row.id, parent_id: row.parent_id, body: row.body, created_at: row.created_at, nickname: commentNickname(profile), avatar_url: path ? urls.get(path) ?? null : null };
+      const isSeller = Boolean(postRow?.user_id && postRow.user_id === row.user_id);
+      const seller = isSeller && postRow ? (postRow.store_id ? postRow.creator : postRow.user_id ?? postRow.creator) : null;
+      return { id: row.id, parent_id: row.parent_id, body: row.body, created_at: row.created_at, nickname: isSeller && postRow?.creator ? postRow.creator : commentNickname(profile), seller, avatar_url: path ? urls.get(path) ?? null : null };
     });
   });
 
