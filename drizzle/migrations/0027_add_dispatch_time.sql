@@ -1,0 +1,2 @@
+ALTER TABLE public.posts ADD COLUMN IF NOT EXISTS dispatch_time text CHECK (dispatch_time IS NULL OR dispatch_time IN ('immediate','3d','5d','7d','14d','20d'));
+CREATE INDEX IF NOT EXISTS posts_dispatch_time_idx ON public.posts(dispatch_time);
