@@ -25,8 +25,8 @@
 - Use insuredPurchase for mandatory delivery insurance and checkout totals; calculate on the seller item price, excluding the optional box, to keep displayed and submitted totals consistent.
 - Store all prices (item and Full Set Box) in base USD and convert only at display via src/lib/currency formatMoney; one stored currency keeps totals and fees consistent.
 - Translate commerce with src/lib/i18n t() and UI with src/locales via src/lib/dom-translate; the shared locale provider detects device language/currency. Cache live USD rates server-side with fixed fallbacks.
-- Accounts use phone + password via src/lib/phone-auth.functions.ts: the phone is peppered-SHA-256 hashed server-side and only the hash (public.profiles.phone_hash, also the synthetic auth email) is stored, enforcing one account per phone; no social/OAuth sign-in.
-- Real roles live in public.user_roles checked via has_role(); seller applications carry only system_code + nickname and approvals go through admin-verified server functions in src/lib/seller-accounts.functions.ts.
+- Phone/password auth uses server-side peppered SHA-256; only a unique phone hash and synthetic email are stored, never raw numbers; no OAuth.
+- Trusted roles use user_roles/has_role(); applications contain system_code/nickname only and approvals require admin verification.
 - Listings store photos in media_urls and one optional video in video_url; selectors append media and use VideoStartPreview posters to preserve edits and avoid black previews.
 - Real orders, QC media and the buyer/seller QC board live in Cloud (orders, order_qc_media, order_messages, private qc-media bucket); a database trigger enforces role-based stage changes and the 9-photo + 1-video QC minimum so clients cannot skip steps. Live courier status comes from 17TRACK via a cached authenticated server function (TRACK17_API_KEY).
 - Help/privacy are public; settings use URL tabs. Presentation: src/components/AGENTS.md.
@@ -39,4 +39,4 @@
 
 - Seller pages share trusted queries; studioTab limits scrolling. PullToRefresh invalidates active queries from top-only document/nested gestures. discoveryListings excludes sold stock only from discovery, retaining storefront history.
 
-- Customer activity uses validated customerTab/orderId/orderView; share owner-scoped likes and account-keyed local saved collections across feed/details/Shorts, and reuse authorized live order/QC/message reads instead of creating simulated purchases or wallets.
+- Customer activity uses validated customerTab/orderId/orderView and authorized live orders/QC/messages; share owner likes and account-keyed local saves. Feed counters are owner reaction state, never static base_likes or cart rows as global totals.
