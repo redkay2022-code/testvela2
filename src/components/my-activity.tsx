@@ -38,7 +38,7 @@ export function MyActivity({ user, posts }: { user: User | null; posts: LuxuryPo
   useEffect(()=>{setSeen(localStorage.getItem(seenKey) ?? '1970-01-01');},[seenKey]);
   const latestReply=(replies.data??[]).reduce((m,r)=>r.created_at>m?r.created_at:m,'');
   const unreadReplies=Boolean(seen&&latestReply&&latestReply>seen);
-  useEffect(()=>{if(tab==='qna'&&latestReply&&seen!==null&&latestReply>seen){localStorage.setItem(seenKey,latestReply);const t=setTimeout(()=>setSeen(latestReply),4000);return ()=>clearTimeout(t);}},[tab,latestReply,seen,seenKey]);
+  useEffect(()=>{if(tab==='qna'&&latestReply&&seen!==null&&latestReply>seen){localStorage.setItem(seenKey,latestReply);const t=setTimeout(()=>setSeen(latestReply),4000);return ()=>clearTimeout(t);}return undefined;},[tab,latestReply,seen,seenKey]);
   const repliedTo=new Set((replies.data??[]).map(r=>r.parent_id));
   const saved=p.saved.flatMap(id=>{const post=posts.find(post=>post.id===id);return post?[post]:[];});
   const liked=posts.filter(post=>engagement.likedIds.has(post.id));
