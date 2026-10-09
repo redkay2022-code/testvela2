@@ -1,7 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useServerFn } from '@tanstack/react-start';
+import { addComment } from '@/lib/market.functions';
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
-import { Heart, Users, MessageCircle, Plus, Truck, ArrowRight } from 'lucide-react';
+import { Heart, Users, MessageCircle, Plus, Truck, ArrowRight, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { marketSearch } from '@/lib/market';
 import { useSellerWorkflows } from '@/lib/use-seller-workflows';
@@ -20,8 +23,9 @@ export function SellerWorkflowPage({ page }: { page: 'store' | 'messages' | 'stu
  return page==='store'?<StoreManager user={auth.data}/>:page==='messages'?<SellerMessages user={auth.data}/>:<SellerStudio user={auth.data}/>;
 }
 function Questions({user}:{user:User}) {
- const q=useSellerWorkflows(user.id), search=marketSearch.parse(useRouterState({select:s=>s.location.search}));
- return <section className="seller-section"><h2>질문 게시판</h2>{q.isError?<p role="alert">문의를 불러오지 못했습니다.</p>:q.isLoading?<p>불러오는 중…</p>:!q.activity?.comments.length?<p className="seller-empty">접수된 상품 문의가 없습니다.</p>:q.activity.comments.map(c=><article className="seller-thread-row" key={c.id}><div><strong>{c.title}</strong><small>{c.creator} · {new Date(c.created_at).toLocaleDateString('ko-KR')}</small><p>{c.body}</p></div><Button asChild variant="goldOutline" size="sm"><Link to="/seller-store" search={prev=>({...prev,sellerView:'qna',question:c.post_id})}>답변<ArrowRight size={14}/></Link></Button></article>)}{search.question&&<ProductComments postId={search.question} user={user} requestAuth={()=>{}} qna replyable/>}</section>;
+ const q=useSellerWorkflows(user.id),write=useServerFn(addComment),client=useQueryClient();
+ const [open,setOpen]=useState<string|null>(null),[text,setText]=useState(''),[busy,setBusy]=useState(false),[done,setDone]=useState<Record<string,string>>({}),[err,setErr]=useState('');
+ return <section className="seller-section"><h2>질문 게시판</h2>{q.isError?<p role="alert">문의를 불러오지 못했습니다.</p>:q.isLoading?<p>불러오는 중…</p>:!q.activity?.comments.length?<p className="seller-empty">접수된 상품 문의가 없습니다.</p>:q.activity.comments.map(c=><article key={c.id} className="seller-thread-row" style={{flexWrap:'wrap'}}><div style={{flex:1,minWidth:0}}><strong>{c.title}</strong><small>{c.creator} · {new Date(c.created_at).toLocaleDateString('ko-KR')}</small><p>{c.body}</p>{done[c.id]&&<p className="mt-2 text-xs text-primary">↳ 내 답변: {done[c.id]}</p>}</div><Button variant="goldOutline" size="sm" aria-expanded={open===c.id} onClick={()=>{setOpen(open===c.id?null:c.id);setText('');setErr('');}}>답변<ArrowRight size={14}/></Button>{open===c.id&&<form className="mt-3 flex w-full gap-2" onSubmit={async e=>{e.preventDefault();if(!text.trim()||busy)return;setBusy(true);setErr('');try{await write({data:{postId:c.post_id,body:text,parentId:c.id}});setDone(d=>({...d,[c.id]:text.trim()}));setText('');setOpen(null);void client.invalidateQueries({queryKey:['comments',c.post_id]});}catch{setErr('답변을 저장하지 못했습니다. 다시 시도해 주세요.');}finally{setBusy(false);}}}><input autoFocus aria-label="답변 입력" placeholder="고객 질문에 답변을 입력하세요…" className="form-input min-w-0 flex-1" value={text} onChange={e=>setText(e.target.value)} maxLength={1000}/><Button type="submit" variant="gold" size="icon" aria-label="답변 등록" disabled={busy}><Send/></Button></form>}{open===c.id&&err&&<p role="alert" className="w-full text-xs text-destructive">{err}</p>}</article>)}</section>;
 }
 function StoreManager({user}:{user:User}) {
  const search=marketSearch.parse(useRouterState({select:s=>s.location.search})),view=search.sellerView??'inventory';
