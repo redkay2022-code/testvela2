@@ -17,6 +17,7 @@ import { completedOrders, salesTrend, type SalesPeriod } from '@/lib/seller-work
 import { ratingAverage, ratingDowngradeAlert, sellerTier, studioNames, tierRules } from '@/lib/reputation';
 import { marketSearch } from '@/lib/market';
 import { formatMoney } from '@/lib/currency';
+import { LogoutItem } from './logout-item';
 
 export function SellerStudio({ user }: { user: User }) {
   const search = marketSearch.parse(useRouterState({ select: s => s.location.search })), navigate = useNavigate();
