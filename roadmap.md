@@ -1,5 +1,5 @@
 # velamarket
-- [ ] Lift the pre-launch gate: remove the "사전 오픈 준비 중" banner and its pre-launch-only store read rule, keeping public visibility limited to active stores.
+- [x] Lift the pre-launch gate: removed the "사전 오픈 준비 중" banner component and replaced the pre-launch-only store read rule with an owner-scoped one; guest feed, product entry and storefront verified with no banner or page errors.
 
 - [x] Compact checkout shipping/totals, single three-tab selector and truthful gold trust notice. Authenticated live-item checkout, four networks, 320/390/707px layout and prefilled MoonPay launch verified without transfers or orders; 18 tests pass, build OK. Actual payment/provider acceptance and WalletConnect QR remain unverified/unconnected.
 - [x] Align main-feed avatar/name/badge and grouped heart/count + star/count; browser-local save toggle/reload/My VELA readback and 390/707/1280px one-row layout verified, four tests pass, build OK.
