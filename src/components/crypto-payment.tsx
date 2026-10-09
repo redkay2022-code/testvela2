@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Copy, Check, Wallet, X, QrCode, Zap, ShieldCheck } from 'lucide-react';
+import { Copy, Check, Wallet, X, QrCode, Zap, ShieldCheck, CreditCard } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Button } from './ui/button';
 import { convert } from '@/lib/currency';
@@ -45,21 +45,47 @@ function CopyRow({ label, value, button }: { label: string; value: string; butto
     <Button type="button" variant="goldOutline" size="sm" onClick={() => { void navigator.clipboard?.writeText(value); setOk(true); setTimeout(() => setOk(false), 1500); }}>{ok ? <Check size={14} /> : <Copy size={14} />}{ok ? '복사됨' : button}</Button></div></div>;
 }
 
+/** MoonPay buy URL sending USDT (TRC-20) to the platform escrow address. */
+export function moonpayUrl(usd: number, address: string) {
+  const q = new URLSearchParams({ currencyCode: 'usdt_trx', baseCurrencyCode: 'usd', baseCurrencyAmount: usd.toFixed(2), walletAddress: address });
+  return `https://buy.moonpay.com/?${q}`;
+}
+
+function TrustBanner() {
+  const items = [
+    ['개인정보 최소 보관', 'VELA는 카드 번호·은행 정보를 저장하지 않아요. 카드 결제 시 본인 확인은 MoonPay가 직접 진행해요.'],
+    ['안전한 중개 에스크로', '대금은 에스크로에 보관되고, 상품을 받고 구매 확정한 뒤에만 판매자에게 지급돼요.'],
+    ['USDT 정산', '모든 결제는 USDT로 정산돼요. 세금·관세 신고 의무는 각 나라 법에 따라 구매자에게 있어요.'],
+  ];
+  return <ul className="mt-4 grid gap-2 rounded-lg border border-primary/40 bg-background/50 p-3">{items.map(([t, d]) => <li key={t} className="flex gap-2 text-xs"><ShieldCheck size={14} className="mt-0.5 shrink-0 text-primary" /><span><strong className="text-primary">{t}</strong><span className="block text-muted-foreground">{d}</span></span></li>)}</ul>;
+}
+
+function CardPay({ usd, amount, onSubmit }: { usd: number; amount: string; onSubmit: (tx: string) => void }) {
+  const trc = cryptoNetworks[0];
+  const [opened, setOpened] = useState(false);
+  return <div className="mt-4">
+    <div className="rounded-lg border border-border p-3 text-sm"><div className="flex justify-between"><span className="text-muted-foreground">결제 금액</span><strong data-no-translate>${usd.toFixed(2)} USD</strong></div><div className="mt-1 flex justify-between"><span className="text-muted-foreground">예상 전환</span><strong className="text-primary" data-no-translate>≈ {amount} USDT</strong></div><p className="mt-2 text-[11px] text-muted-foreground">Visa · Mastercard · Amex · Apple Pay 지원. MoonPay 수수료는 결제 화면에서 별도로 표시돼요.</p></div>
+    <Button type="button" variant="gold" className="mt-4 w-full" onClick={() => { window.open(moonpayUrl(usd, trc.address), '_blank', 'noopener,noreferrer'); setOpened(true); }}><CreditCard size={16} />카드로 결제하고 USDT 자동 송금</Button>
+    {opened && <Button type="button" variant="goldOutline" className="mt-2 w-full" onClick={() => onSubmit('')}>MoonPay 결제 완료 · 주문 확정</Button>}
+  </div>;
+}
+
 export function CryptoDepositDialog({ network, usd, onClose, onSubmit, onNetwork }: { network: CryptoNetwork; usd: number; onClose: () => void; onSubmit: (txid: string) => void; onNetwork?: (n: CryptoNetwork) => void }) {
   const n = cryptoNetworks.find(x => x.id === network)! as Net;
-  const [tab, setTab] = useState<'auto' | 'direct'>('auto');
+  const [tab, setTab] = useState<'direct' | 'card' | 'auto'>('direct');
   const amount = convert(usd, 'USD').toFixed(2);
+  const tabs = [['direct', '크립토 지갑 송금', QrCode], ['card', '카드/애플페이', CreditCard], ['auto', '지갑 연결', Zap]] as const;
   return <div role="dialog" aria-modal="true" aria-label="USDT 결제" className="fixed inset-0 z-[100] flex items-end justify-center bg-background/85 p-3 sm:items-center">
     <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-xl border border-primary/40 bg-card p-5 shadow-2xl">
       <div className="flex items-center justify-between"><h2 className="flex items-center gap-2 font-semibold"><ShieldCheck className="text-primary" size={18} />USDT 에스크로 결제</h2><Button type="button" variant="ghost" size="icon" aria-label="닫기" onClick={onClose}><X /></Button></div>
       <div className="mt-3 rounded-lg border border-primary/30 bg-background/50 p-3 text-center"><p className="text-xs text-muted-foreground">결제 금액</p><p className="mt-1 text-2xl font-semibold text-primary" data-no-translate>{amount} USDT</p><p className="text-xs text-muted-foreground">≈ ${usd.toFixed(2)}</p></div>
-      <div role="tablist" className="mt-4 grid grid-cols-2 gap-1 rounded-lg border border-border p-1">
-        <button type="button" role="tab" aria-selected={tab === 'auto'} onClick={() => setTab('auto')} className={`rounded-md px-2 py-2 text-xs ${tab === 'auto' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><Zap size={13} className="mr-1 inline" />자동 지갑 연결 결제<span className="block text-[10px] opacity-80">추천</span></button>
-        <button type="button" role="tab" aria-selected={tab === 'direct'} onClick={() => setTab('direct')} className={`rounded-md px-2 py-2 text-xs ${tab === 'direct' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><QrCode size={13} className="mr-1 inline" />지갑 주소 직접 입금<span className="block text-[10px] opacity-80">QR · 주소 복사</span></button>
+      <TrustBanner />
+      <div role="tablist" className="mt-4 grid grid-cols-3 gap-1 rounded-lg border border-border p-1">
+        {tabs.map(([id, label, Icon]) => <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => { setTab(id); if (id === 'card') onNetwork?.('USDT-TRC20'); }} className={`rounded-md px-1 py-2 text-[11px] ${tab === id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}><Icon size={13} className="mx-auto mb-0.5" />{label}</button>)}
       </div>
-      {onNetwork && <div className="mt-4 grid grid-cols-2 gap-2">{cryptoNetworks.map(x => <button type="button" key={x.id} onClick={() => onNetwork(x.id)} className={`rounded-md border p-2 text-left text-xs ${x.id === network ? 'border-primary text-primary' : 'border-border text-muted-foreground'}`}><strong className="block">{x.label}</strong><span className="text-[10px]">{x.chain}</span></button>)}</div>}
-      {tab === 'auto' ? <AutoPay key={n.id} n={n} amount={amount} onPaid={onSubmit} /> : <DirectPay key={n.id} n={n} amount={amount} onSubmit={onSubmit} />}
-      <p className="mt-4 text-xs text-destructive">반드시 선택한 네트워크({n.chain})로 보내주세요. 다른 네트워크로 보내면 자산을 잃을 수 있습니다.</p>
+      {tab !== 'card' && onNetwork && <div className="mt-4 grid grid-cols-2 gap-2">{cryptoNetworks.map(x => <button type="button" key={x.id} onClick={() => onNetwork(x.id)} className={`rounded-md border p-2 text-left text-xs ${x.id === network ? 'border-primary text-primary' : 'border-border text-muted-foreground'}`}><strong className="block">{x.label}</strong><span className="text-[10px]">{x.chain}</span></button>)}</div>}
+      {tab === 'card' ? <CardPay usd={usd} amount={amount} onSubmit={onSubmit} /> : tab === 'auto' ? <AutoPay key={n.id} n={n} amount={amount} onPaid={onSubmit} /> : <DirectPay key={n.id} n={n} amount={amount} onSubmit={onSubmit} />}
+      {tab !== 'card' && <p className="mt-4 text-xs text-destructive">반드시 선택한 네트워크({n.chain})로 보내주세요. 다른 네트워크로 보내면 자산을 잃을 수 있습니다.</p>}
     </div></div>;
 }
 
