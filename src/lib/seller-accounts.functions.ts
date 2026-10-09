@@ -41,6 +41,35 @@ async function assertAdmin(supabase: any, userId: string) {
   if (!data) throw new Error('Forbidden');
 }
 
+/** Re-checks the signed-in admin's own password (throwaway client; nothing is stored). Slows brute force. */
+const failures = new Map<string, { n: number; until: number }>();
+async function checkAdminPassword(supabase: any, userId: string, password: string) {
+  await assertAdmin(supabase, userId);
+  const f = failures.get(userId);
+  if (f && f.n >= 5 && Date.now() < f.until) throw new Error('비밀번호를 여러 번 틀렸습니다. 10분 뒤에 다시 시도해 주세요.');
+  const { data: u } = await supabase.auth.getUser();
+  const email = u?.user?.email;
+  if (!email) throw new Error('계정 정보를 확인할 수 없습니다.');
+  const { createClient } = await import('@supabase/supabase-js');
+  const key = (process.env['SUPABASE_PUBLISHABLE_KEY'] || process.env['SUPABASE_ANON_KEY'])!;
+  const probe = createClient(process.env['SUPABASE_URL']!, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: (input, init) => { const h = new Headers(init?.headers); if (key.startsWith('sb_') && h.get('Authorization') === `Bearer ${key}`) h.delete('Authorization'); h.set('apikey', key); return fetch(input, { ...init, headers: h }); } },
+  });
+  const { data, error } = await probe.auth.signInWithPassword({ email, password });
+  if (error || !data.session) {
+    const n = (f && Date.now() < f.until ? f.n : 0) + 1;
+    failures.set(userId, { n, until: Date.now() + 10 * 60_000 });
+    throw new Error('비밀번호가 올바르지 않습니다.');
+  }
+  failures.delete(userId);
+}
+
+export const verifyAdminPassword = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(d => z.object({ password: z.string().min(1).max(72) }).parse(d))
+  .handler(async ({ context, data }) => { await checkAdminPassword(context.supabase, context.userId, data.password); return { ok: true }; });
+
 export const listSellerApplications = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -59,9 +88,11 @@ export const listSellerApplications = createServerFn({ method: 'GET' })
 
 export const decideSellerApplication = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator(d => z.object({ id: z.string().uuid(), approve: z.boolean() }).parse(d))
+  .inputValidator(d => z.object({ id: z.string().uuid(), approve: z.boolean(), password: z.string().max(72).optional() }).parse(d))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
+    /* Revoking a seller is destructive: the admin must re-enter their password. */
+    if (!data.approve) await checkAdminPassword(context.supabase, context.userId, data.password ?? '');
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const { data: app, error } = await supabaseAdmin.from('seller_applications').update({ status: data.approve ? 'approved' : 'rejected', reviewed_at: new Date().toISOString() }).eq('id', data.id).select('user_id').single();
     if (error || !app) throw new Error('Could not update application.');

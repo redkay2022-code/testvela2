@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { publicationUpdate } from '@/lib/seller-workflows';
 import { useMyAccount } from './seller-account';
+import { useAdminPasswordGate } from './admin-password-gate';
 import { formatMoney } from '@/lib/currency';
 import { VideoEditor, type VideoTag } from './video-editor';
 import { VideoStartPreview } from './video-start-preview';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
+import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string; sourceType?: string; factory?: string };
@@ -32,6 +34,7 @@ export function SellerListings() {
   const [user, setUser] = useState<User | null>(null);
   useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUser(data.user)); const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null)); return () => subscription.unsubscribe(); }, []);
   const account = useMyAccount(user);
+  const gate = useAdminPasswordGate();
   const roles: string[] = (account.data as { roles?: string[] } | undefined)?.roles ?? [];
   const canSell = roles.includes('seller') || roles.includes('admin');
   const qc = useQueryClient();
@@ -74,9 +77,9 @@ export function SellerListings() {
     } catch (err) { alert(err instanceof Error ? err.message : '영상 교체에 실패했어요.'); }
     finally { setReplacing(null); }
   };
-  const remove = async (l: Listing) => { if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : [])]; if (media.length) await supabase.storage.from('market-media').remove(media); refresh(); };
+  const remove = async (l: Listing) => { if (roles.includes('admin')) { if (!(await gate.ask(`'${l.title}' 상품을 삭제합니다. 사진·영상도 함께 삭제됩니다.`))) return; } else if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : [])]; if (media.length) await supabase.storage.from('market-media').remove(media); refresh(); };
 
-  return <section className="seller-flow-card" aria-label="내 상품 관리">
+  return <section className="seller-flow-card" aria-label="내 상품 관리">{gate.dialog}
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">내 상품 관리</h2><Button size="sm" onClick={() => setEditing('new')}><Plus />새 상품</Button></div>
     {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground">불러오는 중…</p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground">아직 등록한 상품이 없어요.</p> :
@@ -157,15 +160,19 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       let nextThumb: string | null | undefined = video?.file ? null : undefined;
       if (video?.file) { const ext = video.file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${user.id}/${crypto.randomUUID()}.${ext}`; const { error: e } = await supabase.storage.from('market-media').upload(path, video.file); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(video.file, user.id); if (nextThumb) uploaded.push(nextThumb); }
       const photoPaths: string[] = [];
-      for (const photo of photos) {
-        if (photo.path) { photoPaths.push(photo.path); continue; }
-        if (!photo.file) continue;
-        const ext = photo.file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
+      const settled = await Promise.allSettled(photos.map(async photo => {
+        if (photo.path) return photo.path;
+        if (!photo.file) return null;
+        const file = await compressImage(photo.file);
+        const ext = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: e } = await supabase.storage.from('market-media').upload(path, photo.file);
+        const { error: e } = await supabase.storage.from('market-media').upload(path, file, { cacheControl: LONG_CACHE });
         if (e) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
-        uploaded.push(path); photoPaths.push(path);
-      }
+        uploaded.push(path);
+        return path;
+      }));
+      if (settled.some(r => r.status === 'rejected')) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
+      for (const r of settled) if (r.status === 'fulfilled' && r.value) photoPaths.push(r.value);
       const cleanSpecs = Object.fromEntries(Object.entries(specs).map(([k, v]) => [k, String(v ?? '').trim().slice(0, 80)]).filter(([, v]) => v));
       cleanSpecs.sourceType = sourceType;
       if (sourceType === 'custom') delete cleanSpecs.factory;

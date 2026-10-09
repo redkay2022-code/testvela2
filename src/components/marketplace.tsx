@@ -21,6 +21,7 @@ import { signInWithPhone, signUpWithPhone } from '@/lib/phone-auth.functions';
 import { uploadAvatar } from '@/lib/avatar';
 import { CategoryOptions } from './category-options';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
+import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { appendListingFiles, isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 import { SpecsTable } from './specs-table';
 import { SourceFactoryField, type SourceType } from './source-factory';
@@ -278,13 +279,17 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
     const uploaded:string[]=[];
     try {
       const video = files.find(isListingVideo);
-      for(const file of files) {
+      /* Upload all files at the same time (each photo is shrunk first) instead of one after another. */
+      const results = await Promise.allSettled(files.map(async original => {
+        const file = isListingPhoto(original) ? await compressImage(original) : original;
         const extension = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g,'') || 'bin';
         const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
-        const {error:uploadError} = await supabase.storage.from('market-media').upload(path,file);
+        const {error:uploadError} = await supabase.storage.from('market-media').upload(path,file,{cacheControl:LONG_CACHE});
         if(uploadError) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
-        uploaded.push(path);
-      }
+        return path;
+      }));
+      for(const r of results) if(r.status==='fulfilled') uploaded.push(r.value);
+      if(results.some(r => r.status==='rejected')) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
       const thumb = video ? await uploadVideoThumbnail(video, user.id) : null;
       if(thumb) uploaded.push(thumb);
       const imagePaths = uploaded.filter((_,i) => files[i] ? isListingPhoto(files[i]) : false);

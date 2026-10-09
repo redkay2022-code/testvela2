@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Archive, Copy, Eye, ImagePlus, Pencil, Plus, Power, Star, Trash2, Upload } from 'lucide-react';
 import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { compressImage, LONG_CACHE } from '@/lib/image-compress';
+import { useAdminPasswordGate } from './admin-password-gate';
 import type { Database } from '@/integrations/supabase/types';
 import { watchImages } from '@/lib/luxury-market';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
@@ -44,12 +46,13 @@ function useMediaUrls(paths: string[]) {
   return (p: string | null | undefined) => (!p ? '' : p.startsWith('seed:') ? seedSrc(p) : p.startsWith('http') ? p : data?.[p] ?? '');
 }
 
-async function uploadMedia(file: File, folder: string) {
+async function uploadMedia(input: File, folder: string) {
+  const file = input.type.startsWith('image/') ? await compressImage(input) : input;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('관리자 로그인이 필요합니다.');
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
   const path = `${user.id}/${folder}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from('market-media').upload(path, file, { contentType: file.type });
+  const { error } = await supabase.storage.from('market-media').upload(path, file, { contentType: file.type, cacheControl: LONG_CACHE });
   if (error) throw new Error('파일을 올리지 못했습니다.');
   return path;
 }
@@ -401,6 +404,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
 }
 
 function Categories({ products }: { products: PostRow[] }) {
+  const gate = useAdminPasswordGate();
   const qc = useQueryClient();
   const { data: rows = [], isLoading } = useCategories();
   const [draft, setDraft] = useState({ name: '', parent_id: '', collection: 'watches' });
@@ -431,7 +435,7 @@ function Categories({ products }: { products: PostRow[] }) {
   const remove = async (r: CategoryRow) => {
     if (rows.some(x => x.parent_id === r.id)) { setMsg('하위 카테고리를 먼저 삭제해 주세요.'); return; }
     if (count(r.name)) { setMsg(`${r.name}에 상품 ${count(r.name)}개가 있어 삭제할 수 없습니다.`); return; }
-    if (!confirm(`${r.name} 카테고리를 삭제할까요?`)) return;
+    if (!(await gate.ask(`'${r.name}' 카테고리를 삭제합니다.`))) return;
     const { error } = await supabase.from('categories').delete().eq('id', r.id);
     setMsg(error ? '삭제하지 못했습니다.' : `${r.name} 삭제됨`); await reload();
   };
@@ -440,7 +444,7 @@ function Categories({ products }: { products: PostRow[] }) {
     <td>{child ? '하위' : '상위'}</td><td>{child ? count(r.name, true) : '—'}</td><td>{child ? count(r.name) : '—'}</td>
     <td className="whitespace-nowrap"><Button type="button" variant="ghost" size="sm" aria-label="위로" onClick={() => void move(r, -1)}>↑</Button><Button type="button" variant="ghost" size="sm" aria-label="아래로" onClick={() => void move(r, 1)}>↓</Button><Button type="button" variant="ghost" size="sm" aria-label="삭제" onClick={() => void remove(r)}><Trash2 /></Button></td>
   </tr>;
-  return <div className="catalog mt-4"><div className="section-heading"><h2>CATEGORIES</h2><span>상위 · 하위 카테고리 관리</span></div>
+  return <>{gate.dialog}<div className="catalog mt-4"><div className="section-heading"><h2>CATEGORIES</h2><span>상위 · 하위 카테고리 관리</span></div>
     {msg && <p role="status" className="dashboard-message">{msg}</p>}
     <div className="catalog-toolbar flex flex-wrap gap-2">
       <input aria-label="새 카테고리 이름" placeholder="새 카테고리 이름" value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} />
@@ -452,7 +456,7 @@ function Categories({ products }: { products: PostRow[] }) {
     <div className="catalog-scroll"><table className="catalog-table"><thead><tr><th>Category</th><th>Level</th><th>Published</th><th>Total</th><th></th></tr></thead><tbody>
       {parents.flatMap(p => [row(p, false), ...rows.filter(r => r.parent_id === p.id).map(r => row(r, true))])}
     </tbody></table></div>}
-  </div>;
+  </div></>;
 }
 
 function Inventory({ products, stores }: { products: PostRow[]; stores: StoreRow[] }) {

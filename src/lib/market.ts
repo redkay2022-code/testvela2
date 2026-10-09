@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query';
 import { getPosts, getStores } from './market.functions';
 import { z } from 'zod';
+import { stabilizePosts } from './media-cache';
 import type { Database } from '@/integrations/supabase/types';
 
 export type Post = Database['public']['Tables']['posts']['Row'];
@@ -20,7 +21,7 @@ export const marketSearch = z.object({
   category:z.string().optional(), q:z.string().optional(), fq:z.string().optional(), ffactory:z.string().optional(), fmin:z.number().optional(), fmax:z.number().optional(), fshorts:z.boolean().optional(), fsort:z.enum(['newest','price_desc','price_asc']).optional(), tab:z.enum(['discover','following','reviews','nearby','likes','posts']).optional(),
 });
 export const storesQuery = queryOptions({queryKey:['stores'],queryFn:() => getStores(),staleTime:0,refetchOnMount:'always',refetchInterval:45*60_000});
-export const postsQuery = queryOptions({queryKey:['posts'],queryFn:() => getPosts(),staleTime:0,refetchOnMount:'always',refetchInterval:45*60_000,refetchIntervalInBackground:false});
+export const postsQuery = queryOptions({queryKey:['posts'],queryFn:async () => stabilizePosts(await getPosts()),staleTime:0,refetchOnMount:'always',refetchInterval:45*60_000,refetchIntervalInBackground:false});
 export const pageHead = (title:string,description:string) => ({ meta:[
   {title:`${title} · velamarket 벨라마켓`},
   {name:'description',content:description},

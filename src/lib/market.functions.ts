@@ -37,7 +37,7 @@ export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const permitted = (post:typeof uploaded[number],path:string) => !path.includes('..') && (path.startsWith('seed:') || Boolean(post.store_id && path.split('/').length >= 2) || Boolean(post.user_id && path.startsWith(`${post.user_id}/`)));
     const paths = [...new Set(uploaded.flatMap(p => [...p.media_urls,...(p.video_url ? [p.video_url]:[]),...(p.thumbnail_url ? [p.thumbnail_url]:[])].filter(path => permitted(p,path) && !path.startsWith('seed:'))))];
-    const {data:signed,error:signError} = paths.length ? await supabaseAdmin.storage.from('market-media').createSignedUrls(paths,3600) : {data:[],error:null};
+    const {data:signed,error:signError} = paths.length ? await supabaseAdmin.storage.from('market-media').createSignedUrls(paths,21600) : {data:[],error:null};
     if(signError) throw new Error('게시물 사진을 불러오지 못했습니다.');
     const urls = new Map(signed?.map(s => [s.path,s.signedUrl]) || []);
     for(const post of uploaded) {

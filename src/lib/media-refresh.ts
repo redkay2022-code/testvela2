@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { forgetUrl } from './media-cache';
 
 const SIGNED = '/storage/v1/object/sign/';
 let last = 0;
@@ -12,7 +13,9 @@ export function useMediaRefresh() {
       const el = e.target;
       if (!(el instanceof HTMLImageElement || el instanceof HTMLVideoElement || el instanceof HTMLSourceElement || el instanceof HTMLAudioElement)) return;
       const src = ('currentSrc' in el ? el.currentSrc : '') || el.getAttribute('src') || '';
-      if (!src.includes(SIGNED) || Date.now() - last < 20_000) return;
+      if (!src.includes(SIGNED)) return;
+      forgetUrl(src);
+      if (Date.now() - last < 20_000) return;
       last = Date.now();
       void queryClient.invalidateQueries();
     };

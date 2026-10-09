@@ -1,3 +1,4 @@
+import { useAdminPasswordGate } from './admin-password-gate';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -105,6 +106,7 @@ export function AdminApplications() {
   const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication), setTier = useServerFn(setSellerTierOverride);
   const { data, error, isLoading } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false, refetchInterval: 30000 });
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
+  const gate = useAdminPasswordGate();
   const [busy, setBusy] = useState<string | null>(null); const [msg, setMsg] = useState('');
   if (isLoading) return <p className="text-sm text-muted-foreground">판매자 신청을 불러오는 중…</p>;
   if (error) return <p className="text-sm text-muted-foreground">실제 신청은 관리자 계정으로 로그인한 후 확인할 수 있습니다.</p>;
@@ -112,12 +114,13 @@ export function AdminApplications() {
   const count = (s: string) => rows.filter(a => a.status === s).length;
   const shown = filter === 'all' ? rows : rows.filter(a => a.status === filter);
   const act = async (id: string, approve: boolean, name: string) => {
-    if (!approve && !confirm(`${name} 님의 판매자 권한을 거절/해제할까요?`)) return;
+    let password: string | undefined;
+    if (!approve) { const pw = await gate.ask(`${name} 님의 판매자 권한을 거절/해제합니다.`); if (!pw) return; password = pw; }
     setBusy(id); setMsg('');
-    try { await decide({ data: { id, approve } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); setMsg(`${name} · ${approve ? '승인 완료 — 판매자 권한이 부여되었습니다.' : '거절 처리 — 판매자 권한이 해제되었습니다.'}`); }
+    try { await decide({ data: { id, approve, ...(password ? { password } : {}) } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); setMsg(`${name} · ${approve ? '승인 완료 — 판매자 권한이 부여되었습니다.' : '거절 처리 — 판매자 권한이 해제되었습니다.'}`); }
     catch (e) { setMsg(e instanceof Error ? e.message : '처리하지 못했습니다.'); } finally { setBusy(null); }
   };
-  return <div>
+  return <div>{gate.dialog}
     <div className="flex flex-wrap gap-2 py-3">{([['pending', '대기'], ['approved', '승인'], ['rejected', '거절'], ['all', '전체']] as const).map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? 'goldOutline' : 'ghost'} onClick={() => setFilter(k)}>{l} {k === 'all' ? rows.length : count(k)}</Button>)}</div>
     {msg && <p role="status" className="mb-2 text-sm text-primary">{msg}</p>}
     {!shown.length ? <p className="text-sm text-muted-foreground">{filter === 'pending' ? '검토 대기 중인 신청이 없습니다.' : '해당하는 신청이 없습니다.'}</p> :

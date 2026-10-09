@@ -96,6 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      ...(import.meta.env['VITE_SUPABASE_URL'] ? [{ rel: "preconnect", href: String(import.meta.env['VITE_SUPABASE_URL']), crossOrigin: "anonymous" as const }] : []),
       { rel: "icon", href: "/icons/icon-192.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icons/icon-180.png" },
       { rel: "manifest", href: "/manifest.json" },
