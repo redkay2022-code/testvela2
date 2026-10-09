@@ -31,7 +31,7 @@ export function LogoutItem() {
       <AlertDialogContent lang="ko" data-no-translate>
         <AlertDialogHeader>
           <ShieldQuestion className="mx-auto text-primary" size={30}/>
-          <AlertDialogTitle>로그아웃前 등록 정보를 확인하세요</AlertDialogTitle>
+          <AlertDialogTitle>로그아웃 전에 확인하세요</AlertDialogTitle>
           <AlertDialogDescription>
             로그아웃하기 전에 <strong>가입 때 등록한 전화번호와 비밀번호</strong>를 잊지 마세요.
             다시 로그인할 때 동일한 전화번호와 비밀번호가 필요합니다.
