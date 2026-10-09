@@ -9,10 +9,10 @@ import { convert } from '@/lib/currency';
  * wallet auto-pay stays disabled so no buyer can send real funds to an unowned address.
  */
 export const cryptoNetworks = [
-  { id: 'USDT-TRC20', label: 'USDT (TRC-20)', chain: 'TRON 네트워크', address: 'TSampleVelaEscrowTrc20AddressXXXXXX', unit: 'USDT', usd: 1, kind: 'tron', token: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', decimals: 6, ready: false, gas: '약 1–15 TRX (에너지)' },
-  { id: 'USDT-ERC20', label: 'USDT (ERC-20)', chain: 'Ethereum 네트워크', address: '0xSampleVelaEscrowErc20Address0000000000', unit: 'USDT', usd: 1, kind: 'evm', chainId: 1, native: 'ETH', token: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6, ready: false, gas: '' },
-  { id: 'USDT-POLYGON', label: 'USDT (Polygon)', chain: 'Polygon 네트워크', address: '0xSampleVelaEscrowPolygonAddress00000000', unit: 'USDT', usd: 1, kind: 'evm', chainId: 137, native: 'POL', token: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6, ready: false, gas: '' },
-  { id: 'USDT-BEP20', label: 'USDT (BEP-20)', chain: 'BNB Smart Chain', address: '0xSampleVelaEscrowBep20Address0000000000', unit: 'USDT', usd: 1, kind: 'evm', chainId: 56, native: 'BNB', token: '0x55d398326f99059fF775485246999027B3197955', decimals: 18, ready: false, gas: '' },
+  { id: 'USDT-TRC20', label: 'USDT (TRC-20)', chain: 'TRON 네트워크', address: 'TDmP3UVG9QZkWGWzSKrGJWh8wz9kdGEb6E', unit: 'USDT', usd: 1, kind: 'tron', token: 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t', decimals: 6, ready: true, gas: '약 1–15 TRX (에너지)' },
+  { id: 'USDT-ERC20', label: 'USDT (ERC-20)', chain: 'Ethereum 네트워크', address: '0x54212Ae966af6521514A890d665a1A8747f7b3a1', unit: 'USDT', usd: 1, kind: 'evm', chainId: 1, native: 'ETH', token: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6, ready: true, gas: '' },
+  { id: 'USDT-POLYGON', label: 'USDT (Polygon)', chain: 'Polygon 네트워크', address: '0x54212Ae966af6521514A890d665a1A8747f7b3a1', unit: 'USDT', usd: 1, kind: 'evm', chainId: 137, native: 'POL', token: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals: 6, ready: true, gas: '' },
+  { id: 'USDT-BEP20', label: 'USDT (BEP-20)', chain: 'BNB Smart Chain', address: '0x54212Ae966af6521514A890d665a1A8747f7b3a1', unit: 'USDT', usd: 1, kind: 'evm', chainId: 56, native: 'BNB', token: '0x55d398326f99059fF775485246999027B3197955', decimals: 18, ready: true, gas: '' },
 ] as const;
 export type CryptoNetwork = typeof cryptoNetworks[number]['id'];
 type Net = typeof cryptoNetworks[number];
