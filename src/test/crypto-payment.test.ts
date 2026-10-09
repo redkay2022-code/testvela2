@@ -14,3 +14,27 @@ describe('MoonPay link', () => {
     expect(u.searchParams.get('walletAddress')).toBe('TDmP3UVG9QZkWGWzSKrGJWh8wz9kdGEb6E');
   });
 });
+import { trustTitle, trustPillars } from '@/components/crypto-payment';
+describe('Payment trust banner', () => {
+  const all = [trustTitle, ...trustPillars.map(p => p.join(' '))].join(' ').toLowerCase();
+  it('shows the buyer-first title and exactly three guarantees', () => {
+    expect(trustTitle).toBe('🛡️ VELA Customer Safety First Payment System');
+    expect(trustPillars.map(p => p[0])).toEqual([
+      '🔒 100% Privacy & Financial Data Protection',
+      '💎 Scam Protection & 100% Escrow Guarantee',
+      '🌐 Secure USDT Crypto Settlement',
+    ]);
+    trustPillars.forEach(p => expect(p[1].length).toBeGreaterThan(40));
+  });
+  it('promises escrow release only after the buyer receives, inspects and approves', () => {
+    const escrow = trustPillars.find(p => p[0].includes('Escrow'))?.[1] ?? '';
+    expect(escrow).toMatch(/released to the seller only after you receive, inspect, and approve/i);
+    expect(escrow).toMatch(/full refund protection/i);
+    expect(trustPillars.find(p => p[0].includes('Privacy'))?.[1]).toMatch(/never stores your credit card, bank, or personal financial details/i);
+  });
+  it('makes no anonymity, KYC-free or surveillance/tax-evasion promise', () => {
+    ['anonym', 'surveillance', 'tax', 'customs', 'track', 'untraceable', 'avoid', 'kyc', 'no identity'].forEach(banned => {
+      expect(all).not.toContain(banned);
+    });
+  });
+});
