@@ -1,0 +1,1 @@
+DROP POLICY "Prelaunch members only posts" ON public.posts;
