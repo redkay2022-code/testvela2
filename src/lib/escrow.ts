@@ -1,6 +1,6 @@
 export type EscrowStage='placed'|'preparing'|'qc'|'qc_done'|'qc_requested'|'shipping_prep'|'shipped'|'delivered';
 export const escrowSteps=[
- {en:'Order Placed',ko:'주문 완료'},
+ {en:'Pending Escrow / Payment Confirmed',ko:'결제 완료 및 에스크로 보관'},
  {en:'Preparing Product',ko:'제품 준비'},
  {en:'QC Inspecting',ko:'셀러 검수 중'},
  {en:'QC Completed',ko:'검수 완료 & 승인 대기'},

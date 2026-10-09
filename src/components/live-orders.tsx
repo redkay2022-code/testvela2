@@ -32,10 +32,10 @@ export function explorerUrl(network: string | null, txid: string) {
 const courierLink = (c: string | null, n: string) => `https://t.17track.net/en#nums=${encodeURIComponent(n)}`;
 
 /** Creates a persistent order for a signed-in buyer after TXID submission. */
-export async function createLiveOrder(input: { post_id: string; title: string; image_url?: string; amount_usd: number; product_amount_usd?: number; points_redeemed?: number; seller_id: string | null; seller_name: string; network: string; txid: string }) {
+export async function createLiveOrder(input: { post_id: string; title: string; image_url?: string; amount_usd: number; product_amount_usd?: number; points_redeemed?: number; seller_id: string | null; seller_name: string; network: string; txid?: string }) {
   const { data } = await supabase.auth.getUser();
   if (!data.user) return null;
-  const { data: row, error } = await supabase.from('orders').insert({ ...input, buyer_id: data.user.id }).select('id').single();
+  const { data: row, error } = await supabase.from('orders').insert({ ...input, txid: input.txid || null, buyer_id: data.user.id }).select('id').single();
   if (error) throw error;
   return row.id;
 }

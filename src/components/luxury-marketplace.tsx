@@ -225,6 +225,6 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   <CryptoNetworkPicker value={network} onChange={setNetwork}/>
   <p className="my-5 text-xs leading-6 text-muted-foreground">{t('shippingNote')}</p>
   <Button variant="gold" className="w-full" type="submit">암호화폐로 결제하기<ArrowRight/></Button>
-  {deposit&&<CryptoDepositDialog network={network} usd={cash} onClose={()=>setDeposit(false)} onSubmit={txid=>{setDeposit(false);preview.order(item);void createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:purchase.total,product_amount_usd:productUsd,points_redeemed:points,seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid}).catch(console.error);onDone();}}/>}
+  {deposit&&<CryptoDepositDialog network={network} usd={cash} onNetwork={setNetwork} onClose={()=>setDeposit(false)} onSubmit={txid=>{setDeposit(false);preview.order(item);void createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:purchase.total,product_amount_usd:productUsd,points_redeemed:points,seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid}).catch(console.error);onDone();}}/>}
  </form>;
 }
