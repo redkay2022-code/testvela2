@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Align main-feed seller/badge and grouped engagement counters; verify toggles and saved-collection readback without inventing global save totals.
 - [x] Implement saved-first customer URL tabs, heart likes/Star saves, two-column collection with purchase CTA, order-specific tracking/QC/specs/defect entry and consolidated membership/wallet. Guest save/reload, actual photo load, purchase entry and 390px no-overflow verified; 35 distinct focused tests pass, build OK. Saves are per-account browser-local, not cross-device.
 - [ ] Verify authenticated customer likes, membership and existing order tracking/QC/defect readback. Blocker: no injected session; auth-session --self cannot match requester to an app account. No orders or transfers created for testing; crypto deposit/withdrawal and issued guarantee documents remain unavailable.
 - [x] Display current commenter avatars/nicknames on all post/Shorts comment lists using privacy-safe profile lookup; authenticated real comment posting, loaded avatar, nickname/time, reload, Shorts details/comments and product Q&A verified without page errors; test comment removed, 16 tests pass and build OK.
