@@ -16,7 +16,7 @@ export function LogoutItem() {
       await queryClient.cancelQueries();
       queryClient.clear();
       await supabase.auth.signOut();
-      await navigate({ to: '/auth', replace: true });
+      await navigate({ to: '/', replace: true });
     } finally {
       setBusy(false);
     }
