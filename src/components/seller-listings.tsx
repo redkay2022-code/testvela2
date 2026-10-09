@@ -1,4 +1,4 @@
-import { DISPATCH_OPTIONS, type DispatchTime } from '@/lib/dispatch';
+import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
@@ -100,7 +100,9 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   const [description, setDescription] = useState(listing?.description ?? '');
   const [category, setCategory] = useState(listing?.category === '악세사리' ? '악세사리' : '시계');
   const [price, setPrice] = useState(listing?.price != null ? String(listing.price) : '');
-  const [dispatch, setDispatch] = useState<string>(listing?.dispatch_time ?? '7d');
+  const initialDispatch = listing?.dispatch_time ?? '7d';
+  const [dispatch, setDispatch] = useState<string>(initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
+  const [customDispatch, setCustomDispatch] = useState(initialDispatch.startsWith('custom:') ? initialDispatch.slice(7) : '');
   const [boxPrice, setBoxPrice] = useState(listing?.box_price != null ? String(listing.box_price) : '');
   const [specs, setSpecs] = useState<Specs>(listing?.specs ?? {});
   const [sourceType, setSourceType] = useState<SourceType>(() => {
@@ -160,7 +162,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       cleanSpecs.sourceType = sourceType;
       if (sourceType === 'custom') delete cleanSpecs.factory;
       else cleanSpecs.factory = factory.trim().slice(0, 80);
-      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, dispatch_time: dispatch as DispatchTime, media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
+      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, dispatch_time: dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
         const retained = new Set(photoPaths); const removed = [...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await supabase.storage.from('market-media').remove(removed);
@@ -199,7 +201,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     <label htmlFor="l-desc" className="form-label">상품 설명</label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
     <div className="grid grid-cols-2 gap-x-3">
       <div><label htmlFor="l-price" className="form-label">판매 가격 (USD $)</label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>
-      <fieldset className="sm:col-span-2"><legend className="form-label">예상 발송 시간</legend><div className="flex flex-wrap gap-2" role="radiogroup">{DISPATCH_OPTIONS.map(o => <button type="button" key={o.value} role="radio" aria-checked={dispatch === o.value} onClick={() => setDispatch(o.value)} className={`lux-chip ${dispatch === o.value ? 'active' : ''}`}>{o.label}</button>)}</div></fieldset><div><label htmlFor="l-box" className="form-label">풀셋 박스 (USD $, 선택)</label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
+      <fieldset className="sm:col-span-2"><legend className="form-label">예상 발송 시간</legend><div className="flex flex-wrap gap-2" role="radiogroup">{DISPATCH_OPTIONS.map(o => <button type="button" key={o.value} role="radio" aria-checked={dispatch === o.value} onClick={() => setDispatch(o.value)} className={`lux-chip ${dispatch === o.value ? 'active' : ''}`}>{o.label}</button>)}</div><input aria-label="예상 발송 시간 직접 입력" className="form-input mt-2" maxLength={40} placeholder="직접 입력 (예: 주문 후 10일 이내)" value={customDispatch} onFocus={() => setDispatch('custom')} onChange={e => { setCustomDispatch(e.target.value); setDispatch('custom'); }} /></fieldset><div><label htmlFor="l-box" className="form-label">풀셋 박스 (USD $, 선택)</label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
     </div>
     <p className="mt-2 text-xs text-muted-foreground">가격은 USD로 저장되며, 구매자에게는 각자의 통화로 자동 환산되어 표시돼요.{price && Number(price) > 0 ? ` (현재 표시: ${formatMoney(Number(price))})` : ''}</p>
     <div className="mt-1">

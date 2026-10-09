@@ -82,7 +82,6 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const setFeedFilter=(f:FeedFilter)=>{const next={fq:f.fq,ffactory:f.ffactory,fmin:f.fmin,fmax:f.fmax,fshorts:f.fshorts,fsort:f.fsort};if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,...next}),replace:true,resetScroll:false});else void navigate({to:helpPath ?? base,search:prev=>({...prev,...next}),replace:true,resetScroll:false});};
  const close=()=>{if(postId&&!search.auth&&!search.menu&&!search.panel){void navigate({to:'/',search:{role:search.role},replace:true,resetScroll:false});return;}if(postId)void navigate({to:'/post/$id',params:{id:postId},search:prev=>({...prev,auth:undefined,authSignup:undefined,menu:undefined,panel:undefined}),replace:true,resetScroll:false});else if(shortsId)void navigate({to:'/shorts/$id',params:{id:shortsId},search:prev=>({...prev,auth:undefined,authSignup:undefined,menu:undefined,panel:undefined}),replace:true,resetScroll:false});else void navigate({to:helpPath ?? base,search:prev=>({...prev,...(search.auth?{auth:undefined,authSignup:undefined}:search.menu?{menu:undefined}:search.panel?{panel:undefined}:{post:undefined,detailTab:undefined})}),replace:true,resetScroll:false});};
  let posts=all.filter(p=>!preview.hidden.includes(p.id)&&(!search.q||`${p.title} ${p.creator} ${p.factory} ${p.category}`.toLowerCase().includes(search.q.toLowerCase()))&&(!search.category||search.category==='All'||p.category===search.category||p.factory===search.category));
- if(search.tab==='ready') posts=filterImmediate(posts);
  if(search.tab==='following') posts=posts.filter(p=>preview.isFollowing(sellerIdentity(p))).sort((a,b)=>(Date.parse(b.source?.created_at ?? '')||0)-(Date.parse(a.source?.created_at ?? '')||0));
   const {data:reviewRows}=useQuery({queryKey:['review-counts'],queryFn:async()=>{const {data:rows}=await supabase.from('reviews').select('seller_id');return rows ?? [];},staleTime:30_000});
   const postRatings=usePostRatings();
@@ -96,7 +95,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const cleanHome=mode==='home'&&!shortsId&&!postId;
  const backOnlyHeader=['store','me','seller','upload'].includes(mode)||search.panel==='chat'||search.panel==='cart';
  if(mode!=='store')posts=discoveryListings(posts);
-  if(cleanHome)posts=posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
+  if(cleanHome)posts=search.feedCategory==='ready'?filterImmediate(posts):posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
  if(cleanHome&&search.tab!=='reviews')posts=filterFeed(posts,search);
  const selected=all.find(p=>p.id===(shortsId || postId || search.post));
  const entry=productEntry(authReady,Boolean(user));
@@ -114,7 +113,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   <div className="lux-header-inner">
   <Button variant="ghost" size="icon" className="relative" aria-label={notifications.unread?`메뉴 열기 · 읽지 않은 알림 ${notifications.unread}개`:'메뉴 열기'} onClick={()=>update({menu:true})}><Menu/>{notifications.unread>0&&<span aria-hidden="true" className="absolute right-0 top-1 size-2 rounded-full bg-destructive"/>}</Button>
     <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>
-    <nav className="lux-header-tabs" aria-label="Feed tabs">{[['following','팔로잉'],['discover','추천'],['ready','바로 발송'],['reviews','리뷰']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,feedCategory:search.feedCategory,tab:tab as 'following'|'discover'|'reviews'|'ready'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false}>{label}</Link></Button>)}</nav>
+    <nav className="lux-header-tabs" aria-label="Feed tabs">{[['following','팔로잉'],['discover','추천'],['reviews','리뷰']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,feedCategory:search.feedCategory,tab:tab as 'following'|'discover'|'reviews'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false}>{label}</Link></Button>)}</nav>
    <CurrencySelect/><Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button>
   </div>
    {cleanHome&&<FeedCategoryPicker selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}

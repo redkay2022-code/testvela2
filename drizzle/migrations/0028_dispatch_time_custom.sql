@@ -1,0 +1,2 @@
+ALTER TABLE public.posts DROP CONSTRAINT IF EXISTS posts_dispatch_time_check;
+ALTER TABLE public.posts ADD CONSTRAINT posts_dispatch_time_check CHECK (dispatch_time IS NULL OR dispatch_time IN ('immediate','3d','5d','7d','14d','20d') OR (dispatch_time LIKE 'custom:%' AND char_length(dispatch_time) BETWEEN 8 AND 47));
