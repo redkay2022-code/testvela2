@@ -64,13 +64,13 @@ export function CryptoDepositDialog({ network, usd, onClose, onSubmit, onNetwork
 }
 
 function AutoPay({ n, amount, onPaid }: { n: Net; amount: string; onPaid: (tx: string) => void }) {
-  const [account, setAccount] = useState(''), [gas, setGas] = useState(n.gas), [busy, setBusy] = useState(false), [err, setErr] = useState('');
+  const [account, setAccount] = useState(''), [gas, setGas] = useState<string>(n.gas), [busy, setBusy] = useState(false), [err, setErr] = useState('');
   const connect = async () => {
     setErr('');
     try {
       if (n.kind === 'tron') { const t = tron(); await t.tronLink?.request({ method: 'tron_requestAccounts' }); const a = t.tronWeb?.defaultAddress?.base58; if (!a) throw new Error('TronLink 또는 Trust Wallet(TRON) 지갑을 열어 주세요.'); setAccount(a); return; }
       const p = eth(); if (!p) throw new Error('지갑을 찾을 수 없습니다. MetaMask·Trust Wallet·Coinbase Wallet 앱의 브라우저에서 열어 주세요.');
-      const [a] = await p.request({ method: 'eth_requestAccounts' }) as string[];
+      const [a = ''] = await p.request({ method: 'eth_requestAccounts' }) as string[];
       try { await p.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + n.chainId.toString(16) }] }); } catch { throw new Error(`지갑에서 ${n.chain}으로 전환해 주세요.`); }
       setAccount(a);
       const price = BigInt(await p.request({ method: 'eth_gasPrice' }) as string);
