@@ -1,3 +1,4 @@
+import { DISPATCH_OPTIONS, type DispatchTime } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
@@ -14,7 +15,7 @@ import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string; sourceType?: string; factory?: string };
-type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
+type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
 const specFields: [keyof Specs, string, string][] = [
@@ -38,7 +39,7 @@ export function SellerListings() {
     queryKey: ['my-listings', user?.id], enabled: !!user && canSell,
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,media_urls,video_url,status,product_status,stock_qty,reserved_qty,specs,video_tags,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,dispatch_time,media_urls,video_url,status,product_status,stock_qty,reserved_qty,specs,video_tags,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
       if (error) throw error;
       const rows = data as unknown as Listing[];
       const paths = rows.flatMap(r => [...r.media_urls, r.video_url].filter(Boolean)) as string[];
@@ -99,6 +100,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   const [description, setDescription] = useState(listing?.description ?? '');
   const [category, setCategory] = useState(listing?.category === '악세사리' ? '악세사리' : '시계');
   const [price, setPrice] = useState(listing?.price != null ? String(listing.price) : '');
+  const [dispatch, setDispatch] = useState<string>(listing?.dispatch_time ?? '7d');
   const [boxPrice, setBoxPrice] = useState(listing?.box_price != null ? String(listing.box_price) : '');
   const [specs, setSpecs] = useState<Specs>(listing?.specs ?? {});
   const [sourceType, setSourceType] = useState<SourceType>(() => {
@@ -158,7 +160,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       cleanSpecs.sourceType = sourceType;
       if (sourceType === 'custom') delete cleanSpecs.factory;
       else cleanSpecs.factory = factory.trim().slice(0, 80);
-      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
+      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, dispatch_time: dispatch as DispatchTime, media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
         const retained = new Set(photoPaths); const removed = [...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await supabase.storage.from('market-media').remove(removed);
@@ -197,7 +199,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     <label htmlFor="l-desc" className="form-label">상품 설명</label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
     <div className="grid grid-cols-2 gap-x-3">
       <div><label htmlFor="l-price" className="form-label">판매 가격 (USD $)</label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>
-      <div><label htmlFor="l-box" className="form-label">풀셋 박스 (USD $, 선택)</label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
+      <fieldset className="sm:col-span-2"><legend className="form-label">예상 발송 시간</legend><div className="flex flex-wrap gap-2" role="radiogroup">{DISPATCH_OPTIONS.map(o => <button type="button" key={o.value} role="radio" aria-checked={dispatch === o.value} onClick={() => setDispatch(o.value)} className={`lux-chip ${dispatch === o.value ? 'active' : ''}`}>{o.label}</button>)}</div></fieldset><div><label htmlFor="l-box" className="form-label">풀셋 박스 (USD $, 선택)</label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
     </div>
     <p className="mt-2 text-xs text-muted-foreground">가격은 USD로 저장되며, 구매자에게는 각자의 통화로 자동 환산되어 표시돼요.{price && Number(price) > 0 ? ` (현재 표시: ${formatMoney(Number(price))})` : ''}</p>
     <div className="mt-1">

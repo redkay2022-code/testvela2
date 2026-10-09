@@ -683,6 +683,7 @@ export type Database = {
           currency: string
           data_source: string
           description: string
+          dispatch_time: string | null
           duration: string | null
           featured: boolean
           id: string
@@ -722,6 +723,7 @@ export type Database = {
           currency?: string
           data_source?: string
           description?: string
+          dispatch_time?: string | null
           duration?: string | null
           featured?: boolean
           id?: string
@@ -761,6 +763,7 @@ export type Database = {
           currency?: string
           data_source?: string
           description?: string
+          dispatch_time?: string | null
           duration?: string | null
           featured?: boolean
           id?: string

@@ -5,7 +5,7 @@ import type { Post } from '@/lib/market';
 
 const source: Post = {
  id:'media-routing', user_id:null, title:'Watch', description:'Watch details', creator:'Studio', category:'시계', image_key:'uploaded',
- media_urls:[], video_url:null, thumbnail_url:'/poster.jpg', music_track_id:null, music_title:null, music_artist:null, music_audio_url:null, music_license_url:null,
+ media_urls:[], video_url:null, dispatch_time:null, thumbnail_url:'/poster.jpg', music_track_id:null, music_title:null, music_artist:null, music_audio_url:null, music_license_url:null,
  video_tags:[], duration:null, price:100, box_price:null, base_likes:0, specs:{}, status:'published', updated_at:'2026-10-08T00:00:00Z', created_at:'2026-10-08T00:00:00Z',
  store_id:null, brand:'', model:'', reference:'', subcategory:'', sku:'', currency:'USD', stock_qty:1, reserved_qty:0, low_stock_threshold:1, featured:false, data_source:'USER', product_status:'PUBLISHED',
 };
