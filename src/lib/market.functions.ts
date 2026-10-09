@@ -21,7 +21,7 @@ function publicClient(bearer?: string | null) {
   });
 }
 
-/** Pre-launch: catalog RLS only shows rows to admins/sellers, so reads run as the caller when signed in. */
+/** Catalog reads run as the caller when signed in, so sellers also see their own unpublished rows. */
 async function callerToken() {
   const { getRequestHeader } = await import('@tanstack/react-start/server');
   const h = getRequestHeader('authorization') ?? '';
