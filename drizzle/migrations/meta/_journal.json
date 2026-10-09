@@ -204,6 +204,13 @@
       "when": 1791504795714,
       "tag": "0028_dispatch_time_custom",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791506225583,
+      "tag": "0029_members_can_view_feed",
+      "breakpoints": true
     }
   ]
 }
