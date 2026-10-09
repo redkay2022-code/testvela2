@@ -8,14 +8,12 @@ import './checkout.css';
 import { useNavigate, useRouterState } from '@tanstack/react-router';
 import { Button } from './ui/button';
 import { NicknameEditor } from './seller-account';
-import { useMarketPreview } from './market-preview';
 import { marketSearch } from '@/lib/market';
 
 export function ProfileSettings({ user }: { user: User | null }) {
   const navigate = useNavigate();
   const search = marketSearch.parse(useRouterState({ select: s => s.location.search }));
   const tab = search.profileTab ?? 'profile';
-  const preview = useMarketPreview();
   return <div className="mt-5">
     <nav className="flex gap-2 border-b border-border pb-3" aria-label="프로필 편집 항목">
       {(['profile', 'shipping'] as const).map(value => <Button key={value} variant={tab === value ? 'goldOutline' : 'ghost'} aria-pressed={tab === value} onClick={() => void navigate({ to: '.', search: prev => ({ ...prev, panel: 'settings', profileTab: value }), resetScroll: false })}>{value === 'profile' ? '내 프로필' : '배송지 정보'}</Button>)}
