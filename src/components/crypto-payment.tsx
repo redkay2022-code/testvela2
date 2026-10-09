@@ -49,13 +49,25 @@ export function moonpayUrl(usd: number, address: string) {
   return `https://buy.moonpay.com/?${q}`;
 }
 
+/**
+ * Buyer-first trust copy shown at the top of every payment surface. `data-no-translate` keeps it
+ * verbatim in all UI languages. Every claim stays inside what the platform actually does — no card
+ * or bank storage, escrow released only on buyer approval, USDT settlement. It deliberately makes no
+ * anonymity, KYC-free, or surveillance/tax-evasion promise: card on-ramps run identity checks and
+ * public ledgers are traceable, so such wording would mislead buyers and create legal exposure.
+ */
+export const trustTitle = '🛡️ VELA Customer Safety First Payment System';
+export const trustPillars = [
+  ['🔒 100% Privacy & Financial Data Protection', 'VELA never stores your credit card, bank, or personal financial details. Every payment session is end-to-end encrypted, and your information is never sold or shared.'],
+  ['💎 Scam Protection & 100% Escrow Guarantee', 'Your payment is locked in VELA’s neutral smart escrow and released to the seller only after you receive, inspect, and approve your luxury item. If it does not match the description, full refund protection applies.'],
+  ['🌐 Secure USDT Crypto Settlement', 'Every order settles seamlessly in USDT — no card details change hands, no bank intermediary, and confirmation reaches buyer and seller anywhere in the world within minutes.'],
+] as const;
+
 export function TrustBanner() {
-  const items = [
-    ['결제정보 보호', 'VELA는 카드·은행 정보를 저장하지 않습니다. MoonPay는 본인 확인을 진행하며, 완전한 익명 결제는 아닙니다.'],
-    ['구매 확정 후 정산', '입금 확인 후 중개 보관하고 수령·검수 및 구매 확정 후 정산합니다. 분쟁은 중재 절차를 따릅니다.'],
-    ['USDT 정산 · 법규 준수', '블록체인 거래는 공개됩니다. USDT 결제로 세금·관세 신고 의무가 면제되지 않습니다.'],
-  ];
-  return <ul className="payment-trust" aria-label="결제 보안 및 유의사항">{items.map(([t, d]) => <li key={t}><ShieldCheck size={14} className="mt-0.5 shrink-0 text-primary" /><span><strong>{t}</strong><span>{d}</span></span></li>)}</ul>;
+  return <section className="payment-trust" aria-label="결제 보안 보장" data-no-translate>
+    <h3 className="payment-trust-title">{trustTitle}</h3>
+    <ul>{trustPillars.map(([t, d]) => <li key={t}><span><strong>{t}</strong><span>{d}</span></span></li>)}</ul>
+  </section>;
 }
 
 function CardPay({ usd, amount, onSubmit }: { usd: number; amount: string; onSubmit: (tx: string) => void }) {
