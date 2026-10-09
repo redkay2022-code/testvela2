@@ -487,6 +487,7 @@ export type Database = {
           refunded_amount_usd: number
           seller_id: string | null
           seller_name: string
+          shipping: Json
           stage: string
           title: string
           tracking_checked_at: string | null
@@ -520,6 +521,7 @@ export type Database = {
           refunded_amount_usd?: number
           seller_id?: string | null
           seller_name?: string
+          shipping?: Json
           stage?: string
           title: string
           tracking_checked_at?: string | null
@@ -553,6 +555,7 @@ export type Database = {
           refunded_amount_usd?: number
           seller_id?: string | null
           seller_name?: string
+          shipping?: Json
           stage?: string
           title?: string
           tracking_checked_at?: string | null

@@ -1,0 +1,2 @@
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS shipping jsonb NOT NULL DEFAULT '{}'::jsonb;
+COMMENT ON COLUMN public.orders.shipping IS 'Recipient name, phone, address lines, city, state, postal code and country captured at checkout';
