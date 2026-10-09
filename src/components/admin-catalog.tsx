@@ -444,7 +444,7 @@ function Categories({ products }: { products: PostRow[] }) {
     {msg && <p role="status" className="dashboard-message">{msg}</p>}
     <div className="catalog-toolbar flex flex-wrap gap-2">
       <input aria-label="새 카테고리 이름" placeholder="새 카테고리 이름" value={draft.name} onChange={e => setDraft(d => ({ ...d, name: e.target.value }))} />
-      <select aria-label="상위 카테고리" value={draft.parent_id} onChange={e => setDraft(d => ({ ...d, parent_id: e.target.value }))}><option value="">상위 카테고리로 추가</option>{parents.map(p => <option key={p.id} value={p.id}>{p.name}의 하위</option>)}</select>
+      <select aria-label="상위 카테고리" value={draft.parent_id} onChange={e => setDraft(d => ({ ...d, parent_id: e.target.value }))}><option value="">상위 카테고리로 추가</option>{parents.map(p => <option key={p.id} value={p.id}>{`${p.name}의 하위`}</option>)}</select>
       {!draft.parent_id && <select aria-label="컬렉션" value={draft.collection} onChange={e => setDraft(d => ({ ...d, collection: e.target.value }))}><option value="watches">Watches</option><option value="accessories">Accessories</option></select>}
       <Button type="button" variant="gold" onClick={() => void add()}><Plus />추가</Button>
     </div>

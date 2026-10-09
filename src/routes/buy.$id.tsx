@@ -46,7 +46,7 @@ function BuyPage() {
     <h1 className="mt-3 text-xl font-semibold">구매하기</h1>
     <section className="mt-4 rounded-lg border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-2" data-no-translate><span className="flex items-center gap-2 font-semibold"><Store size={16} className="text-primary" />{post.creator}<SellerBadge reputation={post.reputation} withRating /></span><Button asChild variant="goldOutline" size="sm"><Link to="/store" search={{ seller: sellerIdentity(post), storeTab: 'reviews' }}>셀러 리뷰</Link></Button></div>
-      <div className="mt-3 flex items-center gap-2 text-sm">{pr ? <><Stars value={pr.average} /><strong>{pr.average.toFixed(1)}</strong><span className="text-muted-foreground">이 상품 구매자 평점 · {pr.count}개</span></> : <span className="text-muted-foreground">이 상품의 구매자 평점이 아직 없습니다.</span>}</div>
+      <div className="mt-3 flex items-center gap-2 text-sm">{pr ? <><Stars value={pr.average} /><strong>{pr.average.toFixed(1)}</strong><span className="text-muted-foreground">{`이 상품 구매자 평점 · ${pr.count}개`}</span></> : <span className="text-muted-foreground">이 상품의 구매자 평점이 아직 없습니다.</span>}</div>
       <div className="mt-4 flex gap-2"><Button variant="goldOutline" className="flex-1" aria-pressed={ask} onClick={() => setAsk(v => !v)}><MessageCircle size={16} />판매자에게 문의</Button></div>
       {ask && <div className="mt-3"><p className="text-xs text-muted-foreground">문의는 상품 Q&A에 올라가며 판매자가 답변합니다. 결제 후에는 주문 내역에서 판매자와 1:1 채팅을 할 수 있습니다.</p><ProductComments postId={post.id} user={user} requestAuth={requestAuth} qna /></div>}
     </section>

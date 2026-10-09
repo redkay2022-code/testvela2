@@ -28,6 +28,6 @@ export function FeedFilters({ value, count, onChange }: { value: FeedFilter; cou
       </select>
       <label className="feed-filters-check"><input type="checkbox" checked={Boolean(value.fshorts)} onChange={e => onChange({ ...value, fshorts: e.target.checked || undefined })}/>숏츠(영상)만 보기</label>
     </div>}
-    {active && <div className="feed-filters-summary"><span>{count}개 게시물</span><button type="button" onClick={() => { setText(''); onChange({}); }}>필터 초기화</button></div>}
+    {active && <div className="feed-filters-summary"><span>{`${count}개 게시물`}</span><button type="button" onClick={() => { setText(''); onChange({}); }}>필터 초기화</button></div>}
   </section>;
 }

@@ -71,7 +71,7 @@ export function SellerOrderControl(){
   {o.stage==='preparing'&&<Button variant="gold" onClick={()=>p.setStage(o.id,'qc','Seller started QC inspection')}>Start QC Inspection</Button>}
   {o.stage==='qc'&&<QcUpload o={o} supplement={false}/>}
   {o.stage==='qc_requested'&&<QcUpload o={o} supplement/>}
-  {o.stage==='qc_done'&&<p className="escrow-wait">Waiting for buyer QC approval ({o.qcMedia.length} files sent).</p>}
+  {o.stage==='qc_done'&&<p className="escrow-wait">{`Waiting for buyer QC approval (${o.qcMedia.length} files sent).`}</p>}
   {o.stage==='shipping_prep'&&<ShipForm o={o}/>}
   {o.stage==='shipped'&&<><p className="escrow-wait">Shipped · awaiting buyer delivery confirmation to release escrow.</p><LocationUpdate o={o}/></>}
   {o.stage==='delivered'&&<p className="escrow-done"><Check size={14}/> Escrow released · {dollars(o.amount)} (sample)</p>}

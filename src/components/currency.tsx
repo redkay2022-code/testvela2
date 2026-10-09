@@ -38,10 +38,10 @@ export function CurrencySelect({ className = '' }: { className?: string }) {
   const [open, setOpen] = useState(false);
   return <span className={`locale-menu ${className}`}><button type="button" className="locale-trigger" aria-label={t('language')} aria-expanded={open} onClick={() => setOpen(o => !o)}><Globe size={19}/></button>{open && <span className="locale-selects">
     <select aria-label={t('language')} className="currency-select" value={lang} onChange={e => { if (isLang(e.target.value)) setLang(e.target.value); }}>
-      {langs.map(l => <option key={l} value={l}>{langLabels[l]}</option>)}
+      {langs.map(l => <option key={l} value={l} data-i18n-skip>{langLabels[l]}</option>)}
     </select>
     <select aria-label="Currency" className="currency-select" value={currency} onChange={e => { if (isCurrency(e.target.value)) setCurrency(e.target.value); }}>
-      {currencies.map(c => <option key={c} value={c}>{currencyLabels[c]}</option>)}
+      {currencies.map(c => <option key={c} value={c} data-i18n-skip>{currencyLabels[c]}</option>)}
     </select>
   </span>}</span>;
 }

@@ -79,7 +79,7 @@ export function ReviewComposer({ orderId, requestAuth, onDone }: { orderId?: str
     <label className="form-label" htmlFor="review-body">리뷰 내용</label>
     <textarea id="review-body" className="form-input" maxLength={900} value={body} onChange={e => setBody(e.target.value)} placeholder="상품 상태, 배송, 검수 경험을 알려주세요" required/>
     <label className="mt-3 flex cursor-pointer items-center gap-2 text-xs text-muted-foreground"><ImagePlus size={16} className="text-primary"/>사진(최대 6장)·영상(1개) 추가<input type="file" accept="image/*,video/*" multiple className="sr-only" onChange={e => pick(e.target.files)}/></label>
-    {files.length > 0 && <p className="mt-1 text-xs text-primary">{files.length}개 파일 선택됨</p>}
+    {files.length > 0 && <p className="mt-1 text-xs text-primary">{`${files.length}개 파일 선택됨`}</p>}
     {msg && <p className="mt-2 text-xs text-muted-foreground" role="status">{msg}</p>}
     <Button variant="gold" className="mt-4 w-full" disabled={busy} type="submit">{busy ? '등록 중…' : '리뷰 등록'}</Button>
   </form>;

@@ -138,7 +138,7 @@ function QcUploader({ o, round, supplement }: { o: Order; round: number; supplem
   };
   return <div className="qc-upload"><label className="qc-drop"><Upload size={18} /><span>{supplement ? '요청받은 추가 사진·영상 업로드' : `디테일 사진 ${QC_MIN_PHOTOS}장 이상 + 영상 ${QC_MIN_VIDEOS}개 이상 업로드`}</span>
     <input type="file" accept="image/*,video/*" multiple onChange={e => { const l = e.target.files; if (l) setFiles(prev => [...prev, ...[...l].filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))]); e.target.value = ''; }} /></label>
-    <p className={`qc-count ${ok ? 'ok' : ''}`}>사진 {imgs}장 · 영상 {vids}개 {supplement ? '' : `(필수: 사진 ${QC_MIN_PHOTOS}+ / 영상 ${QC_MIN_VIDEOS}+)`}</p>
+    <p className={`qc-count ${ok ? 'ok' : ''}`}>{`사진 ${imgs}장 · 영상 ${vids}개`}{supplement ? '' : ` (필수: 사진 ${QC_MIN_PHOTOS}+ / 영상 ${QC_MIN_VIDEOS}+)`}</p>
     {files.length > 0 && <ul className="text-xs text-muted-foreground">{files.map((f, i) => <li key={i} className="flex justify-between"><span>{f.name}</span><button type="button" aria-label={`${f.name} 삭제`} onClick={() => setFiles(p => p.filter((_, j) => j !== i))}><X size={12} /></button></li>)}</ul>}
     {err && <p className="text-xs text-destructive">{err}</p>}
     <Button variant="gold" disabled={!ok || busy} onClick={() => void submit()}><Check />{busy ? '업로드 중…' : supplement ? '추가 사진 보내기' : 'QC 완료 & 구매자에게 전송'}</Button></div>;
@@ -191,7 +191,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
         {search.orderView==='qc'&&!media.length&&<p className="escrow-wait">출고 QC 사진·영상이 아직 등록되지 않았습니다.</p>}
         {search.orderView==='specs'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold mb-3">보증 안내·제품 스펙</h3>{product?<SpecsTable specs={product.specs} fallback={<p className="text-sm text-muted-foreground">등록된 상품 사양이 없습니다.</p>}/>:<p className="text-sm text-muted-foreground">이 상품의 스펙 정보를 불러올 수 없습니다.</p>}<p className="text-xs text-muted-foreground my-3">주문에 연결된 상품 정보와 출고 QC 자료입니다. 별도로 발급된 보증서가 없으면 보증서가 제공되지 않습니다.</p><Button asChild variant="goldOutline"><Link to="/escrow-guide">VELA 구매 보호 안내</Link></Button></section>}
         {search.orderView==='defect'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold">초기 불량·교환 접수</h3><p className="my-2 text-sm text-muted-foreground">불량 증상과 교환 요청을 남기면 이 주문의 판매자에게 전달됩니다.</p><Thread msgs={msgs}/><Composer orderId={o.id} role={as}/></section>}
-        {media.length > 0 && <><h4 className="escrow-sub"><Camera size={14} /> QC 사진·영상 {media.length}개</h4><Gallery media={media} /></>}
+        {media.length > 0 && <><h4 className="escrow-sub"><Camera size={14} /> {`QC 사진·영상 ${media.length}개`}</h4><Gallery media={media} /></>}
         {isSeller && stage === 'placed' && <Button variant="gold" onClick={() => setStage(o.id, 'preparing')}>제품 준비 시작</Button>}
         {isSeller && stage === 'preparing' && <Button variant="gold" onClick={() => setStage(o.id, 'qc')}>QC 검수 시작</Button>}
         {isSeller && stage === 'qc' && <QcUploader o={o} round={1} supplement={false} />}
@@ -278,7 +278,7 @@ export function AdminCryptoOrders() {
     <strong>{dollars(Number(o.amount_usd))}</strong>
     <span className="record-status">{o.payment_verified_at ? '입금 확인됨' : '검증 대기'}</span>
     <div className="record-actions">
-      <Button asChild variant="ghost" size="sm"><a href={ex.url} target="_blank" rel="noreferrer"><ExternalLink />{ex.name}에서 확인</a></Button>
+      <Button asChild variant="ghost" size="sm"><a href={ex.url} target="_blank" rel="noreferrer"><ExternalLink />{`${ex.name}에서 확인`}</a></Button>
       {!o.payment_verified_at && <Button variant="goldOutline" size="sm" onClick={() => { if (confirm(`${ex.name}에서 금액과 수신 주소를 확인하셨나요? 결제 확인으로 처리합니다.`)) void supabase.from('orders').update({ payment_verified_at: new Date().toISOString() }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('결제 확인 처리되었습니다.')); }}><Check />결제 확인</Button>}
     </div></div>; })}</div>;
 }

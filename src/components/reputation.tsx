@@ -59,14 +59,14 @@ export function StudioTierPanel({ reputation, live, stats, recent }: { reputatio
       <div className="flex items-center justify-between gap-2 text-sm"><span>다음 등급 <strong className="text-primary">{studioNames[next.tier]}</strong></span><span className="text-xs text-muted-foreground">{usd(reputation.volumeUsd ?? 0)} / {usd(next.volume)}</span></div>
       <progress max={100} value={next.volumeProgress} aria-label="다음 등급까지 매출 진행률"/>
       <ul className="studio-tier-checks">
-        <li className={(reputation.volumeUsd ?? 0) > next.volume ? 'met' : ''}>매출 {usd(next.volume)} 초과 · 남은 금액 {usd(Math.max(0, next.volume - (reputation.volumeUsd ?? 0)))}</li>
-        <li className={reputation.completedSales >= next.sales ? 'met' : ''}>완료 주문 {next.sales}건 이상 · 현재 {reputation.completedSales}건</li>
-        <li className={(average ?? 0) >= next.rating ? 'met' : ''}>평점 {next.rating.toFixed(1)} 이상 · 현재 {average === null ? '평가 없음' : average.toFixed(2)}</li>
-        <li className={(reputation.disputeRate ?? 0) < next.rule.maxDispute ? 'met' : ''}>분쟁률 {next.rule.maxDispute}% 미만 · 현재 {(reputation.disputeRate ?? 0).toFixed(1)}%</li>
+        <li className={(reputation.volumeUsd ?? 0) > next.volume ? 'met' : ''}>{`매출 ${usd(next.volume)} 초과 · 남은 금액 ${usd(Math.max(0, next.volume - (reputation.volumeUsd ?? 0)))}`}</li>
+        <li className={reputation.completedSales >= next.sales ? 'met' : ''}>{`완료 주문 ${next.sales}건 이상 · 현재 ${reputation.completedSales}건`}</li>
+        <li className={(average ?? 0) >= next.rating ? 'met' : ''}>{average === null ? `평점 ${next.rating.toFixed(1)} 이상 · 현재 평가 없음` : `평점 ${next.rating.toFixed(1)} 이상 · 현재 ${average.toFixed(2)}`}</li>
+        <li className={(reputation.disputeRate ?? 0) < next.rule.maxDispute ? 'met' : ''}>{`분쟁률 ${next.rule.maxDispute}% 미만 · 현재 ${(reputation.disputeRate ?? 0).toFixed(1)}%`}</li>
       </ul>
     </div> : <p className="studio-tier-progress text-sm text-primary">최고 등급 MASTER STUDIO를 달성했습니다.</p>}
     {next && next.rating > 0 && <div className="studio-tier-progress"><div className="flex items-center justify-between text-sm"><span>평점 목표 <strong className="text-primary">{next.rating.toFixed(1)}</strong></span><span className="text-xs text-muted-foreground">{average === null ? '평가 없음' : average.toFixed(2)} / {next.rating.toFixed(1)}</span></div><progress max={100} value={next.ratingProgress} aria-label="다음 등급까지 평점 진행률"/></div>}
-    <div className="studio-tier-progress"><div className="flex items-center justify-between text-sm"><span>평균 평점 <strong className="text-primary">★ {average === null ? '—' : average.toFixed(2)}</strong></span><span className="text-xs text-muted-foreground">리뷰 {stats?.count ?? reputation.ratingCount ?? 0}개 · 별점 합계 ÷ 리뷰 수</span></div>
+    <div className="studio-tier-progress"><div className="flex items-center justify-between text-sm"><span>평균 평점 <strong className="text-primary">★ {average === null ? '—' : average.toFixed(2)}</strong></span><span className="text-xs text-muted-foreground">{`리뷰 ${stats?.count ?? reputation.ratingCount ?? 0}개 · 별점 합계 ÷ 리뷰 수`}</span></div>
       {stats && <div className="rating-breakdown">{[5, 4, 3, 2, 1].map(n => { const c = stats.breakdown[n - 1]!; return <div key={n}><span>{n}★</span><progress max={Math.max(1, stats.count)} value={c} aria-label={`${n}점 리뷰`}/><span>{c}</span></div>; })}</div>}
     </div>
     {recent && <div className="studio-tier-progress"><h3 className="text-sm font-semibold">최근 고객 리뷰</h3>{recent.length ? recent.map(r => <div key={r.id} className="border-t border-border pt-2 text-xs"><div className="flex justify-between"><span data-no-translate>{r.nickname}</span><span className="text-primary">{r.rating ? '★'.repeat(r.rating) : '별점 없음'}</span></div><p className="mt-1 line-clamp-2 text-muted-foreground">{r.body}</p></div>) : <p className="text-xs text-muted-foreground">아직 리뷰가 없습니다.</p>}</div>}
