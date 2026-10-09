@@ -45,7 +45,7 @@ import { filterFeed, sortFeed, postFactory, type FeedFilter } from '@/lib/feed-f
 import { FeedFilters } from './feed-filters';
 import { useMediaRefresh } from '@/lib/media-refresh';
 import { productEntry } from '@/lib/product-entry';
-import { CryptoDepositDialog, CryptoNetworkPicker, CryptoPaymentTabs, type CryptoNetwork, type CryptoPaymentTab } from './crypto-payment';
+import { CryptoDepositDialog, TrustBanner, type CryptoNetwork } from './crypto-payment';
 import { SellerEscrowWallet } from './seller-wallet';
 import { PullToRefresh } from './pull-to-refresh';
 import { discoveryListings } from '@/lib/catalog';
@@ -204,32 +204,31 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
  const checkoutSearch=useRouterState({select:s=>marketSearch.parse(s.location.search)});
  const [box,setBox]=useState(Boolean(checkoutSearch.checkoutBox));
  const [f,setF]=useState({recipient:p.recipient||'',phone:p.phone,address:p.address,postal:p.postal,region:['Mainland China','South Korea','Global'].includes(p.region)?p.region:'Global'});
- const filled=Boolean(p.recipient&&p.phone&&p.address);
  const set=(k:keyof typeof f)=>(e:{target:{value:string}})=>setF(prev=>({...prev,[k]:e.target.value}));
  const price=item.price ?? 0, boxPrice=item.boxPrice ?? 0;
-  const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [paymentTab,setPaymentTab]=useState<CryptoPaymentTab>('direct'); const [deposit,setDeposit]=useState(false); const [points,setPoints]=useState(0);
+  const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [deposit,setDeposit]=useState(false); const [points,setPoints]=useState(0);
  const productUsd=price+(box?boxPrice:0), purchase=insuredPurchase(price,box?boxPrice:0), cash=cashPayment(purchase.total,points);
- return <form onSubmit={e=>{e.preventDefault();setDeposit(true);}}>
+ return <form className="checkout-form" onSubmit={e=>{e.preventDefault();setDeposit(true);}}>
+  <TrustBanner/>
   <div className="cart-line"><img src={item.images[0]} width={64} height={64} alt=""/><div><p>{item.title}</p><p className="mt-2 text-primary">{dollars(price)}</p></div></div>
   {boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>{t('addBox')}</span><strong>+{dollars(boxPrice)}</strong></label>}
-  <InsuranceBreakdown price={price} box={box?boxPrice:0} format={dollars}/>
-  <CheckoutPoints product={productUsd} points={points} onChange={setPoints}/>
-  <CheckoutSummary product={productUsd} insurance={purchase.insurance} total={purchase.total} points={points}/>
-  <section className="mt-6" aria-labelledby="payment-method-title">
-    <div className="mb-3 flex items-center justify-between gap-3"><h3 id="payment-method-title" className="text-sm font-semibold">결제 방법 3가지</h3><span className="text-xs text-primary">USDT 에스크로</span></div>
-    <CryptoPaymentTabs value={paymentTab} onChange={tab=>{setPaymentTab(tab);if(tab==='card')setNetwork('USDT-TRC20');}} />
-    <p className="mt-2 text-xs leading-5 text-muted-foreground">원하는 결제 방법을 고른 뒤 아래 배송정보를 확인하고 결제창을 열어 주세요.</p>
-  </section>
-  <h3 className="mt-6 text-sm font-semibold">{t('shippingInfo')}</h3>
-  <p className="mt-1 text-xs text-muted-foreground">{filled?t('autofilled'):t('manualEntry')}</p>
-  <label className="form-label" htmlFor="checkout-name">{t('recipient')}</label><input id="checkout-name" className="form-input" required maxLength={60} autoComplete="name" value={f.recipient} onChange={set('recipient')}/>
-  <label className="form-label" htmlFor="checkout-phone">{t('phone')}</label><input id="checkout-phone" type="tel" className="form-input" required maxLength={30} autoComplete="tel" value={f.phone} onChange={set('phone')}/>
-  <label className="form-label" htmlFor="checkout-address">{t('address')}</label><textarea id="checkout-address" className="form-input" required maxLength={300} autoComplete="street-address" value={f.address} onChange={set('address')}/>
-  <label className="form-label" htmlFor="checkout-postal">{t('postal')}</label><input id="checkout-postal" className="form-input" required maxLength={12} autoComplete="postal-code" value={f.postal} onChange={set('postal')}/>
-  <label className="form-label" htmlFor="checkout-region">{t('destination')}</label><select id="checkout-region" className="form-input" value={f.region} onChange={set('region')}><option>Mainland China</option><option>South Korea</option><option>Global</option></select>
-  <CryptoNetworkPicker value={network} onChange={setNetwork}/>
-  <p className="my-5 text-xs leading-6 text-muted-foreground">{t('shippingNote')}</p>
-  <Button variant="gold" className="w-full" type="submit">3개 결제 방법 창 열기<ArrowRight/></Button>
-  {deposit&&<CryptoDepositDialog network={network} usd={cash} initialTab={paymentTab} onNetwork={setNetwork} onClose={()=>setDeposit(false)} onSubmit={txid=>{setDeposit(false);preview.order(item);void createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:purchase.total,product_amount_usd:productUsd,points_redeemed:points,seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid}).catch(console.error);onDone();}}/>}
+  <h3 className="text-sm font-semibold">배송 정보</h3>
+  <div className="checkout-shipping">
+    <label htmlFor="checkout-name">수령인 이름<input id="checkout-name" className="form-input" required maxLength={60} autoComplete="name" value={f.recipient} onChange={set('recipient')}/></label>
+    <label htmlFor="checkout-phone">연락처 / Telegram ID<input id="checkout-phone" className="form-input" required maxLength={60} autoComplete="tel" placeholder="전화번호 또는 @아이디" value={f.phone} onChange={set('phone')}/></label>
+    <label className="checkout-wide" htmlFor="checkout-address">전체 배송 주소<textarea id="checkout-address" className="form-input" required rows={2} maxLength={300} autoComplete="street-address" value={f.address} onChange={set('address')}/></label>
+  </div>
+  <details><summary>우편번호 · 배송 지역</summary><div className="checkout-shipping mt-3">
+    <label htmlFor="checkout-postal">우편번호<input id="checkout-postal" className="form-input" maxLength={12} autoComplete="postal-code" value={f.postal} onChange={set('postal')}/></label>
+    <label htmlFor="checkout-region">배송 지역<select id="checkout-region" className="form-input" value={f.region} onChange={set('region')}><option value="Mainland China">중국 본토</option><option value="South Korea">대한민국</option><option value="Global">기타 국가</option></select></label>
+  </div></details>
+  <details><summary>결제 명세 · 포인트 사용</summary>
+    <CheckoutPoints product={productUsd} points={points} onChange={setPoints}/>
+    <CheckoutSummary product={productUsd} insurance={purchase.insurance} total={purchase.total} points={points}/>
+  </details>
+  <div className="checkout-total"><span className="text-xs text-muted-foreground">총 결제 금액 · 보험료 포함</span><strong data-no-translate>{cash.toFixed(2)} USDT</strong></div>
+  <p className="text-[11px] leading-5 text-muted-foreground">배송비·관세는 판매자 및 수령국 안내를 따릅니다. 카드 결제 수수료는 MoonPay에서 별도로 확인하세요.</p>
+  <Button variant="gold" className="w-full" type="submit">안전 에스크로 결제하기<ShieldCheck size={16}/></Button>
+  {deposit&&<CryptoDepositDialog network={network} usd={cash} onNetwork={setNetwork} onClose={()=>setDeposit(false)} onSubmit={txid=>{setDeposit(false);preview.order(item);void createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:purchase.total,product_amount_usd:productUsd,points_redeemed:points,seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid}).catch(console.error);onDone();}}/>}
  </form>;
 }
