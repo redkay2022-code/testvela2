@@ -27,6 +27,7 @@ import { SourceFactoryField, type SourceType } from './source-factory';
 import { VideoEditor, type VideoTag } from './video-editor';
 import { VideoStartPreview } from './video-start-preview';
 import { type SelectedMusic } from './music-picker';
+import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 
 function imageFor(post: Post) { return post.media_urls[0] || media[post.image_key]; }
 
@@ -252,6 +253,8 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
   const [editing,setEditing] = useState<File|null>(null);
   const [videoTags,setVideoTags] = useState<VideoTag[]>([]);
   const [music,setMusic] = useState<SelectedMusic|null>(null);
+  const [dispatch,setDispatch] = useState<string>('7d');
+  const [customDispatch,setCustomDispatch] = useState('');
   useEffect(() => {const urls = files.map(f => URL.createObjectURL(f));setPreviews(urls);return () => urls.forEach(u => URL.revokeObjectURL(u));},[files]);
   const addMedia = (selected: File[]) => {
     if (!selected.length) return;
