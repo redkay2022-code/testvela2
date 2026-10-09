@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import type { Database } from '@/integrations/supabase/types';
+import { commentAvatarPath, commentNickname } from './comment-profiles';
 
 function publicClient(bearer?: string | null) {
   const url = process.env['SUPABASE_URL'];
@@ -76,9 +77,28 @@ export const getStores = createServerFn({ method: 'GET' }).handler(async () => {
 export const getComments = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) => z.object({ postId: z.string().max(100) }).parse(data))
   .handler(async ({data}) => {
-    const { data: rows, error } = await publicClient().from('comments').select('*').eq('post_id',data.postId).order('created_at');
+    const client = publicClient(await callerToken());
+    const { data: rows, error } = await client.from('comments').select('id,user_id,body,created_at').eq('post_id',data.postId).order('created_at').order('id');
     if (error) throw new Error('댓글을 불러오지 못했습니다.');
-    return rows;
+    if (!rows.length) return [];
+    const { data: profiles, error: profileError } = await client.rpc('comment_author_profiles', { _post_id: data.postId });
+    if (profileError) throw new Error('댓글 프로필을 불러오지 못했습니다.');
+    const authors = new Set(rows.map(row => row.user_id));
+    const visibleProfiles = (profiles ?? []).filter(profile => authors.has(profile.user_id));
+    const paths = [...new Set(visibleProfiles.map(commentAvatarPath).filter((path): path is string => Boolean(path)))];
+    const urls = new Map<string, string>();
+    if (paths.length) {
+      // Only avatar paths authorized against visible published comments can be signed.
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+      const { data: signed } = await supabaseAdmin.storage.from('avatars').createSignedUrls(paths, 3600);
+      signed?.forEach(item => { if (item.path && item.signedUrl && !item.error) urls.set(item.path, item.signedUrl); });
+    }
+    const byId = new Map(visibleProfiles.map(profile => [profile.user_id, profile]));
+    return rows.map(row => {
+      const profile = byId.get(row.user_id);
+      const path = profile ? commentAvatarPath(profile) : null;
+      return { id: row.id, body: row.body, created_at: row.created_at, nickname: commentNickname(profile), avatar_url: path ? urls.get(path) ?? null : null };
+    });
   });
 
 export const getPublicReviews = createServerFn({ method: 'GET' })
@@ -105,9 +125,9 @@ export const addComment = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ postId:z.string().max(100), body:z.string().trim().min(1).max(1000) }).parse(data))
   .handler(async ({data,context}) => {
-    const metadata = context.claims.user_metadata;
-    const name = metadata && typeof metadata === 'object' && 'display_name' in metadata ? metadata['display_name'] : undefined;
-    const creator = String(name || context.claims.email?.split('@')[0] || 'vela member').slice(0,40);
+    const { data: profile, error: profileError } = await context.supabase.from('profiles').select('nickname').eq('user_id',context.userId).maybeSingle();
+    if (profileError) throw new Error('프로필을 불러오지 못했습니다.');
+    const creator = (profile?.nickname.trim() || 'VELA 회원').slice(0,40);
     const {error} = await context.supabase.from('comments').insert({post_id:data.postId,user_id:context.userId,creator,body:data.body});
     if(error) throw new Error('댓글을 저장하지 못했습니다.');
     return {ok:true};

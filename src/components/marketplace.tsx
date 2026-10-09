@@ -12,10 +12,11 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { Music, ArrowDownWideNarrow, ArrowLeft, ArrowRight, Bell, Check, ChevronDown, Compass, Heart, Home, ImagePlus, MapPin, MessageCircle, Plus, Search, Send, Share2, ShieldCheck, ShoppingBag, Sparkles, User, X } from 'lucide-react';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
+import { ProductComments } from './product-comments';
 import { supabase } from '@/integrations/supabase/client';
 import { categories, media, priceLabel } from '@/lib/market-media';
 import { marketSearch, paths, postsQuery, type Mode, type Post } from '@/lib/market';
-import { addComment, getComments, setLike } from '@/lib/market.functions';
+import { setLike } from '@/lib/market.functions';
 import { signInWithPhone, signUpWithPhone } from '@/lib/phone-auth.functions';
 import { uploadAvatar } from '@/lib/avatar';
 import { CategoryOptions } from './category-options';
@@ -166,24 +167,9 @@ function PostCard({post,path,liked,onLike,search}:{post:Post;path:typeof paths[M
 
 function DetailDrawer({post,user,liked,onLike,onClose,requestAuth,notify}:{post:Post;user:AuthUser|null;liked:boolean;onLike:()=>void;onClose:()=>void;requestAuth:()=>void;notify:(s:string)=>void}) {
   const reducedMotion = useReducedMotion();
-  const [comment,setComment] = useState('');
-  const [pending,setPending] = useState(false);
   const [slide,setSlide] = useState(0);
   const carousel = useRef<HTMLDivElement>(null);
-  const queryClient = useQueryClient();
-  const commentsFn = useServerFn(getComments);
-  const commentFn = useServerFn(addComment);
-  const {data:comments,error:commentError} = useQuery({queryKey:['comments',post.id],queryFn:() => commentsFn({data:{postId:post.id}})});
   const pictures = post.media_urls.length ? post.media_urls : [media[post.image_key]];
-  const submitComment = async (e:React.FormEvent) => {
-    e.preventDefault();
-    if(!user) {requestAuth();return;}
-    if(!comment.trim() || pending) return;
-    setPending(true);
-    try {await commentFn({data:{postId:post.id,body:comment}});setComment('');await queryClient.invalidateQueries({queryKey:['comments',post.id]});}
-    catch {notify('댓글을 저장하지 못했어요. 다시 시도해 주세요.');}
-    finally {setPending(false);}
-  };
   return <Dialog.Root open onOpenChange={open => {if(!open) onClose();}}><Dialog.Portal>
     <Dialog.Overlay asChild><motion.div className="drawer-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}/></Dialog.Overlay>
     <Dialog.Content asChild aria-describedby={undefined}><motion.div className="detail-drawer" initial={{y:reducedMotion?0:'100%'}} animate={{y:0}} exit={{y:reducedMotion?0:'100%'}} transition={{type:'spring',damping:32,stiffness:300}}>
@@ -192,11 +178,10 @@ function DetailDrawer({post,user,liked,onLike,onClose,requestAuth,notify}:{post:
         <div ref={carousel} className="detail-carousel" onScroll={e => setSlide(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))}>{post.video_url && <video src={post.video_url} poster={pictures[0]} controls playsInline preload="metadata"/>}{pictures.map((src,i) => <img key={i} src={src} alt={`${post.title} 상세 사진 ${i+1}`} width={512} height={768}/>)}</div>
         {pictures.length + (post.video_url ? 1 : 0) > 1 && <div className="flex items-center justify-center gap-3 py-2"><Button variant="ghost" size="icon" aria-label="이전 미디어" disabled={slide === 0} onClick={() => carousel.current?.scrollBy({left:-(carousel.current?.clientWidth || 0),behavior:reducedMotion?'auto':'smooth'})}><ArrowLeft/></Button><span className="text-xs text-muted-foreground">{slide+1} / {pictures.length + (post.video_url ? 1 : 0)}</span><Button variant="ghost" size="icon" aria-label="다음 미디어" disabled={slide >= pictures.length + (post.video_url ? 1 : 0)-1} onClick={() => carousel.current?.scrollBy({left:carousel.current?.clientWidth || 0,behavior:reducedMotion?'auto':'smooth'})}><ArrowRight/></Button></div>}
         <div className="detail-copy"><span className="mb-2 inline-block text-xs text-primary">#{post.category}</span><Dialog.Title asChild><h2>{post.title}</h2></Dialog.Title>{post.price !== null && <p className="mt-3 text-2xl font-bold text-primary">{priceLabel(post.price)}</p>}<p className="detail-description whitespace-pre-wrap">{post.description}</p><SpecsTable specs={post.specs}/>{post.duration && !post.video_url && <p className="mb-5 text-xs text-muted-foreground">영상 미리보기 이미지</p>}<p className="text-[11px] text-muted-foreground">{formatDate(post.created_at)} · {post.creator}</p>
-          <div className="mt-7 border-t border-border pt-6"><h3 className="flex items-center gap-2 text-sm font-semibold"><MessageCircle size={16}/>댓글 {comments?.length || 0}</h3>{commentError ? <p className="py-5 text-xs text-destructive">댓글을 불러오지 못했어요.</p> : comments?.length ? comments.map(c => <div key={c.id} className="mt-5 flex gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-xs text-primary">{c.creator.slice(0,1)}</span><div className="min-w-0"><p className="text-xs font-medium">{c.creator}</p><p className="mt-1 break-words text-sm text-muted-foreground">{c.body}</p></div></div>) : <p className="py-5 text-xs text-muted-foreground">첫 번째 이야기를 남겨보세요.</p>}
-          <form onSubmit={submitComment} className="mt-3 flex items-center gap-2"><input className="form-input" aria-label="댓글" placeholder="따뜻한 댓글을 남겨주세요" value={comment} maxLength={1000} onChange={e => setComment(e.target.value)}/><Button size="icon" type="submit" aria-label="댓글 보내기" disabled={pending}><Send/></Button></form></div>
+          <ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>
         </div>
       </div>
-      <div className="detail-bottom"><Button variant="ghost" className={`like-button ${liked?'liked':''}`} onClick={onLike} aria-label="상세 좋아요" aria-pressed={liked}><Heart/>{post.base_likes+(liked?1:0)}</Button>{post.price !== null ? <Button className="ml-auto" onClick={() => {if(!user) requestAuth();else {document.querySelector<HTMLInputElement>('input[aria-label="댓글"]')?.focus();notify('댓글로 판매자에게 문의를 남겨주세요.');}}}><MessageCircle/>판매자에게 문의</Button> : <span className="ml-auto text-xs text-muted-foreground">좋아하는 순간을 함께 나눠요</span>}</div>
+      <div className="detail-bottom"><Button variant="ghost" className={`like-button ${liked?'liked':''}`} onClick={onLike} aria-label="상세 좋아요" aria-pressed={liked}><Heart/>{post.base_likes+(liked?1:0)}</Button>{post.price !== null ? <Button className="ml-auto" onClick={() => {if(!user) requestAuth();else {document.querySelector<HTMLInputElement>('input[aria-label="댓글 입력"]')?.focus();notify('댓글로 판매자에게 문의를 남겨주세요.');}}}><MessageCircle/>판매자에게 문의</Button> : <span className="ml-auto text-xs text-muted-foreground">좋아하는 순간을 함께 나눠요</span>}</div>
     </motion.div></Dialog.Content>
   </Dialog.Portal></Dialog.Root>;
 }
