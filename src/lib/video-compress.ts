@@ -45,7 +45,7 @@ export async function compressVideoForWeb(file: File, onProgress?: (ratio: numbe
       tick();
     });
     v.pause(); rec.stop(); await stopped;
-    const out = new Blob(chunks, { type: mime.split(';')[0] });
+    const out = new Blob(chunks, { type: mime.split(';')[0] ?? 'video/webm' });
     if (!out.size || out.size >= file.size) return file;
     const ext = mime.includes('mp4') ? 'mp4' : 'webm';
     return new File([out], file.name.replace(/\.[^.]+$/, '') + `-web.${ext}`, { type: out.type, lastModified: Date.now() });
