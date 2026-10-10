@@ -93,14 +93,14 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
     stop(); setBusy('export'); setErr('');
     try {
       const first = clips[0]!; const probe = document.createElement('video'); probe.src = first.url; probe.muted = true; await new Promise(r => { probe.onloadedmetadata = r; });
-      const W = vertical ? 720 : Math.min(1280, probe.videoWidth || 1280), H = vertical ? 1280 : Math.round(W * ((probe.videoHeight || 720) / (probe.videoWidth || 1280)));
+      const W = vertical ? 720 : Math.min(960, probe.videoWidth || 960), H = vertical ? 1280 : Math.round(W * ((probe.videoHeight || 720) / (probe.videoWidth || 1280)));
       const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H; const ctx = canvas.getContext('2d')!;
       const css = getComputedStyle(document.documentElement); const gold = css.getPropertyValue('--primary').trim() || 'goldenrod'; const fg = css.getPropertyValue('--foreground').trim() || 'white'; const shade = css.getPropertyValue('--background').trim() || 'black';
       const v = document.createElement('video'); v.playsInline = true; v.crossOrigin = 'anonymous';
       const ac = new AudioContext(); const dest = ac.createMediaStreamDestination(); const og = ac.createGain(); og.gain.value = origVol; ac.createMediaElementSource(v).connect(og).connect(dest);
       const stream = canvas.captureStream(30); dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
       const mime = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m)) ?? 'video/webm';
-      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6_000_000 }); const chunks: Blob[] = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(Math.min(2_500_000, W * H * 2.4)), audioBitsPerSecond: 96_000 }); const chunks: Blob[] = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
       const done = new Promise<void>(r => { rec.onstop = () => r(); });
       const drawFrame = (time: number) => {
         ctx.filter = luxuryFilters[filter].css; ctx.fillStyle = shade; ctx.fillRect(0, 0, W, H);

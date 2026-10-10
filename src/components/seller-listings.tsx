@@ -14,6 +14,7 @@ import { VideoEditor, type VideoTag } from './video-editor';
 import { VideoStartPreview } from './video-start-preview';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
+import { compressVideoForWeb } from '@/lib/video-compress';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string; sourceType?: string; factory?: string };
@@ -61,14 +62,16 @@ export function SellerListings() {
 
   const toggleSold = async (l: Listing, sold: boolean) => { const {error}=await supabase.from('posts').update({ stock_qty: sold ? (l.reserved_qty ?? 0) : Math.max(1, (l.reserved_qty ?? 0) + 1) }).eq('id', l.id).eq('user_id',user.id); if(error){alert('판매 완료 상태를 변경하지 못했습니다.');return;} refresh(); void qc.invalidateQueries({ queryKey: ['seller-stats'] }); };
   const toggle = async (l: Listing) => { const {error} = await supabase.from('posts').update(publicationUpdate(l.status !== 'published')).eq('id', l.id).eq('user_id',user.id); if(error){alert('판매 상태를 변경하지 못했습니다.');return;} refresh(); };
-  const replaceVideo = async (l: Listing, file: File) => {
+  const replaceVideo = async (l: Listing, original: File) => {
+    let file = original;
     if (!isListingVideo(file)) { alert('영상 파일(MP4/WEBM/MOV)을 선택해 주세요.'); return; }
     try { await validateListingFiles([file]); } catch (err) { alert(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; }
     setReplacing(l.id);
     try {
+      file = await compressVideoForWeb(file);
       const ext = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4';
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-      const { error: up } = await supabase.storage.from('market-media').upload(path, file);
+      const { error: up } = await supabase.storage.from('market-media').upload(path, file, { cacheControl: LONG_CACHE });
       if (up) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.');
       const { error: e } = await supabase.from('posts').update({ video_url: path, thumbnail_url: await uploadVideoThumbnail(file, user.id), video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
       if (e) { await supabase.storage.from('market-media').remove([path]); throw new Error('게시물을 수정하지 못했어요.'); }
@@ -158,7 +161,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     try {
       let nextVideo = video?.path ?? null;
       let nextThumb: string | null | undefined = video?.file ? null : undefined;
-      if (video?.file) { const ext = video.file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${user.id}/${crypto.randomUUID()}.${ext}`; const { error: e } = await supabase.storage.from('market-media').upload(path, video.file); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(video.file, user.id); if (nextThumb) uploaded.push(nextThumb); }
+      if (video?.file) { const ext = video.file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${user.id}/${crypto.randomUUID()}.${ext}`; const { error: e } = await supabase.storage.from('market-media').upload(path, video.file, { cacheControl: LONG_CACHE }); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(video.file, user.id); if (nextThumb) uploaded.push(nextThumb); }
       const photoPaths: string[] = [];
       const settled = await Promise.allSettled(photos.map(async photo => {
         if (photo.path) return photo.path;
