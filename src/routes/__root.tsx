@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ViewTracker } from "@/components/view-tracker";
 import { SanctionNotice } from "@/components/sanction-notice";
+import { InstallPrompt } from "@/components/install-prompt";
 import {
   Outlet,
   Link,
@@ -135,6 +136,7 @@ function RootComponent() {
       <OrderNotifier />
       <ViewTracker />
       <SanctionNotice />
+      <InstallPrompt />
     </QueryClientProvider>
   );
 }

@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useServerFn } from '@tanstack/react-start';
 import { ShieldAlert, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { PasswordInput } from './password-input';
 import { verifyAdminPassword } from '@/lib/seller-accounts.functions';
 
 /**
@@ -46,7 +47,7 @@ export function useAdminPasswordGate() {
           <p className="text-sm leading-6">{message}</p>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">삭제·초기화는 되돌릴 수 없습니다. 계속하려면 관리자 비밀번호를 한 번 더 입력하세요.</p>
           <label className="form-label mt-4" htmlFor="admin-confirm-password">관리자 비밀번호</label>
-          <input id="admin-confirm-password" className="form-input" type="password" autoComplete="current-password" autoFocus required maxLength={72} value={password} onChange={e => setPassword(e.target.value)}/>
+          <PasswordInput id="admin-confirm-password" label="비밀번호 보기" autoComplete="current-password" autoFocus required maxLength={72} value={password} onChange={e => setPassword(e.target.value)}/>
           {error && <p role="alert" className="mt-3 text-xs leading-5 text-destructive">{error}</p>}
           <div className="mt-5 grid grid-cols-2 gap-2"><Button type="button" variant="ghost" onClick={() => finish(null)}>취소</Button><Button type="submit" variant="destructive" disabled={pending || !password}>{pending ? '확인 중…' : '확인하고 진행'}</Button></div>
         </form>

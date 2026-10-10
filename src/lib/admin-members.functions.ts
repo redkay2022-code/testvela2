@@ -135,3 +135,165 @@ export const trackView = createServerFn({ method: 'POST' })
     await db.from('page_views').insert({ visitor_id: data.visitorId, session_id: data.sessionId, user_id: userId, kind: data.kind, path: data.path, post_id: data.postId ?? null, seller_id: sellerId, country, source: data.source || 'direct' });
     return { ok: true };
   });
+
+// ------------------------------------------------------------------ reset (members / posts)
+export type ResetScope = 'posts' | 'members' | 'all';
+export type ResetPreview = { members: number; posts: number; orders: number; reviews: number; comments: number; admins: number };
+
+async function adminIds(db: any): Promise<string[]> {
+  const { data, error } = await db.from('user_roles').select('user_id').eq('role', 'admin');
+  if (error) throw new Error('관리자 목록을 확인하지 못했습니다.');
+  return [...new Set<string>((data ?? []).map((r: any) => r.user_id))];
+}
+const notIn = (ids: string[]) => `(${ids.join(',')})`;
+
+/** Shows how much data a reset would remove. Admin accounts are never counted as members. */
+export const adminResetPreview = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<ResetPreview> => {
+    await requireAdmin(context.supabase, context.userId);
+    const db = await adminDb(), admins = await adminIds(db);
+    const count = async (table: string, f?: (q: any) => any) => {
+      let q = db.from(table).select('*', { count: 'exact', head: true });
+      if (f) q = f(q);
+      const { count: n, error } = await q;
+      return error ? 0 : n ?? 0;
+    };
+    const [profiles, posts, orders, reviews, comments] = await Promise.all([
+      count('profiles', q => q.not('user_id', 'in', notIn(admins))), count('posts'), count('orders'), count('reviews'), count('comments'),
+    ]);
+    return { members: profiles, posts, orders, reviews, comments, admins: admins.length };
+  });
+
+const MEMBER_BATCH = 10; // keeps every request small enough for the hosting platform's per-request limits
+
+async function removeFiles(db: any, bucket: string, paths: (string | null | undefined)[]) {
+  const clean = [...new Set(paths.filter((p): p is string => typeof p === 'string' && p.length > 0 && !p.startsWith('seed:') && !/^https?:/i.test(p) && !p.includes('..')))];
+  let removed = 0;
+  for (let i = 0; i < clean.length; i += 100) {
+    const { error } = await db.storage.from(bucket).remove(clean.slice(i, i + 100));
+    if (!error) removed += Math.min(100, clean.length - i);
+  }
+  return removed;
+}
+async function selectAll(db: any, table: string, cols: string, f?: (q: any) => any, orderCol?: string): Promise<any[]> {
+  const out: any[] = [];
+  for (let from = 0; from < 20000; from += 1000) {
+    let q = db.from(table).select(cols);
+    if (f) q = f(q);
+    if (orderCol) q = q.order(orderCol);
+    const { data, error } = await q.range(from, from + 999);
+    if (error) throw new Error(`${table} 목록을 읽지 못했습니다.`);
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  return out;
+}
+
+/**
+ * Wipes test data. Admin accounts are always kept. The admin must re-enter their password and type 초기화.
+ *  posts   → every listing + photos/videos, comments, likes, orders, QC media, reviews
+ *  members → every non-admin account and everything it owns
+ *  all     → both, plus the visit statistics
+ * Two phases keep each request small: 'data' removes content, then 'accounts' is repeated (10 members at a time) until `remainingMembers` is 0.
+ */
+export const adminResetData = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(d => z.object({ scope: z.enum(['posts', 'members', 'all']), confirm: z.literal('초기화'), password: z.string().max(72).optional(), token: z.string().max(200).optional(), phase: z.enum(['data', 'accounts']) }).parse(d))
+  .handler(async ({ context, data }): Promise<{ lines: string[]; deletedMembers: number; remainingMembers: number; warnings: string[]; token?: string }> => {
+    const auth = await import('./admin-auth.server');
+    // The password is checked once ('data' phase); the repeated 'accounts' calls carry a 10-minute signed token instead.
+    if (data.phase === 'data') {
+      if (!data.password) throw new Error('비밀번호를 입력해 주세요.');
+      await auth.checkAdminPassword(context.supabase, context.userId, data.password);
+    } else {
+      await auth.assertAdminRole(context.supabase, context.userId);
+      if (!(await auth.verifyResetToken(context.userId, data.scope, data.token))) throw new Error('확인 시간이 지났습니다. 처음부터 다시 실행해 주세요.');
+    }
+    const db = await adminDb(), admins = await adminIds(db);
+    if (!admins.includes(context.userId)) throw new Error('관리자 계정을 확인하지 못해 중단했습니다.');
+    const lines: string[] = [], warnings: string[] = [];
+    const wipe = async (label: string, table: string, f: (q: any) => any) => {
+      const { error, count } = await f(db.from(table).delete({ count: 'exact' }));
+      if (error) { warnings.push(`${label}: ${error.message}`); return 0; }
+      return count ?? 0;
+    };
+    const chunks = <T,>(a: T[], n = 100) => Array.from({ length: Math.ceil(a.length / n) }, (_, i) => a.slice(i * n, i * n + n));
+    const doPosts = data.scope === 'posts' || data.scope === 'all';
+    const doMembers = data.scope === 'members' || data.scope === 'all';
+    const others = (col: string) => (q: any) => q.not(col, 'in', notIn(admins));
+
+    /** orders (+ everything attached to them) selected by `pick`. */
+    const dropOrders = async (pick: (q: any) => any) => {
+      const orders = await selectAll(db, 'orders', 'id', pick, 'id');
+      const ids: string[] = orders.map(o => o.id);
+      for (const part of chunks(ids)) {
+        const qc = await selectAll(db, 'order_qc_media', 'path', q => q.in('order_id', part), 'id');
+        await removeFiles(db, 'qc-media', qc.map(r => r.path));
+        for (const t of ['order_replacements', 'order_messages', 'order_qc_media', 'payment_transactions']) await wipe(t, t, q => q.in('order_id', part));
+        await wipe('orders', 'orders', q => q.in('id', part));
+      }
+      return ids.length;
+    };
+    const dropPosts = async (pick?: (q: any) => any) => {
+      const posts = await selectAll(db, 'posts', 'id, media_urls, video_url, thumbnail_url', pick, 'id');
+      for (const part of chunks(posts)) {
+        const ids = part.map(p => p.id);
+        const imgs = await selectAll(db, 'product_images', 'path', q => q.in('post_id', ids), 'id');
+        await removeFiles(db, 'market-media', [...part.flatMap(p => [...(p.media_urls ?? []), p.video_url, p.thumbnail_url]), ...imgs.map(i => i.path)]);
+        await wipe('posts', 'posts', q => q.in('id', ids));
+      }
+      return posts.length;
+    };
+    const dropReviews = async (pick?: (q: any) => any) => {
+      const rows = await selectAll(db, 'reviews', 'id, media_urls, video_url', pick, 'id');
+      for (const part of chunks(rows)) {
+        await removeFiles(db, 'review-media', part.flatMap(r => [...(r.media_urls ?? []), r.video_url]));
+        await wipe('reviews', 'reviews', q => q.in('id', part.map(r => r.id)));
+      }
+      return rows.length;
+    };
+
+    if (data.phase === 'data' && doPosts) {
+      lines.push(`주문·정산·QC 기록 ${await dropOrders(q => q.not('id', 'is', null))}건`);
+      lines.push(`리뷰 ${await dropReviews()}건`);
+      lines.push(`상품(게시물) ${await dropPosts()}건 (사진·영상 파일 포함)`);
+      await wipe('likes', 'likes', q => q.not('post_id', 'is', null));
+      await wipe('cart_items', 'cart_items', q => q.not('post_id', 'is', null));
+      await wipe('comments', 'comments', q => q.not('id', 'is', null));
+    }
+
+    let remaining = 0, deletedCount = 0;
+    if (data.phase === 'data' && doMembers) {
+      if (!doPosts) {
+        lines.push(`회원의 주문·정산 기록 ${await dropOrders(q => q.or(`buyer_id.not.in.${notIn(admins)},seller_id.not.in.${notIn(admins)}`))}건`);
+        lines.push(`회원의 리뷰 ${await dropReviews(others('user_id'))}건`);
+        lines.push(`회원의 상품 ${await dropPosts(others('user_id'))}건`);
+      }
+      for (const [t, col] of [['comments', 'user_id'], ['likes', 'user_id'], ['cart_items', 'user_id'], ['notifications', 'user_id'], ['saved_shipping', 'user_id'], ['seller_follows', 'follower_id'], ['point_transactions', 'user_id'], ['point_wallets', 'user_id'], ['memberships', 'user_id'], ['seller_applications', 'user_id'], ['wechat_identities', 'user_id'], ['user_sanctions', 'user_id'], ['page_views', 'user_id'], ['seller_tier_overrides', 'seller_id']] as const)
+        await wipe(t, t, others(col));
+    }
+    if (data.phase === 'data' && data.scope === 'all') { await wipe('page_views', 'page_views', q => q.not('id', 'is', null)); lines.push('방문 통계 초기화'); }
+    if (data.phase === 'accounts' && doMembers) {
+      // accounts: list everyone, keep admins, delete one batch per call
+      const everyone: { id: string }[] = [];
+      for (let page = 1; page <= 50; page++) {
+        const { data: list, error } = await db.auth.admin.listUsers({ page, perPage: 200 });
+        if (error) throw new Error('회원 목록을 불러오지 못했습니다.');
+        everyone.push(...(list?.users ?? []));
+        if ((list?.users?.length ?? 0) < 200) break;
+      }
+      const targets = everyone.filter(u => !admins.includes(u.id)).map(u => u.id);
+      const batch = targets.slice(0, MEMBER_BATCH);
+      const profiles = batch.length ? await selectAll(db, 'profiles', 'user_id, avatar_url', q => q.in('user_id', batch), 'user_id') : [];
+      await removeFiles(db, 'avatars', profiles.map(p => p.avatar_url));
+      let deleted = 0;
+      for (const id of batch) {
+        const { error } = await db.auth.admin.deleteUser(id);
+        if (error) warnings.push(`회원 삭제 실패: ${error.message}`); else deleted++;
+      }
+      if (batch.length) await wipe('seller_follows', 'seller_follows', q => q.in('seller_key', batch));
+      remaining = Math.max(0, targets.length - deleted); deletedCount = deleted;
+    }
+    return { lines, deletedMembers: deletedCount, remainingMembers: remaining, warnings, ...(data.phase === 'data' ? { token: await auth.signResetToken(context.userId, data.scope) } : {}) };
+  });

@@ -28,3 +28,21 @@ export async function checkAdminPassword(supabase: any, userId: string, password
   }
   failures.delete(userId);
 }
+
+const hex = (buf: ArrayBuffer) => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+async function hmac(message: string) {
+  const secret = process.env['SUPABASE_SERVICE_ROLE_KEY'] || '';
+  if (!secret) throw new Error('서버 설정을 확인할 수 없습니다.');
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(`vela-reset:${secret}`), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return hex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message)));
+}
+/** Short-lived proof that the admin just passed the password check (so a long reset does not re-check it dozens of times). */
+export async function signResetToken(userId: string, scope: string) {
+  const exp = Date.now() + 10 * 60_000;
+  return `${exp}.${await hmac(`${userId}|${scope}|${exp}`)}`;
+}
+export async function verifyResetToken(userId: string, scope: string, token: string | undefined) {
+  const [exp, sig] = (token ?? '').split('.');
+  if (!exp || !sig || !(Number(exp) > Date.now())) return false;
+  return sig === (await hmac(`${userId}|${scope}|${exp}`));
+}

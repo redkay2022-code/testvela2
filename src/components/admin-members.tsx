@@ -4,6 +4,7 @@ import { useServerFn } from '@tanstack/react-start';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Ban, Clock, ShieldAlert, ShieldCheck, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { PasswordInput } from './password-input';
 import { BarsChart, Donut, countryName } from './mini-charts';
 import { supabase } from '@/integrations/supabase/client';
 import { adminLiftSanction, adminListMembers, adminSanctionMember, type MemberRow } from '@/lib/admin-members.functions';
@@ -73,7 +74,7 @@ export function AdminMembers() {
             <textarea id="sanction-reason" className="form-input" rows={3} required minLength={2} maxLength={300} value={reason} onChange={e => setReason(e.target.value)} placeholder="예: 반복적인 비방 댓글"/>
           </>}
           <label className="form-label mt-4" htmlFor="sanction-password">관리자 비밀번호</label>
-          <input id="sanction-password" className="form-input" type="password" autoComplete="current-password" required maxLength={72} value={password} onChange={e => setPassword(e.target.value)}/>
+          <PasswordInput id="sanction-password" label="비밀번호 보기" autoComplete="current-password" required maxLength={72} value={password} onChange={e => setPassword(e.target.value)}/>
           {error && <p role="alert" className="mt-3 text-xs leading-5 text-destructive">{error}</p>}
           <div className="mt-5 grid grid-cols-2 gap-2"><Button type="button" variant="ghost" onClick={() => setTarget(null)}>취소</Button><Button type="submit" variant="destructive" disabled={busy || !password || (target?.mode === 'sanction' && reason.trim().length < 2)}>{busy ? '처리 중…' : target?.mode === 'lift' ? '해제하기' : '적용하기'}</Button></div>
         </form>

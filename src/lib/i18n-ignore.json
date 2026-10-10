@@ -85,7 +85,9 @@
     "강제 삭제",
     "회원 관리",
     "접속 현황 · 정지 / 추방",
-    "방문자 분석"
+    "방문자 분석",
+    "데이터 초기화",
+    "테스트 회원 · 게시물 삭제"
   ],
   "patterns": [
     "^[A-Z0-9]{2,4} Factory( \\([A-Z0-9]+\\))?$",
@@ -99,6 +101,8 @@
     "components/seller-analytics.tsx",
     "components/mini-charts.tsx",
     "components/sanction-notice.tsx",
-    "components/admin-password-gate.tsx"
+    "components/admin-password-gate.tsx",
+    "components/admin-reset.tsx",
+    "components/menu-dashboards.tsx"
   ]
 }
