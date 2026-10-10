@@ -4,7 +4,8 @@ import { useServerFn } from '@tanstack/react-start';
 import { addComment } from '@/lib/market.functions';
 import { Link, useRouter, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
-import { Heart, Users, MessageCircle, Plus, Truck, ArrowRight, Send } from 'lucide-react';
+import { Heart, Users, MessageCircle, Plus, Truck, ArrowRight, Send, BarChart3 } from 'lucide-react';
+import { SellerAnalytics } from './seller-analytics';
 import { supabase } from '@/integrations/supabase/client';
 import { marketSearch } from '@/lib/market';
 import { useSellerWorkflows } from '@/lib/use-seller-workflows';
@@ -30,7 +31,7 @@ function Questions({user}:{user:User}) {
 function StoreManager({user}:{user:User}) {
  const search=marketSearch.parse(useRouterState({select:s=>s.location.search})),view=search.sellerView??'inventory';
   const count=useQuery({queryKey:['my-listing-count',user.id],queryFn:async()=>{const {count,error}=await supabase.from('posts').select('id',{count:'exact',head:true}).eq('user_id',user.id);if(error)throw error;return count??0;}});
- return <div className="seller-studio" lang="ko" data-no-translate><div className="studio-title-row"><div><span className="lux-eyebrow">상품 운영</span><h1>스토어 관리</h1></div></div><nav className="seller-action-tabs" aria-label="스토어 작업"><Button asChild variant="gold"><Link to="/upload"><Plus/><span>상품 등록 <span className="seller-product-count" aria-label="등록 상품 수">({count.data??'—'})</span></span></Link></Button><Button asChild variant={view==='qna'?'goldOutline':'ghost'}><Link to="/seller-store" search={{sellerView:'qna'}}><MessageCircle/>질문 게시판</Link></Button><Button asChild variant={view==='shipping'?'goldOutline':'ghost'}><Link to="/seller-store" search={{sellerView:'shipping'}}><Truck/>물류/배송</Link></Button></nav>{view!=='inventory'&&<Button asChild variant="ghost" className="mb-4"><Link to="/seller-store">상품 목록</Link></Button>}{view==='qna'?<Questions user={user}/>:view==='shipping'?<><h2 className="text-lg font-semibold">물류·배송 및 출고 검수</h2><p className="my-3 text-sm text-primary">출고 전 QC 사진 9장 + 영상 1개 필수</p><LiveOrderBoard as="seller"/></>:<SellerListings/>}</div>;
+ return <div className="seller-studio" lang="ko" data-no-translate><div className="studio-title-row"><div><span className="lux-eyebrow">상품 운영</span><h1>스토어 관리</h1></div></div><nav className="seller-action-tabs" aria-label="스토어 작업"><Button asChild variant="gold"><Link to="/upload"><Plus/><span>상품 등록 <span className="seller-product-count" aria-label="등록 상품 수">({count.data??'—'})</span></span></Link></Button><Button asChild variant={view==='qna'?'goldOutline':'ghost'}><Link to="/seller-store" search={{sellerView:'qna'}}><MessageCircle/>질문 게시판</Link></Button><Button asChild variant={view==='shipping'?'goldOutline':'ghost'}><Link to="/seller-store" search={{sellerView:'shipping'}}><Truck/>물류/배송</Link></Button><Button asChild variant={view==='analytics'?'goldOutline':'ghost'}><Link to="/seller-store" search={{sellerView:'analytics'}}><BarChart3/>방문자 분석</Link></Button></nav>{view!=='inventory'&&<Button asChild variant="ghost" className="mb-4"><Link to="/seller-store">상품 목록</Link></Button>}{view==='qna'?<Questions user={user}/>:view==='analytics'?<SellerAnalytics/>:view==='shipping'?<><h2 className="text-lg font-semibold">물류·배송 및 출고 검수</h2><p className="my-3 text-sm text-primary">출고 전 QC 사진 9장 + 영상 1개 필수</p><LiveOrderBoard as="seller"/></>:<SellerListings/>}</div>;
 }
 function SellerMessages({user}:{user:User}) {
  const q=useSellerWorkflows(user.id),search=marketSearch.parse(useRouterState({select:s=>s.location.search})),router=useRouter(),notices=useSharedNotifications();

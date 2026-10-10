@@ -27,6 +27,7 @@ async function passwordSession(email: string, password: string) {
     global: { fetch: (input, init) => { const h = new Headers(init?.headers); if (key.startsWith('sb_') && h.get('Authorization') === `Bearer ${key}`) h.delete('Authorization'); h.set('apikey', key); return fetch(input, { ...init, headers: h }); } },
   });
   const { data, error } = await client.auth.signInWithPassword({ email, password });
+  if (error && /banned/i.test(error.message)) throw new Error('This account has been permanently suspended.');
   if (error || !data.session) throw new Error('Check your phone number and password.');
   return { access_token: data.session.access_token, refresh_token: data.session.refresh_token };
 }

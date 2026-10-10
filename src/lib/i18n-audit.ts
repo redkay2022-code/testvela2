@@ -42,6 +42,7 @@ const TECHNICAL_CALLS = new Set([
 ]);
 
 const ignoreExact = new Set<string>((ignoreList as { exact: string[] }).exact);
+const ignoreFiles = ((ignoreList as { ignoreFiles?: string[] }).ignoreFiles ?? []);
 const ignorePatterns = (ignoreList as { patterns: string[] }).patterns.map(p => new RegExp(p, 'u'));
 const isIgnored = (s: string) => ignoreExact.has(s) || ignorePatterns.some(r => r.test(s));
 
@@ -79,7 +80,7 @@ export function extractStrings(srcDir: string): Found[] {
   const found = new Map<string, string>();
   for (const file of walkFiles(srcDir)) {
     const norm = file.split(path.sep).join('/');
-    if (SKIP_FILE.test(norm)) continue;
+    if (SKIP_FILE.test(norm) || ignoreFiles.some(f => norm.endsWith(f))) continue;
     const text = fs.readFileSync(file, 'utf8');
     const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
     const rel = path.relative(srcDir, file).split(path.sep).join('/');

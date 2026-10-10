@@ -1,4 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ViewTracker } from "@/components/view-tracker";
+import { SanctionNotice } from "@/components/sanction-notice";
 import {
   Outlet,
   Link,
@@ -131,6 +133,8 @@ function RootComponent() {
       <MarketPreviewProvider><Outlet /></MarketPreviewProvider>
       <Toaster position="top-center" richColors />
       <OrderNotifier />
+      <ViewTracker />
+      <SanctionNotice />
     </QueryClientProvider>
   );
 }

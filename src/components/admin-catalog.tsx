@@ -6,6 +6,8 @@ import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { useAdminPasswordGate } from './admin-password-gate';
+import { useServerFn } from '@tanstack/react-start';
+import { adminDeletePost } from '@/lib/admin-members.functions';
 import type { Database } from '@/integrations/supabase/types';
 import { watchImages } from '@/lib/luxury-market';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
@@ -209,6 +211,18 @@ function ProductList({ stores, products }: { stores: StoreRow[]; products: PostR
     const hay = `${p.title} ${p.brand} ${p.model} ${p.reference} ${storeName(p.store_id)} ${p.category}`.toLowerCase();
     return (!q || hay.includes(q.toLowerCase())) && (filter === 'all' || p.product_status === filter || (filter === 'DRAFT' && p.product_status === 'READY'));
   });
+  const gate = useAdminPasswordGate();
+  const deletePost = useServerFn(adminDeletePost);
+  const toggleFeatured = async (p: PostRow) => {
+    const { error } = await supabase.from('posts').update({ featured: !p.featured }).eq('id', p.id);
+    setMsg(error ? '추천 상태를 바꾸지 못했습니다.' : p.featured ? `${p.title} · 추천 해제` : `${p.title} · 메인 피드 추천(Featured)으로 지정`); await refresh();
+  };
+  const forceDelete = async (p: PostRow) => {
+    const password = await gate.ask(`'${p.title}' 상품을 강제 삭제합니다. 사진·영상까지 영구 삭제되며 되돌릴 수 없습니다.`);
+    if (!password) return;
+    try { await deletePost({ data: { postId: p.id, password } }); setMsg(`${p.title} 삭제됨`); await refresh(); }
+    catch (err) { setMsg(err instanceof Error && err.message ? err.message : '삭제하지 못했습니다.'); }
+  };
   const setStatus = async (p: PostRow, s: ProductStatus) => {
     if (s === 'PUBLISHED') {
       const missing = publishBlockers({ title: p.title, storeId: p.store_id, category: p.category, price: p.price, stock: p.stock_qty, hasMainImage: p.media_urls.length > 0 });
@@ -223,7 +237,7 @@ function ProductList({ stores, products }: { stores: StoreRow[]; products: PostR
     const { error } = await supabase.from('posts').insert({ ...rest, user_id: p.user_id ?? user?.id ?? null, title: `${p.title} (copy)`, sku: p.sku ? `${p.sku}-COPY` : '', product_status: 'DRAFT', status: 'draft', featured: false, data_source: 'PRODUCTION' });
     setMsg(error ? '복제하지 못했습니다.' : '초안으로 복제했습니다.'); await refresh();
   };
-  return <div className="catalog mt-4">
+  return <div className="catalog mt-4">{gate.dialog}
     <div className="section-heading"><h2>PRODUCT MANAGEMENT</h2><span>{rows.length} / {products.length}</span></div>
     <div className="catalog-toolbar">
       <input aria-label="상품 검색" placeholder="Name · Brand · Reference · Store · Category" value={q} onChange={e => setQ(e.target.value)} />
@@ -247,6 +261,8 @@ function ProductList({ stores, products }: { stores: StoreRow[]; products: PostR
             ? <Button variant="ghost" size="sm" onClick={() => void setStatus(p, 'DRAFT')}>Unpublish</Button>
             : <Button variant="goldOutline" size="sm" onClick={() => void setStatus(p, 'PUBLISHED')}>Publish</Button>}
           {p.product_status !== 'ARCHIVED' && <Button variant="ghost" size="sm" onClick={() => void setStatus(p, 'ARCHIVED')}><Archive />Archive</Button>}
+          <Button variant="ghost" size="sm" onClick={() => void toggleFeatured(p)}><Star />{p.featured ? '추천 해제' : '추천'}</Button>
+          <Button variant="destructive" size="sm" onClick={() => void forceDelete(p)}><Trash2 />강제 삭제</Button>
         </div></td>
       </tr>)}
     </tbody></table></div>
