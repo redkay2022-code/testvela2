@@ -9,7 +9,12 @@
  *
  * Re-encoding runs in real time (a 30s clip takes ~30s). Any failure falls back to the original file.
  */
+import { faststartMp4 } from './mp4-faststart';
+
 export const COMPRESS_THRESHOLD_BYTES = 1_500_000;
+/** Slight lift applied while re-encoding: browser re-encoding tends to look a little flat and dark, so the result is kept at least as bright as the original. */
+const LIFT_FILTER = 'brightness(1.07) contrast(1.03) saturate(1.04)';
+const canFilter = (ctx: CanvasRenderingContext2D) => 'filter' in ctx;
 /** Clips at or below this bitrate (bits/s) and size are already web-friendly. */
 const LIGHT_BITRATE = 2_200_000;
 /** Minimum average PSNR (dB) of the sampled frames for the converted clip to be accepted. Lower = more permissive. */
@@ -28,8 +33,10 @@ function waitFor(target: EventTarget, okEvent: string, ms = 8000): Promise<void>
   });
 }
 async function seekTo(video: HTMLVideoElement, time: number) { const done = waitFor(video, 'seeked', 3000); video.currentTime = time; await done; }
-function lumaOf(video: HTMLVideoElement, w: number, h: number, ctx: CanvasRenderingContext2D) {
+function lumaOf(video: HTMLVideoElement, w: number, h: number, ctx: CanvasRenderingContext2D, lift = false) {
+  if (lift && canFilter(ctx)) ctx.filter = LIFT_FILTER;
   ctx.drawImage(video, 0, 0, w, h);
+  if (lift && canFilter(ctx)) ctx.filter = 'none';
   const px = ctx.getImageData(0, 0, w, h).data, out = new Float32Array(w * h);
   for (let i = 0, j = 0; i < out.length; i++, j += 4) out[i] = 0.299 * (px[j] ?? 0) + 0.587 * (px[j + 1] ?? 0) + 0.114 * (px[j + 2] ?? 0);
   return out;
@@ -53,7 +60,7 @@ async function averagePsnr(original: HTMLVideoElement, converted: Blob, duration
       try {
         const at = Math.max(0.05, duration * ratio);
         await seekTo(original, at); await seekTo(other, at);
-        const a = lumaOf(original, W, H, ctx), b = lumaOf(other, W, H, ctx);
+        const a = lumaOf(original, W, H, ctx, true), b = lumaOf(other, W, H, ctx);
         let sum = 0; for (let i = 0; i < a.length; i++) { const d = (a[i] ?? 0) - (b[i] ?? 0); sum += d * d; }
         const mse = sum / a.length;
         scores.push(mse < 0.01 ? 60 : 10 * Math.log10((255 * 255) / mse));
@@ -64,10 +71,11 @@ async function averagePsnr(original: HTMLVideoElement, converted: Blob, duration
   finally { URL.revokeObjectURL(url); }
 }
 
-export async function convertVideoSmart(file: File, onProgress?: (ratio: number) => void): Promise<VideoConvertResult> {
+async function convertCore(file: File, onProgress?: (ratio: number) => void): Promise<VideoConvertResult> {
   const keep = (reason: VideoConvertReason): VideoConvertResult => ({ file, converted: false, reason });
   if (typeof document === 'undefined' || typeof MediaRecorder === 'undefined') return keep('unsupported');
   if (file.size <= COMPRESS_THRESHOLD_BYTES) return keep('already-light');
+  if (/^vela-edit-/.test(file.name)) return keep('already-light'); // exported by the editor: already sized and colour-adjusted
   const url = URL.createObjectURL(file);
   let ac: AudioContext | null = null;
   try {
@@ -101,6 +109,7 @@ export async function convertVideoSmart(file: File, onProgress?: (ratio: number)
     await new Promise<void>(resolve => {
       const guard = window.setTimeout(resolve, (duration + 8) * 1000);
       const tick = () => {
+        if (canFilter(ctx)) ctx.filter = LIFT_FILTER;
         ctx.drawImage(v, 0, 0, W, H);
         onProgress?.(Math.min(0.85, (v.currentTime / duration) * 0.85));
         if (v.ended || v.currentTime >= duration - 0.05) { window.clearTimeout(guard); resolve(); } else requestAnimationFrame(tick);
@@ -119,6 +128,13 @@ export async function convertVideoSmart(file: File, onProgress?: (ratio: number)
     return { file: new File([out], file.name.replace(/\.[^.]+$/, '') + `-web.${ext}`, { type: out.type, lastModified: Date.now() }), converted: true, reason: 'converted' };
   } catch { return keep('failed'); }
   finally { URL.revokeObjectURL(url); void ac?.close().catch(() => undefined); }
+}
+
+/** Converts when worthwhile, then (for MP4 / MOV that stay untouched) moves the index to the front so playback starts without downloading the whole file. */
+export async function convertVideoSmart(file: File, onProgress?: (ratio: number) => void): Promise<VideoConvertResult> {
+  const result = await convertCore(file, onProgress);
+  if (result.converted) return result;
+  return { ...result, file: await faststartMp4(result.file) };
 }
 
 /** Backwards-compatible helper: returns the converted file, or the original when conversion is not worthwhile or not possible. */

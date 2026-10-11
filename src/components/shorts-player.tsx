@@ -48,7 +48,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  <div className="shorts-header-tools"><Button variant="ghost" size="icon" aria-label="Open search" title="검색" onClick={onSearch}><Search/></Button><Button variant="ghost" size="icon" aria-label="Share short" title="공유" onClick={share}><Share2/></Button></div>
  </header>
  <div className={`shorts-snap ${sheet?'shorts-locked':''}`} ref={mountFeed} onScroll={e=>{if(sheet||syncing.current)return;const el=e.currentTarget;const index=Math.round(el.scrollTop/el.clientHeight),next=posts[index];if(next&&Math.abs(el.scrollTop-index*el.clientHeight)<el.clientHeight*.35&&next.id!==activeId.current){activeId.current=next.id;setActive(next.id);change(next.id);}}} tabIndex={0} aria-label="Shorts video feed" onKeyDown={e=>{if(sheet)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();feed.current?.scrollBy({top:(e.key==='ArrowDown'?1:-1)*e.currentTarget.clientHeight,behavior:reduced?'instant':'smooth'});}}}>
- {posts.map((p,i)=><ShortScene key={p.id} post={p} active={p.id===active} dist={Math.abs(i-activeIdx)} openSheet={openSheet} notify={notify} user={user} requestAuth={requestAuth}/>)}
+ {posts.map((p,i)=><ShortScene key={p.id} post={p} active={p.id===active} dist={Math.abs(i-activeIdx)} ahead={i>activeIdx} openSheet={openSheet} notify={notify} user={user} requestAuth={requestAuth}/>)}
  {!posts.length&&<div className="shorts-follow-empty"><UserRound/><h2>팔로잉한 셀러의 영상이 없습니다.</h2><Button variant="goldOutline" onClick={()=>onTab('recommend')}>추천 영상 보기</Button></div>}
  </div>
  <AnimatePresence>{sheet&&post&&<ShortSheet key={sheet} kind={sheet} close={closeSheet}>
@@ -56,14 +56,14 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  </ShortSheet>}</AnimatePresence>
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
-function ShortScene({post,active,dist,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;dist:number;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
+function ShortScene({post,active,dist,ahead,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;dist:number;ahead:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
  const hybrid=isHybridPost(post);const engagement=useEngagement(),liked=engagement.likedIds.has(post.id);
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const videoTags=(Array.isArray(post.source?.video_tags)?post.source.video_tags:[]) as {postId:string;title:string;at:number}[];
  const [clock,setClock]=useState(0);
  // Only the visible video and its two neighbours exist as <video> elements (phones choke on more). The neighbours start their full download a moment after the visible video so they never slow it down.
  const [warm,setWarm]=useState(false);
- useEffect(()=>{if(active||dist!==1){setWarm(false);return;}const t=window.setTimeout(()=>setWarm(true),120);return()=>window.clearTimeout(t);},[active,dist]);
+ useEffect(()=>{if(active||dist!==1){setWarm(false);return;}/* Data-saver mode: no background downloads. The next video (swipe direction) starts at once, the previous one a little later. */const saver=(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData;if(saver){setWarm(false);return;}const t=window.setTimeout(()=>setWarm(true),ahead?60:700);return()=>window.clearTimeout(t);},[active,dist,ahead]);
  const [failed,setFailed]=useState(false);const videoSrc=stableMediaSrc(post.video,failed);const [blocked,setBlocked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
  const bgm=useRef<HTMLAudioElement>(null),src=post.source as {music_audio_url?:string|null;music_title?:string|null;music_artist?:string|null}|undefined;
  useEffect(()=>{const v=video.current,a=bgm.current;if(!v||!a)return;const sync=()=>{a.muted=v.muted;if(v.paused)a.pause();else{const d=a.duration||1e9;if(Math.abs(a.currentTime-(v.currentTime%d))>0.4)a.currentTime=v.currentTime%d;void a.play().catch(()=>undefined);}};const ev=['play','pause','playing','volumechange','seeked'];ev.forEach(e=>v.addEventListener(e,sync));sync();return()=>{ev.forEach(e=>v.removeEventListener(e,sync));a.pause();};},[active,videoSrc,src?.music_audio_url]);

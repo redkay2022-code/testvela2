@@ -101,7 +101,9 @@
     "translate(-50%,-50%) scale({0})",
     "\"Noto Serif CJK KR\", \"Songti SC\", serif",
     "ui-monospace, monospace",
-    "system-ui, sans-serif"
+    "system-ui, sans-serif",
+    "Bright Clean",
+    "brightness(1.08) contrast(1.04) saturate(1.05)"
   ],
   "patterns": [
     "^[A-Z0-9]{2,4} Factory( \\([A-Z0-9]+\\))?$",
