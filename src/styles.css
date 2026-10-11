@@ -926,6 +926,7 @@
 .shorts-video-details-seller {padding-block:16px;border-bottom:1px solid var(--border);}
 .shorts-video-details-seller .shorts-anonymous-avatar {background:var(--card);color:var(--foreground);}
 .shorts-video-details-body {padding-block:24px;overflow-wrap:anywhere;}
+.shorts-video-details-body .shorts-video-price {margin-top:10px;font-size:26px;font-weight:600;color:var(--primary);white-space:normal;}
 .shorts-video-details-body h2 {font-size:20px;line-height:1.5;font-weight:600;}
 .shorts-video-details-body p {margin-top:12px;white-space:pre-wrap;font-size:14px;line-height:1.8;color:var(--muted-foreground);}
 .shorts-live-comments {border-top:1px solid var(--border);padding-top:16px;}
