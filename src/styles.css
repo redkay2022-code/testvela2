@@ -980,3 +980,11 @@
 .customer-seller-callout h2 { font-size:14px; font-weight:600; }
 .customer-seller-callout p { font-size:11px; color:var(--muted-foreground); margin-top:4px; }
 @media (max-width:360px) { .customer-order { padding:10px; } .customer-product-copy { padding:8px; } .customer-wallet-row { flex-wrap:wrap; } }
+
+/* Home feed: swipe between 팔로잉 · 추천 · 리뷰 slides the whole screen */
+@keyframes feed-slide-from-right{from{transform:translateX(38px);opacity:.2}to{transform:none;opacity:1}}
+@keyframes feed-slide-from-left{from{transform:translateX(-38px);opacity:.2}to{transform:none;opacity:1}}
+html[data-slide="left"] .red-home-shell{animation:feed-slide-from-right .28s ease-out}
+html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s ease-out}
+.red-home-shell{touch-action:pan-y}
+@media (prefers-reduced-motion:reduce){html[data-slide] .red-home-shell{animation:none}}

@@ -108,6 +108,11 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const guest=authReady&&!user;
  const guestSignup=()=>update({auth:true,authSignup:true});
  const guardGuest=(event:React.MouseEvent)=>{if(!guest)return;event.preventDefault();guestSignup();};
+ const swipeStart=useRef<{x:number;y:number;t:number}|null>(null);
+ const swipeTabs=['following','discover','reviews'] as const;
+ const swipeBusy=Boolean(shortsId||postId||search.auth||search.menu||search.searchOpen||search.categoriesOpen||search.notice||search.panel||search.shortSheet);
+ const onSwipeStart=(e:React.TouchEvent)=>{const t=e.touches[0];const el=e.target as HTMLElement;swipeStart.current=!cleanHome||swipeBusy||e.touches.length!==1||t.clientX<24||t.clientX>window.innerWidth-24||el.closest('input,textarea,select,video,[data-no-swipe],.lux-categories,.red-home-subtabs')?null:{x:t.clientX,y:t.clientY,t:Date.now()};};
+ const onSwipeEnd=(e:React.TouchEvent)=>{const s0=swipeStart.current;swipeStart.current=null;if(!s0)return;const t=e.changedTouches[0],dx=t.clientX-s0.x,dy=t.clientY-s0.y;if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-s0.t>900)return;const cur=swipeTabs.indexOf((search.tab||'discover') as typeof swipeTabs[number]);const next=swipeTabs[cur+(dx<0?1:-1)];if(!next)return;if(guest){guestSignup();return;}document.documentElement.dataset.slide=dx<0?'left':'right';window.setTimeout(()=>{delete document.documentElement.dataset.slide;},320);void navigate({to:'/',search:{role:search.role,feedCategory:search.feedCategory,tab:next},resetScroll:false});};
  const productSignup=entry==='signup'&&Boolean(postId||shortsId||search.post);
  const selectProduct=(event:React.MouseEvent<HTMLAnchorElement>)=>{if(entry==='product')return;event.preventDefault();if(entry==='signup')update({auth:true,authSignup:true});};
  const closeAuth=()=>{if(productSignup){void navigate({to:'/',search:{role:search.role},replace:true,resetScroll:false});}else close();};
@@ -128,7 +133,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
    {cleanHome&&<FeedCategoryPicker selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{if(guest){guestSignup();return;}categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
  </>
  </header>}
-  <main className={`lux-shell ${cleanHome&&!backOnlyHeader?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`}>
+  <main className={`lux-shell ${cleanHome&&!backOnlyHeader?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`} onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
  {!help&&(mode==='explore'||mode==='market')&&<>
   {mode==='market'&&<div className="mt-6 flex flex-wrap items-center gap-3"><Button asChild variant={search.collection!=='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'watches'}}>시계 컬렉션</Link></Button><Button asChild variant={search.collection==='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'accessories'}}>액세서리 컬렉션</Link></Button>{search.collection!=='accessories'&&<select className="form-input max-w-52" aria-label="시계 유형" value={search.watchType ?? 'all'} onChange={e=>update({watchType:marketSearch.shape.watchType.parse(e.target.value)})}>{watchTypes.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>}</div>}
  {mode==='explore'&&<form className="lux-search" onSubmit={e=>{e.preventDefault();update({q:query || undefined});}}><Search size={18}/><input autoFocus aria-label="Search watches" placeholder="Search watches, factories, studios…" value={query} onChange={e=>setQuery(e.target.value)}/><Button variant="ghost" size="icon" type="submit" aria-label="Search"><ArrowRight/></Button></form>}
