@@ -7,6 +7,10 @@
  * (Raw video files also cannot be compressed by this code; compression happens at upload time in video-compress.ts
  * or inside the streaming service.)
  *
+ * The streaming service must output (1) several bitrate variants (e.g. 360p / 540p / 720p) so adaptive bitrate (ABR) can
+ * switch down when the network slows, and (2) SHORT segments of 1-2 seconds. Segment length is decided on the server when the
+ * stream is created; the player cannot change it. With short segments the config below starts playback after ~1 segment.
+ *
  * hls.js is loaded on demand from a CDN the first time an .m3u8 is needed, so it adds nothing to the normal bundle.
  */
 type HlsInstance = { loadSource(url: string): void; attachMedia(v: HTMLVideoElement): void; detachMedia(): void; stopLoad(): void; startLoad(): void; recoverMediaError(): void; destroy(): void; on(event: string, cb: (...a: unknown[]) => void): void };
@@ -50,9 +54,15 @@ export function attachHls(video: HTMLVideoElement, url: string, handlers: HlsHan
     if (disposed) return;
     if (!Hls || !Hls.isSupported()) { handlers.onFatal?.(); return; }
     hls = new Hls({
-      // Small buffers + start low and ramp up: fast first frame and low memory on phones such as the Galaxy Fold6.
-      maxBufferLength: 8, maxMaxBufferLength: 16, backBufferLength: 0, maxBufferSize: 20 * 1000 * 1000,
-      capLevelToPlayerSize: true, startLevel: 0, abrEwmaDefaultEstimate: 2_000_000, lowLatencyMode: false, enableWorker: true,
+      // --- Fast start: keep the pre-buffer tiny. Playback begins as soon as the first short segment is ready. ---
+      maxBufferLength: 4, maxMaxBufferLength: 8, maxBufferSize: 12 * 1000 * 1000, backBufferLength: 0, maxBufferHole: 0.5,
+      startFragPrefetch: false, // do NOT fetch upcoming segments ahead of need
+      progressive: false, lowLatencyMode: false, enableWorker: true,
+      // --- Adaptive bitrate (automatic quality). Start on the lowest variant, go up slowly, drop fast when bandwidth falls. ---
+      startLevel: 0, autoStartLoad: true, capLevelToPlayerSize: true, capLevelOnFPSDrop: true,
+      abrEwmaDefaultEstimate: 1_500_000, abrBandWidthFactor: 0.8, abrBandWidthUpFactor: 0.6, abrEwmaFastVoD: 2, abrEwmaSlowVoD: 6,
+      // --- Fail fast and retry instead of freezing on a slow request. ---
+      manifestLoadingTimeOut: 6000, manifestLoadingMaxRetry: 2, levelLoadingTimeOut: 6000, fragLoadingTimeOut: 8000, fragLoadingMaxRetry: 3,
     });
     const ev = Hls.Events;
     let netRetries = 0;
