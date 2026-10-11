@@ -107,7 +107,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const selected=all.find(p=>p.id===(shortsId || postId || search.post));
  const entry=productEntry(authReady,Boolean(user));
  const guest=authReady&&!user;
- const guestSignup=()=>update({auth:true,authSignup:true});
+ /* Guests who touch something locked see the LOGIN form first; the dialog has its own switch to sign up. */
+ const guestSignup=()=>update({auth:true,authSignup:undefined});
  const guardGuest=(event:React.MouseEvent)=>{if(!guest)return;event.preventDefault();guestSignup();};
  const swipeStart=useRef<{x:number;y:number;t:number}|null>(null);
  const swipeTabs=['following','discover','reviews'] as const;
@@ -115,7 +116,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const onSwipeStart=(e:React.TouchEvent)=>{const t=e.touches[0];const el=e.target as HTMLElement;swipeStart.current=!cleanHome||swipeBusy||e.touches.length!==1||t.clientX<24||t.clientX>window.innerWidth-24||el.closest('input,textarea,select,video,[data-no-swipe],.lux-categories,.red-home-subtabs')?null:{x:t.clientX,y:t.clientY,t:Date.now()};};
  const onSwipeEnd=(e:React.TouchEvent)=>{const s0=swipeStart.current;swipeStart.current=null;if(!s0)return;const t=e.changedTouches[0],dx=t.clientX-s0.x,dy=t.clientY-s0.y;if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-s0.t>900)return;const cur=swipeTabs.indexOf((search.tab||'discover') as typeof swipeTabs[number]);const next=swipeTabs[cur+(dx>0?1:-1)];if(!next)return;if(guest){guestSignup();return;}document.documentElement.dataset.slide=dx>0?'right':'left';window.setTimeout(()=>{delete document.documentElement.dataset.slide;},320);void navigate({to:'/',search:{role:search.role,feedCategory:search.feedCategory,tab:next},resetScroll:false});};
  const productSignup=entry==='signup'&&Boolean(postId||shortsId||search.post);
- const selectProduct=(event:React.MouseEvent<HTMLAnchorElement>)=>{if(entry==='product')return;event.preventDefault();if(entry==='signup')update({auth:true,authSignup:true});};
+ const selectProduct=(event:React.MouseEvent<HTMLAnchorElement>)=>{if(entry==='product')return;event.preventDefault();if(entry==='signup')update({auth:true,authSignup:undefined});};
  const closeAuth=()=>{if(productSignup){void navigate({to:'/',search:{role:search.role},replace:true,resetScroll:false});}else close();};
  const shorts=discoveryListings(all).filter(p=>p.short&&!preview.hidden.includes(p.id));
  const feedFilterResults=sortFeed(filterFeed(discoveryListings(all).filter(p=>!preview.hidden.includes(p.id)),search),search.fsort);
@@ -162,7 +163,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   {search.menu&&!search.notice&&<Overlay title="VELA" close={close} side><ProductionMenu role={search.role} notifications={<Button variant="ghost" className="min-h-11 w-full justify-start gap-3 px-2" aria-label={notifications.unread?`알림함 · 읽지 않음 ${notifications.unread}개`:'알림함'} onClick={()=>{notificationPushed.current=true;update({notice:true});}}><Bell className="size-4 text-muted-foreground"/><span className="flex-1 text-start">알림함</span>{notifications.unread>0&&<span className="rounded-full bg-destructive px-2 text-xs text-destructive-foreground">{notifications.unread>99?'99+':notifications.unread}</span>}<ChevronRight className="size-4 text-muted-foreground"/></Button>}/></Overlay>}
   <NotificationInbox user={user} open={Boolean(search.notice)} onClose={closeNotifications} notifications={notifications}/>
  {entry==='product'&&(search.post||postId)&&!selected&&<Overlay title="Product unavailable" close={close}><p className="py-6 text-sm text-muted-foreground">This listing is no longer available.</p></Overlay>}
- {(search.auth||productSignup)&&<AuthDialog key={search.authSignup||productSignup?'signup':'login'} initialSignup={Boolean(search.authSignup)} onClose={closeAuth} onSignedIn={close}/>}
+ {(search.auth||productSignup)&&<AuthDialog key={search.authSignup?'signup':'login'} initialSignup={Boolean(search.authSignup)} onClose={closeAuth} onSignedIn={close}/>}
   {search.panel&&(search.panel==='orders'&&!user?<Overlay title="주문 내역 · 에스크로 상태" close={close}><p className="my-5 text-sm text-muted-foreground">로그인하면 내 주문의 QC 자료, 에스크로 상태와 배송 추적을 확인할 수 있습니다.</p><Button variant="goldOutline" onClick={()=>update({panel:undefined,auth:true})}>로그인하고 내 주문 확인</Button></Overlay>:<CommercePanel posts={all} onBuy={post=>update({checkoutItem:post.id,panel:'checkout'})} panel={search.panel} user={user} selected={search.panel==='checkout'&&search.checkoutItem?all.find(post=>post.id===search.checkoutItem):selected} close={close} onPanel={panel=>update({panel})} notify={setToast}/>)}
  {toast&&<div className="lux-toast" role="status"><Check size={16}/>{toast}</div>}
  </NotificationsContext.Provider>;
