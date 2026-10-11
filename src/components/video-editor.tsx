@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MAX_VIDEO_SECONDS } from '@/lib/listing-media';
 import { MusicPicker, QuickMusicList, type SelectedMusic } from './music-picker';
@@ -149,7 +149,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
     } catch (e) { setErr(e instanceof Error ? e.message : '영상을 만들지 못했어요.'); } finally { setBusy(''); }
   };
 
-  const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['text', '텍스트·자막', Type], ['music', '음악 추가', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
+  const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['music', '음악 추가', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
   return createPortal(<div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
     <header className="video-editor-head"><Button variant="ghost" size="icon" aria-label="편집 취소" onClick={onCancel} disabled={busy === 'export'}><X/></Button><h2>영상 편집</h2><Button variant="gold" size="sm" disabled={!clips.length || !!busy} onClick={() => { if (total > MAX_VIDEO_SECONDS + 0.05) { setLimitPopup(true); return; } void exportVideo(); }}>{busy === 'export' ? <><Loader2 className="animate-spin"/>만드는 중…</> : '편집 완료'}</Button></header>
     <div className="video-editor-body">
