@@ -59,9 +59,9 @@ function ShortScene({post,active,dist,openSheet,notify,user,requestAuth}:{post:L
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const videoTags=(Array.isArray(post.source?.video_tags)?post.source.video_tags:[]) as {postId:string;title:string;at:number}[];
  const [clock,setClock]=useState(0);
- // The neighbours only start their full download a moment after the visible video, so they never slow it down; ±2 videos only fetch their header.
+ // Only the visible video and its two neighbours exist as <video> elements (phones choke on more). The neighbours start their full download a moment after the visible video so they never slow it down.
  const [warm,setWarm]=useState(false);
- useEffect(()=>{if(active||dist!==1){setWarm(false);return;}const t=window.setTimeout(()=>setWarm(true),900);return()=>window.clearTimeout(t);},[active,dist]);
+ useEffect(()=>{if(active||dist!==1){setWarm(false);return;}const t=window.setTimeout(()=>setWarm(true),350);return()=>window.clearTimeout(t);},[active,dist]);
  const [failed,setFailed]=useState(false);const videoSrc=stableMediaSrc(post.video,failed);const [blocked,setBlocked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
  const bgm=useRef<HTMLAudioElement>(null),src=post.source as {music_audio_url?:string|null;music_title?:string|null;music_artist?:string|null}|undefined;
  useEffect(()=>{const v=video.current,a=bgm.current;if(!v||!a)return;const sync=()=>{a.muted=v.muted;if(v.paused)a.pause();else{const d=a.duration||1e9;if(Math.abs(a.currentTime-(v.currentTime%d))>0.4)a.currentTime=v.currentTime%d;void a.play().catch(()=>undefined);}};const ev=['play','pause','playing','volumechange','seeked'];ev.forEach(e=>v.addEventListener(e,sync));sync();return()=>{ev.forEach(e=>v.removeEventListener(e,sync));a.pause();};},[active,videoSrc,src?.music_audio_url]);
@@ -72,7 +72,7 @@ function ShortScene({post,active,dist,openSheet,notify,user,requestAuth}:{post:L
  const read=useServerFn(getComments);
   const {data:comments}=useQuery({queryKey:['comments',post.id,user?.id ?? 'public'],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
  useEffect(()=>{const v=video.current;if(!v)return;
-  if(!active){v.pause();try{v.currentTime=0;}catch{/* not seekable yet */}return;}
+  if(!active){v.pause();/* Rewind only after the swipe has finished: rewinding at once made the old video jump to its first frame while still half on screen. */const t=window.setTimeout(()=>{try{v.currentTime=0;}catch{/* not seekable yet */}setReady(false);},500);return()=>window.clearTimeout(t);}
   const want=shortsSound;v.muted=!want;setSound(want);let cancelled=false;
   const play=()=>{if(cancelled||document.hidden||!v.isConnected)return;
    void v.play().then(()=>{if(!cancelled)setBlocked(false);}).catch((err:unknown)=>{if(cancelled)return;
@@ -84,7 +84,7 @@ function ShortScene({post,active,dist,openSheet,notify,user,requestAuth}:{post:L
   play();v.addEventListener('loadeddata',play,{once:true});document.addEventListener('visibilitychange',onVis);
   return()=>{cancelled=true;v.removeEventListener('loadeddata',play);v.removeEventListener('canplay',play);document.removeEventListener('visibilitychange',onVis);};},[active,post.video,videoSrc]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active} inert={!active}>
- {post.video&&!failed?<><img className={`shorts-video-poster ${active&&ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{dist<=2&&<video ref={video} src={videoSrc} playsInline loop muted autoPlay={active} preload={active||(dist===1&&warm)?'auto':'metadata'} poster={post.images[0]} onLoadedData={()=>setReady(true)} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
+ {post.video&&!failed?<><img className={`shorts-video-poster ${ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{dist<=1&&<video ref={video} src={videoSrc} style={{background:'#000',willChange:'transform'}} playsInline loop muted autoPlay={active} preload={active||(dist===1&&warm)?'auto':'metadata'} poster={post.images[0]} onLoadedData={()=>setReady(true)} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
  <div className="shorts-shade"/>
  {post.video&&!failed&&<button type="button" className="shorts-sound-toggle" aria-label={sound?'소리 끄기':'소리 켜기'} aria-pressed={sound} onClick={()=>{const v=video.current;if(!v)return;const next=!sound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}{!sound&&<span>소리 켜기</span>}</button>}
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
