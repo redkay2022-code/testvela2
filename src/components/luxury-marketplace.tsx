@@ -1,4 +1,5 @@
 import './vela-desktop.css';
+import { LazyVideo } from './lazy-video';
 import { createLiveOrder, LiveOrderBoard } from './live-orders';
 import { normalizeShipping, shippingError, type ShippingInput } from '@/lib/shipping';
 import { emptyShipping, useSavedShipping } from '@/lib/use-saved-shipping';
@@ -175,7 +176,7 @@ function Feed({posts,base,search,onSelectProduct}:{onSelectProduct?:(event:React
 }
 function FeedVideo({post}:{post:LuxuryPost}) {
  const hasPhoto=Boolean(post.sample||post.source?.thumbnail_url||post.source?.media_urls.length);
- return <span className="feed-video-frame">{hasPhoto||!post.video?<img src={post.images[0]} alt={`${post.title} 영상 썸네일`} loading="lazy"/>:<video src={`${post.video}#t=0.5`} preload="metadata" muted playsInline aria-label={`${post.title} 영상 썸네일`}/>}<span className="feed-video-play" aria-hidden="true"><Play size={18} fill="currentColor"/></span></span>;
+ return <span className="feed-video-frame">{hasPhoto||!post.video?<img src={post.images[0]} alt={`${post.title} 영상 썸네일`} loading="lazy"/>:<LazyVideo src={`${post.video}#t=0.5`} poster={post.images[0]} label={`${post.title} 영상 썸네일`}/>}<span className="feed-video-play" aria-hidden="true"><Play size={18} fill="currentColor"/></span></span>;
 }
 function ProductDetail({post,user,requestAuth,close,buy,notify}:{post:LuxuryPost;user:AuthUser|null;requestAuth:()=>void;close:()=>void;buy:(box:boolean)=>void;notify:(s:string)=>void}) {
  const reduced=useReducedMotion();

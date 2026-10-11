@@ -988,3 +988,8 @@ html[data-slide="left"] .red-home-shell{animation:feed-slide-from-right .28s eas
 html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s ease-out}
 .red-home-shell{touch-action:pan-y}
 @media (prefers-reduced-motion:reduce){html[data-slide] .red-home-shell{animation:none}}
+
+/* LazyVideo (feed cards): compact sound toggle, poster + spinner overlay */
+.lazy-video video,.lazy-video .lazy-video-poster{width:100%;height:100%;object-fit:cover}
+.lazy-video .shorts-sound-toggle{top:8px;right:8px;min-height:30px;padding:0 8px}
+.lazy-video .shorts-video-loading{z-index:2}

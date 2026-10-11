@@ -1,11 +1,12 @@
 import { ProductDetailContent } from './product-detail-content';
 import { EscrowGuarantee } from './escrow';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Search, Share2, Star, Tag, UserRound, Volume2, VolumeX, X } from 'lucide-react';
+/* NOTE: this code only controls video loading/playback. It cannot compress raw video files; compression happens at upload time (video-compress.ts) or on a video CDN. */
 /** Sound preference shared across swipes; starts muted because browsers block autoplay with sound. */
 let shortsSound=false;
 import { Link, useRouterState } from '@tanstack/react-router';
@@ -56,7 +57,8 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  </ShortSheet>}</AnimatePresence>
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
-function ShortScene({post,active,dist,ahead,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;dist:number;ahead:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
+/* Memoised so scenes that did not change (other videos) are not re-rendered while the feed scrolls. */
+const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,notify,user,requestAuth}:{post:LuxuryPost;active:boolean;dist:number;ahead:boolean;openSheet:Props['openSheet'];notify:Props['notify'];user:User|null;requestAuth:()=>void}) {
  const hybrid=isHybridPost(post);const engagement=useEngagement(),liked=engagement.likedIds.has(post.id);
  const video=useRef<HTMLVideoElement>(null),preview=useMarketPreview();
  const videoTags=(Array.isArray(post.source?.video_tags)?post.source.video_tags:[]) as {postId:string;title:string;at:number}[];
@@ -86,7 +88,7 @@ function ShortScene({post,active,dist,ahead,openSheet,notify,user,requestAuth}:{
   play();v.addEventListener('loadeddata',play,{once:true});document.addEventListener('visibilitychange',onVis);
   return()=>{cancelled=true;v.removeEventListener('loadeddata',play);v.removeEventListener('canplay',play);document.removeEventListener('visibilitychange',onVis);};},[active,post.video,videoSrc]);
  return <article className="shorts-scene" data-short-id={post.id} aria-label={post.title} aria-hidden={!active} inert={!active}>
- {post.video&&!failed?<><img className={`shorts-video-poster ${ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{dist<=1&&<video ref={video} src={videoSrc} style={{background:'#000',willChange:'transform'}} playsInline loop muted autoPlay={active} preload={active||(dist===1&&warm)?'auto':'metadata'} poster={post.images[0]} onLoadedData={e=>{setReady(true);const el=e.currentTarget;/* Neighbours: decode and paint the first frame now so the swipe shows picture instantly. */if(!active&&el.currentTime===0){try{el.currentTime=0.001;}catch{/* not seekable yet */}}}} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
+ {post.video&&!failed?<><img className={`shorts-video-poster ${ready?'is-hidden':''}`} src={post.images[0]} alt="" aria-hidden="true"/>{dist<=1&&<video ref={video} src={videoSrc} style={{background:'#000',willChange:'transform'}} playsInline loop muted autoPlay={active} preload={active||(dist===1&&warm)?'auto':'none'} poster={post.images[0]} onLoadedData={e=>{setReady(true);const el=e.currentTarget;/* Neighbours: decode and paint the first frame now so the swipe shows picture instantly. */if(!active&&el.currentTime===0){try{el.currentTime=0.001;}catch{/* not seekable yet */}}}} onPlaying={()=>setReady(true)} onError={()=>setFailed(true)} onClick={()=>{if(!active)return;const v=video.current;if(!v)return;const next=!shortsSound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}/>}{active&&src?.music_audio_url&&<audio ref={bgm} src={src.music_audio_url} loop preload="auto" muted/>} {active&&!ready&&<div className="shorts-video-loading" aria-label="영상 불러오는 중"><span/></div>}</>:<img src={post.images[0]} alt={post.title}/>} 
  <div className="shorts-shade"/>
  {post.video&&!failed&&<button type="button" className="shorts-sound-toggle" aria-label={sound?'소리 끄기':'소리 켜기'} aria-pressed={sound} onClick={()=>{const v=video.current;if(!v)return;const next=!sound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}{!sound&&<span>소리 켜기</span>}</button>}
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:<span>{failed?'영상을 불러올 수 없습니다.':'미리보기 이미지'}</span>}</div>}
@@ -107,7 +109,7 @@ function ShortScene({post,active,dist,ahead,openSheet,notify,user,requestAuth}:{
  </aside>
  </footer>
  </article>;
-}
+});
 function ShortSellerIdentity({post}:{post:LuxuryPost}) {
  const preview=useMarketPreview(),identity=sellerIdentity(post),following=preview.isFollowing(identity);
  return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><span className="shorts-anonymous-avatar" role="img" aria-label="판매자 프로필"><UserRound/></span><strong>{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
