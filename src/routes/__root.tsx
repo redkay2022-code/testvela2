@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ViewTracker } from "@/components/view-tracker";
 import { SanctionNotice } from "@/components/sanction-notice";
 import { InstallPrompt } from "@/components/install-prompt";
+import { AutoFullscreen } from "@/components/auto-fullscreen";
 import {
   Outlet,
   Link,
@@ -137,6 +138,7 @@ function RootComponent() {
       <ViewTracker />
       <SanctionNotice />
       <InstallPrompt />
+      <AutoFullscreen />
     </QueryClientProvider>
   );
 }
