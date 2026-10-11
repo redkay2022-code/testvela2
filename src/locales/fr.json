@@ -2379,5 +2379,6 @@
   "영상은 30초 이내로만 올릴 수 있어요": "Les vidéos ne peuvent pas dépasser 30 secondes",
   "현재 길이는 {0}초입니다. 30초 이내로 편집해 주세요.": "La durée actuelle est de {0} s. Veuillez la ramener à 30 secondes ou moins.",
   "앞 30초만 사용하기": "Utiliser seulement les 30 premières secondes",
-  "직접 편집하기": "Modifier moi-même"
+  "직접 편집하기": "Modifier moi-même",
+  "출처 / 공장": "Origine / Usine"
 }

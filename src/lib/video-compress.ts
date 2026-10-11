@@ -11,7 +11,7 @@
  */
 export const COMPRESS_THRESHOLD_BYTES = 1_500_000;
 /** Clips at or below this bitrate (bits/s) and size are already web-friendly. */
-const LIGHT_BITRATE = 2_800_000;
+const LIGHT_BITRATE = 2_200_000;
 /** Minimum average PSNR (dB) of the sampled frames for the converted clip to be accepted. Lower = more permissive. */
 const MIN_PSNR = 27;
 
@@ -92,7 +92,7 @@ export async function convertVideoSmart(file: File, onProgress?: (ratio: number)
     } catch { /* no audio track: keep the picture */ }
     const mime = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
     if (!mime) return keep('unsupported');
-    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(Math.min(2_500_000, Math.max(900_000, W * H * 3))), audioBitsPerSecond: 96_000 });
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(Math.min(2_000_000, Math.max(900_000, W * H * 2.2))), audioBitsPerSecond: 96_000 });
     const chunks: Blob[] = [];
     rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     const stopped = new Promise<void>(resolve => { rec.onstop = () => resolve(); });

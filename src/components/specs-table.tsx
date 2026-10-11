@@ -7,6 +7,7 @@ const specLabels: Record<string, string> = {
   material: '케이스 소재',
   waterResistance: '방수',
   glass: '글라스/크리스탈',
+  factory: '출처 / 공장',
 };
 
 function labelFor(key: string) {
@@ -19,7 +20,7 @@ export function SpecsTable({specs, fallback}: {specs: unknown; fallback?: React.
   let entries: [string, string][] = [];
   if (specs && typeof specs === 'object' && !Array.isArray(specs)) {
     entries = Object.entries(specs as Record<string, unknown>)
-      .filter(([, v]) => typeof v === 'string' && v.trim())
+      .filter(([k, v]) => k !== 'sourceType' && typeof v === 'string' && v.trim())
       .map(([k, v]) => [k, (v as string).trim().slice(0, 80)]);
   }
   if (!entries.length) return <>{fallback ?? null}</>;
