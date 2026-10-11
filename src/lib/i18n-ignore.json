@@ -105,7 +105,8 @@
     "Bright Clean",
     "brightness(1.08) contrast(1.04) saturate(1.05)",
     "60% 0px 60% 0px",
-    "250% 0px 250% 0px"
+    "250% 0px 250% 0px",
+    "Buffering"
   ],
   "patterns": [
     "^[A-Z0-9]{2,4} Factory( \\([A-Z0-9]+\\))?$",

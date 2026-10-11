@@ -993,3 +993,7 @@ html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s eas
 .lazy-video video,.lazy-video .lazy-video-poster{width:100%;height:100%;object-fit:cover}
 .lazy-video .shorts-sound-toggle{top:8px;right:8px;min-height:30px;padding:0 8px}
 .lazy-video .shorts-video-loading{z-index:2}
+
+/* HLS buffer progress (VELA gold on dark) */
+.shorts-buffer{position:absolute;z-index:6;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 2px);height:3px;background:rgba(255,255,255,.12);pointer-events:none}
+.shorts-buffer i{display:block;height:100%;background:var(--primary,#d4af37);transition:width .25s ease}

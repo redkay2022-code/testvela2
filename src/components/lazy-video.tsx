@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
+import { attachHls, isHlsUrl } from '@/lib/hls-loader';
 
 /**
  * Feed video that only loads and plays while it is on screen (Intersection Observer).
@@ -28,6 +29,8 @@ function LazyVideoBase({ src, poster, className, label }: Props) {
   const [ready, setReady] = useState(false);
   const [sound, setSound] = useState(soundOn);
   const ratio = useRef(0);
+  const hls = isHlsUrl(src);
+  const [visible, setVisible] = useState(false);
 
   const claim = useCallback(() => {
     const v = video.current;
@@ -46,6 +49,7 @@ function LazyVideoBase({ src, poster, className, label }: Props) {
     const playObs = new IntersectionObserver(([e]) => {
       const v = video.current;
       ratio.current = e?.intersectionRatio ?? 0;
+      setVisible(Boolean(e?.isIntersecting) && ratio.current >= 0.6);
       if (!v) return;
       if (e?.isIntersecting && ratio.current >= 0.6 && !document.hidden) claim();
       else { v.pause(); if (currentPlayer?.id === id) currentPlayer = null; }
@@ -56,6 +60,9 @@ function LazyVideoBase({ src, poster, className, label }: Props) {
     return () => { nearObs.disconnect(); farObs.disconnect(); playObs.disconnect(); document.removeEventListener('visibilitychange', onVis); if (currentPlayer?.id === id) currentPlayer = null; };
   }, [claim, id]);
 
+  // HLS: the stream exists only while the video is visible; leaving the screen destroys it completely.
+  useEffect(() => { const v = video.current; if (!hls || !near || !visible || !v) return; return attachHls(v, src, { onFatal: () => setReady(false) }); }, [hls, near, visible, src]);
+
   // When the src is dropped (far away) release the decoder and buffers.
   useEffect(() => { const v = video.current; return () => { if (!v) return; v.pause(); v.removeAttribute('src'); v.load(); }; }, []);
 
@@ -64,7 +71,7 @@ function LazyVideoBase({ src, poster, className, label }: Props) {
   return (
     <div ref={box} className="lazy-video" style={{ position: 'relative' }}>
       {poster && <img src={poster} alt="" aria-hidden="true" className={`${className ?? ''} lazy-video-poster`} loading="lazy" style={{ position: 'absolute', inset: 0, opacity: ready ? 0 : 1, transition: 'opacity .2s' }} />}
-      {near && <video ref={video} src={src} poster={poster} className={className} muted loop playsInline preload="none" aria-label={label} onLoadedData={() => setReady(true)} onPlaying={() => setReady(true)} onClick={toggleSound} style={{ background: '#000' }} />}
+      {near && <video ref={video} src={hls ? undefined : src} poster={poster} className={className} muted loop playsInline preload="none" aria-label={label} onLoadedData={() => setReady(true)} onPlaying={() => setReady(true)} onClick={toggleSound} style={{ background: '#000' }} />}
       {near && !ready && <span className="shorts-video-loading" aria-label="영상 불러오는 중"><span /></span>}
       {near && <button type="button" className="shorts-sound-toggle" aria-label={sound ? '소리 끄기' : '소리 켜기'} aria-pressed={sound} onClick={toggleSound}>{sound ? <Volume2 size={16} /> : <VolumeX size={16} />}</button>}
     </div>
