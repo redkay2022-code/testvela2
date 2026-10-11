@@ -767,9 +767,10 @@
 .video-editor {position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;background:var(--background);color:var(--foreground);}
 .video-editor-head {display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);}
 .video-editor-head h2 {flex:1;font-size:15px;font-weight:600;}
-.video-editor-body {flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.video-editor-body {flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+.video-editor-body>* {flex-shrink:0;}
 .video-editor-stage {position:relative;margin:12px auto 0;width:min(100%,640px);aspect-ratio:16/9;background:var(--card);overflow:hidden;border-radius:10px;}
-.video-editor-stage.is-vertical {aspect-ratio:9/16;width:auto;height:min(46dvh,560px);}
+.video-editor-stage.is-vertical {aspect-ratio:9/16;width:auto;height:min(50dvh,560px);}
 .video-editor-video {width:100%;height:100%;object-fit:contain;}
 .is-vertical .video-editor-video {object-fit:cover;}
 .video-editor-vignette {position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,color-mix(in oklab,var(--background) 75%,transparent));}
@@ -795,7 +796,17 @@
 .video-editor-layers {display:flex;gap:4px;overflow-x:auto;padding:0 12px;border-bottom:1px solid var(--border);}
 .video-editor-layers button {display:flex;align-items:center;gap:5px;padding:10px 10px;font-size:12px;white-space:nowrap;color:var(--muted-foreground);border-bottom:2px solid transparent;}
 .video-editor-layers button.active {color:var(--primary);border-color:var(--primary);}
-.video-editor-panel {display:grid;gap:10px;padding:12px 16px 32px;}
+.video-editor-panel {display:grid;gap:10px;padding:12px 16px 32px;align-content:start;flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;}
+.video-editor-body>.video-editor-panel {flex-shrink:1;}
+@media (min-width:900px) {
+ .video-editor-body {display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,460px);grid-template-rows:auto 1fr;column-gap:16px;}
+ .video-editor-body>.video-editor-stage {grid-column:1;grid-row:1;margin:12px auto 0;}
+ .video-editor-body>.video-editor-stage.is-vertical {height:min(72dvh,760px);}
+ .video-editor-body>.video-editor-timeline {grid-column:1;grid-row:2;align-self:start;}
+ .video-editor-body>.video-editor-layers {grid-column:2;grid-row:1;align-self:start;margin-top:12px;}
+ .video-editor-body>.video-editor-panel {grid-column:2;grid-row:2 / span 2;}
+ .video-editor-body>p {grid-column:1;grid-row:3;}
+}
 .editor-card {display:grid;gap:4px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--card);}
 .editor-row {display:grid;grid-template-columns:96px 1fr;align-items:center;gap:8px;font-size:12px;color:var(--muted-foreground);}
 .editor-row input {accent-color:var(--primary);}
