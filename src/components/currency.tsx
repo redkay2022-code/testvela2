@@ -21,7 +21,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     setL(isLang(savedLang) ? savedLang : detected.lang);
     setCur(isCurrency(savedCur) ? savedCur : detected.currency);
   }, []);
-  useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; void applyDomTranslation(lang); }, [lang]);
+  useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; /* The site translates itself; the browser's own translator must not rewrite the same text. */ document.documentElement.setAttribute('translate', 'no'); void applyDomTranslation(lang); }, [lang]);
   const setCurrency = (c: Currency) => { localStorage.setItem(CUR_KEY, c); setCur(c); };
   const setLang = (l: Lang) => {
     localStorage.setItem(LANG_KEY, l); setL(l);

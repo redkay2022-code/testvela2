@@ -88,6 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "velamarket · 벨라마켓" },
       { name: "description", content: "취향으로 연결되는 우리들의 마켓, 벨라마켓" },
       { name: "theme-color", content: "#0D0D0F" },
+      { name: "google", content: "notranslate" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
@@ -114,7 +115,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" translate="no">
       <head>
         <HeadContent />
       </head>

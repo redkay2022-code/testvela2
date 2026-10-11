@@ -18,8 +18,8 @@ type FilterId = 'none' | 'bright' | 'dark' | 'metal' | 'cinema';
 type Layer = 'clips' | 'text' | 'music' | 'filter' | 'tags';
 
 export const luxuryFilters: Record<FilterId, { label: string; css: string; vignette: boolean }> = {
-  bright: { label: 'Bright Clean', css: 'brightness(1.08) contrast(1.04) saturate(1.05)', vignette: false },
   none: { label: '원본', css: 'none', vignette: false },
+  bright: { label: 'Bright Clean', css: 'brightness(1.08) contrast(1.04) saturate(1.05)', vignette: false },
   dark: { label: 'Dark Luxury', css: 'contrast(1.18) brightness(0.86) saturate(0.85) sepia(0.12)', vignette: true },
   metal: { label: 'Metallic Gloss', css: 'contrast(1.14) brightness(1.06) saturate(0.7)', vignette: false },
   cinema: { label: 'Cinematic Contrast', css: 'contrast(1.32) saturate(1.08) brightness(0.94)', vignette: true },
@@ -36,7 +36,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
   const [clips, setClips] = useState<Clip[]>([]);
   const [layer, setLayer] = useState<Layer>('clips');
   const [vertical, setVertical] = useState(true); const [cropX, setCropX] = useState(50);
-  const [filter, setFilter] = useState<FilterId>('bright');
+  const [filter, setFilter] = useState<FilterId>('none');
   const [texts, setTexts] = useState<TextLayer[]>([]); const [captions, setCaptions] = useState<Caption[]>([]); const [showCaptions, setShowCaptions] = useState(true);
   const [bgm, setBgm] = useState<BgmId | null>(null); const [bgmVol, setBgmVol] = useState(0.6); const [beatSync, setBeatSync] = useState(true); const [origVol, setOrigVol] = useState(1); const [origOff, setOrigOff] = useState(false);
   const effVol = origOff ? 0 : origVol;
