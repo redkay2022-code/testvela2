@@ -87,7 +87,21 @@
     "접속 현황 · 정지 / 추방",
     "방문자 분석",
     "데이터 초기화",
-    "테스트 회원 · 게시물 삭제"
+    "테스트 회원 · 게시물 삭제",
+    "Calming",
+    "Bright",
+    "Grooving",
+    "Uplifting",
+    "Bouncy",
+    "Relaxed",
+    "Mysterious",
+    "Kevin MacLeod",
+    "BPM ·",
+    "{0} 가나다",
+    "translate(-50%,-50%) scale({0})",
+    "\"Noto Serif CJK KR\", \"Songti SC\", serif",
+    "ui-monospace, monospace",
+    "system-ui, sans-serif"
   ],
   "patterns": [
     "^[A-Z0-9]{2,4} Factory( \\([A-Z0-9]+\\))?$",
@@ -103,6 +117,8 @@
     "components/sanction-notice.tsx",
     "components/admin-password-gate.tsx",
     "components/admin-reset.tsx",
-    "components/menu-dashboards.tsx"
+    "components/menu-dashboards.tsx",
+    "lib/editor-fonts.ts",
+    "lib/video-compress.ts"
   ]
 }

@@ -1,0 +1,40 @@
+/*
+ * Computer / tablet layout.
+ *  - Home keeps the phone-app proportions (a centred column) instead of stretching across a wide screen.
+ *  - Shorts keep a 9:16 frame so vertical videos are not cropped or stretched.
+ *  - The product page shows photos/video on the left and the details (price, description, specs) beside them,
+ *    so the details are visible without scrolling past a screen-high picture.
+ * Phones are not affected: every rule needs a wide viewport.
+ */
+@media (min-width: 721px) {
+  .red-home-shell { max-width: 560px; }
+  .red-home-header .lux-header-inner,
+  .red-home-subtabs { max-width: 560px; }
+  .lux-bottom-nav > div { max-width: 560px; }
+}
+
+@media (min-width: 721px) and (min-height: 600px) {
+  .shorts-player {
+    inset: 0 calc((100vw - min(100vw, 100dvh * 9 / 16)) / 2);
+    box-shadow: 0 0 0 100vmax var(--background);
+  }
+}
+
+@media (min-width: 721px) and (max-width: 899px) {
+  .lux-detail-page .lux-detail-scroll .lux-carousel > * { height: clamp(320px, 52dvh, 560px); }
+}
+
+@media (min-width: 900px) {
+  .lux-detail-page > .lux-detail-scroll {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 24px;
+    align-items: start;
+  }
+  .lux-detail-page .lux-detail-scroll .lux-carousel-wrap { grid-column: 1; grid-row: 1; }
+  .lux-detail-page .lux-detail-scroll .carousel-controls { grid-column: 1; grid-row: 2; }
+  .lux-detail-page .lux-detail-scroll > .lux-detail-copy { grid-column: 2; grid-row: 1 / span 2; max-width: none; margin: 0; padding: 16px 16px 28px 0; }
+  .lux-detail-page .lux-detail-scroll > .lux-detail-copy:only-child { grid-column: 1 / -1; max-width: 960px; margin-inline: auto; padding-inline: 16px; }
+  .lux-detail-page .lux-detail-scroll .lux-carousel > * { height: clamp(360px, calc(100dvh - 230px), 760px); }
+}

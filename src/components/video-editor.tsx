@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Type, Volume2, VolumeX, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MAX_VIDEO_SECONDS } from '@/lib/listing-media';
-import { MusicPicker, type SelectedMusic } from './music-picker';
+import { MusicPicker, QuickMusicList, type SelectedMusic } from './music-picker';
+import { editorFonts, ensureEditorFonts, fontStack, loadFontForCanvas } from '@/lib/editor-fonts';
 import { beatTimes, bgmCredit, bgmPresets, preloadBgm, clipsToWavBase64, renderSoundtrack, snapToBeat, type BgmId, type SfxType } from '@/lib/video-audio';
 import { transcribeVideoAudio } from '@/lib/video-captions.functions';
 
 export type VideoTag = { postId: string; title: string; at: number };
 type Clip = { id: string; file: File; url: string; duration: number; start: number; end: number };
-type TextLayer = { id: string; text: string; start: number; end: number; style: TextStyle; y: number };
+type TextLayer = { id: string; text: string; start: number; end: number; style: TextStyle; x: number; y: number; size: number; font: string };
 type Caption = { start: number; end: number; text: string };
 type TextStyle = 'gold-serif' | 'spec' | 'minimal';
 type FilterId = 'none' | 'dark' | 'metal' | 'cinema';
@@ -36,22 +37,31 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
   const [vertical, setVertical] = useState(true); const [cropX, setCropX] = useState(50);
   const [filter, setFilter] = useState<FilterId>('dark');
   const [texts, setTexts] = useState<TextLayer[]>([]); const [captions, setCaptions] = useState<Caption[]>([]); const [showCaptions, setShowCaptions] = useState(true);
-  const [bgm, setBgm] = useState<BgmId | null>(null); const [bgmVol, setBgmVol] = useState(0.6); const [beatSync, setBeatSync] = useState(true); const [origVol, setOrigVol] = useState(1);
+  const [bgm, setBgm] = useState<BgmId | null>(null); const [bgmVol, setBgmVol] = useState(0.6); const [beatSync, setBeatSync] = useState(true); const [origVol, setOrigVol] = useState(1); const [origOff, setOrigOff] = useState(false);
+  const effVol = origOff ? 0 : origVol;
+  const [limitPopup, setLimitPopup] = useState(false); const limitShown = useRef(false);
   const [sfx, setSfx] = useState<{ id: string; type: SfxType; at: number }[]>([]);
   const [tags, setTags] = useState<{ id: string; postId: string; title: string; at: number }[]>([]);
   const [t, setT] = useState(0); const [playing, setPlaying] = useState(false);
   useEffect(() => { const a = musicAudio.current; if (!a) return; if (playing) { void a.play().catch(() => undefined); } else a.pause(); }, [playing, music?.music_audio_url]);
   const [busy, setBusy] = useState(''); const [err, setErr] = useState('');
-  const [draft, setDraft] = useState({ text: '', style: 'gold-serif' as TextStyle }); const [tagPick, setTagPick] = useState(catalog[0]?.id ?? '');
+  const [draft, setDraft] = useState({ text: '', style: 'gold-serif' as TextStyle, font: '' }); const [tagPick, setTagPick] = useState(catalog[0]?.id ?? '');
+  const stageRef = useRef<HTMLDivElement>(null); const dragText = useRef<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null); const audioCtx = useRef<AudioContext | null>(null); const audioSrc = useRef<AudioBufferSourceNode | null>(null);
   const soundtrack = useRef<AudioBuffer | null>(null); const tRef = useRef(0); const raf = useRef(0);
 
-  const addFile = async (f: File) => { const url = URL.createObjectURL(f); try { const duration = await readDuration(url); setClips(c => [...c, { id: uid(), file: f, url, duration, start: 0, end: Math.min(duration, MAX_VIDEO_SECONDS) }]); } catch (e) { URL.revokeObjectURL(url); setErr(e instanceof Error ? e.message : '영상을 읽을 수 없어요.'); } };
+  const addFile = async (f: File) => { const url = URL.createObjectURL(f); try { const duration = await readDuration(url); setClips(c => [...c, { id: uid(), file: f, url, duration, start: 0, end: duration }]); } catch (e) { URL.revokeObjectURL(url); setErr(e instanceof Error ? e.message : '영상을 읽을 수 없어요.'); } };
   const loaded = useRef(false);
   useEffect(() => { if (!loaded.current) { loaded.current = true; void addFile(file); } return () => { cancelAnimationFrame(raf.current); audioSrc.current?.stop(); void audioCtx.current?.close(); }; }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => clips.forEach(c => URL.revokeObjectURL(c.url)), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const total = clips.reduce((s, c) => s + (c.end - c.start), 0);
+  useEffect(() => { ensureEditorFonts(); }, []);
+  useEffect(() => { if (videoRef.current) videoRef.current.volume = effVol; }, [effVol, clips.length]);
+  /* Past 30 seconds the editor cannot continue: show the notice once each time the total crosses the limit. */
+  useEffect(() => { if (total > MAX_VIDEO_SECONDS + 0.05) { if (!limitShown.current) { limitShown.current = true; setLimitPopup(true); } } else limitShown.current = false; }, [total]);
+  /* Keeps the first 30 seconds in order; later clips are removed. */
+  const fitToLimit = () => { let left = MAX_VIDEO_SECONDS; setClips(cs => cs.flatMap(c => { if (left <= 0.05) return []; const len = Math.min(c.end - c.start, left); left -= len; return [{ ...c, end: c.start + len }]; })); setLimitPopup(false); };
   const bpm = bgm ? bgmPresets[bgm]!.bpm : 0;
   const snap = (x: number) => Math.max(0, Math.min(total, bgm && beatSync ? snapToBeat(x, bpm) : x));
   const locate = (time: number) => { let acc = 0; for (let i = 0; i < clips.length; i++) { const c = clips[i]!, len = c.end - c.start; if (time < acc + len || i === clips.length - 1) return { i, local: c.start + Math.min(len, Math.max(0, time - acc)) }; acc += len; } return { i: 0, local: 0 }; };
@@ -66,7 +76,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
     if (tRef.current >= total - 0.05) seek(0);
     audioCtx.current ??= new AudioContext(); const ac = audioCtx.current; await ac.resume();
     if (soundtrack.current) { const s = ac.createBufferSource(); s.buffer = soundtrack.current; s.connect(ac.destination); s.start(0, tRef.current); audioSrc.current = s; }
-    v.volume = origVol; await v.play().catch(() => undefined); setPlaying(true);
+    v.volume = effVol; await v.play().catch(() => undefined); setPlaying(true);
     const tick = () => {
       const { i } = locate(tRef.current); const c = clips[i]!; let acc = 0; for (let k = 0; k < i; k++) acc += clips[k]!.end - clips[k]!.start;
       if (v.currentTime >= c.end - 0.03) { if (i >= clips.length - 1) { stop(); seek(total); return; } seek(acc + (c.end - c.start) + 0.001); void v.play(); }
@@ -84,6 +94,10 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
     catch (e) { setErr(e instanceof Error ? e.message : '자막을 만들지 못했어요.'); } finally { setBusy(''); }
   };
   const activeTexts = texts.filter(x => t >= x.start && t <= x.end);
+  /* Text can be dragged anywhere on the preview; the position is stored as a % of the frame so the export matches. */
+  const startDrag = (e: ReactPointerEvent<HTMLDivElement>, id: string) => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); dragText.current = id; };
+  const moveDrag = (e: ReactPointerEvent<HTMLDivElement>) => { const id = dragText.current, box = stageRef.current?.getBoundingClientRect(); if (!id || !box || !box.width || !box.height) return; const x = Math.min(95, Math.max(5, ((e.clientX - box.left) / box.width) * 100)), y = Math.min(95, Math.max(5, ((e.clientY - box.top) / box.height) * 100)); setTexts(ts => ts.map(k => k.id === id ? { ...k, x: +x.toFixed(1), y: +y.toFixed(1) } : k)); };
+  const endDrag = () => { dragText.current = null; };
   const activeCaption = showCaptions ? captions.find(c => t >= c.start && t <= c.end) : undefined;
   const activeTags = tags.filter(x => t >= x.at && t <= x.at + 2.5);
   const beats = useMemo(() => bgm && beatSync ? beatTimes(bpm, total) : [], [bgm, beatSync, bpm, total]);
@@ -97,7 +111,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
       const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H; const ctx = canvas.getContext('2d')!;
       const css = getComputedStyle(document.documentElement); const gold = css.getPropertyValue('--primary').trim() || 'goldenrod'; const fg = css.getPropertyValue('--foreground').trim() || 'white'; const shade = css.getPropertyValue('--background').trim() || 'black';
       const v = document.createElement('video'); v.playsInline = true; v.crossOrigin = 'anonymous';
-      const ac = new AudioContext(); const dest = ac.createMediaStreamDestination(); const og = ac.createGain(); og.gain.value = origVol; ac.createMediaElementSource(v).connect(og).connect(dest);
+      const ac = new AudioContext(); const dest = ac.createMediaStreamDestination(); const og = ac.createGain(); og.gain.value = effVol; ac.createMediaElementSource(v).connect(og).connect(dest);
       const stream = canvas.captureStream(30); dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
       const mime = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m)) ?? 'video/webm';
       const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: Math.round(Math.min(2_500_000, W * H * 2.4)), audioBitsPerSecond: 96_000 }); const chunks: Blob[] = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
@@ -107,17 +121,19 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
         const vw = v.videoWidth || W, vh = v.videoHeight || H, scale = Math.max(W / vw, H / vh), dw = vw * scale, dh = vh * scale;
         ctx.drawImage(v, (W - dw) * (cropX / 100), (H - dh) / 2, dw, dh); ctx.filter = 'none';
         if (luxuryFilters[filter].vignette) { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.75); g.addColorStop(0, 'transparent'); g.addColorStop(1, shade); ctx.globalAlpha = 0.7; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
-        ctx.textAlign = 'center';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         texts.filter(x => time >= x.start && time <= x.end).forEach(x => {
-          const y = H * (x.y / 100);
-          if (x.style === 'gold-serif') { ctx.font = `600 ${Math.round(W * 0.07)}px "Noto Serif CJK KR", "Songti SC", serif`; ctx.fillStyle = gold; ctx.shadowColor = shade; ctx.shadowBlur = 12; ctx.fillText(x.text.toUpperCase(), W / 2, y); }
-          else if (x.style === 'spec') { ctx.font = `500 ${Math.round(W * 0.04)}px ui-monospace, monospace`; ctx.fillStyle = fg; ctx.shadowBlur = 8; ctx.fillText(x.text, W / 2, y); ctx.fillStyle = gold; ctx.fillRect(W * 0.35, y + W * 0.02, W * 0.3, 2); }
-          else { ctx.font = `500 ${Math.round(W * 0.05)}px system-ui, sans-serif`; ctx.fillStyle = fg; ctx.shadowBlur = 8; ctx.fillText(x.text, W / 2, y); }
+          const cx = W * (x.x / 100), cy = H * (x.y / 100), k = x.size, own = fontStack(x.font);
+          if (x.style === 'gold-serif') { ctx.font = `600 ${Math.round(W * 0.07 * k)}px ${own ?? '"Noto Serif CJK KR", "Songti SC", serif'}`; ctx.fillStyle = gold; ctx.shadowColor = shade; ctx.shadowBlur = 12; ctx.fillText(x.text.toUpperCase(), cx, cy, W * 0.92); }
+          else if (x.style === 'spec') { ctx.font = `500 ${Math.round(W * 0.04 * k)}px ${own ?? 'ui-monospace, monospace'}`; ctx.fillStyle = fg; ctx.shadowColor = shade; ctx.shadowBlur = 8; ctx.fillText(x.text, cx, cy, W * 0.92); ctx.fillStyle = gold; ctx.fillRect(cx - W * 0.15 * k, cy + W * 0.03 * k, W * 0.3 * k, 2); }
+          else { ctx.font = `500 ${Math.round(W * 0.05 * k)}px ${own ?? 'system-ui, sans-serif'}`; ctx.fillStyle = fg; ctx.shadowColor = shade; ctx.shadowBlur = 8; ctx.fillText(x.text, cx, cy, W * 0.92); }
           ctx.shadowBlur = 0;
         });
+        ctx.textBaseline = 'alphabetic';
         const cap = showCaptions ? captions.find(c => time >= c.start && time <= c.end) : undefined;
         if (cap) { ctx.font = `500 ${Math.round(W * 0.045)}px system-ui, sans-serif`; const tw = ctx.measureText(cap.text).width; ctx.globalAlpha = 0.6; ctx.fillStyle = shade; ctx.fillRect(W / 2 - tw / 2 - 16, H * 0.8 - W * 0.05, tw + 32, W * 0.07); ctx.globalAlpha = 1; ctx.fillStyle = fg; ctx.fillText(cap.text, W / 2, H * 0.8); }
       };
+      await Promise.all([...new Set(texts.filter(x => x.font).map(x => x.font))].map(f => loadFontForCanvas(f, texts.map(x => x.text).join(''))));
       await ac.resume(); rec.start(250);
       if (soundtrack.current) { const s = ac.createBufferSource(); s.buffer = soundtrack.current; s.connect(dest); s.start(); }
       let acc = 0;
@@ -135,12 +151,13 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
 
   const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['text', '텍스트·자막', Type], ['music', '음악 추가', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
   return createPortal(<div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
-    <header className="video-editor-head"><Button variant="ghost" size="icon" aria-label="편집 취소" onClick={onCancel} disabled={busy === 'export'}><X/></Button><h2>영상 편집</h2><Button variant="gold" size="sm" disabled={!clips.length || !!busy || total > MAX_VIDEO_SECONDS + 0.05} onClick={() => void exportVideo()}>{busy === 'export' ? <><Loader2 className="animate-spin"/>만드는 중…</> : '편집 완료'}</Button></header>
+    <header className="video-editor-head"><Button variant="ghost" size="icon" aria-label="편집 취소" onClick={onCancel} disabled={busy === 'export'}><X/></Button><h2>영상 편집</h2><Button variant="gold" size="sm" disabled={!clips.length || !!busy} onClick={() => { if (total > MAX_VIDEO_SECONDS + 0.05) { setLimitPopup(true); return; } void exportVideo(); }}>{busy === 'export' ? <><Loader2 className="animate-spin"/>만드는 중…</> : '편집 완료'}</Button></header>
     <div className="video-editor-body">
-      <div className={`video-editor-stage ${vertical ? 'is-vertical' : ''}`}>
-        <video ref={videoRef} playsInline className="video-editor-video" style={{ filter: luxuryFilters[filter].css, objectPosition: `${cropX}% 50%` }} onLoadedData={() => videoRef.current && (videoRef.current.volume = origVol)}/>
+      <div ref={stageRef} className={`video-editor-stage ${vertical ? 'is-vertical' : ''}`}>
+        <video ref={videoRef} playsInline className="video-editor-video" style={{ filter: luxuryFilters[filter].css, objectPosition: `${cropX}% 50%` }} onLoadedData={() => videoRef.current && (videoRef.current.volume = effVol)}/>
         {luxuryFilters[filter].vignette && <div className="video-editor-vignette"/>}
-        {activeTexts.map(x => <div key={x.id} className={`video-text-layer text-${x.style}`} style={{ top: `${x.y}%` }}>{x.text}</div>)}
+        {activeTexts.map(x => <div key={x.id} className={`video-text-layer text-${x.style}`} role="button" tabIndex={0} aria-label={`텍스트 이동: ${x.text}`} style={{ left: `${x.x}%`, top: `${x.y}%`, right: 'auto', width: 'max-content', maxWidth: '92%', transform: `translate(-50%,-50%) scale(${x.size})`, fontFamily: fontStack(x.font) ?? undefined, pointerEvents: 'auto', touchAction: 'none', cursor: 'grab' }} onPointerDown={e => startDrag(e, x.id)} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>{x.text}</div>)}
+        {clips.length > 0 && <button type="button" className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-full bg-background/70 px-2.5 py-1 text-[11px] text-foreground" aria-pressed={origOff} onClick={() => setOrigOff(o => !o)}>{origOff ? <VolumeX size={13}/> : <Volume2 size={13}/>}{origOff ? '원래 소리 꺼짐' : '원래 소리 끄기'}</button>}
         {activeCaption && <div className="video-caption-layer">{activeCaption.text}</div>}
         {activeTags.map(x => <div key={x.id} className="video-tag-pin"><Tag size={12}/>{x.title}</div>)}
         {busy === 'export' && <div className="video-editor-busy"><Loader2 className="animate-spin"/>{`영상 내보내는 중 · ${fmt(t)} / ${fmt(total)}`}</div>}
@@ -174,18 +191,25 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
             {captions.length > 0 && <><label className="mt-2 flex items-center gap-2 text-xs"><input type="checkbox" checked={showCaptions} onChange={e => setShowCaptions(e.target.checked)}/>자막 표시</label><div className="mt-2 grid max-h-40 gap-1 overflow-y-auto">{captions.map((c, i) => <div key={i} className="flex items-center gap-2 text-xs"><span className="w-16 shrink-0 text-muted-foreground">{fmt(c.start)}</span><input className="form-input !mt-0 !py-1 text-xs" value={c.text} maxLength={80} onChange={e => setCaptions(cs => cs.map((x, k) => k === i ? { ...x, text: e.target.value } : x))}/></div>)}</div></>}</div>
           <div className="editor-card"><strong className="text-sm">스펙 텍스트 추가</strong><input className="form-input" placeholder="예: VS3235 · 41MM · 904L" maxLength={40} value={draft.text} onChange={e => setDraft(d => ({ ...d, text: e.target.value }))}/>
             <div className="mt-2 flex flex-wrap gap-2">{(Object.keys(textStyles) as TextStyle[]).map(s => <button key={s} type="button" className={`editor-chip text-${s} ${draft.style === s ? 'active' : ''}`} onClick={() => setDraft(d => ({ ...d, style: s }))}>{textStyles[s]}</button>)}</div>
-            <Button size="sm" variant="gold" className="mt-2" disabled={!draft.text.trim()} onClick={() => { const start = snap(t); setTexts(ts => [...ts, { id: uid(), text: draft.text.trim(), style: draft.style, start, end: Math.min(total, start + 3), y: 22 }]); setDraft(d => ({ ...d, text: '' })); }}>{`현재 위치(${fmt(snap(t))})에 추가`}</Button></div>
+            <p className="mt-3 text-[11px] text-muted-foreground">글꼴 (무료 폰트 · 눌러서 선택)</p>
+            <div className="mt-1 grid max-h-44 grid-cols-2 gap-2 overflow-y-auto" role="listbox" aria-label="글꼴 선택"><button type="button" role="option" aria-selected={!draft.font} className={`editor-chip ${!draft.font ? 'active' : ''}`} onClick={() => setDraft(d => ({ ...d, font: '' }))}>기본 글꼴</button>{editorFonts.map(f => <button key={f.id} type="button" role="option" aria-selected={draft.font === f.id} className={`editor-chip ${draft.font === f.id ? 'active' : ''}`} style={{ fontFamily: fontStack(f.id) ?? undefined }} onClick={() => setDraft(d => ({ ...d, font: f.id }))}>{f.group === 'ko' ? `${f.label} 가나다` : f.label}</button>)}</div>
+            <Button size="sm" variant="gold" className="mt-2" disabled={!draft.text.trim()} onClick={() => { const start = snap(t); setTexts(ts => [...ts, { id: uid(), text: draft.text.trim(), style: draft.style, start, end: Math.min(total, start + 3), x: 50, y: 22, size: 1, font: draft.font }]); setDraft(d => ({ ...d, text: '' })); }}>{`현재 위치(${fmt(snap(t))})에 추가`}</Button></div>
           {texts.map(x => <div key={x.id} className="editor-card text-xs"><div className="flex items-center gap-2"><strong className="truncate">{x.text}</strong><span className="text-muted-foreground">{textStyles[x.style]}</span><Button size="icon" variant="ghost" className="ml-auto size-7" aria-label="텍스트 삭제" onClick={() => setTexts(ts => ts.filter(y => y.id !== x.id))}><Trash2/></Button></div>
             <label className="editor-row">{`시작 ${fmt(x.start)}`}<input type="range" min={0} max={total} step={0.1} value={x.start} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, start: snap(Number(e.target.value)), end: Math.max(y.end, snap(Number(e.target.value)) + 0.5) } : y))}/></label>
             <label className="editor-row">{`끝 ${fmt(x.end)}`}<input type="range" min={0} max={total} step={0.1} value={x.end} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, end: Math.max(y.start + 0.5, Number(e.target.value)) } : y))}/></label>
-            <label className="editor-row">세로 위치<input type="range" min={8} max={90} value={x.y} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, y: Number(e.target.value) } : y))}/></label></div>)}
+            <label className="editor-row">세로 위치<input type="range" min={5} max={95} value={x.y} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, y: Number(e.target.value) } : y))}/></label>
+            <label className="editor-row">가로 위치<input type="range" min={5} max={95} value={x.x} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, x: Number(e.target.value) } : y))}/></label>
+            <label className="editor-row">{`크기 ${x.size.toFixed(1)}배`}<input type="range" min={0.5} max={2.5} step={0.1} value={x.size} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, size: Number(e.target.value) } : y))}/></label>
+            <label className="editor-row">글꼴<select className="form-input !mt-0 !py-1 text-xs" value={x.font} onChange={e => setTexts(ts => ts.map(y => y.id === x.id ? { ...y, font: e.target.value } : y))}><option value="">기본 글꼴</option>{editorFonts.map(f => <option key={f.id} value={f.id}>{f.label}</option>)}</select></label>
+            <div className="mt-2 flex items-center gap-2"><Button size="sm" variant="goldOutline" onClick={() => { stop(); seek(x.start + 0.05); }}>화면에서 위치 조정</Button><span className="text-[11px] text-muted-foreground">미리보기의 글자를 손가락이나 마우스로 끌어 움직여요.</span></div></div>)}
         </>}
         {layer === 'music' && <>
-          <div className="editor-card"><div className="flex flex-wrap items-center gap-2"><Music size={16} className="text-primary"/><strong className="text-sm">음악 추가</strong><Button size="sm" variant="goldOutline" className="ml-auto" disabled={!onMusicChange} onClick={() => setPickerOpen(true)}>{music ? '음악 변경' : '음악 선택'}</Button></div>
+          <div className="editor-card"><div className="flex flex-wrap items-center gap-2"><Music size={16} className="text-primary"/><strong className="text-sm">배경 음악</strong><Button size="sm" variant="goldOutline" className="ml-auto" disabled={!onMusicChange} onClick={() => setPickerOpen(true)}>온라인 음악 더 찾기</Button></div>
             {music && <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground" data-no-translate>♪ {music.music_title} - {music.music_artist}<Button size="icon" variant="ghost" className="ml-auto size-7" aria-label="음악 제거" onClick={() => onMusicChange?.(null)}><Trash2/></Button></div>}
-            {music && <audio ref={musicAudio} src={music.music_audio_url} loop preload="auto" />}</div>
+            {onMusicChange ? <div className="mt-3"><QuickMusicList selectedId={music?.music_track_id} onSelect={m => onMusicChange(m)}/></div> : <p className="mt-2 text-xs text-muted-foreground">이 화면에서는 배경 음악을 추가할 수 없어요.</p>}</div>
           {pickerOpen && onMusicChange && <MusicPicker onClose={() => setPickerOpen(false)} onSelect={m => { onMusicChange(m); setPickerOpen(false); }}/>}
-          <label className="editor-row">원본 소리<input type="range" min={0} max={1} step={0.05} value={origVol} onChange={e => { setOrigVol(Number(e.target.value)); if (videoRef.current) videoRef.current.volume = Number(e.target.value); }}/></label>
+          <div className="editor-card"><div className="flex items-center gap-2"><strong className="text-sm">원래 소리</strong><Button size="sm" variant={origOff ? 'gold' : 'goldOutline'} className="ml-auto" aria-pressed={origOff} onClick={() => setOrigOff(o => !o)}>{origOff ? <><VolumeX/>꺼짐 · 다시 켜기</> : <><Volume2/>원래 소리 끄기</>}</Button></div>
+            <label className="editor-row">원본 소리 크기<input type="range" min={0} max={1} step={0.05} disabled={origOff} value={origVol} onChange={e => setOrigVol(Number(e.target.value))}/></label></div>
         </>}
         {layer === 'filter' && <div className="grid grid-cols-2 gap-2">{(Object.keys(luxuryFilters) as FilterId[]).map(f => <button key={f} type="button" className={`editor-option ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}><span className="editor-swatch" style={{ filter: luxuryFilters[f].css }}/>{luxuryFilters[f].label}</button>)}</div>}
         {layer === 'tags' && <>
@@ -196,5 +220,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
         </>}
       </section>
     </div>
+    {music && <audio ref={musicAudio} src={music.music_audio_url} loop preload="auto" />}
+    {limitPopup && <div role="alertdialog" aria-modal="true" aria-label="영상 길이 제한" className="fixed inset-0 z-[140] grid place-items-center bg-background/80 p-6"><div className="w-full max-w-sm rounded-xl border border-border bg-card p-5 text-center"><h3 className="text-base font-semibold">영상은 30초 이내로만 올릴 수 있어요</h3><p className="mt-2 text-sm text-muted-foreground">{`현재 길이는 ${total.toFixed(1)}초입니다. 30초 이내로 편집해 주세요.`}</p><div className="mt-4 grid gap-2"><Button variant="gold" onClick={fitToLimit}>앞 30초만 사용하기</Button><Button variant="goldOutline" onClick={() => setLimitPopup(false)}>직접 편집하기</Button></div></div></div>}
   </div>, document.body);
 }

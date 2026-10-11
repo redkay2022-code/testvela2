@@ -3,6 +3,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { Music, Pause, Play, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { searchJamendo, type JamendoTrack } from '@/lib/jamendo.functions';
+import { bgmCredit, bgmPresets } from '@/lib/video-audio';
 
 export type SelectedMusic = { music_track_id: string; music_title: string; music_artist: string; music_audio_url: string; music_license_url: string };
 const TAGS = ['pop', 'rock', 'electronic', 'ambient', 'cinematic', 'happy', 'calm'];
@@ -41,5 +42,31 @@ export function MusicPicker({ onSelect, onClose }: { onSelect: (m: SelectedMusic
       {tracks.length >= offset + 20 && <Button type="button" variant="ghost" className="mt-2" disabled={loading} onClick={() => void run(q, tag, offset + 20)}>{loading ? '불러오는 중…' : '더 보기'}</Button>}
       {loading && !tracks.length && <p className="py-6 text-center text-sm text-muted-foreground">불러오는 중…</p>}
     </div>
+  </div>;
+}
+
+const CC_BY = 'https://creativecommons.org/licenses/by/4.0/';
+const MOODS = ['Calming', 'Bright', 'Grooving', 'Uplifting', 'Bouncy', 'Relaxed', 'Mysterious'];
+const localTracks = Object.entries(bgmPresets).map(([key, p]) => ({ id: `local:${key}`, title: p.title, bpm: Math.round(p.bpm), feel: p.feel, audio: p.url }));
+
+/** Instant list of the bundled royalty-free tracks: no network search, tap ▶ to preview and 선택 to use. */
+export function QuickMusicList({ onSelect, selectedId }: { onSelect: (m: SelectedMusic) => void; selectedId?: string | undefined }) {
+  const [mood, setMood] = useState(''), [playing, setPlaying] = useState<string | null>(null);
+  const audio = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => () => { audio.current?.pause(); }, []);
+  const list = mood ? localTracks.filter(t => t.feel.includes(mood)) : localTracks;
+  const toggle = (id: string, url: string) => {
+    if (playing === id) { audio.current?.pause(); setPlaying(null); return; }
+    audio.current?.pause(); const a = new Audio(url); audio.current = a; a.onended = () => setPlaying(null);
+    void a.play().catch(() => setPlaying(null)); setPlaying(id);
+  };
+  return <div data-no-translate>
+    <div className="flex flex-wrap gap-1.5" role="group" aria-label="분위기">{['', ...MOODS].map(m => <button key={m || 'all'} type="button" aria-pressed={mood === m} className={`editor-chip ${mood === m ? 'active' : ''}`} onClick={() => setMood(m)}>{m || '전체'}</button>)}</div>
+    <ul className="mt-2 grid max-h-56 gap-1 overflow-y-auto">{list.map(t => <li key={t.id} className={`flex items-center gap-2 rounded-md border p-2 text-xs ${selectedId === t.id ? 'border-primary' : 'border-border'}`}>
+      <Button type="button" size="icon" variant="ghost" className="size-8 shrink-0" aria-label={playing === t.id ? '정지' : '미리듣기'} onClick={() => toggle(t.id, t.audio)}>{playing === t.id ? <Pause/> : <Play/>}</Button>
+      <div className="min-w-0 flex-1"><p className="truncate text-sm">{t.title}</p><p className="truncate text-[11px] text-muted-foreground">{t.bpm} BPM · {t.feel}</p></div>
+      <Button type="button" size="sm" variant={selectedId === t.id ? 'gold' : 'goldOutline'} onClick={() => { audio.current?.pause(); setPlaying(null); onSelect({ music_track_id: t.id, music_title: t.title, music_artist: 'Kevin MacLeod', music_audio_url: t.audio, music_license_url: CC_BY }); }}>{selectedId === t.id ? '선택됨' : '선택'}</Button>
+    </li>)}</ul>
+    <p className="mt-1 text-[10px] text-muted-foreground">{bgmCredit}</p>
   </div>;
 }

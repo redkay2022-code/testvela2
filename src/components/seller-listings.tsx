@@ -14,7 +14,8 @@ import { VideoEditor, type VideoTag } from './video-editor';
 import { VideoStartPreview } from './video-start-preview';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
-import { compressVideoForWeb } from '@/lib/video-compress';
+import { compressVideoForWeb, COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
+import { estimateUploadSeconds, useCountdown } from '@/lib/upload-countdown';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string; sourceType?: string; factory?: string };
@@ -122,6 +123,9 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   const objectUrls = useRef<Set<string>>(new Set());
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const [eta, setEta] = useState(10);
+  const [convertPct, setConvertPct] = useState<number | null>(null);
+  const left = useCountdown(pending, eta);
   useEffect(() => () => { objectUrls.current.forEach(url => URL.revokeObjectURL(url)); }, []);
 
   const createPreview = (file: File) => { const url = URL.createObjectURL(file); objectUrls.current.add(url); return url; };
@@ -161,7 +165,8 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     try {
       let nextVideo = video?.path ?? null;
       let nextThumb: string | null | undefined = video?.file ? null : undefined;
-      if (video?.file) { const ext = video.file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${user.id}/${crypto.randomUUID()}.${ext}`; const { error: e } = await supabase.storage.from('market-media').upload(path, video.file, { cacheControl: LONG_CACHE }); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(video.file, user.id); if (nextThumb) uploaded.push(nextThumb); }
+      setEta(estimateUploadSeconds([...photos.flatMap(p => p.file ? [p.file] : []), ...(video?.file ? [video.file] : [])], 30, Boolean(video?.file && video.file.size > COMPRESS_THRESHOLD_BYTES)));
+      if (video?.file) { setConvertPct(0); const ready = await compressVideoForWeb(video.file, r => setConvertPct(Math.round(r * 100))); setConvertPct(null); setEta(estimateUploadSeconds([ready, ...photos.flatMap(p => p.file ? [p.file] : [])])); const ext = ready.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${user.id}/${crypto.randomUUID()}.${ext}`; const { error: e } = await supabase.storage.from('market-media').upload(path, ready, { cacheControl: LONG_CACHE }); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(ready, user.id); if (nextThumb) uploaded.push(nextThumb); }
       const photoPaths: string[] = [];
       const settled = await Promise.allSettled(photos.map(async photo => {
         if (photo.path) return photo.path;
@@ -191,7 +196,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       }
       onSaved();
     } catch (err) { if (uploaded.length) await supabase.storage.from('market-media').remove(uploaded); setError(err instanceof Error ? err.message : '잠시 후 다시 시도해 주세요.'); }
-    finally { setPending(false); }
+    finally { setPending(false); setConvertPct(null); }
   };
 
   const photoPicker = useRef<HTMLInputElement>(null);
@@ -199,10 +204,10 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   return <div className="form-panel mt-4 rounded-lg border border-border p-4">
     {editing && <VideoEditor file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags }) => { if (video?.file) { URL.revokeObjectURL(video.preview); objectUrls.current.delete(video.preview); } setVideo({ file, preview: createPreview(file) }); setVideoTags(tags); setEditing(null); }} />}
     <div className="flex items-center justify-between"><h3 className="font-semibold">{listing ? '상품 수정' : '새 상품 등록'}</h3><Button size="icon" variant="ghost" aria-label="닫기" onClick={onClose}><X /></Button></div>
-    <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-input bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground">영상과 사진 한 번에 선택</span><span className="text-xs text-muted-foreground">영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {photoTotal}/{MAX_LISTING_PHOTOS}</span>
+    <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-destructive bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground">영상과 사진 한 번에 선택</span><span className="text-xs text-muted-foreground">영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {photoTotal}/{MAX_LISTING_PHOTOS}</span>
       <input className="sr-only" type="file" accept="image/*,video/*" multiple aria-label="상품 영상과 사진 한 번에 선택" onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} /></label>
     {(video || photos.length > 0) && <div className="mt-3 space-y-3" aria-label="선택한 상품 미디어">
-      {video && <div className="grid grid-cols-2 gap-2"><div className="relative overflow-hidden rounded-md border border-primary bg-muted"><VideoStartPreview file={video.file} src={video.preview} className="aspect-square w-full object-cover"/><span className="absolute left-2 top-2 rounded bg-background/80 px-2 py-1 text-[11px] font-semibold text-primary">메인 피드 영상</span><Button type="button" size="icon" variant="secondary" className="absolute right-2 top-2 size-7" aria-label="영상 제거" onClick={removeVideo}><X /></Button>{video.file && <Button type="button" size="sm" variant="gold" className="absolute bottom-2 right-2" onClick={() => { if (video.file) setEditing(video.file); }}><Scissors />영상 편집</Button>}{videoTags.length > 0 && <span className="absolute bottom-2 left-2 rounded bg-background/80 px-2 py-1 text-[11px] text-primary">{`상품 태그 ${videoTags.length}개`}</span>}</div>{photoTotal < MAX_LISTING_PHOTOS && <Button type="button" variant="outline" className="aspect-square h-auto w-full flex-col gap-2 border-dashed border-primary/50 bg-muted text-primary" aria-label="사진 추가" onClick={() => photoPicker.current?.click()}><ImagePlus className="size-7"/><span className="text-xs">사진 추가</span><span className="text-[11px] text-muted-foreground">{photoTotal}/{MAX_LISTING_PHOTOS}</span></Button>}</div>}
+      {video && <div className="grid grid-cols-2 gap-2"><div className="relative overflow-hidden rounded-md border border-primary bg-muted"><VideoStartPreview file={video.file} src={video.preview} className="aspect-square w-full object-cover"/><span className="absolute left-2 top-2 rounded bg-background/80 px-2 py-1 text-[11px] font-semibold text-primary">메인 피드 영상</span><Button type="button" size="icon" variant="secondary" className="absolute right-2 top-2 size-7" aria-label="영상 제거" onClick={removeVideo}><X /></Button>{video.file && <Button type="button" size="sm" variant="gold" className="absolute bottom-2 right-2" onClick={() => { if (video.file) setEditing(video.file); }}><Scissors />영상 편집</Button>}{videoTags.length > 0 && <span className="absolute bottom-2 left-2 rounded bg-background/80 px-2 py-1 text-[11px] text-primary">{`상품 태그 ${videoTags.length}개`}</span>}</div>{photoTotal < MAX_LISTING_PHOTOS && <Button type="button" variant="outline" className="aspect-square h-auto w-full flex-col gap-2 border-2 border-dashed border-destructive bg-muted text-primary" aria-label="사진 추가" onClick={() => photoPicker.current?.click()}><ImagePlus className="size-7"/><span className="text-xs">사진 추가</span><span className="text-[11px] text-muted-foreground">{photoTotal}/{MAX_LISTING_PHOTOS}</span></Button>}</div>}
       {photos.length > 0 && <div><p className="mb-2 text-xs text-muted-foreground">상세 사진 갤러리 · 끌어서 또는 화살표로 순서 변경</p><div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {photos.map((photo, index) => <div key={photo.id} draggable onDragStart={() => setDraggedPhoto(photo.id)} onDragEnd={() => setDraggedPhoto(null)} onDragOver={event => event.preventDefault()} onDrop={() => dropPhoto(photo.id)} className={`relative overflow-hidden rounded-md border bg-muted ${draggedPhoto === photo.id ? 'border-primary opacity-60' : 'border-border'}`}>
           {photo.preview ? <img src={photo.preview} alt={`상세 사진 ${index + 1}`} className="aspect-square w-full object-cover"/> : <div className="grid aspect-square place-items-center text-xs text-muted-foreground">{`사진 ${index + 1}`}</div>}
@@ -243,6 +248,6 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       {sourceType === 'other' && <input aria-label="출처 직접 입력" className="form-input mt-2" placeholder="출처 / 공장을 직접 입력해 주세요" maxLength={80} value={factory} onChange={e => setFactory(e.target.value)} />}
     </div>
     {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
-    <div className="mt-4 grid grid-cols-2 gap-2"><Button variant="secondary" disabled={pending} onClick={() => void save('draft')}>임시 저장</Button><Button disabled={pending} onClick={() => void save('published')}>{pending ? '저장 중…' : '게시하기'}</Button></div>
+    <div className="mt-4 grid grid-cols-2 gap-2"><Button variant="secondary" disabled={pending} onClick={() => void save('draft')}>임시 저장</Button><Button disabled={pending} onClick={() => void save('published')}>{pending ? (convertPct !== null ? `영상 최적화 중… ${convertPct}%` : left > 0 ? `저장 중… ${left}초` : '마무리 중…') : '게시하기'}</Button></div>
   </div>;
 }

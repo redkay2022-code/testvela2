@@ -1,3 +1,4 @@
+import './vela-desktop.css';
 import { createLiveOrder, LiveOrderBoard } from './live-orders';
 import { normalizeShipping, shippingError, type ShippingInput } from '@/lib/shipping';
 import { emptyShipping, useSavedShipping } from '@/lib/use-saved-shipping';
@@ -136,7 +137,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  </>}
  {help?<MarketHelp kind={help} user={user} requestAuth={()=>update({auth:true})}/>:cleanHome&&search.tab==='reviews'?<section className="mt-4 grid gap-4"><ReviewComposer requestAuth={()=>update({auth:true})}/><ReviewList role={search.role} posts={posts}/></section>:
  mode==='me'?(user&&(!account.data||myPage==='/seller')?<div className="lux-empty">Loading…</div>:<AccountView posts={all} user={user} onPanel={panel=>update({panel})} requestAuth={signup=>update({auth:true,authSignup:signup||undefined})}/>):
- mode==='upload'?<><div className="sample-notice">Product publishing · Account sign-in required</div><UploadForm user={user} requestAuth={()=>update({auth:true})} onPosted={()=>{void router.invalidate();void navigate({to:'/me',search:{role:search.role}});}}/></>:
+ mode==='upload'?<><div className="sample-notice">Product publishing · Account sign-in required</div><UploadForm user={user} requestAuth={()=>update({auth:true})} onPosted={()=>{void queryClient.invalidateQueries({queryKey:['posts']});void router.invalidate();void navigate({to:'/',search:{role:search.role}});}}/></>:
   mode==='store'?search.seller?<><SellerStoreHeader post={storePosts[0]} count={storePosts.length} search={search} notify={setToast}/>{search.storeTab==='reviews'?<><h2 className="mt-6 text-base font-semibold">고객 리뷰</h2><ReviewList posts={posts} sellerId={search.seller} role={search.role}/></>:<Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/>}</>:<><SellerDirectory posts={all.filter(p=>!preview.hidden.includes(p.id))} category={search.storeCategory} role={search.role}/></>:
   mode==='admin'||mode==='seller'?children:<div className="lux-feed-transition" key={search.tab || 'discover'}><Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/></div>}
  </main>
@@ -155,7 +156,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   {search.menu&&!search.notice&&<Overlay title="VELA" close={close} side><ProductionMenu role={search.role} notifications={<Button variant="ghost" className="min-h-11 w-full justify-start gap-3 px-2" aria-label={notifications.unread?`알림함 · 읽지 않음 ${notifications.unread}개`:'알림함'} onClick={()=>{notificationPushed.current=true;update({notice:true});}}><Bell className="size-4 text-muted-foreground"/><span className="flex-1 text-start">알림함</span>{notifications.unread>0&&<span className="rounded-full bg-destructive px-2 text-xs text-destructive-foreground">{notifications.unread>99?'99+':notifications.unread}</span>}<ChevronRight className="size-4 text-muted-foreground"/></Button>}/></Overlay>}
   <NotificationInbox user={user} open={Boolean(search.notice)} onClose={closeNotifications} notifications={notifications}/>
  {entry==='product'&&(search.post||postId)&&!selected&&<Overlay title="Product unavailable" close={close}><p className="py-6 text-sm text-muted-foreground">This listing is no longer available.</p></Overlay>}
- {(search.auth||productSignup)&&<AuthDialog key={search.authSignup?'signup':'login'} initialSignup={Boolean(search.authSignup||productSignup)} onClose={closeAuth} onSignedIn={close}/>}
+ {(search.auth||productSignup)&&<AuthDialog key={search.authSignup||productSignup?'signup':'login'} initialSignup={Boolean(search.authSignup)} onClose={closeAuth} onSignedIn={close}/>}
   {search.panel&&(search.panel==='orders'&&!user?<Overlay title="주문 내역 · 에스크로 상태" close={close}><p className="my-5 text-sm text-muted-foreground">로그인하면 내 주문의 QC 자료, 에스크로 상태와 배송 추적을 확인할 수 있습니다.</p><Button variant="goldOutline" onClick={()=>update({panel:undefined,auth:true})}>로그인하고 내 주문 확인</Button></Overlay>:<CommercePanel posts={all} onBuy={post=>update({checkoutItem:post.id,panel:'checkout'})} panel={search.panel} user={user} selected={search.panel==='checkout'&&search.checkoutItem?all.find(post=>post.id===search.checkoutItem):selected} close={close} onPanel={panel=>update({panel})} notify={setToast}/>)}
  {toast&&<div className="lux-toast" role="status"><Check size={16}/>{toast}</div>}
  </NotificationsContext.Provider>;
