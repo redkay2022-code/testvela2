@@ -17,7 +17,7 @@ import { formatMoney } from '@/lib/currency';
 const rpc = (name: string, args: object) => (supabase as unknown as { rpc: (n: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }> }).rpc(name, args);
 const dash = '—';
 
-function Stat({ label, value, note, tone }: { label: string; value: ReactNode; note?: string; tone?: 'alert' }) {
+function Stat({ label, value, note, tone }: { label: string; value: ReactNode; note?: string | undefined; tone?: 'alert' | undefined }) {
   return <div className={`rounded-lg border p-3 ${tone === 'alert' ? 'border-destructive/60' : 'border-border'}`}>
     <span className="block text-[11px] text-muted-foreground">{label}</span>
     <strong className={`block text-lg leading-7 ${tone === 'alert' ? 'text-destructive' : ''}`}>{value}</strong>
