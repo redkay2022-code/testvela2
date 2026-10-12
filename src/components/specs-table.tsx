@@ -3,11 +3,14 @@ const specLabels: Record<string, string> = {
   model: '모델',
   movement: '무브먼트',
   powerReserve: '파워리저브',
-  caseSize: '다이암터',
+  caseSize: '케이스 직경',
   material: '케이스 소재',
   waterResistance: '방수',
   glass: '글라스/크리스탈',
   factory: '출처 / 공장',
+  thickness: '두께',
+  weight: '무게',
+  additionalDetails: '추가 내용',
 };
 
 function labelFor(key: string) {
@@ -21,7 +24,7 @@ export function SpecsTable({specs, fallback}: {specs: unknown; fallback?: React.
   if (specs && typeof specs === 'object' && !Array.isArray(specs)) {
     entries = Object.entries(specs as Record<string, unknown>)
       .filter(([k, v]) => k !== 'sourceType' && typeof v === 'string' && v.trim())
-      .map(([k, v]) => [k, (v as string).trim().slice(0, 80)]);
+      .map(([k, v]) => [k, (v as string).trim().slice(0, k === 'additionalDetails' ? 3000 : 80)]);
   }
   if (!entries.length) return <>{fallback ?? null}</>;
   return (
@@ -29,7 +32,7 @@ export function SpecsTable({specs, fallback}: {specs: unknown; fallback?: React.
       <h3 className="mb-1 text-sm font-semibold">상품 사양</h3>
       <dl className="lux-specs">
         {entries.map(([key, value]) => (
-          <div key={key}><dt>{labelFor(key)}</dt><dd style={{overflowWrap: 'anywhere'}}>{value}</dd></div>
+          <div key={key}><dt>{labelFor(key)}</dt><dd className="whitespace-pre-wrap" style={{overflowWrap: 'anywhere'}}>{value}</dd></div>
         ))}
       </dl>
     </div>

@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Application architecture
-- Share a translation-protected BrandSelect and watch catalog across creation/edit forms for consistent custom entry and ordering.
+- Share translation-protected BrandSelect and WatchSpecificationsForm across creation/edit forms; preserve spec JSON keys and units for consistent saved detail rendering.
 - Validated TanStack search drives UI layers; Back unwinds one. No invented brand affiliations.
 - Public feed uses Query/server loaders; SSR needs no login.
 - Scope checkout CSS and selectors to the shared payment dialog.

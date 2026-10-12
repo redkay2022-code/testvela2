@@ -1,4 +1,5 @@
-import { BrandSelect } from './brand-select';
+import { WatchSpecificationsForm } from './watch-specifications-form';
+import { cleanWatchSpecs } from '@/lib/watch-specifications';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -15,7 +16,7 @@ import { watchImages } from '@/lib/luxury-market';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { CategoryOptions, categoriesQueryKey, useCategories, type CategoryRow } from './category-options';
 import {
-  availableQty, imageKinds, productCategories, productStatuses, publishBlockers, slugify, verificationStatuses, watchSpecFields,
+  availableQty, imageKinds, productCategories, productStatuses, publishBlockers, slugify, verificationStatuses,
   type ImageKind, type ProductStatus,
 } from '@/lib/catalog';
 
@@ -276,12 +277,12 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
   const navigate = useNavigate(); const refresh = useRefresh();
   const specs0 = (existing?.specs ?? {}) as Record<string, string>;
   const [f, setF] = useState(() => ({
-    store_id: existing?.store_id ?? '', title: existing?.title ?? '', brand: existing?.brand ?? '', model: existing?.model ?? '', reference: existing?.reference ?? '',
+    store_id: existing?.store_id ?? '', title: existing?.title ?? '', brand: existing?.brand ?? specs0.brand ?? '', model: existing?.model ?? specs0.model ?? '', reference: existing?.reference ?? '',
     category: existing?.category ?? '', subcategory: existing?.subcategory ?? '', description: existing?.description ?? '', price: existing?.price?.toString() ?? '',
     box_price: existing?.box_price?.toString() ?? '', sku: existing?.sku ?? '', stock_qty: String(existing?.stock_qty ?? 1), reserved_qty: String(existing?.reserved_qty ?? 0),
     low_stock_threshold: String(existing?.low_stock_threshold ?? 1), featured: existing?.featured ?? false, video_url: existing?.video_url ?? null,
   }));
-  const [specs, setSpecs] = useState<Record<string, string>>(() => Object.fromEntries(watchSpecFields.map(([k]) => [k, typeof specs0[k] === 'string' ? specs0[k] : ''])));
+  const [specs, setSpecs] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(specs0).filter(([, v]) => typeof v === 'string')));
   const [images, setImages] = useState<Img[]>(() => (existing?.media_urls ?? []).map((path, i) => ({ path, kind: i === 0 ? 'main' : 'gallery' })));
   const [qc, setQc] = useState({ qc_available: false, qc_video: null as string | null, inspection_notes: '', rate: '', amplitude: '', beat_error: '' });
   const [msg, setMsg] = useState(''), [busy, setBusy] = useState(false), [drag, setDrag] = useState<number | null>(null), [thumb, setThumb] = useState<string | null>(existing?.thumbnail_url ?? null);
@@ -322,7 +323,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
       // Main image first; QC/movement inspection shots stay out of the customer gallery.
       const ordered = main ? [main, ...images.filter(i => i !== main)] : images;
       const gallery = ordered.filter(i => i.kind !== 'qc' && i.kind !== 'movement').map(i => i.path);
-      const cleanSpecs = { ...(existing?.specs as Record<string, unknown> ?? {}), ...Object.fromEntries(Object.entries(specs).filter(([, v]) => v.trim())), brand: f.brand || undefined, model: f.model || undefined };
+      const cleanSpecs = cleanWatchSpecs({ ...specs, brand: f.brand, model: f.model });
       const allSeed = [...gallery, ...(f.video_url ? [f.video_url] : [])].every(p => p.startsWith('seed:'));
       const row = {
         store_id: f.store_id, creator: store?.store_name ?? 'VELA', title: f.title.trim(), brand: f.brand, model: f.model, reference: f.reference, category: f.category || '기타',
@@ -360,8 +361,6 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
     </fieldset>
     <fieldset><legend>2 · PRODUCT INFORMATION</legend>
       <label>Product name *<input value={f.title} onChange={e => set('title', e.target.value)} required /></label>
-      <div translate="no" className="notranslate" data-i18n-skip><label htmlFor="catalog-brand" translate="no" className="notranslate">Brand</label><BrandSelect id="catalog-brand" value={f.brand} onChange={v => set('brand', v)} /></div>
-      <label>Model<input value={f.model} onChange={e => set('model', e.target.value)} /></label>
       <label>Reference number<input value={f.reference} onChange={e => set('reference', e.target.value)} /></label>
       <label>Category *<select value={f.category} onChange={e => set('category', e.target.value)}><option value="">선택…</option><CategoryOptions current={f.category} fallback={productCategories} /></select></label>
       <label>Subcategory<input value={f.subcategory} onChange={e => set('subcategory', e.target.value)} /></label>

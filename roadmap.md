@@ -77,4 +77,6 @@
 
 - [x] Update all three product creation/edit brand selectors: custom entry first, requested top nine, alphabetical full catalog and translation protection. Three tests pass; authenticated upload and seller new-product selection/custom entry/scroll verified, no runtime errors, build OK. No live product created.
 
-- [x] Keep the brand list closed while a typed brand name is present (click, keyboard and touch paths), reopening it only once the text is cleared; 2 component tests and preview checks pass, build OK.
+- [x] Brand custom mode reopens the option list whether text is empty or typed; listed/custom switching retains translation protection.
+
+- [ ] Add shared eleven-field watch specifications to upload, seller creation/edit and admin catalog, retain units/multiline content in saved details; verify tests and authenticated form.
