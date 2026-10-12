@@ -74,3 +74,5 @@
 ## Payments
 - [x] USDT payment modal: direct transfer, card/Apple Pay via MoonPay, wallet connect, escrow trust banner
 - [ ] MoonPay partner key for guaranteed wallet prefill (waiting on user)
+
+- [ ] Update product brand selectors with custom entry, ordered TOP BRANDS and alphabetical ALL BRANDS; verify selection and translation protection.

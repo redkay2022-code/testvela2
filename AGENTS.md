@@ -10,9 +10,10 @@
 <!-- LOVABLE:END -->
 
 ## Application architecture
-- Use validated TanStack search for UI layers; Back unwinds one layer. Match aliases without invented affiliations.
-- Public feed uses a TanStack Query/server loader; SSR never requires login.
-- Scope checkout CSS locally; selectors live only in the shared payment dialog to avoid duplicates.
+- Share a translation-protected BrandSelect and watch catalog across creation/edit forms for consistent custom entry and ordering.
+- Validated TanStack search drives UI layers; Back unwinds one. No invented brand affiliations.
+- Public feed uses Query/server loaders; SSR needs no login.
+- Scope checkout CSS and selectors to the shared payment dialog.
 - Cloud writes use owner-scoped policies and caller identity.
 - Bundle editorial media and icons locally; uploaded private storage media are served with signed URLs after matching published post paths.
 - Use manifest-only home-screen support; no service worker without an offline request.
