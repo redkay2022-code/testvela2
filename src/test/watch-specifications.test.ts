@@ -16,4 +16,11 @@ describe('watch specification values', () => {
   it('offers all eleven requested structured specification fields', () => {
     expect(watchSpecificationFields.map(field => field.key)).toEqual(['brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'powerReserve', 'glass', 'waterResistance', 'additionalDetails']);
   });
+  it('lets sellers type movement and glass directly instead of fixed option lists', () => {
+    for (const key of ['movement', 'glass']) {
+      const field = watchSpecificationFields.find(entry => entry.key === key);
+      expect(field?.kind).toBe('text');
+      expect(field && 'options' in field).toBe(false);
+    }
+  });
 });
