@@ -8,11 +8,12 @@ import { compressVideoForWeb } from '@/lib/video-compress';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { readVideoDuration, MAX_VIDEO_SECONDS } from '@/lib/listing-media';
 import { productCategories } from '@/lib/catalog';
+import { activeLang } from '@/lib/i18n';
 import { applyRows, BULK_FIELDS, groupFiles, MAX_BULK, parseTable, readTextFile, validateItem, type BulkField, type BulkItem } from '@/lib/bulk-upload';
 
 type State = { status: 'idle' | 'working' | 'done' | 'error'; pct: number; step: string; error: string };
 const idle: State = { status: 'idle', pct: 0, step: '', error: '' };
-const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '가격(USD)', category: '카테고리', source: '출처', factory: '공장', dispatch: '발송', boxPrice: '박스 가격', brand: '브랜드', model: '모델', movement: '무브먼트', caseSize: '케이스 크기', material: '소재', waterResistance: '방수', description: '소개' };
+const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '가격(USD)', category: '카테고리', source: '출처', factory: '공장', dispatch: '발송', boxPrice: '박스 가격', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경(mm)', thickness: '두께(mm)', weight: '무게(g)', powerReserve: '파워리저브(시간)', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '소개' };
 const EDIT_FIELDS = BULK_FIELDS.filter(f => f !== 'file');
 
 /**
@@ -75,7 +76,7 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
       for (const photo of item.photos) photoPaths.push(await put(await compressImage(photo)));
       const thumb = await uploadVideoThumbnail(video, user.id); if (thumb) uploaded.push(thumb);
       const nickname = (await supabase.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()).data?.nickname || 'vela member';
-      const { error } = await supabase.from('posts').insert({ user_id: user.id, creator: String(nickname).slice(0, 40), image_key: 'uploaded', title: plan.title, description: plan.description, category: plan.category, price: plan.price, box_price: plan.boxPrice, dispatch_time: plan.dispatch, media_urls: photoPaths, video_url: videoPath, thumbnail_url: thumb, video_tags: [], specs: plan.specs, status: publish ? 'published' : 'draft' });
+      const { error } = await supabase.from('posts').insert({ user_id: user.id, creator: String(nickname).slice(0, 40), image_key: 'uploaded', source_lang: activeLang(), title: plan.title, description: plan.description, category: plan.category, price: plan.price, box_price: plan.boxPrice, dispatch_time: plan.dispatch, media_urls: photoPaths, video_url: videoPath, thumbnail_url: thumb, video_tags: [], specs: plan.specs, status: publish ? 'published' : 'draft' });
       if (error) throw new Error('저장하지 못했어요. 셀러 승인 상태를 확인해 주세요.');
       set(item.id, { status: 'done', pct: 100, step: '완료' });
     } catch (err) {
@@ -122,7 +123,7 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
           </div>
           {[...c.errors, ...c.warnings.map(w => `주의: ${w}`)].map(m => <p key={m} className={`mt-1 text-xs ${m.startsWith('주의') ? 'text-muted-foreground' : 'text-destructive'}`}>{m}</p>)}
           {s.status === 'error' && <p className="mt-1 text-xs text-destructive" role="alert">{s.error}</p>}
-          {open === it.id && s.status !== 'done' && <div className="mt-3 grid grid-cols-2 gap-2">{EDIT_FIELDS.map(f => f === 'description'
+          {open === it.id && s.status !== 'done' && <div className="mt-3 grid grid-cols-2 gap-2">{EDIT_FIELDS.map(f => f === 'description' || f === 'additionalDetails'
             ? <textarea key={f} className="form-input col-span-2" aria-label={FIELD_LABEL[f]} placeholder={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running} />
             : f === 'category'
               ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">카테고리 (기본: 커스텀제작)</option>{productCategories.map(cat => <option key={cat}>{cat}</option>)}</select>

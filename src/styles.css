@@ -1005,3 +1005,6 @@ html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s eas
 /* HLS buffer progress (VELA gold on dark) */
 .shorts-buffer{position:absolute;z-index:6;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 2px);height:3px;background:rgba(255,255,255,.12);pointer-events:none}
 .shorts-buffer i{display:block;height:100%;background:var(--primary,#d4af37);transition:width .25s ease}
+
+/* Seller avatar without a registered photo: neutral icon, never a product image */
+.store-avatar-fallback{display:grid;place-items:center;background:var(--muted);color:var(--muted-foreground)}

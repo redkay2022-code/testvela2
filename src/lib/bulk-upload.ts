@@ -7,9 +7,11 @@ import { productCategories } from '@/lib/catalog';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from '@/lib/listing-media';
 import { validatePostTitle } from '@/lib/post-title';
+import { cleanWatchSpecs, numericSpecValue, watchSpecificationFields } from '@/lib/watch-specifications';
+import { knownWatchBrand } from '@/lib/watch-brands';
 
 export const MAX_BULK = 20;
-export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'movement', 'caseSize', 'material', 'waterResistance', 'description'] as const;
+export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'powerReserve', 'glass', 'waterResistance', 'additionalDetails', 'description'] as const;
 export type BulkField = (typeof BULK_FIELDS)[number];
 export type BulkValues = Record<BulkField, string>;
 export const emptyValues = (): BulkValues => Object.fromEntries(BULK_FIELDS.map(f => [f, ''])) as BulkValues;
@@ -19,8 +21,10 @@ const HEADER_ALIASES: Record<BulkField, string[]> = {
   file: ['파일명', '파일', 'file', 'filename'], title: ['제목', '상품명', 'title', 'name'], price: ['가격', '판매가격', '판매 가격', 'price'],
   category: ['카테고리', 'category'], source: ['출처', 'source'], factory: ['공장', '출처/공장', '출처 / 공장', 'factory'],
   dispatch: ['발송', '발송시기', '발송 시기', 'dispatch'], boxPrice: ['박스가격', '박스 가격', '박스', 'boxprice', 'box'],
-  brand: ['브랜드', 'brand'], model: ['모델', 'model'], movement: ['무브먼트', 'movement'], caseSize: ['케이스크기', '케이스 크기', '다이얼', 'casesize'],
-  material: ['소재', '케이스소재', 'material'], waterResistance: ['방수', 'waterresistance'], description: ['소개', '제품소개', '설명', 'description'],
+  brand: ['브랜드', 'brand'], model: ['모델', '모델명', 'model'], material: ['케이스소재', '케이스 소재', '소재', 'material'],
+  movement: ['무브먼트', 'movement'], caseSize: ['케이스직경', '케이스 직경', '케이스크기', '케이스 크기', '다이얼', 'casesize'],
+  thickness: ['두께', 'thickness'], weight: ['무게', 'weight'], powerReserve: ['파워리저브', 'powerreserve'], glass: ['글라스', 'glass'],
+  waterResistance: ['방수', 'waterresistance'], additionalDetails: ['추가내용', '추가 내용', 'additionaldetails'], description: ['소개', '제품소개', '설명', 'description'],
 };
 
 /** Splits one line of CSV / TSV, honouring "quoted, values". */
@@ -104,6 +108,36 @@ export function normalizeDispatch(raw: string): { choice: string; custom: string
   return { choice: 'custom', custom: t };
 }
 
+const SPEC_UNIT: Record<string, string> = { caseSize: 'mm', thickness: 'mm', weight: 'g', powerReserve: 'Hours' };
+const optionsOf = (key: string) => { const f = watchSpecificationFields.find(x => x.key === key); return f && 'options' in f ? (f.options as readonly string[]) : []; };
+/** Same stored values as the single upload form: numbers get their unit ("40 mm"), selects use the form's own options. */
+function watchSpecs(v: BulkValues, errors: string[], warnings: string[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  const label = (k: string) => watchSpecificationFields.find(f => f.key === k)?.label ?? k;
+  const brand = v.brand.trim();
+  if (brand) { const known = knownWatchBrand(brand); if (!known) warnings.push(`브랜드 “${brand}”는 목록에 없어요. 그대로 저장돼요.`); out.brand = known ?? brand; }
+  if (v.model.trim()) out.model = v.model.trim();
+  const mat = v.material.trim();
+  if (mat) out.material = optionsOf('material').find(o => norm(o) === norm(mat)) ?? mat;
+  if (v.movement.trim()) out.movement = v.movement.trim();
+  for (const k of ['caseSize', 'thickness', 'weight', 'powerReserve'] as const) {
+    const raw = v[k].trim(); if (!raw) continue;
+    const n = numericSpecValue(raw);
+    if (!n) errors.push(`${label(k)}은(는) 숫자만 입력해 주세요. (예: 40)`); else out[k] = `${n} ${SPEC_UNIT[k]}`;
+  }
+  if (v.glass.trim()) out.glass = v.glass.trim();
+  const wr = v.waterResistance.trim();
+  if (wr) {
+    const opts = optionsOf('waterResistance');
+    const num = /^(\d+)\s*m?\b/i.exec(wr)?.[1];
+    const hit = opts.find(o => norm(o) === norm(wr)) ?? (num ? opts.find(o => o.startsWith(`${num}m`)) : undefined) ?? (/1000/.test(wr) ? '1000m+' : undefined);
+    if (!hit) warnings.push(`방수 “${wr}”는 선택 목록(${opts.join(', ')})에 없어요. 그대로 저장돼요.`);
+    out.waterResistance = hit ?? wr;
+  }
+  if (v.additionalDetails.trim()) out.additionalDetails = v.additionalDetails.trim();
+  return cleanWatchSpecs(out);
+}
+
 export type BulkPlan = { title: string; description: string; category: string; price: number; boxPrice: number | null; dispatch: string; specs: Record<string, string> };
 
 /** Returns every problem of one product (empty array = ready) plus the cleaned data to save. */
@@ -125,8 +159,9 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   if (existingTitles.has(norm(v.title))) warnings.push('같은 제목의 상품이 이미 있어요.');
   if (errors.length || !source || !category) return { errors, warnings, plan: null };
   const d = normalizeDispatch(v.dispatch);
-  const specs: Record<string, string> = {};
-  for (const k of ['brand', 'model', 'movement', 'caseSize', 'material', 'waterResistance'] as const) { const s = v[k].trim().slice(0, 80); if (s) specs[k] = s; }
+  const spec = watchSpecs(v, errors, warnings);
+  if (errors.length) return { errors, warnings, plan: null };
+  const specs: Record<string, string> = { ...spec };
   specs.sourceType = source; if (source !== 'custom') specs.factory = v.factory.trim().slice(0, 80);
   return { errors, warnings, plan: { title: v.title.trim().slice(0, 100), description: v.description.trim().slice(0, 3000), category, price: Math.round(price), boxPrice: box === null ? null : Math.round(box), dispatch: dispatchValue(d.choice, d.custom), specs } };
 }
