@@ -384,7 +384,7 @@
   "Lifetime Used": "累計使用",
   "Like short": "いいね短い",
   "Lingua Latina": "ラテン語",
-  "Listing false factory information will result in immediate seller ban and escrow freeze.": "虚偽の工場情報を掲載した場合、出品者は即時利用停止となり、エスクロー資金は凍結されます。",
+  "Listing false factory information will result in immediate seller ban and escrow freeze.": "⚠️ [警告] 偽の工場表記や出所情報の盗用が発覚した場合、予告なく商品が削除され、出品者資格が永久に剥奪されるほか、エスクロー精算が凍結されます。",
   "Listing removed from sample feed": "サンプルフィードから出品が削除されました",
   "Livelli VIP e vantaggi": "VIPランクと特典",
   "Livello attuale": "現在のランク",
@@ -2587,5 +2587,10 @@
   "상품 관리": "商品管理",
   "주문 · 분쟁 관리": "注文・紛争管理",
   "데이터 초기화": "データの初期化",
-  "제재 중 {0}명": "制限中の会員：{0}"
+  "제재 중 {0}명": "制限中の会員：{0}",
+  " (현재 표시: {0})": " （現在の表示：{0}）",
+  "자동 추적 서비스 연결 대기 중 · ": "自動追跡サービスへの接続待ち · ",
+  "마지막 조회 {0} · ": "最終確認 {0} · ",
+  " (필수: 사진 {0}+ / 영상 {1}+)": " （必須：写真{0}枚以上／動画{1}本以上）",
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "訪問者統計を読み込めません。後でもう一度お試しください。"
 }

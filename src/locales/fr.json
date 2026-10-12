@@ -383,7 +383,7 @@
   "Lifetime Used": "Total utilisé",
   "Like short": "J'aime court",
   "Lingua Latina": "Latin",
-  "Listing false factory information will result in immediate seller ban and escrow freeze.": "Toute fausse information sur la manufacture entraînera le bannissement immédiat du vendeur et le gel des fonds sous séquestre.",
+  "Listing false factory information will result in immediate seller ban and escrow freeze.": "⚠️ [Avertissement] En cas de fausse indication d'usine ou d'usurpation d'informations d'origine, le produit pourra être supprimé et le statut de vendeur définitivement révoqué sans préavis, et le règlement de l'escrow sera gelé.",
   "Listing removed from sample feed": "Annonce retirée du flux d'échantillons",
   "Livelli VIP e vantaggi": "Niveaux VIP et avantages",
   "Livello attuale": "Niveau actuel",
@@ -2586,5 +2586,10 @@
   "상품 관리": "Gestion des produits",
   "주문 · 분쟁 관리": "Commandes et litiges",
   "데이터 초기화": "Réinitialiser les données",
-  "제재 중 {0}명": "Membres restreints : {0}"
+  "제재 중 {0}명": "Membres restreints : {0}",
+  " (현재 표시: {0})": " (actuellement affiché : {0})",
+  "자동 추적 서비스 연결 대기 중 · ": "En attente de connexion au service de suivi automatique · ",
+  "마지막 조회 {0} · ": "Dernière vérification {0} · ",
+  " (필수: 사진 {0}+ / 영상 {1}+)": " (Requis : {0}+ photos / {1}+ vidéos)",
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Impossible de charger les statistiques. Réessayez plus tard."
 }

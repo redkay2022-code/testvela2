@@ -264,7 +264,7 @@
   "Land / regio van bestemming": "도착 국가/지역",
   "Like short": "좋아요 짧게",
   "Lingua Latina": "라틴어",
-  "Listing false factory information will result in immediate seller ban and escrow freeze.": "허위 공장 정보를 기재할 경우 판매자 즉시 계정 정지 및 에스크로 동결 조치됩니다.",
+  "Listing false factory information will result in immediate seller ban and escrow freeze.": "⚠️ [경고] 허위 공장 표기 또는 출처 정보 도용 적발 시, 예고 없이 상품 삭제 및 셀러 자격이 영구 박탈될 수 있으며 에스크로 정산이 동결 조치됩니다.",
   "Listing removed from sample feed": "샘플 피드에서 목록 제거됨",
   "Livelli VIP e vantaggi": "VIP 등급 및 혜택",
   "Livello attuale": "현재 등급",
@@ -1439,5 +1439,9 @@
   "상품 관리": "상품 관리",
   "주문 · 분쟁 관리": "주문 · 분쟁 관리",
   "데이터 초기화": "데이터 초기화",
-  "제재 중 {0}명": "제재 중 {0}명"
+  "제재 중 {0}명": "제재 중 {0}명",
+  "자동 추적 서비스 연결 대기 중 · ": "자동 추적 서비스 연결 대기 중 · ",
+  "마지막 조회 {0} · ": "마지막 조회 {0} · ",
+  " (필수: 사진 {0}+ / 영상 {1}+)": " (필수: 사진 {0}+ / 영상 {1}+)",
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "통계를 불러오지 못했습니다. 관리자가 최신 DB 업데이트(0035)를 적용했는지 확인해 주세요."
 }

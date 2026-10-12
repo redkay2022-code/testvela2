@@ -385,7 +385,7 @@
   "Lifetime Used": "累计使用",
   "Like short": "喜欢短",
   "Lingua Latina": "拉丁语",
-  "Listing false factory information will result in immediate seller ban and escrow freeze.": "发布虚假工厂信息将导致卖家立即被封禁，托管资金被冻结。",
+  "Listing false factory information will result in immediate seller ban and escrow freeze.": "⚠️ [警告] 一经发现虚假工厂标注或盗用来源信息，商品将被无预警下架，卖家资格将被永久取消，托管结算也将被冻结。",
   "Listing removed from sample feed": "商品已从示例源中移除",
   "Livelli VIP e vantaggi": "VIP 等级与权益",
   "Livello attuale": "当前等级",
@@ -2589,5 +2589,10 @@
   "상품 관리": "商品管理",
   "주문 · 분쟁 관리": "订单·争议管理",
   "데이터 초기화": "重置数据",
-  "제재 중 {0}명": "受限会员：{0}"
+  "제재 중 {0}명": "受限会员：{0}",
+  " (현재 표시: {0})": " （当前显示：{0}）",
+  "자동 추적 서비스 연결 대기 중 · ": "正在等待连接自动追踪服务 · ",
+  "마지막 조회 {0} · ": "上次查询 {0} · ",
+  " (필수: 사진 {0}+ / 영상 {1}+)": " （必需：{0}+ 张照片 / {1}+ 个视频）",
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "无法加载访客统计，请稍后重试。"
 }

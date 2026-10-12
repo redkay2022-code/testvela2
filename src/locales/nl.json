@@ -386,7 +386,7 @@
   "Lifetime Used": "Totaal gebruikt",
   "Like short": "Vind ik kort",
   "Lingua Latina": "Latijn",
-  "Listing false factory information will result in immediate seller ban and escrow freeze.": "Het vermelden van onjuiste fabrieksinformatie leidt tot een onmiddellijke verkopersblokkering en bevriezing van de escrowgelden.",
+  "Listing false factory information will result in immediate seller ban and escrow freeze.": "⚠️ [Waarschuwing] Bij valse fabrieksvermelding of misbruik van herkomstinformatie kan het product zonder voorafgaande kennisgeving worden verwijderd en de verkopersstatus permanent worden ingetrokken, en wordt de escrow-afwikkeling bevroren.",
   "Listing removed from sample feed": "Advertentie verwijderd uit voorbeeldfeed",
   "Livelli VIP e vantaggi": "VIP-niveaus en voordelen",
   "Livello attuale": "Huidig niveau",
@@ -2591,5 +2591,10 @@
   "상품 관리": "Productbeheer",
   "주문 · 분쟁 관리": "Bestellingen en geschillen",
   "데이터 초기화": "Gegevens resetten",
-  "제재 중 {0}명": "Beperkte leden: {0}"
+  "제재 중 {0}명": "Beperkte leden: {0}",
+  " (현재 표시: {0})": " (momenteel getoond: {0})",
+  "자동 추적 서비스 연결 대기 중 · ": "Wachten op verbinding met automatische trackingservice · ",
+  "마지막 조회 {0} · ": "Laatst gecontroleerd {0} · ",
+  " (필수: 사진 {0}+ / 영상 {1}+)": " (Vereist: {0}+ foto's / {1}+ video's)",
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Bezoekersstatistieken laden mislukt. Probeer het later opnieuw."
 }

@@ -1446,5 +1446,11 @@
   "상품 관리": "Product Management",
   "주문 · 분쟁 관리": "Orders & Disputes",
   "데이터 초기화": "Reset Data",
-  "제재 중 {0}명": "Restricted members: {0}"
+  "제재 중 {0}명": "Restricted members: {0}",
+  " (현재 표시: {0})": " (currently shown: {0})",
+  "자동 추적 서비스 연결 대기 중 · ": "Waiting to connect to auto-tracking service · ",
+  "마지막 조회 {0} · ": "Last checked {0} · ",
+  " (필수: 사진 {0}+ / 영상 {1}+)": " (Required: {0}+ photos / {1}+ videos)",
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Unable to load visitor statistics. Please try again later.",
+  "Listing false factory information will result in immediate seller ban and escrow freeze.": "Listing false factory information will result in immediate seller ban and escrow freeze."
 }
