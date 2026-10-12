@@ -460,6 +460,13 @@
 .shorts-sheet-seller .reputation-badge {font-size:9px;}
 .shorts-sheet-seller .luxury-emblem {width:22px;height:22px;flex-basis:22px;}
 .shorts-sheet-seller>a {flex-shrink:0;font-size:11px;gap:4px;}
+.seller-header-info {flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.seller-header-name {display:flex;align-items:center;gap:4px;min-width:0;}
+.seller-header-name svg {color:var(--primary);flex-shrink:0;}
+.seller-header-rating {display:flex;align-items:center;gap:3px;font-size:10px;color:var(--primary);white-space:nowrap;}
+.seller-header-avatar img {display:block;}
+.seller-store-cta {flex-shrink:0;font-size:11px;gap:4px;white-space:nowrap;}
+@media(max-width:480px) {.shorts-sheet-seller {flex-wrap:wrap;row-gap:8px;padding:10px 14px;}.shorts-sheet-seller .seller-header-info {order:1;flex:1 1 160px;}.shorts-sheet-seller .seller-share-button {order:2;}.shorts-sheet-seller .seller-follow-button {order:3;flex:1 1 120px;justify-content:center;}.shorts-sheet-seller .seller-store-cta {order:4;flex:1 1 160px;justify-content:center;}}
 .shorts-gallery {min-width:0;}
 .shorts-gallery-wrap {position:relative;background:var(--card);}
 .shorts-gallery-track {display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;}

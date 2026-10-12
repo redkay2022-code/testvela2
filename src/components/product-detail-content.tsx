@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Star, Check, Eye, MessageCircle, Plus, ShieldChe
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 import { useMarketPreview } from './market-preview';
-import { SellerBadge, SellerRatings } from './reputation';
+import { SellerRatings } from './reputation';
 import { ShortsGallery } from './shorts-gallery';
 import { SpecsTable } from './specs-table';
 import { usePostTranslation, TranslationToggle } from './post-translation';
@@ -19,12 +19,17 @@ import { sellerIdentity } from '@/lib/seller-directory';
 import { t } from '@/lib/i18n';
 import { usePostRatings } from '@/lib/studio-tier';
 import { detailMedia } from '@/lib/post-media';
+import { ratingAverage } from '@/lib/reputation';
+import { getSellerAvatar } from '@/lib/market.functions';
+import { useQuery } from '@tanstack/react-query';
 
 export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=false}:{post:LuxuryPost;user:User|null;requestAuth:()=>void;buy:(box:boolean)=>void;notify:(text:string)=>void;shorts?:boolean}) {
  const preview=useMarketPreview(),navigate=useNavigate(),router=useRouter();
  const search=useRouterState({select:s=>marketSearch.parse(s.location.search)});
  const pushed=useRef(false),[box,setBox]=useState(false);
  const pr=usePostRatings().data?.[post.id];
+ const sellerAvg=ratingAverage(post.reputation),sellerCount=post.reputation.ratingCount;
+ const sellerAvatar=useQuery({queryKey:['seller-header-avatar',post.source.store_id ?? post.source.user_id ?? null],enabled:!post.sample&&Boolean(post.source.store_id||post.source.user_id),queryFn:()=>getSellerAvatar({data:{storeId:post.source.store_id ?? undefined,userId:post.source.user_id ?? undefined}})});
  const tr=usePostTranslation(post.source,!post.sample);
  const verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
  const qna=search.detailTab==='qna',boxPrice=post.boxPrice ?? 0;
@@ -32,7 +37,7 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  const closeQna=()=>{if(pushed.current){pushed.current=false;router.history.back();}else void navigate({to:'.',search:prev=>({...prev,detailTab:undefined}),replace:true,resetScroll:false});};
  const share=async()=>{try{const url=new URL(`/post/${post.id}`,window.location.origin).href;if(navigator.share)await navigator.share({title:post.title,url});else{await navigator.clipboard.writeText(url);notify('상품 링크를 복사했습니다.');}}catch{/* Share dismissed */}};
  return <>
- <header className={shorts?"shorts-sheet-seller":"shorts-sheet-seller product-detail-header"} aria-label="판매자 정보"><span className="shorts-anonymous-avatar shrink-0"><UserRound/></span><div data-no-translate><strong>{post.creator}</strong>{shorts&&<SellerBadge reputation={post.reputation} withRating/>}</div><Button variant="goldOutline" size="sm" aria-pressed={preview.isFollowing(sellerIdentity(post))} onClick={()=>preview.toggleSeller(sellerIdentity(post))}>{preview.isFollowing(sellerIdentity(post))?<Check size={13}/>:<Plus size={13}/>} {preview.isFollowing(sellerIdentity(post))?'팔로잉':'팔로우'}</Button>{shorts?<Button asChild variant="goldOutline" size="sm"><Link to="/store" search={{role:search.role,seller:sellerIdentity(post),storeTab:'products'}}>셀러샵</Link></Button>:<Button variant="ghost" size="icon" aria-label="상품 공유" title="공유" onClick={share}><Share2/></Button>}</header>
+ <header className={shorts?"shorts-sheet-seller":"shorts-sheet-seller product-detail-header"} aria-label="판매자 정보" data-no-translate translate="no"><span className="shorts-anonymous-avatar shrink-0 seller-header-avatar">{sellerAvatar.data?.avatar?<img src={sellerAvatar.data.avatar} alt={`${post.creator} 프로필 사진`} className="size-full rounded-full object-cover"/>:<UserRound/>}</span><div className="seller-header-info" data-no-translate><span className="seller-header-name"><strong className="notranslate" translate="no">{post.creator}</strong>{verified&&<ShieldCheck size={13} className="seller-header-verified" aria-label="VELA VERIFIED"/>}</span><span className="seller-header-rating notranslate" translate="no"><Star size={11} aria-hidden/>{sellerAvg===null?'평점 없음':`${sellerAvg.toFixed(1)} (${sellerCount ?? 0})`}</span></div><Button variant="goldOutline" size="sm" className="seller-follow-button" aria-pressed={preview.isFollowing(sellerIdentity(post))} onClick={()=>preview.toggleSeller(sellerIdentity(post))}>{preview.isFollowing(sellerIdentity(post))?<Check size={13}/>:<Plus size={13}/>} {preview.isFollowing(sellerIdentity(post))?'팔로잉':'팔로우'}</Button><Button asChild variant="gold" size="sm" className="seller-store-cta"><Link to="/store" search={{role:search.role,seller:sellerIdentity(post),storeTab:'products'}} className="notranslate" translate="no">셀러 스토어 들어가기</Link></Button>{!shorts&&<Button variant="ghost" size="icon" className="seller-share-button" aria-label="상품 공유" title="공유" onClick={share}><Share2/></Button>}</header>
  <div className={shorts?'shorts-sheet-body':'lux-detail-scroll'}>
  {qna?<div className="lux-detail-copy"><Button variant="ghost" size="sm" onClick={closeQna}><ArrowLeft size={16}/>제품 상세</Button><h2 className="mt-4 text-lg font-semibold">{post.title}</h2><ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} qna/></div>:<>
  {shorts?<ShortsGallery key={post.id} images={post.images} title={post.title}/>:<ProductPhotos post={post} verified={verified}/>}
