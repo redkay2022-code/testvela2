@@ -79,4 +79,4 @@
 
 - [x] Brand custom mode reopens the option list whether text is empty or typed; listed/custom switching retains translation protection.
 
-- [ ] Add shared eleven-field watch specifications to upload, seller creation/edit and admin catalog, retain units/multiline content in saved details; verify tests and authenticated form.
+- [x] Add shared eleven-field watch specifications to upload, seller creation/edit and admin catalog; retain units/multiline content. Sixteen tests and build pass; browser input/custom selection and 390px single-column layout verified. No live product was created, so saved-product end-to-end readback remains unverified.
