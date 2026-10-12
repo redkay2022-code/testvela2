@@ -8,13 +8,15 @@ import { compressVideoForWeb } from '@/lib/video-compress';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { readVideoDuration, MAX_VIDEO_SECONDS } from '@/lib/listing-media';
 import { productCategories } from '@/lib/catalog';
+import { DISPATCH_OPTIONS } from '@/lib/dispatch';
+import { factoryOptions } from './source-factory';
 import { postCategoryLabels } from '@/lib/feed-categories';
 import { activeLang } from '@/lib/i18n';
 import { applyRows, BULK_FIELDS, groupFiles, MAX_BULK, parseTable, readTextFile, validateItem, type BulkField, type BulkItem } from '@/lib/bulk-upload';
 
 type State = { status: 'idle' | 'working' | 'done' | 'error'; pct: number; step: string; error: string };
 const idle: State = { status: 'idle', pct: 0, step: '', error: '' };
-const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '가격(USD)', category: '카테고리', source: '출처', factory: '공장', dispatch: '발송', boxPrice: '박스 가격', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경(mm)', thickness: '두께(mm)', weight: '무게(g)', powerReserve: '파워리저브(시간)', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '소개', menuCategory: '메뉴 카테고리' };
+const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '판매 가격', category: '카테고리', source: '제조/출처 구분', factory: '공장', dispatch: '예상 발송 시간', boxPrice: '풀셋 박스 추가 금액', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경', thickness: '두께', weight: '무게', powerReserve: '파워리저브', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '제품 소개', menuCategory: '메뉴 카테고리', sell: '마켓에 판매하기' };
 const EDIT_FIELDS = BULK_FIELDS.filter(f => f !== 'file');
 
 /**
@@ -130,9 +132,14 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
               ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">카테고리 (기본: 커스텀제작)</option>{productCategories.map(cat => <option key={cat}>{cat}</option>)}</select>
               : f === 'menuCategory'
                 ? <select key={f} className="form-input notranslate" translate="no" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">메뉴 카테고리 (비우면 시계)</option>{postCategoryLabels.map(cat => <option key={cat} translate="no" className="notranslate">{cat}</option>)}</select>
-                : <input key={f} className="form-input" aria-label={FIELD_LABEL[f]} placeholder={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running} />)}</div>}
+                : f === 'sell'
+                  ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">마켓에 판매하기 (비우면 예)</option><option>예</option><option>아니오</option></select>
+                  : f === 'source'
+                    ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">제조 / 출처 구분 (비우면 커스텀 제작)</option><option>커스텀 제작</option><option>공장 선택</option><option>기타 - 직접입력</option></select>
+                    : <input key={f} list={f === 'dispatch' ? 'bulk-dispatch-list' : f === 'factory' ? 'bulk-factory-list' : undefined} className="form-input" aria-label={FIELD_LABEL[f]} placeholder={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running} />)}</div>}
         </li>;
       })}</ul>
+      <datalist id="bulk-dispatch-list">{DISPATCH_OPTIONS.map(o => <option key={o.value} value={o.label} />)}</datalist><datalist id="bulk-factory-list">{factoryOptions.map(f => <option key={f} value={f} />)}</datalist>
       <p className="mt-4 text-xs text-muted-foreground">임시저장으로 올리면 구매자에게 보이지 않아요. “내 상품 관리”에서 확인한 뒤 상품마다 판매 스위치를 켜서 공개해요.</p>
       <div className="mt-3 flex flex-wrap items-center gap-3"><Button onClick={() => void start(false)} disabled={running || ready === 0}>{running ? '올리는 중…' : `임시저장으로 올리기 (${ready}개)`}</Button><Button variant="goldOutline" onClick={() => void start(true)} disabled={running || ready === 0}>바로 공개하며 올리기</Button><span className="text-xs text-muted-foreground">완료 {doneCount} · 수정 필요 {blocked}</span></div>
     </>}
