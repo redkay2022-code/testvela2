@@ -39,7 +39,8 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
 
   const addFiles = (list: FileList | null) => {
     if (!list?.length) return;
-    picked.current = [...picked.current, ...Array.from(list)];
+    const okFile = (f: File) => /\.(mp4|mov|jpe?g|png|webp)$/i.test(f.name) && !f.name.startsWith('.');
+    picked.current = [...picked.current, ...Array.from(list).filter(okFile)];
     const g = groupFiles(picked.current);
     // keep what the seller already typed for videos that are still selected
     setItems(prev => g.items.map(n => prev.find(p => p.video.name === n.video.name && p.video.size === n.video.size) ? { ...n, values: prev.find(p => p.video.name === n.video.name && p.video.size === n.video.size)!.values } : n));
@@ -105,7 +106,11 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
       <li>엑셀/구글 시트의 표를 복사해 아래 칸에 붙여넣어요. 열 순서: {BULK_FIELDS.map(f => FIELD_LABEL[f]).join(' · ')} (첫 줄에 머리글을 넣으면 순서가 달라도 돼요)</li>
       <li>줄마다 문제가 없는지 확인하고 “업로드 시작”을 눌러요. 올리는 동안 화면을 켜 두세요.</li>
     </ol>
-    <label className="mt-3 flex min-h-20 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border bg-muted p-3 text-sm"><Upload size={18} />영상 + 사진 선택 (여러 개)<input className="sr-only" type="file" multiple accept="video/mp4,video/quicktime,.mov,image/jpeg,image/png,image/webp" aria-label="영상과 사진 선택" disabled={running} onChange={e => { addFiles(e.target.files); e.target.value = ''; }} /></label>
+    <div className="mt-3 flex min-h-20 flex-wrap items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted p-3 text-sm" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (!running) addFiles(e.dataTransfer.files); }}>
+      <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2"><Upload size={18} />파일 선택 (여러 개)<input className="sr-only" type="file" multiple accept="video/mp4,video/quicktime,.mov,image/jpeg,image/png,image/webp" aria-label="영상과 사진 선택" disabled={running} onChange={e => { addFiles(e.target.files); e.target.value = ''; }} /></label>
+      <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2"><Upload size={18} />폴더 통째로 선택<input className="sr-only" type="file" multiple {...({ webkitdirectory: '', directory: '' } as Record<string, string>)} aria-label="폴더 선택" disabled={running} onChange={e => { addFiles(e.target.files); e.target.value = ''; }} /></label>
+      <span className="w-full text-center text-xs text-muted-foreground">파일을 여기로 끌어다 놓아도 돼요</span>
+    </div>
     <textarea className="form-input mt-3 min-h-24 font-mono text-xs" placeholder="엑셀에서 복사한 표를 여기에 붙여넣기" value={paste} onChange={e => setPaste(e.target.value)} disabled={running} />
     <div className="mt-2 flex flex-wrap items-center gap-2">
       <Button size="sm" variant="goldOutline" disabled={!paste.trim() || !items.length || running} onClick={() => { applyTable(paste); setPaste(''); }}>표 적용</Button>
