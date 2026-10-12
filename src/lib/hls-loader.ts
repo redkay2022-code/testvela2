@@ -66,7 +66,7 @@ export function attachHls(video: HTMLVideoElement, url: string, handlers: HlsHan
     });
     const ev = Hls.Events;
     let netRetries = 0;
-    hls.on(ev.ERROR ?? 'hlsError', (_e, data) => {
+    hls.on(ev['ERROR'] ?? 'hlsError', (_e, data) => {
       const d = data as { fatal?: boolean; type?: string };
       if (!d?.fatal || disposed) return;
       if (d.type === 'networkError' && netRetries++ < 2) hls?.startLoad();
