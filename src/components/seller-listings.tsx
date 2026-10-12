@@ -20,7 +20,7 @@ import { compressVideoForWeb, COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compr
 import { estimateUploadSeconds, useCountdown } from '@/lib/upload-countdown';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
-type Specs = Record<string, string>;
+type Specs = Record<string, string> & { sourceType?: string; factory?: string };
 type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
@@ -180,9 +180,9 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       if (settled.some(r => r.status === 'rejected')) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
       for (const r of settled) if (r.status === 'fulfilled' && r.value) photoPaths.push(r.value);
       const cleanSpecs = cleanWatchSpecs(specs);
-      cleanSpecs.sourceType = sourceType;
-      if (sourceType === 'custom') delete cleanSpecs.factory;
-      else cleanSpecs.factory = factory.trim().slice(0, 80);
+      cleanSpecs['sourceType'] = sourceType;
+      if (sourceType === 'custom') delete cleanSpecs['factory'];
+      else cleanSpecs['factory'] = factory.trim().slice(0, 80);
       const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, dispatch_time: dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');

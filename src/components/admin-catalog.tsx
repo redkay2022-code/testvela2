@@ -277,7 +277,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
   const navigate = useNavigate(); const refresh = useRefresh();
   const specs0 = (existing?.specs ?? {}) as Record<string, string>;
   const [f, setF] = useState(() => ({
-    store_id: existing?.store_id ?? '', title: existing?.title ?? '', brand: existing?.brand ?? specs0.brand ?? '', model: existing?.model ?? specs0.model ?? '', reference: existing?.reference ?? '',
+    store_id: existing?.store_id ?? '', title: existing?.title ?? '', brand: existing?.brand ?? specs0['brand'] ?? '', model: existing?.model ?? specs0['model'] ?? '', reference: existing?.reference ?? '',
     category: existing?.category ?? '', subcategory: existing?.subcategory ?? '', description: existing?.description ?? '', price: existing?.price?.toString() ?? '',
     box_price: existing?.box_price?.toString() ?? '', sku: existing?.sku ?? '', stock_qty: String(existing?.stock_qty ?? 1), reserved_qty: String(existing?.reserved_qty ?? 0),
     low_stock_threshold: String(existing?.low_stock_threshold ?? 1), featured: existing?.featured ?? false, video_url: existing?.video_url ?? null,
@@ -385,7 +385,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
       {f.video_url && <Button type="button" variant="ghost" size="sm" onClick={() => set('video_url', null)}><Trash2 />영상 제거</Button>}
     </fieldset>
     <fieldset><legend>4 · WATCH SPECIFICATIONS (선택)</legend>
-      {watchSpecFields.map(([k, l]) => <label key={k}>{l}<input value={specs[k] ?? ''} onChange={e => setSpecs(prev => ({ ...prev, [k]: e.target.value }))} /></label>)}
+      <div className="col-span-full min-w-0"><WatchSpecificationsForm idPrefix="catalog-spec" value={{ ...specs, brand: f.brand, model: f.model }} onChange={next => { setSpecs(next); setF(prev => ({ ...prev, brand: next['brand'] ?? '', model: next['model'] ?? '' })); }} /></div>
     </fieldset>
     <fieldset><legend>5 · PRICING (USD)</legend>
       <label>Price *<input type="number" min={0} step="1" value={f.price} onChange={e => set('price', e.target.value)} /></label>
