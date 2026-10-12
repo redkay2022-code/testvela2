@@ -1,4 +1,5 @@
-import type { Lang } from './i18n';
+import { activeLang, type Lang } from './i18n';
+import { labelFor } from './label-lookup';
 import { translateTexts } from './translate.functions';
 
 // Per-language dictionaries (source UI string -> translation), loaded on demand.
@@ -171,12 +172,22 @@ function walk(root: Node) {
   for (let n = w.nextNode(); n; n = w.nextNode()) n.nodeType === Node.TEXT_NODE ? textNode(n as Text) : element(n as Element);
 }
 
+const dicts: Partial<Record<Lang, Record<string, string>>> = {};
+/** Loads (once) the dictionary of a language so static labels can be looked up synchronously. Never throws: a failed load means original text. */
+export async function loadDictionary(l: Lang): Promise<void> {
+  if (dicts[l]) return;
+  const load = loaders[`../locales/${l}.json`];
+  try { dicts[l] = load ? (await load()).default : {}; } catch { dicts[l] = {}; }
+}
+/** Direct dictionary lookup of a static UI label for the platform's current language (no DOM rewriting). Falls back to the original text. */
+export const tx = (text: string): string => labelFor(dicts[activeLang()], text);
+
 /** Translates on-screen text into `lang`: UI strings via dictionaries, seller/user-written text via cached machine translation. */
 export async function applyDomTranslation(next: Lang) {
   observer?.disconnect(); observer = null;
   lang = next; pending.clear(); waiting.clear();
-  const load = loaders[`../locales/${next}.json`];
-  dict = load ? (await load()).default : {};
+  await loadDictionary(next);
+  dict = dicts[next] ?? {};
   patterns = compilePatterns(dict);
   installDialogTranslation();
   walk(document.body);
