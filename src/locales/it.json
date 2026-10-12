@@ -2570,5 +2570,7 @@
   "지금 보고 있는 방문자": "Visitatori in tempo reale",
   "Dispute · 교환": "Controversie e cambi",
   "통계를 불러오지 못했습니다. 관리자가 최신 DB 업데이트(0035)를 적용했는지 확인해 주세요.": "Impossibile caricare le statistiche. Riprova più tardi.",
-  "방문 기록은 임의의 브라우저 ID로만 집계하며 IP·이름·전화번호는 저장하지 않습니다. 본인과 관리자의 방문은 제외됩니다. 국가는 접속 지역 기준입니다.": "Le visite sono conteggiate con un ID casuale del browser. IP, nomi e telefoni non vengono salvati. Visite proprie e degli amministratori escluse; paesi basati sulla regione di connessione."
+  "방문 기록은 임의의 브라우저 ID로만 집계하며 IP·이름·전화번호는 저장하지 않습니다. 본인과 관리자의 방문은 제외됩니다. 국가는 접속 지역 기준입니다.": "Le visite sono conteggiate con un ID casuale del browser. IP, nomi e telefoni non vengono salvati. Visite proprie e degli amministratori escluse; paesi basati sulla regione di connessione.",
+  "상품과 사진·영상을 함께 삭제합니다: {0}": "Elimina prodotto, foto e video: {0}",
+  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 video · 30 s · 100MB · Foto 10MB / Foto {0}/{1}"
 }
