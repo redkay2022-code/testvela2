@@ -39,6 +39,6 @@ export function BrandSelect({ id, value, onChange }: { id: string; value: string
         </SelectGroup>
       </SelectContent>
     </Select>
-    {customMode && <input {...noTranslate} ref={input} id={`${id}-custom`} aria-label="브랜드 직접 입력" className="notranslate form-input" placeholder="브랜드 이름 직접 입력" maxLength={80} value={value} onChange={event => onChange(event.target.value)} />}
+    {customMode && <input {...noTranslate} ref={input} id={`${id}-custom`} aria-label="브랜드 직접 입력" className="notranslate form-input" placeholder="브랜드 이름 직접 입력" maxLength={80} value={value} onChange={event => { if (!event.target.value) setCustom(false); onChange(event.target.value); }} />}
   </div>;
 }
