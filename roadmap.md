@@ -76,3 +76,5 @@
 - [ ] MoonPay partner key for guaranteed wallet prefill (waiting on user)
 
 - [x] Update all three product creation/edit brand selectors: custom entry first, requested top nine, alphabetical full catalog and translation protection. Three tests pass; authenticated upload and seller new-product selection/custom entry/scroll verified, no runtime errors, build OK. No live product created.
+
+- [x] Keep the brand list closed while a typed brand name is present (click, keyboard and touch paths), reopening it only once the text is cleared; 2 component tests and preview checks pass, build OK.
