@@ -920,6 +920,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          held: boolean
           id: string
           media_urls: string[]
           nickname: string
@@ -934,6 +935,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          held?: boolean
           id?: string
           media_urls?: string[]
           nickname: string
@@ -948,6 +950,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          held?: boolean
           id?: string
           media_urls?: string[]
           nickname?: string
