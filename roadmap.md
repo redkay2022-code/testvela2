@@ -74,3 +74,9 @@
 ## Payments
 - [x] USDT payment modal: direct transfer, card/Apple Pay via MoonPay, wallet connect, escrow trust banner
 - [ ] MoonPay partner key for guaranteed wallet prefill (waiting on user)
+
+- [x] Update all three product creation/edit brand selectors: custom entry first, requested top nine, alphabetical full catalog and translation protection. Three tests pass; authenticated upload and seller new-product selection/custom entry/scroll verified, no runtime errors, build OK. No live product created.
+
+- [x] Brand custom mode reopens the option list whether text is empty or typed; listed/custom switching retains translation protection.
+
+- [x] Add shared eleven-field watch specifications to upload, seller creation/edit and admin catalog; retain units/multiline content. Sixteen tests and build pass; browser input/custom selection and 390px single-column layout verified. No live product was created, so saved-product end-to-end readback remains unverified.

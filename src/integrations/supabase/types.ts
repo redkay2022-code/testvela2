@@ -714,6 +714,7 @@ export type Database = {
           reference: string
           reserved_qty: number
           sku: string
+          source_lang: string | null
           specs: Json
           status: string
           stock_qty: number
@@ -721,6 +722,7 @@ export type Database = {
           subcategory: string
           thumbnail_url: string | null
           title: string
+          translations: Json
           updated_at: string
           user_id: string | null
           video_tags: Json
@@ -754,6 +756,7 @@ export type Database = {
           reference?: string
           reserved_qty?: number
           sku?: string
+          source_lang?: string | null
           specs?: Json
           status?: string
           stock_qty?: number
@@ -761,6 +764,7 @@ export type Database = {
           subcategory?: string
           thumbnail_url?: string | null
           title: string
+          translations?: Json
           updated_at?: string
           user_id?: string | null
           video_tags?: Json
@@ -794,6 +798,7 @@ export type Database = {
           reference?: string
           reserved_qty?: number
           sku?: string
+          source_lang?: string | null
           specs?: Json
           status?: string
           stock_qty?: number
@@ -801,6 +806,7 @@ export type Database = {
           subcategory?: string
           thumbnail_url?: string | null
           title?: string
+          translations?: Json
           updated_at?: string
           user_id?: string | null
           video_tags?: Json
@@ -920,6 +926,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          held: boolean
           id: string
           media_urls: string[]
           nickname: string
@@ -934,6 +941,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          held?: boolean
           id?: string
           media_urls?: string[]
           nickname: string
@@ -948,6 +956,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          held?: boolean
           id?: string
           media_urls?: string[]
           nickname?: string

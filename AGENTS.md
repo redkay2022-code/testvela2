@@ -10,9 +10,10 @@
 <!-- LOVABLE:END -->
 
 ## Application architecture
-- Use validated TanStack search for UI layers; Back unwinds one layer. Match aliases without invented affiliations.
-- Public feed uses a TanStack Query/server loader; SSR never requires login.
-- Scope checkout CSS locally; selectors live only in the shared payment dialog to avoid duplicates.
+- Share translation-protected BrandSelect and WatchSpecificationsForm across creation/edit forms; preserve spec JSON keys and units for consistent saved detail rendering.
+- Validated TanStack search drives UI layers; Back unwinds one. No invented brand affiliations.
+- Public feed uses Query/server loaders; SSR needs no login.
+- Scope checkout CSS and selectors to the shared payment dialog.
 - Cloud writes use owner-scoped policies and caller identity.
 - Bundle editorial media and icons locally; uploaded private storage media are served with signed URLs after matching published post paths.
 - Use manifest-only home-screen support; no service worker without an offline request.
@@ -20,11 +21,11 @@
 - Share photo/Shorts detail content; product Q&A uses authenticated post comments and validated detailTab for Back navigation, separate from simulated commerce.
 - Shorts use /shorts/$id with validated nested sheets; swipes replace the ID so Back exits rather than replaying swipes.
 - Derive seller reputation and account badges with shared pure functions and local SVG emblems; account badges use trusted roles, not URL view state; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
-- Buyer membership is an explicit trusted tier, not inferred from client orders or metadata; use baseline Member when no earned membership is available.
+- Buyer tiers are trusted, never inferred from client orders/metadata; default to Member.
 - Resolve storefronts from public feed rows by seller identity, creator name and slug-insensitive keys; reviews share that canonical identity so 구매처 opens the correct store. Never attribute sample reputation or reviews to another seller.
 - Build the public seller directory from visible feed listings grouped by stable seller identity; directory filters use validated URL search state and unknown live metrics remain unavailable.
 - Use insuredPurchase for mandatory delivery insurance and checkout totals; calculate on the seller item price, excluding the optional box, to keep displayed and submitted totals consistent.
-- Store all prices (item and Full Set Box) in base USD and convert only at display via src/lib/currency formatMoney; one stored currency keeps totals and fees consistent.
+- Store item/box prices in USD; display via src/lib/currency formatMoney for consistent totals/fees.
 - Translate commerce with src/lib/i18n t() and UI with src/locales via src/lib/dom-translate; the shared locale provider detects device language/currency. Cache live USD rates server-side with fixed fallbacks.
 - Phone/password auth uses server-side peppered SHA-256; only a unique phone hash and synthetic email are stored, never raw numbers; no OAuth.
 - Trusted roles use user_roles/has_role(); applications contain system_code/nickname only and approvals require admin verification.
@@ -40,4 +41,5 @@
 
 - Seller pages share trusted queries; studioTab limits scrolling. PullToRefresh invalidates active queries from top-only document/nested gestures. discoveryListings excludes sold stock only from discovery, retaining storefront history.
 
-- Customer activity uses validated customerTab/orderId/orderView and authorized live orders/QC/messages; share owner likes and account-keyed local saves. Feed counters are owner reaction state, never static base_likes or cart rows as global totals.
+- Customer activity uses validated customerTab/orderId/orderView and authorized live orders/QC/messages; share owner likes and account-keyed local saves. Feed counters are owner state.
+- Seller post text is AI-translated on demand into posts.translations; a trigger resets it on edit.
