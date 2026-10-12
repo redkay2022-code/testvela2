@@ -103,7 +103,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const cleanHome=mode==='home'&&!shortsId&&!postId;
  const backOnlyHeader=['store','me','seller','upload'].includes(mode)||search.panel==='chat'||search.panel==='cart';
  if(mode!=='store')posts=discoveryListings(posts);
-  if(cleanHome)posts=search.feedCategory==='ready'?filterImmediate(posts):posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
+  if(cleanHome)posts=search.feedCategory==='ready'?posts.filter(p=>p.category==='바로발송'||filterImmediate([p]).length>0):posts.filter(p=>matchesFeedCategory(p,search.feedCategory));
  if(cleanHome&&search.tab!=='reviews')posts=filterFeed(posts,search);
  const selected=all.find(p=>p.id===(shortsId || postId || search.post));
  const entry=productEntry(authReady,Boolean(user));

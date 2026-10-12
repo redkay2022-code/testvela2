@@ -3,7 +3,7 @@
  * match each row to a video file by file name, group photos with their video, and validate every product.
  * One video = one product. Photos named "<video name>-1.jpg", "<video name>_2.png" … belong to that video.
  */
-import { productCategories } from '@/lib/catalog';
+import { postCategoryLabels, toPostCategory } from '@/lib/feed-categories';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from '@/lib/listing-media';
 import { validatePostTitle } from '@/lib/post-title';
@@ -145,8 +145,9 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   const v = item.values, errors: string[] = [], warnings: string[] = [];
   const titleError = validatePostTitle(v.title); if (titleError) errors.push(titleError);
   const price = Number(v.price.replace(/[$,\s]/g, '')); if (!Number.isFinite(price) || price < 1) errors.push('판매 가격(USD)은 1 이상의 숫자로 입력해 주세요.');
-  const category = productCategories.find(c => norm(c) === norm(v.category)) ?? (v.category ? undefined : '커스텀제작');
-  if (!category) errors.push(`카테고리는 ${productCategories.join(' / ')} 중 하나여야 해요.`);
+  const category = v.category.trim() ? postCategoryLabels.find(c => norm(c) === norm(v.category)) ?? (toPostCategory(v.category) || undefined) : '시계';
+  if (!category) errors.push(`카테고리는 ${postCategoryLabels.join(' / ')} 중 하나여야 해요.`);
+  else if (!v.category.trim()) warnings.push('카테고리가 비어 있어 “시계”로 저장돼요.');
   const source = v.source ? SOURCE_ALIASES[norm(v.source)] : (v.factory ? 'factory' : 'custom');
   if (!source) errors.push('출처는 직접제작 / 공장 / 기타 중 하나여야 해요.');
   if ((source === 'factory' || source === 'other') && !v.factory.trim()) errors.push('공장(출처)을 입력해 주세요.');
