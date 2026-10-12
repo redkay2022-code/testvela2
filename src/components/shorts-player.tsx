@@ -12,6 +12,7 @@ let shortsSound=false;
 import { Link, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { ProductComments } from './product-comments';
 import { useMarketPreview } from './market-preview';
 import { type LuxuryPost } from '@/lib/luxury-market';
@@ -21,7 +22,7 @@ import { SpecsTable } from './specs-table';
 import { Tx } from './tx';
 import { usePostTranslation, TranslationToggle } from './post-translation';
 import { marketSearch } from '@/lib/market';
-import { getComments } from '@/lib/market.functions';
+import { getComments, getSellerAvatar } from '@/lib/market.functions';
 import { stableMediaSrc } from '@/lib/media-refresh';
 import { attachHls, isHlsUrl } from '@/lib/hls-loader';
 import { sellerIdentity } from '@/lib/seller-directory';
@@ -120,7 +121,8 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
 });
 function ShortSellerIdentity({post}:{post:LuxuryPost}) {
  const preview=useMarketPreview(),identity=sellerIdentity(post),following=preview.isFollowing(identity);
- return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><span className="shorts-anonymous-avatar" role="img" aria-label="판매자 프로필"><UserRound/></span><strong data-i18n-skip className="notranslate" translate="no">{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
+ const sellerAvatar=useQuery({queryKey:['seller-header-avatar',post.source.store_id ?? post.source.user_id ?? null],enabled:!post.sample&&Boolean(post.source.store_id||post.source.user_id),queryFn:()=>getSellerAvatar({data:{storeId:post.source.store_id ?? undefined,userId:post.source.user_id ?? undefined}}),staleTime:300_000});
+ return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><Avatar className="shorts-anonymous-avatar"><AvatarImage src={sellerAvatar.data?.avatar ?? undefined} alt={`${post.creator} 프로필 사진`} className="object-cover"/><AvatarFallback className="bg-transparent" aria-label="판매자 프로필"><UserRound/></AvatarFallback></Avatar><strong data-i18n-skip className="notranslate" translate="no">{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
 }
 function VideoOnlyDetails({post,user,requestAuth,buy}:{post:LuxuryPost;user:User|null;requestAuth:()=>void;buy:Props['buy']}) {
  const tr=usePostTranslation(post.source,!post.sample);
