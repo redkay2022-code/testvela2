@@ -30,7 +30,7 @@ export function SpecsTable({specs, fallback}: {specs: unknown; fallback?: React.
   return (
     <div className="mt-5">
       <h3 className="mb-1 text-sm font-semibold">상품 사양</h3>
-      <dl className="lux-specs">
+      <dl className="lux-specs notranslate" translate="no" data-no-translate>
         {entries.map(([key, value]) => (
           <div key={key}><dt>{labelFor(key)}</dt><dd className="whitespace-pre-wrap" style={{overflowWrap: 'anywhere'}}>{value}</dd></div>
         ))}

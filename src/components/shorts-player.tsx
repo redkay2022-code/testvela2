@@ -18,6 +18,7 @@ import { type LuxuryPost } from '@/lib/luxury-market';
 import { SellerBadge, SellerRatings } from './reputation';
 import { ShortsGallery } from './shorts-gallery';
 import { SpecsTable } from './specs-table';
+import { usePostTranslation, TranslationToggle } from './post-translation';
 import { marketSearch } from '@/lib/market';
 import { getComments } from '@/lib/market.functions';
 import { stableMediaSrc } from '@/lib/media-refresh';
@@ -121,14 +122,15 @@ function ShortSellerIdentity({post}:{post:LuxuryPost}) {
  return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><span className="shorts-anonymous-avatar" role="img" aria-label="판매자 프로필"><UserRound/></span><strong>{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
 }
 function VideoOnlyDetails({post,user,requestAuth,buy}:{post:LuxuryPost;user:User|null;requestAuth:()=>void;buy:Props['buy']}) {
- return <section className="shorts-video-details" lang="ko" data-no-translate>
+ const tr=usePostTranslation(post.source,!post.sample);
+ return <section className="shorts-video-details notranslate" lang="ko" data-no-translate translate="no">
  <header className="shorts-video-details-seller" aria-label="판매자 정보"><ShortSellerIdentity post={post}/></header>
- <div className="shorts-video-details-body"><h2>{post.title}</h2>
+ <div className="shorts-video-details-body"><h2>{post.sample?post.title:tr.title}</h2>
  {post.price!==null&&<p className="shorts-video-price" data-no-translate>{usd(post.price)}</p>}
  <div className="detail-tags"><span>{post.factory}</span><span>{post.category}</span></div>
  {isImmediateDispatch(post)&&<span className="lux-ready-badge is-inline mt-3" data-no-translate>바로 발송 · Ready to Ship</span>}
- <p>{post.description}</p>
- <SpecsTable specs={post.source.specs}/>
+ <p>{post.sample?post.description:tr.description}</p><TranslationToggle t={tr}/>
+ <SpecsTable specs={post.sample?post.source.specs:tr.specs}/>
  {post.price!==null&&<Button variant="gold" className="mt-5 w-full" onClick={()=>buy(false)}>{t('buyNow')}<ChevronRight size={16}/></Button>}</div>
  <ProductComments postId={post.id} user={user} requestAuth={requestAuth} composerFirst live/>
  </section>;
