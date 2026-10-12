@@ -16,6 +16,7 @@ import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { compressVideoForWeb, COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
 import { estimateUploadSeconds, useCountdown } from '@/lib/upload-countdown';
+import { BulkUpload } from './bulk-upload';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = { brand?: string; model?: string; movement?: string; caseSize?: string; material?: string; waterResistance?: string; sourceType?: string; factory?: string };
@@ -54,6 +55,7 @@ export function SellerListings() {
     },
   });
   const [editing, setEditing] = useState<Listing | 'new' | null>(null);
+  const [bulk, setBulk] = useState(false);
   const [replacing, setReplacing] = useState<string | null>(null);
   const refresh = () => { void qc.invalidateQueries({ queryKey: ['my-listings'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); void qc.invalidateQueries({ queryKey: ['my-listing-count'] }); };
 
@@ -84,7 +86,8 @@ export function SellerListings() {
   const remove = async (l: Listing) => { if (roles.includes('admin')) { if (!(await gate.ask(`'${l.title}' 상품을 삭제합니다. 사진·영상도 함께 삭제됩니다.`))) return; } else if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : [])]; if (media.length) await supabase.storage.from('market-media').remove(media); refresh(); };
 
   return <section className="seller-flow-card" aria-label="내 상품 관리">{gate.dialog}
-    <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">내 상품 관리</h2><Button size="sm" onClick={() => setEditing('new')}><Plus />새 상품</Button></div>
+    <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">내 상품 관리</h2><div className="flex gap-2"><Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}>일괄 업로드</Button><Button size="sm" onClick={() => setEditing('new')}><Plus />새 상품</Button></div></div>
+    {bulk && <BulkUpload user={user} existingTitles={(listings.data ?? []).map(l => l.title)} onClose={() => setBulk(false)} onDone={refresh} />}
     {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground">불러오는 중…</p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground">아직 등록한 상품이 없어요.</p> :
       <ul className="seller-inventory-grid mt-5">{listings.data.map(l => <li key={l.id} className="seller-inventory-item">

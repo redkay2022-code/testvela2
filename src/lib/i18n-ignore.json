@@ -124,6 +124,8 @@
     "components/admin-reset.tsx",
     "components/menu-dashboards.tsx",
     "lib/editor-fonts.ts",
-    "lib/video-compress.ts"
+    "lib/video-compress.ts",
+    "components/bulk-upload.tsx",
+    "lib/bulk-upload.ts"
   ]
 }
