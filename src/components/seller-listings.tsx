@@ -1,3 +1,4 @@
+import { BrandSelect } from './brand-select';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -220,7 +221,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     <input ref={photoPicker} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="추가 사진 선택" onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} />
     <label htmlFor="l-title" className="form-label">상품명</label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
     <label htmlFor="l-cat" className="form-label">카테고리</label><select id="l-cat" className="form-input" value={category} onChange={e => setCategory(e.target.value)}><option value="시계">시계</option><option value="악세사리">악세사리</option></select>
-    <div className="grid grid-cols-2 gap-x-3">{specFields.map(([k, label, ph]) => <div key={k}><label htmlFor={`l-${k}`} className="form-label">{label}</label><input id={`l-${k}`} className="form-input" placeholder={ph} maxLength={80} value={specs[k] ?? ''} onChange={e => setSpecs(s => ({ ...s, [k]: e.target.value }))} /></div>)}</div>
+    <div className="grid grid-cols-2 gap-x-3">{specFields.map(([k, label, ph]) => <div key={k} className={k === 'brand' ? 'notranslate min-w-0' : undefined} translate={k === 'brand' ? 'no' : undefined} data-i18n-skip={k === 'brand' ? true : undefined}><label htmlFor={`l-${k}`} className={k === 'brand' ? 'notranslate form-label' : 'form-label'} translate={k === 'brand' ? 'no' : undefined}>{label}</label>{k === 'brand' ? <BrandSelect id="l-brand" value={specs[k] ?? ''} onChange={v => setSpecs(s => ({...s,[k]:v}))}/> : <input id={`l-${k}`} className="form-input" placeholder={ph} maxLength={80} value={specs[k] ?? ''} onChange={e => setSpecs(s => ({ ...s, [k]: e.target.value }))} />}</div>)}</div>
     <label htmlFor="l-desc" className="form-label">상품 설명</label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
     <div className="grid grid-cols-2 gap-x-3">
       <div><label htmlFor="l-price" className="form-label">판매 가격 (USD $)</label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>

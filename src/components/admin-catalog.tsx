@@ -1,3 +1,4 @@
+import { BrandSelect } from './brand-select';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -359,7 +360,7 @@ function ProductForm({ id, stores, products }: { id: string; stores: StoreRow[];
     </fieldset>
     <fieldset><legend>2 · PRODUCT INFORMATION</legend>
       <label>Product name *<input value={f.title} onChange={e => set('title', e.target.value)} required /></label>
-      <label>Brand<input value={f.brand} onChange={e => set('brand', e.target.value)} /></label>
+      <div translate="no" className="notranslate" data-i18n-skip><label htmlFor="catalog-brand" translate="no" className="notranslate">Brand</label><BrandSelect id="catalog-brand" value={f.brand} onChange={v => set('brand', v)} /></div>
       <label>Model<input value={f.model} onChange={e => set('model', e.target.value)} /></label>
       <label>Reference number<input value={f.reference} onChange={e => set('reference', e.target.value)} /></label>
       <label>Category *<select value={f.category} onChange={e => set('category', e.target.value)}><option value="">선택…</option><CategoryOptions current={f.category} fallback={productCategories} /></select></label>
