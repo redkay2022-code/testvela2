@@ -6,6 +6,7 @@ const noTranslate = { translate: 'no' as const, 'data-i18n-skip': true };
 
 export function BrandSelect({ id, value, onChange }: { id: string; value: string; onChange: (value: string) => void }) {
   const [custom, setCustom] = useState(false);
+  const [open, setOpen] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const known = knownWatchBrand(value);
   const customMode = custom || Boolean(value && !known);
@@ -13,9 +14,12 @@ export function BrandSelect({ id, value, onChange }: { id: string; value: string
   const selected = customMode ? 'custom' : known ? `${section}:${known}` : '';
 
   return <div {...noTranslate} className="notranslate min-w-0 space-y-2">
-    <Select value={selected} onValueChange={next => {
-      if (next === 'custom') { setCustom(true); onChange(customMode ? value : ''); }
-      else { setCustom(false); onChange(next.slice(next.indexOf(':') + 1)); }
+    <Select open={open} onOpenChange={next => {
+      if (next && customMode) { input.current?.focus(); return; }
+      setOpen(next);
+    }} value={selected} onValueChange={next => {
+      if (next === 'custom') { setCustom(true); setOpen(false); onChange(customMode ? value : ''); }
+      else { setCustom(false); setOpen(false); onChange(next.slice(next.indexOf(':') + 1)); }
     }}>
       <SelectTrigger {...noTranslate} id={id} aria-label="브랜드 선택" className="notranslate h-11 bg-muted text-foreground">
         <SelectValue {...noTranslate} className="notranslate" placeholder="브랜드 선택" />
@@ -35,6 +39,6 @@ export function BrandSelect({ id, value, onChange }: { id: string; value: string
         </SelectGroup>
       </SelectContent>
     </Select>
-    {customMode && <input {...noTranslate} ref={input} id={`${id}-custom`} aria-label="브랜드 직접 입력" className="notranslate form-input" placeholder="브랜드 이름 직접 입력" maxLength={80} value={value} onChange={event => onChange(event.target.value)} />}
+    {customMode && <input {...noTranslate} ref={input} id={`${id}-custom`} aria-label="브랜드 직접 입력" className="notranslate form-input" placeholder="브랜드 이름 직접 입력" maxLength={80} value={value} onChange={event => { if (!event.target.value) setCustom(false); onChange(event.target.value); }} />}
   </div>;
 }
