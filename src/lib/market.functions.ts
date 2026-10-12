@@ -146,3 +146,23 @@ export const setLike = createServerFn({method:'POST'})
     if(result.error) throw new Error('좋아요를 저장하지 못했습니다.');
     return {ok:true};
   });
+
+/** Seller header avatar for detail pages: signed store or profile avatar, never a product image. */
+export const getSellerAvatar = createServerFn({ method: 'GET' })
+  .inputValidator((data: unknown) => z.object({ storeId: z.string().uuid().optional(), userId: z.string().uuid().optional() }).parse(data))
+  .handler(async ({ data }) => {
+    if (!data.storeId && !data.userId) return { avatar: null };
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    let path: string | null = null, bucket: 'avatars' | 'market-media' = 'avatars';
+    if (data.storeId) {
+      const { data: store } = await supabaseAdmin.from('stores').select('avatar').eq('id', data.storeId).maybeSingle();
+      if (store?.avatar) { path = store.avatar; bucket = 'market-media'; }
+    }
+    if (!path && data.userId) {
+      const { data: profile } = await supabaseAdmin.from('profiles').select('avatar_url').eq('user_id', data.userId).maybeSingle();
+      path = profile?.avatar_url ?? null;
+    }
+    if (!path || path.includes('..') || path.includes('://')) return { avatar: null };
+    const { data: signed } = await supabaseAdmin.storage.from(bucket).createSignedUrls([path], 3600);
+    return { avatar: signed?.[0]?.signedUrl ?? null };
+  });
