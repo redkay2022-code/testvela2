@@ -25,35 +25,45 @@ function clickTrigger() {
   fireEvent.click(node);
 }
 
-function pickCustomInput() {
-  fireEvent.click(screen.getByText("Custom Input (직접 입력)", { selector: "span" }));
-}
+const pickOption = (label: string) => fireEvent.click(screen.getAllByText(label, { selector: "span" })[0]!);
 
 describe("BrandSelect direct input", () => {
-  it("keeps the brand list closed while a typed brand name is present", () => {
-    render(<Harness id="brand-typed" />);
+  it("re-opens the brand list after choosing Custom Input with empty text", () => {
+    render(<Harness id="brand-empty" />);
     clickTrigger();
-    pickCustomInput();
-    const box = screen.getByLabelText("브랜드 직접 입력");
-    fireEvent.change(box, { target: { value: "Chanel" } });
-    expect(screen.getByTestId("saved")).toHaveTextContent("Chanel");
-
-    clickTrigger();
-
-    expect(screen.queryByText("TOP BRANDS")).toBeNull();
-    expect(screen.getByLabelText("브랜드 직접 입력")).toHaveValue("Chanel");
-  });
-
-  it("reopens the brand list once the typed name is cleared", () => {
-    render(<Harness id="brand-cleared" />);
-    clickTrigger();
-    pickCustomInput();
-    const box = screen.getByLabelText("브랜드 직접 입력");
-    fireEvent.change(box, { target: { value: "Chanel" } });
-    fireEvent.change(box, { target: { value: "" } });
+    pickOption("Custom Input (직접 입력)");
+    expect(screen.getByLabelText("브랜드 직접 입력")).toHaveValue("");
 
     clickTrigger();
 
     expect(screen.getByText("TOP BRANDS")).toBeInTheDocument();
+  });
+
+  it("re-opens the brand list while a typed name is present and keeps the text", () => {
+    render(<Harness id="brand-typed" />);
+    clickTrigger();
+    pickOption("Custom Input (직접 입력)");
+    fireEvent.change(screen.getByLabelText("브랜드 직접 입력"), { target: { value: "Chanel" } });
+
+    clickTrigger();
+
+    expect(screen.getByText("TOP BRANDS")).toBeInTheDocument();
+    expect(screen.getByTestId("saved")).toHaveTextContent("Chanel");
+  });
+
+  it("switches back and forth between a listed brand and Custom Input", () => {
+    render(<Harness id="brand-switch" />);
+    clickTrigger();
+    pickOption("Custom Input (직접 입력)");
+    fireEvent.change(screen.getByLabelText("브랜드 직접 입력"), { target: { value: "Chanel" } });
+
+    clickTrigger();
+    pickOption("ROLEX");
+    expect(screen.getByTestId("saved")).toHaveTextContent("ROLEX");
+    expect(screen.queryByLabelText("브랜드 직접 입력")).toBeNull();
+
+    clickTrigger();
+    pickOption("Custom Input (직접 입력)");
+    expect(screen.getByLabelText("브랜드 직접 입력")).toBeInTheDocument();
   });
 });
