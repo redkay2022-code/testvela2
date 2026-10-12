@@ -88,7 +88,7 @@ function Thread({ msgs }: { msgs: Msg[] }) {
   const { lang } = useCurrency();
   if (!msgs.length) return null;
   return <ul className="mt-3 grid gap-2 text-sm">{msgs.map(m => <li key={m.id} className={`rounded-md border p-2 ${m.author_role === 'admin' ? 'border-primary bg-primary/20' : m.author_role === 'seller' ? 'border-border bg-card' : 'border-border bg-primary/10'}`}>
-    <div className="flex justify-between text-xs text-muted-foreground"><span>{m.author_role === 'admin' ? tx('관리자 (중재)') : m.author_role === 'seller' ? tx('셀러') : tx('구매자')} · {m.kind === 'request' ? tx('추가 사진 요청') : m.kind === 'qc' ? tx('QC 업로드') : tx('메시지')}</span><span>{new Date(m.created_at).toLocaleString()}</span></div>
+    <div className="flex justify-between text-xs text-muted-foreground"><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{m.author_role === 'admin' ? tx('관리자 (중재)') : m.author_role === 'seller' ? tx('셀러') : tx('구매자')}</span> · <span data-i18n-skip data-no-translate translate="no" className="notranslate">{m.kind === 'request' ? tx('추가 사진 요청') : m.kind === 'qc' ? tx('QC 업로드') : tx('메시지')}</span></span><span>{new Date(m.created_at).toLocaleString()}</span></div>
     {m.areas.length > 0 && <p className="mt-1 text-primary">{m.areas.join(', ')}</p>}
     {m.body && <p className="mt-1 whitespace-pre-wrap">{m.body}</p>}
   </li>)}</ul>;
@@ -98,7 +98,7 @@ export function Composer({ orderId, role, onSent }: { orderId: string; role: 'bu
   const { lang } = useCurrency();
   const [v, setV] = useState(''); const [busy, setBusy] = useState(false);
   return <form className="ship-form mt-2" onSubmit={async e => { e.preventDefault(); if (!v.trim()) return; setBusy(true); try { const { data } = await supabase.auth.getUser(); if(!data.user) throw new Error('로그인이 필요합니다.'); const {error}=await supabase.from('order_messages').insert({ order_id: orderId, author_id: data.user.id, author_role: role, body: v.trim().slice(0, 1000) }); if(error) throw error; setV(''); toast.success('요청을 전달했습니다.'); onSent?.(); } catch { toast.error('요청을 보내지 못했습니다. 다시 시도해 주세요.'); } finally { setBusy(false); } }}>
-    <input className="form-input" maxLength={1000} value={v} onChange={e => setV(e.target.value)} placeholder={tx("메시지 남기기")} aria-label={tx("메시지")} /><Button variant="goldOutline" type="submit" disabled={busy}><Send />{tx("보내기")}</Button></form>;
+    <input className="form-input" maxLength={1000} value={v} onChange={e => setV(e.target.value)} placeholder={tx("메시지 남기기")} aria-label={tx("메시지")} /><Button variant="goldOutline" type="submit" disabled={busy}><Send /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("보내기")}</span></Button></form>;
 }
 
 function TrackingPanel({ o }: { o: Order }) {
@@ -108,14 +108,14 @@ function TrackingPanel({ o }: { o: Order }) {
   if (!o.tracking_number) return null;
   const latest = q.data?.events[0];
   return <div className="tracking-widget"><Truck className="text-primary" />
-    <div><span>{tx("택배사")}</span><strong>{o.courier}</strong></div>
-    <div><span>{tx("송장번호")}</span><strong data-no-translate>{o.tracking_number}</strong></div>
-    <div><span><MapPin size={10} className="inline" /> {tx("현재 상태")}</span><strong>{latest ? `${latest.description}${latest.location ? ` · ${latest.location}` : ''}` : q.isLoading ? tx('조회 중…') : (q.data?.status ?? '대기')}</strong></div>
+    <div><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("택배사")}</span></span><strong>{o.courier}</strong></div>
+    <div><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("송장번호")}</span></span><strong data-no-translate>{o.tracking_number}</strong></div>
+    <div><span><MapPin size={10} className="inline" /> <span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("현재 상태")}</span></span><strong><span data-i18n-skip data-no-translate translate="no" className="notranslate">{latest ? `${latest.description}${latest.location ? ` · ${latest.location}` : ''}` : q.isLoading ? tx('조회 중…') : (q.data?.status ?? '대기')}</span></strong></div>
     {q.data?.events && q.data.events.length > 1 && <ol className="col-span-full mt-2 grid gap-1 text-xs text-muted-foreground">{q.data.events.slice(1, 8).map((e, i) => <li key={i}>{e.time ? new Date(e.time).toLocaleString() : ''} · {e.description} {e.location}</li>)}</ol>}
     <small className="col-span-full flex flex-wrap items-center gap-2">
-      {q.data && !q.data.configured ? tx('자동 추적 서비스 연결 대기 중 · ') : q.data?.checkedAt ? tx("마지막 조회 {0} · ", { 0: new Date(q.data.checkedAt).toLocaleTimeString() }) : ''}
-      <a className="text-primary underline" href={courierLink(o.courier, o.tracking_number)} target="_blank" rel="noreferrer">{tx("택배사 조회 열기")}</a>
-      {q.data?.configured && <button type="button" className="inline-flex items-center gap-1 text-primary" onClick={() => void fetchTrack({ data: { orderId: o.id, force: true } }).then(() => q.refetch())}><RefreshCw size={11} />{tx("새로고침")}</button>}
+      <span data-i18n-skip data-no-translate translate="no" className="notranslate">{q.data && !q.data.configured ? tx('자동 추적 서비스 연결 대기 중 · ') : q.data?.checkedAt ? tx("마지막 조회 {0} · ", { 0: new Date(q.data.checkedAt).toLocaleTimeString() }) : ''}</span>
+      <a className="text-primary underline" href={courierLink(o.courier, o.tracking_number)} target="_blank" rel="noreferrer"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("택배사 조회 열기")}</span></a>
+      {q.data?.configured && <button type="button" className="inline-flex items-center gap-1 text-primary" onClick={() => void fetchTrack({ data: { orderId: o.id, force: true } }).then(() => q.refetch())}><RefreshCw size={11} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새로고침")}</span></button>}
       {q.data?.error}
     </small></div>;
 }
@@ -143,20 +143,20 @@ function QcUploader({ o, round, supplement }: { o: Order; round: number; supplem
       setFiles([]);
     } catch (e) { setErr(e instanceof Error ? e.message : '업로드 실패'); } finally { setBusy(false); }
   };
-  return <div className="qc-upload"><label className="qc-drop"><Upload size={18} /><span>{supplement ? tx('요청받은 추가 사진·영상 업로드') : tx("디테일 사진 {0}장 이상 + 영상 {1}개 이상 업로드", { 0: QC_MIN_PHOTOS, 1: QC_MIN_VIDEOS })}</span>
+  return <div className="qc-upload"><label className="qc-drop"><Upload size={18} /><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? tx('요청받은 추가 사진·영상 업로드') : tx("디테일 사진 {0}장 이상 + 영상 {1}개 이상 업로드", { 0: QC_MIN_PHOTOS, 1: QC_MIN_VIDEOS })}</span></span>
     <input type="file" accept="image/*,video/*" multiple onChange={e => { const l = e.target.files; if (l) setFiles(prev => [...prev, ...[...l].filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))]); e.target.value = ''; }} /></label>
-    <p className={`qc-count ${ok ? 'ok' : ''}`}>{tx("사진 {0}장 · 영상 {1}개", { 0: imgs, 1: vids })}{supplement ? '' : tx(" (필수: 사진 {0}+ / 영상 {1}+)", { 0: QC_MIN_PHOTOS, 1: QC_MIN_VIDEOS })}</p>
+    <p className={`qc-count ${ok ? 'ok' : ''}`}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("사진 {0}장 · 영상 {1}개", { 0: imgs, 1: vids })}</span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? '' : tx(" (필수: 사진 {0}+ / 영상 {1}+)", { 0: QC_MIN_PHOTOS, 1: QC_MIN_VIDEOS })}</span></p>
     {files.length > 0 && <ul className="text-xs text-muted-foreground">{files.map((f, i) => <li key={i} className="flex justify-between"><span>{f.name}</span><button type="button" aria-label={tx("{0} 삭제", { 0: f.name })} onClick={() => setFiles(p => p.filter((_, j) => j !== i))}><X size={12} /></button></li>)}</ul>}
-    {err && <p className="text-xs text-destructive">{tx(err)}</p>}
-    <Button variant="gold" disabled={!ok || busy} onClick={() => void submit()}><Check />{busy ? tx('업로드 중…') : supplement ? tx('추가 사진 보내기') : tx('QC 완료 & 구매자에게 전송')}</Button></div>;
+    {err && <p className="text-xs text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(err)}</span></p>}
+    <Button variant="gold" disabled={!ok || busy} onClick={() => void submit()}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{busy ? tx('업로드 중…') : supplement ? tx('추가 사진 보내기') : tx('QC 완료 & 구매자에게 전송')}</span></Button></div>;
 }
 
 function RequestForm({ o, close }: { o: Order; close: () => void }) {
   const { lang } = useCurrency();
   const [areas, setAreas] = useState<string[]>([]); const [note, setNote] = useState('');
-  return <div className="qc-request"><h3>{tx("추가 사진 요청")}</h3><div className="qc-areas">{qcAreas.map(a => <button type="button" key={a} aria-pressed={areas.includes(a)} className={areas.includes(a) ? 'active' : ''} onClick={() => setAreas(p => p.includes(a) ? p.filter(x => x !== a) : [...p, a])}>{tx(a)}</button>)}</div>
+  return <div className="qc-request"><h3><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("추가 사진 요청")}</span></h3><div className="qc-areas">{qcAreas.map(a => <button type="button" key={a} aria-pressed={areas.includes(a)} className={areas.includes(a) ? 'active' : ''} onClick={() => setAreas(p => p.includes(a) ? p.filter(x => x !== a) : [...p, a])}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(a)}</span></button>)}</div>
     <textarea className="form-input" maxLength={500} value={tx(note)} onChange={e => setNote(e.target.value)} placeholder={tx("예: 야광을 완전히 어두운 곳에서 보여주세요")} aria-label={tx("요청 내용")} />
-    <div className="escrow-actions"><Button variant="ghost" onClick={close}>{tx("취소")}</Button><Button variant="gold" disabled={!areas.length && !note.trim()} onClick={async () => { const { data } = await supabase.auth.getUser(); await supabase.from('order_messages').insert({ order_id: o.id, author_id: data.user!.id, author_role: 'buyer', kind: 'request', areas, body: note.trim() }); await supabase.from('orders').update({ stage: 'qc_requested' }).eq('id', o.id); close(); }}>{tx("요청 보내기")}</Button></div></div>;
+    <div className="escrow-actions"><Button variant="ghost" onClick={close}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("취소")}</span></Button><Button variant="gold" disabled={!areas.length && !note.trim()} onClick={async () => { const { data } = await supabase.auth.getUser(); await supabase.from('order_messages').insert({ order_id: o.id, author_id: data.user!.id, author_role: 'buyer', kind: 'request', areas, body: note.trim() }); await supabase.from('orders').update({ stage: 'qc_requested' }).eq('id', o.id); close(); }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("요청 보내기")}</span></Button></div></div>;
 }
 
 function ShipForm({ o }: { o: Order }) {
@@ -165,7 +165,7 @@ function ShipForm({ o }: { o: Order }) {
   return <form className="ship-form" onSubmit={async e => { e.preventDefault(); const r = await supabase.from('orders').update({ courier, tracking_number: num.trim(), stage: 'shipped' }).eq('id', o.id); setErr(r.error?.message ?? ''); }}>
     <select className="form-input" value={courier} onChange={e => setCourier(e.target.value)} aria-label={tx("택배사")}>{couriers.map(c => <option key={c}>{c}</option>)}</select>
     <input className="form-input" required maxLength={40} pattern="[A-Za-z0-9\-]{6,40}" value={num} onChange={e => setNum(e.target.value)} placeholder={tx("송장번호")} aria-label={tx("송장번호")} />
-    <Button variant="gold" type="submit"><Truck />{tx("발송 완료 & 송장 등록")}</Button>{err && <p className="text-xs text-destructive">{tx(err)}</p>}</form>;
+    <Button variant="gold" type="submit"><Truck /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("발송 완료 & 송장 등록")}</span></Button>{err && <p className="text-xs text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(err)}</span></p>}</form>;
 }
 
 /** Persistent QC board: seller QC uploads, buyer approval / extra-photo requests, tracking. */
@@ -183,10 +183,10 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
   const setStage = (id: string, stage: EscrowStage) => void supabase.from('orders').update({ stage }).eq('id', id);
   return <section className="escrow-board mb-6" aria-label={tx("QC 게시판")} lang={lang} translate="no" className="notranslate" data-no-translate>
     {reviewing && <ReviewModal orderId={reviewing} close={() => setReviewing(null)} requestAuth={() => setReviewing(null)} />}
-    <div className="section-heading"><h2><MessageSquareText size={16} className="mr-1 inline" />{tx("QC 게시판")}</h2><span>{tx("실시간 저장")}</span></div>
-    {q.isError&&<p role="alert" className="text-destructive">{tx("주문 정보를 불러오지 못했습니다.")}</p>}
-    {q.isLoading&&<p>{tx("주문을 불러오는 중…")}</p>}
-    {!q.isLoading&&!orders.length && <p className="py-6 text-center text-sm text-muted-foreground">{as === 'buyer' ? tx('결제한 실제 주문이 여기에 표시됩니다.') : tx('받은 실제 주문이 여기에 표시됩니다.')}</p>}
+    <div className="section-heading"><h2><MessageSquareText size={16} className="mr-1 inline" /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 게시판")}</span></h2><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("실시간 저장")}</span></span></div>
+    {q.isError&&<p role="alert" className="text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문 정보를 불러오지 못했습니다.")}</span></p>}
+    {q.isLoading&&<p><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문을 불러오는 중…")}</span></p>}
+    {!q.isLoading&&!orders.length && <p className="py-6 text-center text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{as === 'buyer' ? tx('결제한 실제 주문이 여기에 표시됩니다.') : tx('받은 실제 주문이 여기에 표시됩니다.')}</span></p>}
     {orders.map(o => {
       const media = (q.data?.media ?? []).filter(m => m.order_id === o.id);
       const msgs = (q.data?.msgs ?? []).filter(m => m.order_id === o.id);
@@ -197,29 +197,29 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
       return <article className="escrow-order" key={o.id}>
         <div className="escrow-order-head">{o.image_url ? <img src={o.image_url} width={52} height={52} alt="" /> : <Camera className="text-primary" />}<div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small>{stageLabel(stage)} · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
         <EscrowTimeline stage={stage} />
-        {search.orderView==='tracking'&&!o.tracking_number&&<p className="escrow-wait">{tx("송장번호가 아직 등록되지 않았습니다.")}</p>}
-        {search.orderView==='qc'&&!media.length&&<p className="escrow-wait">{tx("출고 QC 사진·영상이 아직 등록되지 않았습니다.")}</p>}
-        {search.orderView==='specs'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold mb-3">{tx("보증 안내·제품 스펙")}</h3>{product?<SpecsTable specs={product.specs} fallback={<p className="text-sm text-muted-foreground">{tx("등록된 상품 사양이 없습니다.")}</p>}/>:<p className="text-sm text-muted-foreground">{tx("이 상품의 스펙 정보를 불러올 수 없습니다.")}</p>}<p className="text-xs text-muted-foreground my-3">{tx("주문에 연결된 상품 정보와 출고 QC 자료입니다. 별도로 발급된 보증서가 없으면 보증서가 제공되지 않습니다.")}</p><Button asChild variant="goldOutline"><Link to="/escrow-guide">{tx("VELA 구매 보호 안내")}</Link></Button></section>}
-        {search.orderView==='defect'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold">{tx("초기 불량·교환 접수")}</h3><p className="my-2 text-sm text-muted-foreground">{tx("불량 증상과 교환 요청을 남기면 이 주문의 판매자에게 전달됩니다.")}</p><Thread msgs={msgs}/><Composer orderId={o.id} role={as}/></section>}
-        {media.length > 0 && <><h4 className="escrow-sub"><Camera size={14} /> {tx("QC 사진·영상 {0}개", { 0: media.length })}</h4><Gallery media={media} /></>}
-        {isSeller && stage === 'placed' && <Button variant="gold" onClick={() => setStage(o.id, 'preparing')}>{tx("제품 준비 시작")}</Button>}
-        {isSeller && stage === 'preparing' && <Button variant="gold" onClick={() => setStage(o.id, 'qc')}>{tx("QC 검수 시작")}</Button>}
+        {search.orderView==='tracking'&&!o.tracking_number&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("송장번호가 아직 등록되지 않았습니다.")}</span></p>}
+        {search.orderView==='qc'&&!media.length&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("출고 QC 사진·영상이 아직 등록되지 않았습니다.")}</span></p>}
+        {search.orderView==='specs'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold mb-3"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("보증 안내·제품 스펙")}</span></h3>{product?<SpecsTable specs={product.specs} fallback={<p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("등록된 상품 사양이 없습니다.")}</span></p>}/>:<p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("이 상품의 스펙 정보를 불러올 수 없습니다.")}</span></p>}<p className="text-xs text-muted-foreground my-3"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문에 연결된 상품 정보와 출고 QC 자료입니다. 별도로 발급된 보증서가 없으면 보증서가 제공되지 않습니다.")}</span></p><Button asChild variant="goldOutline"><Link to="/escrow-guide"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("VELA 구매 보호 안내")}</span></Link></Button></section>}
+        {search.orderView==='defect'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("초기 불량·교환 접수")}</span></h3><p className="my-2 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불량 증상과 교환 요청을 남기면 이 주문의 판매자에게 전달됩니다.")}</span></p><Thread msgs={msgs}/><Composer orderId={o.id} role={as}/></section>}
+        {media.length > 0 && <><h4 className="escrow-sub"><Camera size={14} /> <span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 사진·영상 {0}개", { 0: media.length })}</span></h4><Gallery media={media} /></>}
+        {isSeller && stage === 'placed' && <Button variant="gold" onClick={() => setStage(o.id, 'preparing')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("제품 준비 시작")}</span></Button>}
+        {isSeller && stage === 'preparing' && <Button variant="gold" onClick={() => setStage(o.id, 'qc')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 검수 시작")}</span></Button>}
         {isSeller && stage === 'qc' && <QcUploader o={o} round={1} supplement={false} />}
         {isSeller && stage === 'qc_requested' && <QcUploader o={o} round={round + 1} supplement />}
-        {isSeller && stage === 'qc_done' && <p className="escrow-wait">{tx("구매자의 QC 확인을 기다리는 중입니다.")}</p>}
+        {isSeller && stage === 'qc_done' && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("구매자의 QC 확인을 기다리는 중입니다.")}</span></p>}
         {isSeller && stage === 'shipping_prep' && <ShipForm o={o} />}
-        {!isSeller && stage === 'qc_requested' && <p className="escrow-wait">{tx("셀러가 추가 사진을 준비 중입니다.")}</p>}
-        {!isSeller && stage === 'qc_done' && (asking === o.id ? <RequestForm o={o} close={() => setAsking(null)} /> : <div className="escrow-actions"><Button variant="gold" onClick={() => setStage(o.id, 'shipping_prep')}><Check />{tx("QC 승인")}</Button><Button variant="goldOutline" onClick={() => setAsking(o.id)}><Camera />{tx("추가 사진 요청")}</Button></div>)}
+        {!isSeller && stage === 'qc_requested' && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("셀러가 추가 사진을 준비 중입니다.")}</span></p>}
+        {!isSeller && stage === 'qc_done' && (asking === o.id ? <RequestForm o={o} close={() => setAsking(null)} /> : <div className="escrow-actions"><Button variant="gold" onClick={() => setStage(o.id, 'shipping_prep')}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 승인")}</span></Button><Button variant="goldOutline" onClick={() => setAsking(o.id)}><Camera /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("추가 사진 요청")}</span></Button></div>)}
         <TrackingPanel o={o} />
-        {!isSeller && stage === 'shipped' && <Button variant="gold" className="w-full" onClick={() => setStage(o.id, 'delivered')}><ShieldCheck />{tx("수령 확인 및 구매 확정")}</Button>}
-        {!isSeller && stage === 'delivered' && <Button variant="gold" className="w-full" onClick={() => setReviewing(o.id)}><Star />{tx("리뷰 작성 및 셀러 평가")}</Button>}
-        {!o.payment_verified_at && <p className="escrow-wait">{tx("관리자가 TXID 입금을 확인하는 중입니다.")}</p>}
-        {o.dispute_open && <p className="mt-3 flex items-center gap-2 rounded-md border border-primary p-2 text-sm text-primary"><AlertTriangle size={15} />{tx("분쟁 진행 중 · 관리자가 참여한 3자 분쟁방입니다. 에스크로 대금은 중재가 끝날 때까지 보류됩니다.")}</p>}
+        {!isSeller && stage === 'shipped' && <Button variant="gold" className="w-full" onClick={() => setStage(o.id, 'delivered')}><ShieldCheck /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("수령 확인 및 구매 확정")}</span></Button>}
+        {!isSeller && stage === 'delivered' && <Button variant="gold" className="w-full" onClick={() => setReviewing(o.id)}><Star /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("리뷰 작성 및 셀러 평가")}</span></Button>}
+        {!o.payment_verified_at && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자가 TXID 입금을 확인하는 중입니다.")}</span></p>}
+        {o.dispute_open && <p className="mt-3 flex items-center gap-2 rounded-md border border-primary p-2 text-sm text-primary"><AlertTriangle size={15} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("분쟁 진행 중 · 관리자가 참여한 3자 분쟁방입니다. 에스크로 대금은 중재가 끝날 때까지 보류됩니다.")}</span></p>}
         <div className="escrow-actions mt-3">
-          <Button variant="goldOutline" onClick={() => setChat(chat === o.id ? null : o.id)}><MessageSquareText />{o.dispute_open ? tx('분쟁방 열기') : isSeller ? tx('구매자에게 메시지') : tx('판매자에게 메시지')}{msgs.length ? ` (${msgs.length})` : ''}</Button>
-          {!o.dispute_open && stage !== 'delivered' && <Button variant="ghost" onClick={() => { if (confirm('분쟁을 열면 관리자가 대화에 참여하고 에스크로 대금이 보류됩니다. 계속할까요?')) void supabase.from('orders').update({ dispute_open: true }).eq('id', o.id).then(r => { if (r.error) toast.error(r.error.message); else setChat(o.id); }); }}><AlertTriangle />{tx("분쟁 열기")}</Button>}
+          <Button variant="goldOutline" onClick={() => setChat(chat === o.id ? null : o.id)}><MessageSquareText /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{o.dispute_open ? tx('분쟁방 열기') : isSeller ? tx('구매자에게 메시지') : tx('판매자에게 메시지')}</span>{msgs.length ? ` (${msgs.length})` : ''}</Button>
+          {!o.dispute_open && stage !== 'delivered' && <Button variant="ghost" onClick={() => { if (confirm('분쟁을 열면 관리자가 대화에 참여하고 에스크로 대금이 보류됩니다. 계속할까요?')) void supabase.from('orders').update({ dispute_open: true }).eq('id', o.id).then(r => { if (r.error) toast.error(r.error.message); else setChat(o.id); }); }}><AlertTriangle /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("분쟁 열기")}</span></Button>}
         </div>
-        {chat === o.id && <div className="mt-2"><p className="text-xs text-muted-foreground">{o.dispute_open ? tx('구매자 · 셀러 · 관리자 3자 대화') : tx('익명 1:1 주문 대화 · 닉네임과 연락처는 공유되지 않습니다')}</p><Thread msgs={msgs} /><Composer orderId={o.id} role={as} /></div>}
+        {chat === o.id && <div className="mt-2"><p className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{o.dispute_open ? tx('구매자 · 셀러 · 관리자 3자 대화') : tx('익명 1:1 주문 대화 · 닉네임과 연락처는 공유되지 않습니다')}</span></p><Thread msgs={msgs} /><Composer orderId={o.id} role={as} /></div>}
       </article>;
     })}
   </section>;
@@ -279,30 +279,30 @@ function useAdminOrders(filter: 'crypto' | 'disputes') {
 /** Admin: real submitted TXIDs with 1-click block-explorer verification. */
 export function AdminCryptoOrders() {
   const q = useAdminOrders('crypto');
-  if (q.isLoading) return <p className="text-sm text-muted-foreground">{tx("주문을 불러오는 중…")}</p>;
-  if (q.error) return <p className="text-sm text-muted-foreground">{tx("관리자 계정으로 로그인하면 실제 TXID를 확인할 수 있습니다.")}</p>;
+  if (q.isLoading) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문을 불러오는 중…")}</span></p>;
+  if (q.error) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자 계정으로 로그인하면 실제 TXID를 확인할 수 있습니다.")}</span></p>;
   const orders = q.data?.orders ?? [];
-  if (!orders.length) return <div className="lux-empty"><ShieldCheck /><h2>{tx("수신된 실제 TXID가 없습니다.")}</h2><p>{tx("구매자가 TXID를 제출하면 여기에 실시간으로 표시됩니다.")}</p></div>;
+  if (!orders.length) return <div className="lux-empty"><ShieldCheck /><h2><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("수신된 실제 TXID가 없습니다.")}</span></h2><p><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("구매자가 TXID를 제출하면 여기에 실시간으로 표시됩니다.")}</span></p></div>;
   return <div className="management-list">{orders.map(o => { const ex = explorerUrl(o.network, o.txid!); return <div className="management-row" key={o.id}>
     <div className="min-w-0"><strong>{o.title}</strong><small data-no-translate>{o.order_no} · {o.seller_name} · {o.network ?? '—'}</small><small className="break-all" data-no-translate>TXID {o.txid}</small></div>
     <strong>{dollars(Number(o.amount_usd))}</strong>
-    <span className="record-status">{o.payment_verified_at ? tx('입금 확인됨') : tx('검증 대기')}</span>
+    <span className="record-status"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{o.payment_verified_at ? tx('입금 확인됨') : tx('검증 대기')}</span></span>
     <div className="record-actions">
-      <Button asChild variant="ghost" size="sm"><a href={ex.url} target="_blank" rel="noreferrer"><ExternalLink />{tx("{0}에서 확인", { 0: ex.name })}</a></Button>
-      {!o.payment_verified_at && <Button variant="goldOutline" size="sm" onClick={() => { if (confirm(`${ex.name}에서 금액과 수신 주소를 확인하셨나요? 결제 확인으로 처리합니다.`)) void supabase.from('orders').update({ payment_verified_at: new Date().toISOString() }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('결제 확인 처리되었습니다.')); }}><Check />{tx("결제 확인")}</Button>}
+      <Button asChild variant="ghost" size="sm"><a href={ex.url} target="_blank" rel="noreferrer"><ExternalLink /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("{0}에서 확인", { 0: ex.name })}</span></a></Button>
+      {!o.payment_verified_at && <Button variant="goldOutline" size="sm" onClick={() => { if (confirm(`${ex.name}에서 금액과 수신 주소를 확인하셨나요? 결제 확인으로 처리합니다.`)) void supabase.from('orders').update({ payment_verified_at: new Date().toISOString() }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('결제 확인 처리되었습니다.')); }}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("결제 확인")}</span></Button>}
     </div></div>; })}</div>;
 }
 
 /** Admin: 3-way dispute rooms for orders with an open dispute. */
 export function AdminDisputeRooms() {
   const q = useAdminOrders('disputes');
-  if (q.isLoading) return <p className="text-sm text-muted-foreground">{tx("분쟁을 불러오는 중…")}</p>;
-  if (q.error) return <p className="text-sm text-muted-foreground">{tx("관리자 계정으로 로그인하면 실제 분쟁방을 확인할 수 있습니다.")}</p>;
+  if (q.isLoading) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("분쟁을 불러오는 중…")}</span></p>;
+  if (q.error) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자 계정으로 로그인하면 실제 분쟁방을 확인할 수 있습니다.")}</span></p>;
   const orders = q.data?.orders ?? [];
-  if (!orders.length) return <div className="lux-empty"><AlertTriangle /><h2>{tx("접수된 실제 분쟁이 없습니다.")}</h2></div>;
+  if (!orders.length) return <div className="lux-empty"><AlertTriangle /><h2><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("접수된 실제 분쟁이 없습니다.")}</span></h2></div>;
   return <div className="grid gap-4">{orders.map(o => <article className="escrow-order" key={o.id}>
-    <div className="escrow-order-head"><AlertTriangle className="text-primary" /><div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small>{tx(stageLabel(o.stage as EscrowStage))} · {o.seller_name} · {dollars(Number(o.amount_usd))}</small></div>
-      <Button variant="ghost" size="sm" onClick={() => { if (confirm('분쟁을 종료할까요?')) void supabase.from('orders').update({ dispute_open: false }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('분쟁을 종료했습니다.')); }}>{tx("분쟁 종료")}</Button></div>
+    <div className="escrow-order-head"><AlertTriangle className="text-primary" /><div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(stageLabel(o.stage as EscrowStage))}</span> · {o.seller_name} · {dollars(Number(o.amount_usd))}</small></div>
+      <Button variant="ghost" size="sm" onClick={() => { if (confirm('분쟁을 종료할까요?')) void supabase.from('orders').update({ dispute_open: false }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('분쟁을 종료했습니다.')); }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("분쟁 종료")}</span></Button></div>
     <Thread msgs={(q.data?.msgs ?? []).filter(m => m.order_id === o.id)} />
     <Composer orderId={o.id} role="admin" />
   </article>)}</div>;

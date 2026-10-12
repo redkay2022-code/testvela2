@@ -2572,5 +2572,19 @@
   "통계를 불러오지 못했습니다. 관리자가 최신 DB 업데이트(0035)를 적용했는지 확인해 주세요.": "Besucherstatistiken konnten nicht geladen werden. Versuchen Sie es später erneut.",
   "방문 기록은 임의의 브라우저 ID로만 집계하며 IP·이름·전화번호는 저장하지 않습니다. 본인과 관리자의 방문은 제외됩니다. 국가는 접속 지역 기준입니다.": "Besuche werden nur mit einer zufälligen Browser-ID gezählt. IP-Adressen, Namen und Telefonnummern werden nicht gespeichert. Eigene und Admin-Besuche sind ausgeschlossen. Länder basieren auf der Verbindungsregion.",
   "상품과 사진·영상을 함께 삭제합니다: {0}": "Produkt und Fotos/Videos löschen: {0}",
-  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 Video · 30 Sek. · 100MB · Foto 10MB / Fotos {0}/{1}"
+  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 Video · 30 Sek. · 100MB · Foto 10MB / Fotos {0}/{1}",
+  "관리자 대시보드": "Admin-Dashboard",
+  "지금 접속자": "Jetzt online",
+  "오늘 방문자": "Heutige Besucher",
+  "전체 회원": "Alle Mitglieder",
+  "승인 대기 셀러": "Verkäufer warten auf Genehmigung",
+  "진행 중 주문": "Laufende Bestellungen",
+  "분쟁 접수": "Offene Streitfälle",
+  "대시보드 전체 보기": "Gesamtes Dashboard anzeigen",
+  "판매자 신청 승인": "Verkäuferanträge genehmigen",
+  "회원 관리 · 정지/추방": "Mitgliederverwaltung · Sperren/Entfernen",
+  "상품 관리": "Produktverwaltung",
+  "주문 · 분쟁 관리": "Bestellungen & Streitfälle",
+  "데이터 초기화": "Daten zurücksetzen",
+  "제재 중 {0}명": "Gesperrte Mitglieder: {0}"
 }

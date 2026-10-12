@@ -22,9 +22,9 @@ const dash = '—';
 function Stat({ label, value, note, tone }: { label: string; value: ReactNode; note?: string | undefined; tone?: 'alert' | undefined }) {
   const { lang } = useCurrency();
   return <div className={`rounded-lg border p-3 ${tone === 'alert' ? 'border-destructive/60' : 'border-border'}`}>
-    <span className="block text-[11px] text-muted-foreground">{tx(label)}</span>
+    <span className="block text-[11px] text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(label)}</span></span>
     <strong className={`block text-lg leading-7 ${tone === 'alert' ? 'text-destructive' : ''}`}>{value}</strong>
-    {note && <small className="block text-[10px] leading-4 text-muted-foreground">{tx(note)}</small>}
+    {note && <small className="block text-[10px] leading-4 text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(note)}</span></small>}
   </div>;
 }
 type ShortcutProps = { icon: typeof Store; children: ReactNode; badge?: number; to: '/admin' | '/seller' | '/seller-store' | '/seller-messages' | '/upload'; search: Record<string, string> };
@@ -46,7 +46,7 @@ function AdminBlock() {
   const disputes = useCount('menu-open-disputes', 'orders', q => q.eq('dispute_open', true));
   const t = traffic.data;
   return <section className="border-b border-border py-4" aria-label={tx("관리자 대시보드")}>
-    <h2 className="mb-2 flex items-center gap-2 px-2 text-xs font-semibold text-primary"><ShieldCheck className="size-4"/>{tx("관리자 대시보드")}</h2>
+    <h2 className="mb-2 flex items-center gap-2 px-2 text-xs font-semibold text-primary"><ShieldCheck className="size-4"/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자 대시보드")}</span></h2>
     <div className="grid grid-cols-2 gap-2 px-1">
       <Stat label="지금 접속자" value={t ? t.live : dash} note="최근 5분"/>
       <Stat label="오늘 방문자" value={t ? t.today_visitors : dash}/>
@@ -55,14 +55,14 @@ function AdminBlock() {
       <Stat label="진행 중 주문" value={open.data ?? dash}/>
       <Stat label="분쟁 접수" value={disputes.data ?? dash} tone={disputes.data ? 'alert' : undefined}/>
     </div>
-    {traffic.isError && <p className="mt-2 px-2 text-[11px] leading-4 text-muted-foreground">{tx("방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.")}</p>}
+    {traffic.isError && <p className="mt-2 px-2 text-[11px] leading-4 text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.")}</span></p>}
     <div className="mt-2 grid gap-1">
-      <Shortcut icon={LayoutDashboard} to="/admin" search={{ role: 'admin', section: 'dashboard' }}>{tx("대시보드 전체 보기")}</Shortcut>
-      <Shortcut icon={ClipboardList} badge={apps.data ?? 0} to="/admin" search={{ role: 'admin', section: 'applications' }}>{tx("판매자 신청 승인")}</Shortcut>
-      <Shortcut icon={Users} to="/admin" search={{ role: 'admin', section: 'members' }}>{tx("회원 관리 · 정지/추방")}</Shortcut>
-      <Shortcut icon={Package} to="/admin" search={{ role: 'admin', section: 'products' }}>{tx("상품 관리")}</Shortcut>
-      <Shortcut icon={Truck} badge={disputes.data ?? 0} to="/admin" search={{ role: 'admin', section: 'orders' }}>{tx("주문 · 분쟁 관리")}</Shortcut>
-      <Shortcut icon={Trash2} to="/admin" search={{ role: 'admin', section: 'reset' }}>{tx("데이터 초기화")}</Shortcut>
+      <Shortcut icon={LayoutDashboard} to="/admin" search={{ role: 'admin', section: 'dashboard' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("대시보드 전체 보기")}</span></Shortcut>
+      <Shortcut icon={ClipboardList} badge={apps.data ?? 0} to="/admin" search={{ role: 'admin', section: 'applications' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매자 신청 승인")}</span></Shortcut>
+      <Shortcut icon={Users} to="/admin" search={{ role: 'admin', section: 'members' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("회원 관리 · 정지/추방")}</span></Shortcut>
+      <Shortcut icon={Package} to="/admin" search={{ role: 'admin', section: 'products' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품 관리")}</span></Shortcut>
+      <Shortcut icon={Truck} badge={disputes.data ?? 0} to="/admin" search={{ role: 'admin', section: 'orders' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문 · 분쟁 관리")}</span></Shortcut>
+      <Shortcut icon={Trash2} to="/admin" search={{ role: 'admin', section: 'reset' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("데이터 초기화")}</span></Shortcut>
     </div>
   </section>;
 }
@@ -77,7 +77,7 @@ function SellerBlock({ user }: { user: User }) {
   const questions = work.activity?.comments.length, followers = work.activity?.followers.length;
   const t = traffic.data;
   return <section className="border-b border-border py-4" aria-label={tx("셀러 대시보드")}>
-    <h2 className="mb-2 flex items-center gap-2 px-2 text-xs font-semibold text-primary"><Store className="size-4"/>{tx("셀러 대시보드")}</h2>
+    <h2 className="mb-2 flex items-center gap-2 px-2 text-xs font-semibold text-primary"><Store className="size-4"/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("셀러 대시보드")}</span></h2>
     <div className="grid grid-cols-2 gap-2 px-1">
       <Stat label="처리할 주문" value={work.data ? todo : dash} note="배송 완료 전" tone={todo ? 'alert' : undefined}/>
       <Stat label="분쟁 · 교환" value={work.data ? disputes : dash} tone={disputes ? 'alert' : undefined}/>
@@ -89,13 +89,13 @@ function SellerBlock({ user }: { user: User }) {
       <Stat label="7일 방문자" value={t ? t.visitors : dash} note={t ? tx("신규 팔로워 {0}명", { 0: followers ?? 0 }) : undefined}/>
     </div>
     <div className="mt-2 grid gap-1">
-      <Shortcut icon={LayoutDashboard} to="/seller" search={{ role: 'seller' }}>{tx("내 스튜디오 · 매출 분석")}</Shortcut>
-      <Shortcut icon={Plus} to="/upload" search={{ role: 'seller' }}>{tx("상품 등록")}</Shortcut>
-      <Shortcut icon={Store} to="/seller-store" search={{ role: 'seller' }}>{tx("스토어 관리")}</Shortcut>
-      <Shortcut icon={Truck} badge={todo} to="/seller-store" search={{ role: 'seller', sellerView: 'shipping' }}>{tx("물류 · 배송 · 출고 검수")}</Shortcut>
-      <Shortcut icon={MessageCircle} to="/seller-messages" search={{ role: 'seller' }}>{tx("메시지함 · 구매자 대화")}</Shortcut>
-      <Shortcut icon={BarChart3} to="/seller-store" search={{ role: 'seller', sellerView: 'analytics' }}>{tx("방문자 분석")}</Shortcut>
-      <Shortcut icon={Wallet} to="/seller" search={{ role: 'seller' }}>{tx("정산 · 지갑")}</Shortcut>
+      <Shortcut icon={LayoutDashboard} to="/seller" search={{ role: 'seller' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 스튜디오 · 매출 분석")}</span></Shortcut>
+      <Shortcut icon={Plus} to="/upload" search={{ role: 'seller' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품 등록")}</span></Shortcut>
+      <Shortcut icon={Store} to="/seller-store" search={{ role: 'seller' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("스토어 관리")}</span></Shortcut>
+      <Shortcut icon={Truck} badge={todo} to="/seller-store" search={{ role: 'seller', sellerView: 'shipping' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("물류 · 배송 · 출고 검수")}</span></Shortcut>
+      <Shortcut icon={MessageCircle} to="/seller-messages" search={{ role: 'seller' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("메시지함 · 구매자 대화")}</span></Shortcut>
+      <Shortcut icon={BarChart3} to="/seller-store" search={{ role: 'seller', sellerView: 'analytics' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("방문자 분석")}</span></Shortcut>
+      <Shortcut icon={Wallet} to="/seller" search={{ role: 'seller' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("정산 · 지갑")}</span></Shortcut>
     </div>
   </section>;
 }

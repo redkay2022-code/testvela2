@@ -2572,5 +2572,19 @@
   "통계를 불러오지 못했습니다. 관리자가 최신 DB 업데이트(0035)를 적용했는지 확인해 주세요.": "Impossible de charger les statistiques. Réessayez plus tard.",
   "방문 기록은 임의의 브라우저 ID로만 집계하며 IP·이름·전화번호는 저장하지 않습니다. 본인과 관리자의 방문은 제외됩니다. 국가는 접속 지역 기준입니다.": "Les visites utilisent un identifiant aléatoire du navigateur. Les IP, noms et téléphones ne sont pas conservés. Vos visites et celles des administrateurs sont exclues. Les pays reflètent la région de connexion.",
   "상품과 사진·영상을 함께 삭제합니다: {0}": "Supprimer le produit et ses photos/vidéos : {0}",
-  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 vidéo · 30 s · 100MB · Photo 10MB / Photos {0}/{1}"
+  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 vidéo · 30 s · 100MB · Photo 10MB / Photos {0}/{1}",
+  "관리자 대시보드": "Tableau de bord administrateur",
+  "지금 접속자": "En ligne",
+  "오늘 방문자": "Visiteurs du jour",
+  "전체 회원": "Tous les membres",
+  "승인 대기 셀러": "Vendeurs en attente d’approbation",
+  "진행 중 주문": "Commandes en cours",
+  "분쟁 접수": "Litiges ouverts",
+  "대시보드 전체 보기": "Voir le tableau de bord complet",
+  "판매자 신청 승인": "Approuver les candidatures vendeurs",
+  "회원 관리 · 정지/추방": "Gestion des membres · Suspendre/Retirer",
+  "상품 관리": "Gestion des produits",
+  "주문 · 분쟁 관리": "Commandes et litiges",
+  "데이터 초기화": "Réinitialiser les données",
+  "제재 중 {0}명": "Membres restreints : {0}"
 }

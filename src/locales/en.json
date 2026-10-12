@@ -1432,5 +1432,19 @@
   "통계를 불러오지 못했습니다. 관리자가 최신 DB 업데이트(0035)를 적용했는지 확인해 주세요.": "Unable to load visitor statistics. Please try again later.",
   "방문 기록은 임의의 브라우저 ID로만 집계하며 IP·이름·전화번호는 저장하지 않습니다. 본인과 관리자의 방문은 제외됩니다. 국가는 접속 지역 기준입니다.": "Visits use a random browser ID only; IP addresses, names and phone numbers are not stored. Your own and admin visits are excluded. Countries reflect connection regions.",
   "상품과 사진·영상을 함께 삭제합니다: {0}": "Delete the product and its photos/videos: {0}",
-  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 video · 30 sec · 100MB · 10MB per photo / Photos {0}/{1}"
+  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 video · 30 sec · 100MB · 10MB per photo / Photos {0}/{1}",
+  "관리자 대시보드": "Admin Dashboard",
+  "지금 접속자": "Online Now",
+  "오늘 방문자": "Today's Visitors",
+  "전체 회원": "All Members",
+  "승인 대기 셀러": "Sellers Awaiting Approval",
+  "진행 중 주문": "Orders in Progress",
+  "분쟁 접수": "Open Disputes",
+  "대시보드 전체 보기": "View Full Dashboard",
+  "판매자 신청 승인": "Approve Seller Applications",
+  "회원 관리 · 정지/추방": "Member Management · Suspend/Remove",
+  "상품 관리": "Product Management",
+  "주문 · 분쟁 관리": "Orders & Disputes",
+  "데이터 초기화": "Reset Data",
+  "제재 중 {0}명": "Restricted members: {0}"
 }

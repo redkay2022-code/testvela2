@@ -2577,5 +2577,19 @@
   "통계를 불러오지 못했습니다. 관리자가 최신 DB 업데이트(0035)를 적용했는지 확인해 주세요.": "Statistica visitatorum legi non potest. Postea iterum tempta.",
   "방문 기록은 임의의 브라우저 ID로만 집계하며 IP·이름·전화번호는 저장하지 않습니다. 본인과 관리자의 방문은 제외됩니다. 국가는 접속 지역 기준입니다.": "Visitationes solo identificatore fortuito navigatoris numerantur; inscriptiones IP, nomina et numeri telephonici non servantur. Visitationes propriae et administratorum excluduntur. Terrae regionem connexionis indicant.",
   "상품과 사진·영상을 함께 삭제합니다: {0}": "Merces et imagines pelliculasque dele: {0}",
-  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 pellicula · 30 s · 100MB · Imago 10MB / Imagines {0}/{1}"
+  "영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}": "1 pellicula · 30 s · 100MB · Imago 10MB / Imagines {0}/{1}",
+  "관리자 대시보드": "Tabula administratoris",
+  "지금 접속자": "Nunc connexi",
+  "오늘 방문자": "Visitatores hodierni",
+  "전체 회원": "Omnes sodales",
+  "승인 대기 셀러": "Venditores approbationem exspectantes",
+  "진행 중 주문": "Ordines in progressu",
+  "분쟁 접수": "Controversiae apertae",
+  "대시보드 전체 보기": "Totam tabulam vide",
+  "판매자 신청 승인": "Petitiones venditorum approba",
+  "회원 관리 · 정지/추방": "Administratio sodalium · Suspende/Amove",
+  "상품 관리": "Administratio mercium",
+  "주문 · 분쟁 관리": "Ordines et controversiae",
+  "데이터 초기화": "Data restitue",
+  "제재 중 {0}명": "Sodales restricti: {0}"
 }
