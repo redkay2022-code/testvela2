@@ -1686,7 +1686,7 @@
   "상품 링크를 복사했습니다.": "Produktlink kopiert.",
   "상품 목록": "Produktliste",
   "상품 문의": "Produktanfragen",
-  "상품 사양": "Produktbeschreibung",
+  "상품 사양": "Produktspezifikationen",
   "상품 사진": "Artikelfotos",
   "상품 상태 필터": "Produktstatus-Filter",
   "상품 상태, 배송, 검수 경험을 알려주세요": "Teilen Sie Ihre Erfahrungen mit Artikelzustand, Versand und Prüfung",
@@ -2406,9 +2406,9 @@
   "ALL BRANDS": "ALL BRANDS",
   "브랜드 직접 입력": "Marke eingeben",
   "브랜드 이름 직접 입력": "Markennamen eingeben",
-  "Translating…": "Translating…",
-  "Original text": "Original text",
-  "Translated by VELA AI": "Translated by VELA AI",
+  "Translating…": "Wird übersetzt…",
+  "Original text": "Originaltext",
+  "Translated by VELA AI": "Von VELA AI übersetzt",
   "View translation (번역 보기)": "Übersetzung ansehen",
   "View Original (원문 보기)": "Original ansehen",
   "평점 없음": "Noch keine Bewertung",
@@ -2518,5 +2518,6 @@
   "메뉴 카테고리": "Menükategorie",
   "메뉴 카테고리를 선택해 주세요.": "Bitte wähle eine Menükategorie.",
   "메뉴 카테고리 (비우면 시계)": "Menükategorie (leer = Uhr)",
-  "메뉴 카테고리 선택 (필수)": "Menükategorie wählen (erforderlich)"
+  "메뉴 카테고리 선택 (필수)": "Menükategorie wählen (erforderlich)",
+  "바로 발송 · Ready to Ship": "Sofort versandbereit"
 }

@@ -135,7 +135,6 @@ function alreadyTarget(s: string) {
   return false;
 }
 function textNode(n: Text) {
-  if (n.parentElement?.closest('[lang="ko"][data-no-translate]')) return;
   if (skipped(n.parentElement)) return;
   if (n.parentElement && SKIP.has(n.parentElement.tagName)) return;
   const rec = written.get(n);
@@ -145,7 +144,7 @@ function textNode(n: Text) {
   written.set(n, { orig: source, out: next });
 }
 function element(el: Element) {
-  if (el.closest('[lang="ko"][data-no-translate]') || skipped(el)) return;
+  if (skipped(el)) return;
   for (const a of ATTRS) {
     const v = el.getAttribute(a);
     if (!v) continue;
@@ -175,19 +174,24 @@ function walk(root: Node) {
 const dicts: Partial<Record<Lang, Record<string, string>>> = {};
 /** Loads (once) the dictionary of a language so static labels can be looked up synchronously. Never throws: a failed load means original text. */
 export async function loadDictionary(l: Lang): Promise<void> {
-  if (dicts[l]) return;
-  const load = loaders[`../locales/${l}.json`];
-  try { dicts[l] = load ? (await load()).default : {}; } catch { dicts[l] = {}; }
+  const load = async (code: Lang) => {
+    if (dicts[code]) return;
+    const loader = loaders[`../locales/${code}.json`];
+    try { dicts[code] = loader ? (await loader()).default : {}; } catch { dicts[code] = {}; }
+  };
+  await Promise.all([load(l), load('en')]);
 }
 /** Direct dictionary lookup of a static UI label for the platform's current language (no DOM rewriting). Falls back to the original text. */
-export const tx = (text: string): string => labelFor(dicts[activeLang()], text);
+export const tx = (text: string): string => labelFor(dicts[activeLang()], text, activeLang() === 'ko' && HANGUL.test(text) ? undefined : dicts.en);
 
 /** Translates on-screen text into `lang`: UI strings via dictionaries, seller/user-written text via cached machine translation. */
 export async function applyDomTranslation(next: Lang) {
   observer?.disconnect(); observer = null;
   lang = next; pending.clear(); waiting.clear();
-  await loadDictionary(next);
-  dict = dicts[next] ?? {};
+  if (!dicts[next]) await loadDictionary(next);
+  if (lang !== next) return;
+  const fallback = next === 'ko' ? Object.fromEntries(Object.entries(dicts.en ?? {}).map(([key, value]) => [key, HANGUL.test(key) ? key : value])) : dicts.en;
+  dict = { ...fallback, ...dicts[next] };
   patterns = compilePatterns(dict);
   installDialogTranslation();
   walk(document.body);

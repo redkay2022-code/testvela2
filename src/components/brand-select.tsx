@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
 import { ALL_WATCH_BRANDS, TOP_WATCH_BRANDS, knownWatchBrand } from '@/lib/watch-brands';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from './ui/select';
+import { Tx } from './tx';
+import { tx } from '@/lib/dom-translate';
 
-const noTranslate = { translate: 'no' as const, 'data-i18n-skip': true };
+const noTranslate = { translate: 'no' as const, 'data-no-translate': true };
 
 // A field in direct-input mode stays there (even with empty text, or a typed name that matches
 // a listed brand) until the seller picks a listed brand; the list always re-opens on click.
@@ -22,21 +24,21 @@ export function BrandSelect({ id, value, onChange }: { id: string; value: string
       if (next === 'custom') { setCustom(true); typedFields.add(id); setOpen(false); onChange(known ? '' : value); }
       else { setCustom(false); typedFields.delete(id); setOpen(false); onChange(next.slice(next.indexOf(':') + 1)); }
     }}>
-      <SelectTrigger {...noTranslate} id={id} aria-label="브랜드 선택" className="notranslate h-11 bg-muted text-foreground">
-        <SelectValue {...noTranslate} className="notranslate" placeholder="브랜드 선택" />
+      <SelectTrigger {...noTranslate} id={id} aria-label={tx('브랜드 선택')} className="notranslate h-11 bg-muted text-foreground">
+        <SelectValue {...noTranslate} className="notranslate" placeholder={tx('브랜드 선택')} />
       </SelectTrigger>
       <SelectContent {...noTranslate} position="popper" className="notranslate z-[200] max-h-80 border-primary/30 bg-popover text-popover-foreground" onCloseAutoFocus={event => {
         if (input.current) { event.preventDefault(); input.current.focus(); }
       }}>
-        <SelectItem {...noTranslate} value="custom" className="notranslate py-3 text-primary"><span {...noTranslate} className="notranslate">Custom Input (직접 입력)</span></SelectItem>
+        <SelectItem {...noTranslate} value="custom" className="notranslate py-3 text-primary"><Tx>Custom Input (직접 입력)</Tx></SelectItem>
         <SelectGroup {...noTranslate} className="notranslate">
-          <SelectLabel {...noTranslate} className="notranslate text-xs text-primary">TOP BRANDS</SelectLabel>
-          {TOP_WATCH_BRANDS.map(brand => <SelectItem {...noTranslate} key={brand} value={`top:${brand}`} className="notranslate py-2.5"><span {...noTranslate} className="notranslate">{brand}</span></SelectItem>)}
+          <SelectLabel {...noTranslate} className="notranslate text-xs text-primary"><Tx>TOP BRANDS</Tx></SelectLabel>
+          {TOP_WATCH_BRANDS.map(brand => <SelectItem {...noTranslate} data-i18n-skip key={brand} value={`top:${brand}`} className="notranslate py-2.5"><span {...noTranslate} className="notranslate">{brand}</span></SelectItem>)}
         </SelectGroup>
         <SelectSeparator {...noTranslate} className="notranslate my-2 bg-border" />
         <SelectGroup {...noTranslate} className="notranslate">
-          <SelectLabel {...noTranslate} className="notranslate text-xs text-primary">ALL BRANDS</SelectLabel>
-          {ALL_WATCH_BRANDS.map(brand => <SelectItem {...noTranslate} key={brand} value={`all:${brand}`} className="notranslate py-2.5"><span {...noTranslate} className="notranslate">{brand}</span></SelectItem>)}
+          <SelectLabel {...noTranslate} className="notranslate text-xs text-primary"><Tx>ALL BRANDS</Tx></SelectLabel>
+          {ALL_WATCH_BRANDS.map(brand => <SelectItem {...noTranslate} data-i18n-skip key={brand} value={`all:${brand}`} className="notranslate py-2.5"><span {...noTranslate} className="notranslate">{brand}</span></SelectItem>)}
         </SelectGroup>
       </SelectContent>
     </Select>

@@ -846,7 +846,7 @@
   "w-full caption-bottom text-sm": "w-full caption-bottom text-sm",
   "z-10 flex h-4 w-3 items-center justify-center rounded-sm border bg-border": "z-10 flex h-4 w-3 items-center justify-center rounded-sm border bg-border",
   "z-10 ring-1 ring-ring": "z-10 ring-1 ring-ring",
-  "상품 사양": "제품 소개",
+  "상품 사양": "상품 사양",
   "제품 소개": "제품 소개",
   "Orders · Coming Soon": "주문 · 준비 중",
   "Stores": "스토어",
@@ -1064,9 +1064,9 @@
   "Show password": "비밀번호 보기",
   "TOP BRANDS": "TOP BRANDS",
   "ALL BRANDS": "ALL BRANDS",
-  "Translating…": "Translating…",
-  "Original text": "Original text",
-  "Translated by VELA AI": "Translated by VELA AI",
+  "Translating…": "번역 중…",
+  "Original text": "원문",
+  "Translated by VELA AI": "VELA AI 번역",
   "Hours": "Hours",
   "PATEK PHILIPPE": "PATEK PHILIPPE",
   "AUDEMARS PIGUET": "AUDEMARS PIGUET",
@@ -1145,5 +1145,8 @@
   "50m / 5 ATM": "50m / 5 ATM",
   "100m / 10 ATM": "100m / 10 ATM",
   "300m / 30 ATM": "300m / 30 ATM",
-  "VELA MARKET": "VELA MARKET"
+  "VELA MARKET": "VELA MARKET",
+  "바로 발송 · Ready to Ship": "바로 발송",
+  "View translation (번역 보기)": "번역 보기",
+  "View Original (원문 보기)": "원문 보기"
 }

@@ -1,5 +1,5 @@
 import { Globe } from 'lucide-react';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { currencies, currencyLabels, isCurrency, setActiveCurrency, type Currency } from '@/lib/currency';
 import { getUsdRates } from '@/lib/rates.functions';
 import { applyDomTranslation, loadDictionary } from '@/lib/dom-translate';
@@ -15,6 +15,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [lang, setL] = useState<Lang>('en');
   const [ratesAt, setRatesAt] = useState('');
   const [ver, setVer] = useState(0);
+  const selection = useRef(0);
   useEffect(() => { void getUsdRates().then(r => { if (r) { setUsdRates(r.rates); setRatesAt(r.updated); } }).catch(() => {}); }, []);
   useEffect(() => {
     const detected = detectLocale(Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.languages ?? [navigator.language]);
@@ -22,17 +23,19 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     const nextLang = isLang(savedLang) ? savedLang : detected.lang;
     const nextCur = isCurrency(savedCur) ? savedCur : detected.currency;
     let alive = true;
+    const request = selection.current;
     // The dictionary is loaded first, so the first paint in the chosen language never mixes in Korean source text.
-    void loadDictionary(nextLang).finally(() => { if (!alive) return; setL(nextLang); setCur(nextCur); setVer(v => v + 1); });
+    void loadDictionary(nextLang).finally(() => { if (!alive || request !== selection.current) return; setL(nextLang); setCur(nextCur); setVer(v => v + 1); });
     return () => { alive = false; };
   }, []);
-  useEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; /* The site translates itself; the browser's own translator must not rewrite the same text. */ document.documentElement.setAttribute('translate', 'no'); document.documentElement.classList.add('notranslate'); document.body.setAttribute('translate', 'no'); document.body.classList.add('notranslate'); void applyDomTranslation(lang); }, [lang]);
+  useLayoutEffect(() => { document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'; document.documentElement.setAttribute('translate', 'no'); document.documentElement.classList.add('notranslate'); document.body.setAttribute('translate', 'no'); document.body.classList.add('notranslate'); void applyDomTranslation(lang); }, [lang, currency, ratesAt, ver]);
   const setCurrency = (c: Currency) => { localStorage.setItem(CUR_KEY, c); setCur(c); };
   const setLang = (l: Lang) => {
+    const request = ++selection.current;
     localStorage.setItem(LANG_KEY, l);
     const needsCurrency = !localStorage.getItem(CUR_KEY);
     // Load the new dictionary before switching, so every label changes at once (no half-translated screen).
-    void loadDictionary(l).finally(() => { setL(l); setVer(v => v + 1); if (needsCurrency) setCur(defaultCurrency[l]); });
+    void loadDictionary(l).finally(() => { if (request !== selection.current) return; setL(l); setVer(v => v + 1); if (needsCurrency) setCur(defaultCurrency[l]); });
   };
   setActiveCurrency(currency); setActiveLang(lang);
   // Re-key so every formatter and translated string re-renders in the chosen locale.
