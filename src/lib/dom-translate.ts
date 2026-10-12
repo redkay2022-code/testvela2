@@ -182,7 +182,13 @@ export async function loadDictionary(l: Lang): Promise<void> {
   await Promise.all([load(l), load('en')]);
 }
 /** Direct dictionary lookup of a static UI label for the platform's current language (no DOM rewriting). Falls back to the original text. */
-export const tx = (text: string): string => labelFor(dicts[activeLang()], text, activeLang() === 'ko' && HANGUL.test(text) ? undefined : dicts.en);
+export const tx = (text: string, values: Record<string, string | number> = {}): string => {
+  const localized = labelFor(dicts[activeLang()], text, activeLang() === 'ko' && HANGUL.test(text) ? undefined : dicts.en);
+  return localized.replace(/\{(\w+)\}/g, (token, name: string) => {
+    const value = values[name];
+    return value === undefined ? token : String(value);
+  });
+};
 
 /** Translates on-screen text into `lang`: UI strings via dictionaries, seller/user-written text via cached machine translation. */
 export async function applyDomTranslation(next: Lang) {

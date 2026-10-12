@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Complete reactive seller dashboard/store-management translations across all 11 locales; verify authenticated English/Chinese switching and nested views.
 - [x] Unify navigation/categories/detail/specification/modal dictionary lookup; latest language wins, native translation protection stays intact, seller original toggle preserved. Authenticated live feed switching across all 11 languages, English category sheet, English/Chinese product detail and original/translation readback verified; 28 tests pass, build OK.
 - [x] Lift the pre-launch gate: removed the "사전 오픈 준비 중" banner component and replaced the pre-launch-only store read rule with an owner-scoped one; guest feed, product entry and storefront verified with no banner or page errors.
 
