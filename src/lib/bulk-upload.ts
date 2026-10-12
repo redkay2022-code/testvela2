@@ -42,6 +42,9 @@ function splitLine(line: string, sep: string): string[] {
   return out.map(s => s.trim());
 }
 
+/** Column order of the Excel sheet (used when the pasted text has no header row). */
+export const PASTE_ORDER: readonly BulkField[] = ['file', 'menuCategory', 'title', 'description', 'category', 'sell', 'price', 'boxPrice', 'dispatch', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'powerReserve', 'glass', 'waterResistance', 'additionalDetails', 'source', 'factory'];
+
 /** Spreadsheet text -> rows of values. Excel/Sheets copy gives tabs; CSV gives commas. Quoted cells may contain line breaks. */
 export function parseTable(text: string): Partial<BulkValues>[] {
   const clean = text.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
@@ -54,7 +57,7 @@ export function parseTable(text: string): Partial<BulkValues>[] {
   }
   if (buf.trim()) lines.push(buf);
   if (!lines.length) return [];
-  let order: BulkField[] = [...BULK_FIELDS];
+  let order: BulkField[] = [...PASTE_ORDER];
   let start = 0;
   const first = splitLine(lines[0]!, sep).map(h => h.toLowerCase().replace(/\s+/g, ''));
   const mapped = first.map(h => BULK_FIELDS.find(f => HEADER_ALIASES[f].some(a => a.toLowerCase().replace(/\s+/g, '') === h)));

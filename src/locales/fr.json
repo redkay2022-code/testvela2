@@ -2591,5 +2591,15 @@
   "자동 추적 서비스 연결 대기 중 · ": "En attente de connexion au service de suivi automatique · ",
   "마지막 조회 {0} · ": "Dernière vérification {0} · ",
   " (필수: 사진 {0}+ / 영상 {1}+)": " (Requis : {0}+ photos / {1}+ vidéos)",
-  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Impossible de charger les statistiques. Réessayez plus tard."
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Impossible de charger les statistiques. Réessayez plus tard.",
+  "내 스토어": "Ma boutique",
+  "상품 미리보기": "Aperçu du produit",
+  "미리보기 · 구매자에게 보이는 상세 화면": "Aperçu · l'écran de détail vu par les acheteurs",
+  "판매 중인 상품이에요.": "Cet article est en vente.",
+  "임시 저장 상태예요. 판매를 켜기 전까지는 구매자에게 보이지 않아요.": "Enregistré comme brouillon. Les acheteurs ne le voient pas tant que la vente n'est pas activée.",
+  "이 화면에서는 구매·메시지가 작동하지 않아요.": "L'achat et la messagerie ne fonctionnent pas sur cet écran.",
+  "미리보기 닫기": "Fermer l'aperçu",
+  "미리보기에서는 로그인이 필요하지 않아요.": "La connexion n'est pas nécessaire dans l'aperçu.",
+  "미리보기에서는 구매할 수 없어요.": "Vous ne pouvez pas acheter dans l'aperçu.",
+  "미리보기": "Aperçu"
 }

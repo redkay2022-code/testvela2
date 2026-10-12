@@ -2596,5 +2596,15 @@
   "자동 추적 서비스 연결 대기 중 · ": "Exspectatur conexio cum servitio vestigationis automaticae · ",
   "마지막 조회 {0} · ": "Ultima inspectio {0} · ",
   " (필수: 사진 {0}+ / 영상 {1}+)": " (Necessaria: {0}+ imagines / {1}+ video)",
-  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Statistica visitatorum legi non potest. Postea iterum tempta."
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Statistica visitatorum legi non potest. Postea iterum tempta.",
+  "내 스토어": "Taberna mea",
+  "상품 미리보기": "Praevisio rei",
+  "미리보기 · 구매자에게 보이는 상세 화면": "Praevisio · pagina singularum quam emptores vident",
+  "판매 중인 상품이에요.": "Haec res venalis est.",
+  "임시 저장 상태예요. 판매를 켜기 전까지는 구매자에게 보이지 않아요.": "Ut exemplar servata. Emptores eam non vident donec venditionem accendas.",
+  "이 화면에서는 구매·메시지가 작동하지 않아요.": "Emptio et nuntii in hac pagina non operantur.",
+  "미리보기 닫기": "Praevisionem claude",
+  "미리보기에서는 로그인이 필요하지 않아요.": "In praevisione aditus non requiritur.",
+  "미리보기에서는 구매할 수 없어요.": "In praevisione emere non potes.",
+  "미리보기": "Praevisio"
 }

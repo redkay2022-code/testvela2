@@ -2596,5 +2596,15 @@
   "자동 추적 서비스 연결 대기 중 · ": "Wachten op verbinding met automatische trackingservice · ",
   "마지막 조회 {0} · ": "Laatst gecontroleerd {0} · ",
   " (필수: 사진 {0}+ / 영상 {1}+)": " (Vereist: {0}+ foto's / {1}+ video's)",
-  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Bezoekersstatistieken laden mislukt. Probeer het later opnieuw."
+  "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Bezoekersstatistieken laden mislukt. Probeer het later opnieuw.",
+  "내 스토어": "Mijn winkel",
+  "상품 미리보기": "Productvoorbeeld",
+  "미리보기 · 구매자에게 보이는 상세 화면": "Voorbeeld · het detailscherm dat kopers zien",
+  "판매 중인 상품이에요.": "Dit artikel is te koop.",
+  "임시 저장 상태예요. 판매를 켜기 전까지는 구매자에게 보이지 않아요.": "Opgeslagen als concept. Kopers zien het pas als je verkoop inschakelt.",
+  "이 화면에서는 구매·메시지가 작동하지 않아요.": "Kopen en berichten werken niet op dit scherm.",
+  "미리보기 닫기": "Voorbeeld sluiten",
+  "미리보기에서는 로그인이 필요하지 않아요.": "Inloggen is niet nodig in het voorbeeld.",
+  "미리보기에서는 구매할 수 없어요.": "Kopen is niet mogelijk in het voorbeeld.",
+  "미리보기": "Voorbeeld"
 }

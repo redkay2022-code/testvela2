@@ -7,6 +7,7 @@ import { postCategoryLabels } from '@/lib/feed-categories';
 import { PostCategoryField } from './post-category-field';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
+import { ListingPreview } from './listing-preview';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
 import { ArrowLeft, ArrowRight, GripVertical, ImagePlus, Pencil, Plus, Trash2, X, Eye, EyeOff, Video, Scissors, TriangleAlert, RefreshCw } from 'lucide-react';
@@ -61,6 +62,9 @@ export function SellerListings() {
   const [editing, setEditing] = useState<Listing | 'new' | null>(null);
   const [bulk, setBulk] = useState(false);
   const [replacing, setReplacing] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState<string | null>(null);
+  const formTop = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (editing) formTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [editing]);
   const refresh = () => { void qc.invalidateQueries({ queryKey: ['my-listings'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); void qc.invalidateQueries({ queryKey: ['my-listing-count'] }); };
 
   if (!user) return <section className="seller-flow-card"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><p className="mt-2 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품을 등록하려면 “나” 탭에서 로그인해 주세요.")}</span></p></section>;
@@ -92,6 +96,7 @@ export function SellerListings() {
   return <section className="seller-flow-card" aria-label={tx("내 상품 관리")}>{gate.dialog}
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><div className="flex gap-2"><Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("일괄 업로드")}</span></Button><Button size="sm" onClick={() => setEditing('new')}><Plus /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새 상품")}</span></Button></div></div>
     {bulk && <BulkUpload user={user} existingTitles={(listings.data ?? []).map(l => l.title)} onClose={() => setBulk(false)} onDone={refresh} />}
+    <div ref={formTop} className="scroll-mt-4" />
     {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불러오는 중…")}</span></p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 등록한 상품이 없어요.")}</span></p> :
       <ul className="seller-inventory-grid mt-5">{listings.data.map(l => <li key={l.id} className="seller-inventory-item">
@@ -100,10 +105,12 @@ export function SellerListings() {
         <div className="record-actions">
           {l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label={tx("판매 완료")} checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 완료")}</span></label>}
            <label className="flex items-center gap-2 text-xs"><Switch aria-label={tx("{0} 판매", { 0: l.title })} checked={l.status==='published'} onCheckedChange={() => void toggle(l)}/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매")}</span></label>
+          <Button size="sm" variant="ghost" aria-label={tx("미리보기")} onClick={() => setPreviewing(l.id)}><Eye /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("미리보기")}</span></Button>
           <Button size="sm" variant="ghost" aria-label={tx("편집")} onClick={() => setEditing(l)}><Pencil /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("편집")}</span></Button>
           <Button asChild size="sm" variant="ghost"><label aria-label={tx("영상 재업로드")} className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{replacing === l.id ? tx('올리는 중') : tx('재업로드')}</span><input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
           <Button size="sm" variant="ghost" aria-label={tx("삭제")} onClick={() => void remove(l)}><Trash2 /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("삭제")}</span></Button>
         </div></li>)}</ul>}
+  {previewing && (() => { const pl = (listings.data ?? []).find(x => x.id === previewing); return pl ? <ListingPreview listing={pl} user={user} onClose={() => setPreviewing(null)} /> : null; })()}
   </section>;
 }
 

@@ -12,7 +12,7 @@ import { DISPATCH_OPTIONS } from '@/lib/dispatch';
 import { factoryOptions } from './source-factory';
 import { postCategoryLabels } from '@/lib/feed-categories';
 import { activeLang } from '@/lib/i18n';
-import { applyRows, BULK_FIELDS, groupFiles, MAX_BULK, parseTable, readTextFile, validateItem, type BulkField, type BulkItem } from '@/lib/bulk-upload';
+import { applyRows, BULK_FIELDS, groupFiles, MAX_BULK, PASTE_ORDER, parseTable, readTextFile, validateItem, type BulkField, type BulkItem } from '@/lib/bulk-upload';
 
 type State = { status: 'idle' | 'working' | 'done' | 'error'; pct: number; step: string; error: string };
 const idle: State = { status: 'idle', pct: 0, step: '', error: '' };
@@ -103,7 +103,7 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
     <div className="flex items-center justify-between gap-3"><h3 className="text-base font-semibold">일괄 업로드 (영상 1개 = 상품 1개, 최대 {MAX_BULK}개)</h3><Button variant="ghost" size="icon" aria-label="닫기" onClick={onClose} disabled={running}><X /></Button></div>
     <ol className="mt-3 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
       <li>영상과 사진을 한꺼번에 선택해요. 사진 이름은 “영상이름-1.jpg”, “영상이름-2.jpg”처럼 영상 이름으로 시작해야 같은 상품으로 묶여요.</li>
-      <li>엑셀/구글 시트의 표를 복사해 아래 칸에 붙여넣어요. 열 순서: {BULK_FIELDS.map(f => FIELD_LABEL[f]).join(' · ')} (첫 줄에 머리글을 넣으면 순서가 달라도 돼요)</li>
+      <li>엑셀/구글 시트의 표를 복사해 아래 칸에 붙여넣어요. 열 순서: {PASTE_ORDER.map(f => FIELD_LABEL[f]).join(' · ')} (첫 줄에 머리글을 넣으면 순서가 달라도 돼요)</li>
       <li>줄마다 문제가 없는지 확인하고 “업로드 시작”을 눌러요. 올리는 동안 화면을 켜 두세요.</li>
     </ol>
     <div className="mt-3 flex min-h-20 flex-wrap items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted p-3 text-sm" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (!running) addFiles(e.dataTransfer.files); }}>

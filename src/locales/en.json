@@ -1452,5 +1452,15 @@
   "마지막 조회 {0} · ": "Last checked {0} · ",
   " (필수: 사진 {0}+ / 영상 {1}+)": " (Required: {0}+ photos / {1}+ videos)",
   "방문 통계는 DB 업데이트(0035)를 적용하면 표시됩니다.": "Unable to load visitor statistics. Please try again later.",
-  "Listing false factory information will result in immediate seller ban and escrow freeze.": "Listing false factory information will result in immediate seller ban and escrow freeze."
+  "Listing false factory information will result in immediate seller ban and escrow freeze.": "Listing false factory information will result in immediate seller ban and escrow freeze.",
+  "내 스토어": "My store",
+  "상품 미리보기": "Product preview",
+  "미리보기 · 구매자에게 보이는 상세 화면": "Preview · the detail screen buyers see",
+  "판매 중인 상품이에요.": "This item is on sale.",
+  "임시 저장 상태예요. 판매를 켜기 전까지는 구매자에게 보이지 않아요.": "Saved as a draft. Buyers cannot see it until you turn on selling.",
+  "이 화면에서는 구매·메시지가 작동하지 않아요.": "Buying and messaging do not work on this screen.",
+  "미리보기 닫기": "Close preview",
+  "미리보기에서는 로그인이 필요하지 않아요.": "Login is not required in the preview.",
+  "미리보기에서는 구매할 수 없어요.": "You cannot buy in the preview.",
+  "미리보기": "Preview"
 }
