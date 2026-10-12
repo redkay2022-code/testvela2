@@ -3,7 +3,8 @@
  * match each row to a video file by file name, group photos with their video, and validate every product.
  * One video = one product. Photos named "<video name>-1.jpg", "<video name>_2.png" … belong to that video.
  */
-import { postCategoryLabels, toPostCategory } from '@/lib/feed-categories';
+import { productCategories } from '@/lib/catalog';
+import { postCategoryLabels } from '@/lib/feed-categories';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from '@/lib/listing-media';
 import { validatePostTitle } from '@/lib/post-title';
@@ -11,7 +12,7 @@ import { cleanWatchSpecs, numericSpecValue, watchSpecificationFields } from '@/l
 import { knownWatchBrand } from '@/lib/watch-brands';
 
 export const MAX_BULK = 20;
-export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'powerReserve', 'glass', 'waterResistance', 'additionalDetails', 'description'] as const;
+export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'powerReserve', 'glass', 'waterResistance', 'additionalDetails', 'description', 'menuCategory'] as const;
 export type BulkField = (typeof BULK_FIELDS)[number];
 export type BulkValues = Record<BulkField, string>;
 export const emptyValues = (): BulkValues => Object.fromEntries(BULK_FIELDS.map(f => [f, ''])) as BulkValues;
@@ -24,7 +25,7 @@ const HEADER_ALIASES: Record<BulkField, string[]> = {
   brand: ['브랜드', 'brand'], model: ['모델', '모델명', 'model'], material: ['케이스소재', '케이스 소재', '소재', 'material'],
   movement: ['무브먼트', 'movement'], caseSize: ['케이스직경', '케이스 직경', '케이스크기', '케이스 크기', '다이얼', 'casesize'],
   thickness: ['두께', 'thickness'], weight: ['무게', 'weight'], powerReserve: ['파워리저브', 'powerreserve'], glass: ['글라스', 'glass'],
-  waterResistance: ['방수', 'waterresistance'], additionalDetails: ['추가내용', '추가 내용', 'additionaldetails'], description: ['소개', '제품소개', '설명', 'description'],
+  waterResistance: ['방수', 'waterresistance'], additionalDetails: ['추가내용', '추가 내용', 'additionaldetails'], description: ['소개', '제품소개', '설명', 'description'], menuCategory: ['메뉴카테고리', '메뉴 카테고리', 'menucategory', 'menu'],
 };
 
 /** Splits one line of CSV / TSV, honouring "quoted, values". */
@@ -145,9 +146,11 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   const v = item.values, errors: string[] = [], warnings: string[] = [];
   const titleError = validatePostTitle(v.title); if (titleError) errors.push(titleError);
   const price = Number(v.price.replace(/[$,\s]/g, '')); if (!Number.isFinite(price) || price < 1) errors.push('판매 가격(USD)은 1 이상의 숫자로 입력해 주세요.');
-  const category = v.category.trim() ? postCategoryLabels.find(c => norm(c) === norm(v.category)) ?? (toPostCategory(v.category) || undefined) : '시계';
-  if (!category) errors.push(`카테고리는 ${postCategoryLabels.join(' / ')} 중 하나여야 해요.`);
-  else if (!v.category.trim()) warnings.push('카테고리가 비어 있어 “시계”로 저장돼요.');
+  const category = productCategories.find(c => norm(c) === norm(v.category)) ?? (v.category ? undefined : '커스텀제작');
+  if (!category) errors.push(`카테고리는 ${productCategories.join(' / ')} 중 하나여야 해요.`);
+  const menuCategory = v.menuCategory.trim() ? postCategoryLabels.find(c => norm(c) === norm(v.menuCategory)) : '시계';
+  if (!menuCategory) errors.push(`메뉴 카테고리는 ${postCategoryLabels.join(' / ')} 중 하나여야 해요.`);
+  else if (!v.menuCategory.trim()) warnings.push('메뉴 카테고리가 비어 있어 “시계”로 저장돼요.');
   const source = v.source ? SOURCE_ALIASES[norm(v.source)] : (v.factory ? 'factory' : 'custom');
   if (!source) errors.push('출처는 직접제작 / 공장 / 기타 중 하나여야 해요.');
   if ((source === 'factory' || source === 'other') && !v.factory.trim()) errors.push('공장(출처)을 입력해 주세요.');
@@ -158,12 +161,12 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   if (item.photos.some(p => p.size > MAX_PHOTO_BYTES)) errors.push('사진은 장당 최대 10MB까지 올릴 수 있어요.');
   if (v.title.trim().length > 100) warnings.push('제목이 100자를 넘어 잘립니다.');
   if (existingTitles.has(norm(v.title))) warnings.push('같은 제목의 상품이 이미 있어요.');
-  if (errors.length || !source || !category) return { errors, warnings, plan: null };
+  if (errors.length || !source || !category || !menuCategory) return { errors, warnings, plan: null };
   const d = normalizeDispatch(v.dispatch);
   const spec = watchSpecs(v, errors, warnings);
   if (errors.length) return { errors, warnings, plan: null };
   const specs: Record<string, string> = { ...spec };
-  specs['sourceType'] = source; if (source !== 'custom') specs['factory'] = v.factory.trim().slice(0, 80);
+  specs['sourceType'] = source; specs['menuCategory'] = menuCategory; if (source !== 'custom') specs['factory'] = v.factory.trim().slice(0, 80);
   return { errors, warnings, plan: { title: v.title.trim().slice(0, 100), description: v.description.trim().slice(0, 3000), category, price: Math.round(price), boxPrice: box === null ? null : Math.round(box), dispatch: dispatchValue(d.choice, d.custom), specs } };
 }
 

@@ -1,7 +1,8 @@
 import { activeLang } from '@/lib/i18n';
 import { WatchSpecificationsForm } from './watch-specifications-form';
 import { cleanWatchSpecs } from '@/lib/watch-specifications';
-import { postCategoryLabels, toPostCategory } from '@/lib/feed-categories';
+import { postCategoryLabels } from '@/lib/feed-categories';
+import { PostCategoryField } from './post-category-field';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -108,7 +109,8 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   const [editing, setEditing] = useState<File | null>(null);
   const [title, setTitle] = useState(listing?.title ?? '');
   const [description, setDescription] = useState(listing?.description ?? '');
-  const [category, setCategory] = useState(toPostCategory(listing?.category));
+  const [category, setCategory] = useState(listing?.category === '악세사리' ? '악세사리' : '시계');
+  const [menuCategory, setMenuCategory] = useState(postCategoryLabels.includes(String(listing?.specs?.['menuCategory'] ?? '')) ? String(listing?.specs?.['menuCategory']) : '');
   const [price, setPrice] = useState(listing?.price != null ? String(listing.price) : '');
   const initialDispatch = listing?.dispatch_time ?? '7d';
   const [dispatch, setDispatch] = useState<string>(initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
@@ -159,7 +161,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
 
   const save = async (status: 'draft' | 'published') => {
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
-    if (!postCategoryLabels.includes(category)) { setError('카테고리를 선택해 주세요.'); return; }
+    if (!postCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
     const p = Number(price); if (!Number.isFinite(p) || p < 1) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
     if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
     if (sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
@@ -187,6 +189,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       for (const r of settled) if (r.status === 'fulfilled' && r.value) photoPaths.push(r.value);
       const cleanSpecs = cleanWatchSpecs(specs);
       cleanSpecs['sourceType'] = sourceType;
+      cleanSpecs['menuCategory'] = menuCategory;
       if (sourceType === 'custom') delete cleanSpecs['factory'];
       else cleanSpecs['factory'] = factory.trim().slice(0, 80);
       const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, dispatch_time: dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
@@ -222,8 +225,9 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       </div></div>}
     </div>}
     <input ref={photoPicker} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label="추가 사진 선택" onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} />
+    <PostCategoryField value={menuCategory} onChange={setMenuCategory} />
     <label htmlFor="l-title" className="form-label">상품명</label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
-    <fieldset className="notranslate" translate="no" aria-required="true"><legend className="form-label">카테고리 <span aria-hidden="true" className="text-destructive">*</span> <span className="text-xs font-normal text-muted-foreground">(1개 선택)</span></legend><div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" aria-label="카테고리 선택">{postCategoryLabels.map(c => <label key={c} translate="no" className={`notranslate flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${category === c ? 'border-primary bg-primary/10 font-medium text-primary' : 'border-border text-muted-foreground'}`}><input type="checkbox" className="size-4 accent-primary" name="l-cat" value={c} checked={category === c} onChange={() => setCategory(category === c ? '' : c)} />{c}</label>)}</div></fieldset>
+    <label htmlFor="l-cat" className="form-label">카테고리</label><select id="l-cat" className="form-input" value={category} onChange={e => setCategory(e.target.value)}><option value="시계">시계</option><option value="악세사리">악세사리</option></select>
     <WatchSpecificationsForm idPrefix="l-spec" value={specs} onChange={setSpecs} />
     <label htmlFor="l-desc" className="form-label">상품 설명</label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
     <div className="grid grid-cols-2 gap-x-3">

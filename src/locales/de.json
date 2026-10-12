@@ -2514,5 +2514,8 @@
   "카테고리를 선택해 주세요.": "Bitte wähle eine Kategorie.",
   "카테고리 (비우면 시계)": "Kategorie (leer = Uhr)",
   "(1개 선택)": "(1 wählen)",
-  "카테고리 선택": "Kategorie wählen"
+  "카테고리 선택": "Kategorie wählen",
+  "메뉴 카테고리": "Menükategorie",
+  "메뉴 카테고리를 선택해 주세요.": "Bitte wähle eine Menükategorie.",
+  "메뉴 카테고리 (비우면 시계)": "Menükategorie (leer = Uhr)"
 }

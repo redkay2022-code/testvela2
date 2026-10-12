@@ -7,13 +7,14 @@ import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { compressVideoForWeb } from '@/lib/video-compress';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { readVideoDuration, MAX_VIDEO_SECONDS } from '@/lib/listing-media';
+import { productCategories } from '@/lib/catalog';
 import { postCategoryLabels } from '@/lib/feed-categories';
 import { activeLang } from '@/lib/i18n';
 import { applyRows, BULK_FIELDS, groupFiles, MAX_BULK, parseTable, readTextFile, validateItem, type BulkField, type BulkItem } from '@/lib/bulk-upload';
 
 type State = { status: 'idle' | 'working' | 'done' | 'error'; pct: number; step: string; error: string };
 const idle: State = { status: 'idle', pct: 0, step: '', error: '' };
-const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '가격(USD)', category: '카테고리', source: '출처', factory: '공장', dispatch: '발송', boxPrice: '박스 가격', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경(mm)', thickness: '두께(mm)', weight: '무게(g)', powerReserve: '파워리저브(시간)', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '소개' };
+const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '가격(USD)', category: '카테고리', source: '출처', factory: '공장', dispatch: '발송', boxPrice: '박스 가격', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경(mm)', thickness: '두께(mm)', weight: '무게(g)', powerReserve: '파워리저브(시간)', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '소개', menuCategory: '메뉴 카테고리' };
 const EDIT_FIELDS = BULK_FIELDS.filter(f => f !== 'file');
 
 /**
@@ -126,8 +127,10 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
           {open === it.id && s.status !== 'done' && <div className="mt-3 grid grid-cols-2 gap-2">{EDIT_FIELDS.map(f => f === 'description' || f === 'additionalDetails'
             ? <textarea key={f} className="form-input col-span-2" aria-label={FIELD_LABEL[f]} placeholder={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running} />
             : f === 'category'
-              ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">카테고리 (비우면 시계)</option>{postCategoryLabels.map(cat => <option key={cat} translate="no" className="notranslate">{cat}</option>)}</select>
-              : <input key={f} className="form-input" aria-label={FIELD_LABEL[f]} placeholder={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running} />)}</div>}
+              ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">카테고리 (기본: 커스텀제작)</option>{productCategories.map(cat => <option key={cat}>{cat}</option>)}</select>
+              : f === 'menuCategory'
+                ? <select key={f} className="form-input notranslate" translate="no" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">메뉴 카테고리 (비우면 시계)</option>{postCategoryLabels.map(cat => <option key={cat} translate="no" className="notranslate">{cat}</option>)}</select>
+                : <input key={f} className="form-input" aria-label={FIELD_LABEL[f]} placeholder={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running} />)}</div>}
         </li>;
       })}</ul>
       <p className="mt-4 text-xs text-muted-foreground">임시저장으로 올리면 구매자에게 보이지 않아요. “내 상품 관리”에서 확인한 뒤 상품마다 판매 스위치를 켜서 공개해요.</p>

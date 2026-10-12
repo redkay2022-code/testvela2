@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {categoryGroups,matchesFeedCategory,postCategoryLabels,primaryCategories,toPostCategory} from '@/lib/feed-categories';
+import {categoryGroups,matchesFeedCategory,postCategoryLabels,primaryCategories} from '@/lib/feed-categories';
 import {marketSearch} from '@/lib/market';
 const post={title:'Rolex watch',description:'Inspection',category:'Ready to Ship',factory:'VS Factory',sample:false};
 describe('Home category filters',()=>{
@@ -19,14 +19,14 @@ describe('Home category filters',()=>{
   expect(matchesFeedCategory({...post,category:'기타'},'etc')).toBe(true);
  });
  it('offers sellers exactly the ten official post categories (no 전체)',()=>expect(postCategoryLabels).toEqual(['뉴스','바로발송','스토리','시계','악세사리','가방','의류','커스텀','18K 금','기타']));
- it('filters strictly by the saved category',()=>{
-  const watch={...post,title:'Leather tote bag',category:'시계'};
+ it('filters strictly by the saved menu category',()=>{
+  const watch={...post,title:'Leather tote bag',category:'시계',menuCategory:'시계'};
   expect(matchesFeedCategory(watch,'bags')).toBe(false);expect(matchesFeedCategory(watch,'watches')).toBe(true);
-  expect(matchesFeedCategory({...watch,category:'가방'},'bags')).toBe(true);expect(matchesFeedCategory({...watch,category:'18K 금'},'solid-gold')).toBe(true);
-  expect(matchesFeedCategory({...watch,category:'커스텀'},'custom')).toBe(true);expect(matchesFeedCategory({...watch,category:'커스텀'},'watches')).toBe(false);
+  expect(matchesFeedCategory({...watch,menuCategory:'가방'},'bags')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'18K 금'},'solid-gold')).toBe(true);
+  expect(matchesFeedCategory({...watch,menuCategory:'커스텀'},'custom')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'커스텀'},'watches')).toBe(false);
   expect(matchesFeedCategory(watch,undefined)).toBe(true);expect(matchesFeedCategory(watch,'recommend')).toBe(true);
  });
- it('maps older categories to official ones',()=>{expect(toPostCategory('커스텀제작')).toBe('커스텀');expect(toPostCategory('제작 과정')).toBe('스토리');expect(toPostCategory('Watches')).toBe('시계');expect(toPostCategory('몰라')).toBe('');expect(toPostCategory(undefined)).toBe('');});
+ it('falls back to keywords for older posts without a menu category',()=>{expect(matchesFeedCategory({...post,category:'제작 과정'},'story')).toBe(true);expect(matchesFeedCategory({...post,title:'Leather tote bag',category:'시계'},'bags')).toBe(true);});
  it('does not assign a brand to generic watch samples',()=>expect(matchesFeedCategory({...post,title:'Everyday diver',sample:true},'rolex')).toBe(false));
  it('retains the selection below the open picker',()=>expect(marketSearch.parse({feedCategory:'rolex',categoriesOpen:true})).toMatchObject({feedCategory:'rolex',categoriesOpen:true}));
 });

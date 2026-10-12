@@ -4,12 +4,9 @@ export const categoryGroups:readonly {label:string;items:readonly (readonly [str
  {label:'명품 악세사리 브랜드',items:[['chrome-hearts','크롬하츠'],['van-cleef','반클리프 앤 아펠'],['boucheron','부쉐론'],['bvlgari','불가리'],['tiffany','티파니']]},
 ] as const;
 export const primaryCategories=categoryGroups[0]?.items ?? [];
-/** Official post categories sellers choose from (the "전체" entry is a filter only, never a post category). */
+/** Menu categories sellers choose from (stored in posts.specs.menuCategory, separate from the older 카테고리 field) (the "전체" entry is a filter only, never a post category). */
 export const postCategories:readonly (readonly [string,string])[]=(categoryGroups[0]?.items ?? []).filter(item=>item[0]!=='recommend');
 export const postCategoryLabels:readonly string[]=postCategories.map(item=>item[1]);
-const legacyCategory:Record<string,string>={watch:'시계',watches:'시계',accessory:'악세사리',accessories:'악세사리','공장 생산':'시계','커스텀제작':'커스텀','커스터마이징':'커스텀','제작 과정':'스토리','18K 솔리드 골드':'18K 금'};
-/** Maps an older/free-text category to an official one, or '' when it has no clear match. */
-export const toPostCategory=(value:string|null|undefined)=>{const v=(value??'').trim();return postCategoryLabels.includes(v)?v:legacyCategory[v.toLowerCase()]??legacyCategory[v]??'';};
 export const categoryLabel=(id:string)=>categoryGroups.flatMap(group=>group.items).find(item=>item[0]===id)?.[1] ?? id;
 const aliases:Record<string,string[]>={
  news:['news','뉴스'],story:['story','스토리','제작 과정','making'],bags:['bag','bags','handbag','tote','backpack','가방','핸드백','토트'],
@@ -20,10 +17,10 @@ const aliases:Record<string,string[]>={
  'richard-mille':['richard mille','리차드 밀'],omega:['omega','오메가'],panerai:['panerai','파네라이'],iwc:['iwc'],
  'chrome-hearts':['chrome hearts','크롬하츠'],'van-cleef':['van cleef','반클리프 앤 아펠'],boucheron:['boucheron','부쉐론'],bvlgari:['bvlgari','bulgari','불가리'],tiffany:['tiffany','티파니'],
 };
-export function matchesFeedCategory(post:{title:string;description:string;category:string;factory:string;sample:boolean;source?:{brand?:string;model?:string}|undefined},id:string|undefined){
+export function matchesFeedCategory(post:{title:string;description:string;category:string;factory:string;sample:boolean;menuCategory?:string|undefined;source?:{brand?:string;model?:string}|undefined},id:string|undefined){
  if(!id||id==='recommend')return true;
  const own=postCategories.find(item=>item[0]===id);
- if(own&&postCategoryLabels.includes(post.category))return post.category===own[1];
+ if(own&&post.menuCategory&&postCategoryLabels.includes(post.menuCategory))return post.menuCategory===own[1];
  if(id==='watches'&&post.sample)return true;
  const text=`${post.title} ${post.description} ${post.category} ${post.factory} ${post.source?.brand ?? ''} ${post.source?.model ?? ''}`.toLowerCase();
  return (aliases[id] ?? [id.toLowerCase()]).some(alias=>text.includes(alias));
