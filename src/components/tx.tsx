@@ -6,7 +6,7 @@ import { useCurrency } from './currency';
  * Translated labels are marked so the DOM translator never touches them again; if no entry exists the original
  * text is rendered unchanged (graceful fallback, no browser or external translation involved).
  */
-export function Tx({ children }: { children: string | undefined }) {
+export function Tx({ children, values }: { children: string | undefined; values?: Record<string, string | number> }) {
   useCurrency();
-  return <span data-i18n-skip data-no-translate className="notranslate" translate="no">{tx(children ?? '')}</span>;
+  return <span data-i18n-skip data-no-translate className="notranslate" translate="no">{tx(children ?? '', values)}</span>;
 }

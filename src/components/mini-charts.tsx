@@ -1,4 +1,7 @@
-/** Small dependency-free SVG/CSS charts for the dashboards (Korean-only back-office UI). */
+import { tx } from '@/lib/dom-translate';
+import { useCurrency } from './currency';
+import { activeLang } from '@/lib/i18n';
+/** Small dependency-free SVG/CSS charts for dashboards. */
 const GOLD = 'var(--primary, #D4AF37)';
 const COLORS = ['#D4AF37', '#5B8DEF', '#3FB68B', '#E5735A', '#A678DE', '#E0B84C', '#6CC4D9', '#9AA0A6'];
 
@@ -23,15 +26,18 @@ export function LineChart({ series, labels, height = 130, label }: { series: { n
 }
 
 export function Donut({ items, label }: { items: { label: string; value: number }[]; label: string }) {
+  useCurrency();
   const total = items.reduce((s, i) => s + i.value, 0);
-  if (!total) return <p className="text-sm text-muted-foreground">아직 데이터가 없습니다.</p>;
+  if (!total) return <p className="text-sm text-muted-foreground">{tx('아직 데이터가 없습니다.')}</p>;
   let acc = 0;
   const stops = items.map((it, i) => { const from = (acc / total) * 100; acc += it.value; return `${COLORS[i % COLORS.length]} ${from}% ${(acc / total) * 100}%`; }).join(', ');
   return <div className="flex items-center gap-4"><div role="img" aria-label={label} className="relative size-28 shrink-0 rounded-full" style={{ background: `conic-gradient(${stops})` }}><div className="absolute inset-4 rounded-full bg-card"/></div>
     <ul className="min-w-0 flex-1 space-y-1 text-sm">{items.map((it, i) => <li key={it.label} className="flex items-center justify-between gap-2"><span className="flex min-w-0 items-center gap-2 truncate"><i style={{ background: COLORS[i % COLORS.length] }} className="size-2.5 shrink-0 rounded-full"/>{it.label}</span><span className="shrink-0 text-muted-foreground">{Math.round((it.value / total) * 100)}% · {it.value}</span></li>)}</ul></div>;
 }
 
-const regionNames = (() => { try { return new Intl.DisplayNames(['ko'], { type: 'region' }); } catch { return null; } })();
-export const countryName = (code: string) => code === 'ZZ' ? '알 수 없음' : (() => { try { return regionNames?.of(code) ?? code; } catch { return code; } })() ?? code;
+export const countryName = (code: string, locale = activeLang()) => {
+  if (code === 'ZZ') return tx('알 수 없음');
+  try { return new Intl.DisplayNames([locale], { type: 'region' }).of(code) ?? code; } catch { return code; }
+};
 const SOURCE_NAMES: Record<string, string> = { direct: '직접 접속', feed: '메인 피드', search: '검색', category: '카테고리', shorts: '쇼츠', store: '스토어', internal: '사이트 내부', external: '외부 링크', instagram: '인스타그램', telegram: '텔레그램', facebook: '페이스북', x: 'X(트위터)', google: '구글', youtube: '유튜브', wechat: '위챗', naver: '네이버', bing: '빙' };
 export const sourceName = (s: string) => SOURCE_NAMES[s] ?? s;

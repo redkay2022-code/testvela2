@@ -32,4 +32,10 @@ describe('central locale behavior', () => {
     expect(mergeSpecs(specs, undefined)).toEqual(specs);
     expect(mergeSpecs(specs, { movement: 'Automatic' })).toEqual({ movement: 'Automatic', caseSize: '40 mm' });
   });
+  it('interpolates zero counts and literal replacement characters without changing seller-provided values', async () => {
+    await loadDictionary('en');
+    setActiveLang('en');
+    expect(tx('{0} / {1}', { 0: 0, 1: '$&{0}' })).toBe('0 / $&{0}');
+    expect(tx('{missing}', {})).toBe('{missing}');
+  });
 });
