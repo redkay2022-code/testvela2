@@ -1,7 +1,7 @@
 import { WatchSpecificationsForm } from './watch-specifications-form';
 import { cleanWatchSpecs } from '@/lib/watch-specifications';
 import { validatePostTitle } from '@/lib/post-title';
-import { formatDate, isLang, langLabels, langs } from '@/lib/i18n';
+import { activeLang, formatDate, isLang, langLabels, langs } from '@/lib/i18n';
 import { useCurrency } from './currency';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PHONE_COUNTRIES, detectPhoneCountry, toE164 } from '@/lib/phone-countries';
