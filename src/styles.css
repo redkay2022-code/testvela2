@@ -202,6 +202,7 @@
 .creator-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px; margin-top:8px; }
 .creator { display:flex; min-width:0; align-items:center; gap:6px; font-size:11px; color:var(--muted-foreground); }
 .creator-avatar { width:21px; height:21px; flex-shrink:0; object-fit:cover; border-radius:50%; }
+.creator-avatar-fallback { display:inline-flex; align-items:center; justify-content:center; background:hsl(var(--muted)); color:hsl(var(--primary)); border:1px solid hsl(var(--border)); }
 .like-button {gap:4px; padding:0; height:28px; color:var(--muted-foreground); font-size:11px; background:transparent;}
 .like-button svg {width:16px;height:16px;}
 .like-button.liked {color:var(--primary);}
