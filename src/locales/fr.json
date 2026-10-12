@@ -2517,5 +2517,6 @@
   "카테고리 선택": "Choisir la catégorie",
   "메뉴 카테고리": "Catégorie du menu",
   "메뉴 카테고리를 선택해 주세요.": "Veuillez choisir une catégorie du menu.",
-  "메뉴 카테고리 (비우면 시계)": "Catégorie du menu (vide = Montre)"
+  "메뉴 카테고리 (비우면 시계)": "Catégorie du menu (vide = Montre)",
+  "메뉴 카테고리 선택 (필수)": "Choisir une catégorie du menu (obligatoire)"
 }

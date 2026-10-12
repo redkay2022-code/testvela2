@@ -2517,5 +2517,6 @@
   "카테고리 선택": "Kategorie wählen",
   "메뉴 카테고리": "Menükategorie",
   "메뉴 카테고리를 선택해 주세요.": "Bitte wähle eine Menükategorie.",
-  "메뉴 카테고리 (비우면 시계)": "Menükategorie (leer = Uhr)"
+  "메뉴 카테고리 (비우면 시계)": "Menükategorie (leer = Uhr)",
+  "메뉴 카테고리 선택 (필수)": "Menükategorie wählen (erforderlich)"
 }

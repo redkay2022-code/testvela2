@@ -1374,5 +1374,6 @@
   "카테고리 선택": "Select category",
   "메뉴 카테고리": "Menu category",
   "메뉴 카테고리를 선택해 주세요.": "Please select a menu category.",
-  "메뉴 카테고리 (비우면 시계)": "Menu category (blank = Watch)"
+  "메뉴 카테고리 (비우면 시계)": "Menu category (blank = Watch)",
+  "메뉴 카테고리 선택 (필수)": "Select a menu category (required)"
 }
