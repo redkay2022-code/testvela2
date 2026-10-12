@@ -110,7 +110,7 @@ function TrackingPanel({ o }: { o: Order }) {
   return <div className="tracking-widget"><Truck className="text-primary" />
     <div><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("택배사")}</span></span><strong>{o.courier}</strong></div>
     <div><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("송장번호")}</span></span><strong data-no-translate>{o.tracking_number}</strong></div>
-    <div><span><MapPin size={10} className="inline" /> <span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("현재 상태")}</span></span><strong><span data-i18n-skip data-no-translate translate="no" className="notranslate">{latest ? `${latest.description}${latest.location ? ` · ${latest.location}` : ''}` : q.isLoading ? tx('조회 중…') : (q.data?.status ?? '대기')}</span></strong></div>
+    <div><span><MapPin size={10} className="inline" /> <span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("현재 상태")}</span></span><strong><span data-i18n-skip data-no-translate translate="no" className="notranslate">{latest ? `${latest.description}${latest.location ? ` · ${latest.location}` : ''}` : q.isLoading ? tx('조회 중…') : (q.data?.status ?? tx('대기'))}</span></strong></div>
     {q.data?.events && q.data.events.length > 1 && <ol className="col-span-full mt-2 grid gap-1 text-xs text-muted-foreground">{q.data.events.slice(1, 8).map((e, i) => <li key={i}>{e.time ? new Date(e.time).toLocaleString() : ''} · {e.description} {e.location}</li>)}</ol>}
     <small className="col-span-full flex flex-wrap items-center gap-2">
       <span data-i18n-skip data-no-translate translate="no" className="notranslate">{q.data && !q.data.configured ? tx('자동 추적 서비스 연결 대기 중 · ') : q.data?.checkedAt ? tx("마지막 조회 {0} · ", { 0: new Date(q.data.checkedAt).toLocaleTimeString() }) : ''}</span>
@@ -181,7 +181,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
   if (!user) return null;
   const orders = (q.data?.orders ?? []).filter(o => (as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin))) && (!search.orderId||o.id===search.orderId));
   const setStage = (id: string, stage: EscrowStage) => void supabase.from('orders').update({ stage }).eq('id', id);
-  return <section className="escrow-board mb-6" aria-label={tx("QC 게시판")} lang={lang} translate="no" className="notranslate" data-no-translate>
+  return <section className="escrow-board mb-6 notranslate" aria-label={tx("QC 게시판")} lang={lang} translate="no" data-no-translate>
     {reviewing && <ReviewModal orderId={reviewing} close={() => setReviewing(null)} requestAuth={() => setReviewing(null)} />}
     <div className="section-heading"><h2><MessageSquareText size={16} className="mr-1 inline" /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 게시판")}</span></h2><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("실시간 저장")}</span></span></div>
     {q.isError&&<p role="alert" className="text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문 정보를 불러오지 못했습니다.")}</span></p>}
@@ -195,7 +195,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
       const isSeller = as === 'seller';
       const product=catalog.data?.find(p=>p.id===o.post_id);
       return <article className="escrow-order" key={o.id}>
-        <div className="escrow-order-head">{o.image_url ? <img src={o.image_url} width={52} height={52} alt="" /> : <Camera className="text-primary" />}<div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small>{stageLabel(stage)} · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
+        <div className="escrow-order-head">{o.image_url ? <img src={o.image_url} width={52} height={52} alt="" /> : <Camera className="text-primary" />}<div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
         <EscrowTimeline stage={stage} />
         {search.orderView==='tracking'&&!o.tracking_number&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("송장번호가 아직 등록되지 않았습니다.")}</span></p>}
         {search.orderView==='qc'&&!media.length&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("출고 QC 사진·영상이 아직 등록되지 않았습니다.")}</span></p>}
