@@ -1,3 +1,5 @@
+import { Tx } from './tx';
+
 const specLabels: Record<string, string> = {
   brand: '브랜드',
   model: '모델',
@@ -29,10 +31,10 @@ export function SpecsTable({specs, fallback}: {specs: unknown; fallback?: React.
   if (!entries.length) return <>{fallback ?? null}</>;
   return (
     <div className="mt-5">
-      <h3 className="mb-1 text-sm font-semibold">상품 사양</h3>
+      <h3 className="mb-1 text-sm font-semibold"><Tx>상품 사양</Tx></h3>
       <dl className="lux-specs notranslate" translate="no" data-no-translate>
         {entries.map(([key, value]) => (
-          <div key={key}><dt>{labelFor(key)}</dt><dd className="whitespace-pre-wrap" style={{overflowWrap: 'anywhere'}}>{value}</dd></div>
+          <div key={key}><dt><Tx>{labelFor(key)}</Tx></dt><dd data-i18n-skip className="whitespace-pre-wrap" style={{overflowWrap: 'anywhere'}}>{value}</dd></div>
         ))}
       </dl>
     </div>
