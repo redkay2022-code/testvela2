@@ -1369,5 +1369,7 @@
   "18K 금": "18K Gold",
   "카테고리 선택 (필수)": "Select a category (required)",
   "카테고리를 선택해 주세요.": "Please select a category.",
-  "카테고리 (비우면 시계)": "Category (blank = Watch)"
+  "카테고리 (비우면 시계)": "Category (blank = Watch)",
+  "(1개 선택)": "(choose 1)",
+  "카테고리 선택": "Select category"
 }

@@ -2512,5 +2512,7 @@
   "18K 금": "Or 18K",
   "카테고리 선택 (필수)": "Choisir une catégorie (obligatoire)",
   "카테고리를 선택해 주세요.": "Veuillez choisir une catégorie.",
-  "카테고리 (비우면 시계)": "Catégorie (vide = Montre)"
+  "카테고리 (비우면 시계)": "Catégorie (vide = Montre)",
+  "(1개 선택)": "(choisir 1)",
+  "카테고리 선택": "Choisir la catégorie"
 }
