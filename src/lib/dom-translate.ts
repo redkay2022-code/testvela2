@@ -182,7 +182,7 @@ export async function loadDictionary(l: Lang): Promise<void> {
   await Promise.all([load(l), load('en')]);
 }
 /** Direct dictionary lookup of a static UI label for the platform's current language (no DOM rewriting). Falls back to the original text. */
-export const tx = (text: string): string => labelFor(dicts[activeLang()], text, dicts.en);
+export const tx = (text: string): string => labelFor(dicts[activeLang()], text, activeLang() === 'ko' && HANGUL.test(text) ? undefined : dicts.en);
 
 /** Translates on-screen text into `lang`: UI strings via dictionaries, seller/user-written text via cached machine translation. */
 export async function applyDomTranslation(next: Lang) {
@@ -190,7 +190,8 @@ export async function applyDomTranslation(next: Lang) {
   lang = next; pending.clear(); waiting.clear();
   if (!dicts[next]) await loadDictionary(next);
   if (lang !== next) return;
-  dict = { ...dicts.en, ...dicts[next] };
+  const fallback = next === 'ko' ? Object.fromEntries(Object.entries(dicts.en ?? {}).map(([key, value]) => [key, HANGUL.test(key) ? key : value])) : dicts.en;
+  dict = { ...fallback, ...dicts[next] };
   patterns = compilePatterns(dict);
   installDialogTranslation();
   walk(document.body);
