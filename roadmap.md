@@ -75,4 +75,4 @@
 - [x] USDT payment modal: direct transfer, card/Apple Pay via MoonPay, wallet connect, escrow trust banner
 - [ ] MoonPay partner key for guaranteed wallet prefill (waiting on user)
 
-- [ ] Update product brand selectors with custom entry, ordered TOP BRANDS and alphabetical ALL BRANDS; verify selection and translation protection.
+- [x] Update all three product creation/edit brand selectors: custom entry first, requested top nine, alphabetical full catalog and translation protection. Three tests pass; authenticated upload and seller new-product selection/custom entry/scroll verified, no runtime errors, build OK. No live product created.
