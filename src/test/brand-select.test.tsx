@@ -25,7 +25,7 @@ function clickTrigger() {
   fireEvent.click(node);
 }
 
-const pickOption = (label: string) => fireEvent.click(screen.getByText(label, { selector: "span" }));
+const pickOption = (label: string) => fireEvent.click(screen.getAllByText(label, { selector: "span" })[0]);
 
 describe("BrandSelect direct input", () => {
   it("re-opens the brand list after choosing Custom Input with empty text", () => {
