@@ -115,26 +115,26 @@ function watchSpecs(v: BulkValues, errors: string[], warnings: string[]): Record
   const out: Record<string, string> = {};
   const label = (k: string) => watchSpecificationFields.find(f => f.key === k)?.label ?? k;
   const brand = v.brand.trim();
-  if (brand) { const known = knownWatchBrand(brand); if (!known) warnings.push(`브랜드 “${brand}”는 목록에 없어요. 그대로 저장돼요.`); out.brand = known ?? brand; }
-  if (v.model.trim()) out.model = v.model.trim();
+  if (brand) { const known = knownWatchBrand(brand); if (!known) warnings.push(`브랜드 “${brand}”는 목록에 없어요. 그대로 저장돼요.`); out['brand'] = known ?? brand; }
+  if (v.model.trim()) out['model'] = v.model.trim();
   const mat = v.material.trim();
-  if (mat) out.material = optionsOf('material').find(o => norm(o) === norm(mat)) ?? mat;
-  if (v.movement.trim()) out.movement = v.movement.trim();
+  if (mat) out['material'] = optionsOf('material').find(o => norm(o) === norm(mat)) ?? mat;
+  if (v.movement.trim()) out['movement'] = v.movement.trim();
   for (const k of ['caseSize', 'thickness', 'weight', 'powerReserve'] as const) {
     const raw = v[k].trim(); if (!raw) continue;
     const n = numericSpecValue(raw);
     if (!n) errors.push(`${label(k)}은(는) 숫자만 입력해 주세요. (예: 40)`); else out[k] = `${n} ${SPEC_UNIT[k]}`;
   }
-  if (v.glass.trim()) out.glass = v.glass.trim();
+  if (v.glass.trim()) out['glass'] = v.glass.trim();
   const wr = v.waterResistance.trim();
   if (wr) {
     const opts = optionsOf('waterResistance');
     const num = /^(\d+)\s*m?\b/i.exec(wr)?.[1];
     const hit = opts.find(o => norm(o) === norm(wr)) ?? (num ? opts.find(o => o.startsWith(`${num}m`)) : undefined) ?? (/1000/.test(wr) ? '1000m+' : undefined);
     if (!hit) warnings.push(`방수 “${wr}”는 선택 목록(${opts.join(', ')})에 없어요. 그대로 저장돼요.`);
-    out.waterResistance = hit ?? wr;
+    out['waterResistance'] = hit ?? wr;
   }
-  if (v.additionalDetails.trim()) out.additionalDetails = v.additionalDetails.trim();
+  if (v.additionalDetails.trim()) out['additionalDetails'] = v.additionalDetails.trim();
   return cleanWatchSpecs(out);
 }
 
@@ -162,7 +162,7 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   const spec = watchSpecs(v, errors, warnings);
   if (errors.length) return { errors, warnings, plan: null };
   const specs: Record<string, string> = { ...spec };
-  specs.sourceType = source; if (source !== 'custom') specs.factory = v.factory.trim().slice(0, 80);
+  specs['sourceType'] = source; if (source !== 'custom') specs['factory'] = v.factory.trim().slice(0, 80);
   return { errors, warnings, plan: { title: v.title.trim().slice(0, 100), description: v.description.trim().slice(0, 3000), category, price: Math.round(price), boxPrice: box === null ? null : Math.round(box), dispatch: dispatchValue(d.choice, d.custom), specs } };
 }
 
