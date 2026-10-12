@@ -297,3 +297,34 @@ export const adminResetData = createServerFn({ method: 'POST' })
     }
     return { lines, deletedMembers: deletedCount, remainingMembers: remaining, warnings, ...(data.phase === 'data' ? { token: await auth.signResetToken(context.userId, data.scope) } : {}) };
   });
+
+/**
+ * Permanently deletes one non-admin member: their account (sign-in + phone hash) and the content they own.
+ * Order records stay for escrow/accounting history. The same phone number can sign up again afterwards.
+ */
+export const adminDeleteMember = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(d => z.object({ userId: z.string().uuid(), password: z.string().min(1).max(72) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const auth = await import('./admin-auth.server');
+    await auth.checkAdminPassword(context.supabase, context.userId, data.password);
+    if (data.userId === context.userId) throw new Error('자기 자신은 삭제할 수 없습니다.');
+    const db = await adminDb();
+    const { data: isAdmin } = await db.rpc('has_role', { _user_id: data.userId, _role: 'admin' });
+    if (isAdmin) throw new Error('관리자 계정은 삭제할 수 없습니다.');
+    const id = data.userId;
+    const { data: prof } = await db.from('profiles').select('avatar_url').eq('user_id', id).maybeSingle();
+    const { data: posts } = await db.from('posts').select('id, media_urls, video_url, thumbnail_url').eq('user_id', id);
+    const files = (posts ?? []).flatMap((p: any) => [...(p.media_urls ?? []), p.video_url, p.thumbnail_url]).filter((p: unknown): p is string => typeof p === 'string' && !!p && !p.startsWith('seed:') && !/^https?:/i.test(p) && !p.includes('..'));
+    const del = (t: string, col: string, v: string) => db.from(t).delete().eq(col, v);
+    await Promise.all([del('likes', 'user_id', id), del('cart_items', 'user_id', id), del('seller_follows', 'follower_id', id), del('seller_follows', 'seller_key', id), del('notifications', 'user_id', id), del('saved_shipping', 'user_id', id), del('seller_applications', 'user_id', id), del('user_sanctions', 'user_id', id)]);
+    await db.from('comments').delete().eq('user_id', id).not('parent_id', 'is', null);
+    await del('comments', 'user_id', id);
+    await del('reviews', 'user_id', id);
+    if (posts?.length) { await db.from('posts').delete().eq('user_id', id); for (let i = 0; i < files.length; i += 100) await db.storage.from('market-media').remove(files.slice(i, i + 100)); }
+    if (prof?.avatar_url && !/^https?:/i.test(prof.avatar_url)) await db.storage.from('avatars').remove([prof.avatar_url]);
+    const { error } = await db.auth.admin.deleteUser(id);
+    if (error) throw new Error(`회원을 삭제하지 못했습니다: ${error.message}`);
+    await db.from('profiles').delete().eq('user_id', id);
+    return { ok: true };
+  });
