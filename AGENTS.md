@@ -42,4 +42,4 @@
 - Seller pages share trusted queries; studioTab limits scrolling. PullToRefresh invalidates active queries from top-only document/nested gestures. discoveryListings excludes sold stock only from discovery, retaining storefront history.
 
 - Customer activity uses validated customerTab/orderId/orderView and authorized live orders/QC/messages; share owner likes and account-keyed local saves. Feed counters show owner reaction state, not global totals.
-- Seller post text is AI-translated on demand and cached in posts.translations; a trigger resets it on edit, blocking client writes.
+- Seller post text is AI-translated on demand into posts.translations; a trigger resets it on edit.
