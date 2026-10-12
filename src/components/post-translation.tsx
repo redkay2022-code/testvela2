@@ -5,6 +5,8 @@ import { useCurrency } from './currency';
 import { getPostTranslation } from '@/lib/translate.functions';
 import { mergeSpecs } from '@/lib/post-translation';
 import type { Post } from '@/lib/market';
+import { Tx } from './tx';
+import { Button } from './ui/button';
 
 /** Seller text in the buyer's app language, with a switch back to the original. */
 export function usePostTranslation(post: Post, enabled = true) {
@@ -29,9 +31,9 @@ export function TranslationToggle({ t }: { t: ReturnType<typeof usePostTranslati
   return (
     <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground notranslate" translate="no" data-no-translate>
       <Languages size={13} className="text-primary" />
-      {t.loading ? <span>Translating…</span> : <>
-        <span>{t.original ? 'Original text' : 'Translated by VELA AI'}</span>
-        <button type="button" className="text-primary underline-offset-2 hover:underline" onClick={t.toggle}>{t.original ? 'View translation (번역 보기)' : 'View Original (원문 보기)'}</button>
+      {t.loading ? <Tx>Translating…</Tx> : <>
+        <Tx>{t.original ? 'Original text' : 'Translated by VELA AI'}</Tx>
+        <Button variant="link" size="sm" className="h-auto whitespace-normal p-0 text-[11px]" onClick={t.toggle}><Tx>{t.original ? 'View translation (번역 보기)' : 'View Original (원문 보기)'}</Tx></Button>
       </>}
     </div>
   );
