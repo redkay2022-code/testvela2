@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Star, Check, Eye, MessageCircle, Plus, ShieldChe
 import type { User } from '@supabase/supabase-js';
 import { Button } from './ui/button';
 import { useMarketPreview } from './market-preview';
-import { SellerBadge, SellerRatings } from './reputation';
+import { SellerRatings } from './reputation';
 import { ShortsGallery } from './shorts-gallery';
 import { SpecsTable } from './specs-table';
 import { usePostTranslation, TranslationToggle } from './post-translation';
