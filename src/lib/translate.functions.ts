@@ -1,51 +1,39 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
+import { langNames, translateBatch } from './translate.server';
+import { translatableSpecKeys, type PostTranslation } from './post-translation';
 
-const names: Record<string, string> = { en: 'English', ko: 'Korean', zh: 'Simplified Chinese', ja: 'Japanese', it: 'Italian', fr: 'French', de: 'German', nl: 'Dutch', ru: 'Russian', la: 'Latin', ar: 'Arabic' };
 const cache = new Map<string, string>();
+const langEnum = z.enum(Object.keys(langNames) as [string, ...string[]]);
 
 /** Machine-translates user/seller-written snippets into the target language; returns originals on failure. */
 export const translateTexts = createServerFn({ method: 'POST' })
-  .inputValidator((d) => z.object({ lang: z.enum(Object.keys(names) as [string, ...string[]]), texts: z.array(z.string().min(1).max(600)).min(1).max(40) }).parse(d))
+  .inputValidator((d) => z.object({ lang: langEnum, texts: z.array(z.string().min(1).max(600)).min(1).max(40) }).parse(d))
   .handler(async ({ data }) => {
     const out: string[] = data.texts.map((t) => cache.get(`${data.lang}\u0000${t}`) ?? '');
     const todo = data.texts.map((t, i) => ({ t, i })).filter(({ i }) => !out[i]);
     if (todo.length) {
-      try {
-        const res = await fetch('https://ai.gateway.lovable.dev/v1/responses', {
-          method: 'POST',
-          headers: { 'Lovable-API-Key': process.env['LOVABLE_API_KEY'] ?? '', 'X-Lovable-AIG-SDK': 'fetch', 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'openai/gpt-6-astra',
-            stream: true,
-            store: false,
-            reasoning: { effort: 'low' },
-            text: { format: { type: 'json_schema', name: 'translations', strict: true, schema: { type: 'object', additionalProperties: false, required: ['t'], properties: { t: { type: 'array', items: { type: 'string' } } } } } },
-            input: [
-              { role: 'system', content: `Translate each string of a luxury watch marketplace into ${names[data.lang]}. Keep brand names, model codes, numbers and prices. If a string is already in ${names[data.lang]}, return it unchanged. Return the same count and order. Keep output brief.` },
-              { role: 'user', content: JSON.stringify(todo.map((x) => x.t)) },
-            ],
-          }),
-        });
-        if (res.ok && res.body) {
-          const reader = res.body.getReader(), dec = new TextDecoder();
-          let buf = '', text = '';
-          for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buf += dec.decode(value, { stream: true });
-            const lines = buf.split('\n'); buf = lines.pop() ?? '';
-            for (const line of lines) {
-              if (!line.startsWith('data:')) continue;
-              try { const ev = JSON.parse(line.slice(5)) as { type?: string; delta?: string }; if (ev.type === 'response.output_text.delta' && ev.delta) text += ev.delta; } catch { /* skip */ }
-            }
-          }
-          const parsed = JSON.parse(text || '{}') as { t?: unknown };
-          if (Array.isArray(parsed.t) && parsed.t.length === todo.length) {
-            todo.forEach(({ t, i }, k) => { const v = parsed.t as unknown[]; const s = typeof v[k] === 'string' ? (v[k] as string) : t; out[i] = s; cache.set(`${data.lang}\u0000${t}`, s); });
-          }
-        }
-      } catch { /* fall back to originals */ }
+      const res = await translateBatch(data.lang, todo.map((x) => x.t));
+      if (res) todo.forEach(({ t, i }, k) => { out[i] = res[k]!; cache.set(`${data.lang}\u0000${t}`, res[k]!); });
     }
     return data.texts.map((t, i) => out[i] || t);
+  });
+
+/** Returns the seller's post text translated into `lang`, cached on the post row (cache resets when the seller edits). */
+export const getPostTranslation = createServerFn({ method: 'POST' })
+  .inputValidator((d) => z.object({ postId: z.string().min(1).max(80), lang: langEnum }).parse(d))
+  .handler(async ({ data }): Promise<PostTranslation | null> => {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: post } = await supabaseAdmin.from('posts').select('id,title,description,specs,source_lang,translations,status').eq('id', data.postId).maybeSingle();
+    if (!post || post.status !== 'published' || post.source_lang === data.lang) return null;
+    const all = (post.translations && typeof post.translations === 'object' ? post.translations : {}) as Record<string, PostTranslation>;
+    if (all[data.lang]) return all[data.lang]!;
+    const specs = (post.specs && typeof post.specs === 'object' && !Array.isArray(post.specs) ? post.specs : {}) as Record<string, unknown>;
+    const keys = translatableSpecKeys.filter((k) => typeof specs[k] === 'string' && (specs[k] as string).trim());
+    const texts = [post.title, post.description, ...keys.map((k) => specs[k] as string)].map((s) => s || ' ');
+    const res = await translateBatch(data.lang, texts);
+    if (!res) return null;
+    const result: PostTranslation = { title: res[0]!.trim(), description: res[1]!.trim(), specs: Object.fromEntries(keys.map((k, i) => [k, res[i + 2]!])) };
+    await supabaseAdmin.from('posts').update({ translations: { ...all, [data.lang]: result } }).eq('id', post.id);
+    return result;
   });
