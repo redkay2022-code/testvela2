@@ -26,7 +26,7 @@
 - Build the public seller directory from visible feed listings grouped by stable seller identity; directory filters use validated URL search state and unknown live metrics remain unavailable.
 - Use insuredPurchase for mandatory delivery insurance and checkout totals; calculate on the seller item price, excluding the optional box, to keep displayed and submitted totals consistent.
 - Store item/box prices in USD; display via src/lib/currency formatMoney for consistent totals/fees.
-- Translate commerce with src/lib/i18n t() and UI with src/locales via src/lib/dom-translate; the shared locale provider detects device language/currency. Cache live USD rates server-side with fixed fallbacks.
+- Commit only the latest loaded locale; reactive Tx/pre-paint dictionary labels follow it. Native notranslate never blocks app labels; data-i18n-skip protects localized output/identities. Cache USD rates server-side.
 - Phone/password auth uses server-side peppered SHA-256; only a unique phone hash and synthetic email are stored, never raw numbers; no OAuth.
 - Trusted roles use user_roles/has_role(); applications contain system_code/nickname only and approvals require admin verification.
 - Listings store photos in media_urls and one optional video in video_url; selectors append media and use VideoStartPreview posters to preserve edits and avoid black previews.
