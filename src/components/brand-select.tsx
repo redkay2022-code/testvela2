@@ -4,8 +4,8 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSepa
 
 const noTranslate = { translate: 'no' as const, 'data-i18n-skip': true };
 
-// A field the seller has typed into stays in direct-input mode until its text is cleared,
-// even when the typed name happens to match a listed brand or the form re-renders.
+// A field in direct-input mode stays there (even with empty text, or a typed name that matches
+// a listed brand) until the seller picks a listed brand; the list always re-opens on click.
 const typedFields = new Set<string>();
 
 export function BrandSelect({ id, value, onChange }: { id: string; value: string; onChange: (value: string) => void }) {
@@ -16,21 +16,13 @@ export function BrandSelect({ id, value, onChange }: { id: string; value: string
   const customMode = custom;
   const section = known && TOP_WATCH_BRANDS.some(brand => brand === known) ? 'top' : 'all';
   const selected = customMode ? 'custom' : known ? `${section}:${known}` : '';
-  const keepTyping = () => input.current?.focus();
 
   return <div {...noTranslate} className="notranslate min-w-0 space-y-2">
-    <Select open={open} onOpenChange={next => {
-      if (next && customMode) { keepTyping(); return; }
-      setOpen(next);
-    }} value={selected} onValueChange={next => {
+    <Select open={open} onOpenChange={setOpen} value={selected} onValueChange={next => {
       if (next === 'custom') { setCustom(true); typedFields.add(id); setOpen(false); onChange(known ? '' : value); }
       else { setCustom(false); typedFields.delete(id); setOpen(false); onChange(next.slice(next.indexOf(':') + 1)); }
     }}>
-      <SelectTrigger {...noTranslate} id={id} aria-label="브랜드 선택" className="notranslate h-11 bg-muted text-foreground" onPointerDown={event => {
-        if (customMode) { event.preventDefault(); keepTyping(); }
-      }} onKeyDown={event => {
-        if (customMode && ['Enter', ' ', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) { event.preventDefault(); keepTyping(); }
-      }}>
+      <SelectTrigger {...noTranslate} id={id} aria-label="브랜드 선택" className="notranslate h-11 bg-muted text-foreground">
         <SelectValue {...noTranslate} className="notranslate" placeholder="브랜드 선택" />
       </SelectTrigger>
       <SelectContent {...noTranslate} position="popper" className="notranslate z-[200] max-h-80 border-primary/30 bg-popover text-popover-foreground" onCloseAutoFocus={event => {
@@ -50,8 +42,7 @@ export function BrandSelect({ id, value, onChange }: { id: string; value: string
     </Select>
     {customMode && <input {...noTranslate} ref={input} id={`${id}-custom`} aria-label="브랜드 직접 입력" className="notranslate form-input" placeholder="브랜드 이름 직접 입력" maxLength={80} value={value} onChange={event => {
       const next = event.target.value;
-      if (next) typedFields.add(id);
-      else { typedFields.delete(id); setCustom(false); }
+      typedFields.add(id);
       onChange(next);
     }} />}
   </div>;
