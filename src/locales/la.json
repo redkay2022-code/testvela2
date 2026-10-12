@@ -1691,7 +1691,7 @@
   "상품 링크를 복사했습니다.": "Nexus mercis exscriptus est.",
   "상품 목록": "Index mercium",
   "상품 문의": "Quaestiones de mercibus",
-  "상품 사양": "Descriptio producti",
+  "상품 사양": "Specificationes producti",
   "상품 사진": "Imagines mercis",
   "상품 상태 필터": "Filtrum status mercis",
   "상품 상태, 배송, 검수 경험을 알려주세요": "De statu mercis, traditione et inspectione narra",
@@ -2411,9 +2411,9 @@
   "ALL BRANDS": "ALL BRANDS",
   "브랜드 직접 입력": "Marcam scribe",
   "브랜드 이름 직접 입력": "Nomen marcae scribe",
-  "Translating…": "Translating…",
-  "Original text": "Original text",
-  "Translated by VELA AI": "Translated by VELA AI",
+  "Translating…": "Translatio in cursu…",
+  "Original text": "Textus originalis",
+  "Translated by VELA AI": "A VELA AI translatum",
   "View translation (번역 보기)": "Translationem vide",
   "View Original (원문 보기)": "Textum originalem vide",
   "평점 없음": "Nulla aestimatio",
@@ -2523,5 +2523,6 @@
   "메뉴 카테고리": "Categoria menu",
   "메뉴 카테고리를 선택해 주세요.": "Elige categoriam menu.",
   "메뉴 카테고리 (비우면 시계)": "Categoria menu (vacua = Horologium)",
-  "메뉴 카테고리 선택 (필수)": "Elige categoriam menu (necessarium)"
+  "메뉴 카테고리 선택 (필수)": "Elige categoriam menu (necessarium)",
+  "바로 발송 · Ready to Ship": "Ad mittendum paratum"
 }

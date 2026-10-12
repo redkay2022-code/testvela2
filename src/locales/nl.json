@@ -1691,7 +1691,7 @@
   "상품 링크를 복사했습니다.": "Productlink gekopieerd.",
   "상품 목록": "Productlijst",
   "상품 문의": "Productvragen",
-  "상품 사양": "Productbeschrijving",
+  "상품 사양": "Productspecificaties",
   "상품 사진": "Productfoto's",
   "상품 상태 필터": "Productstatusfilter",
   "상품 상태, 배송, 검수 경험을 알려주세요": "Vertel over de productstaat, verzending en je ervaring met de inspectie",
@@ -2411,9 +2411,9 @@
   "ALL BRANDS": "ALL BRANDS",
   "브랜드 직접 입력": "Merk invoeren",
   "브랜드 이름 직접 입력": "Merknaam invoeren",
-  "Translating…": "Translating…",
-  "Original text": "Original text",
-  "Translated by VELA AI": "Translated by VELA AI",
+  "Translating…": "Vertalen…",
+  "Original text": "Originele tekst",
+  "Translated by VELA AI": "Vertaald door VELA AI",
   "View translation (번역 보기)": "Vertaling bekijken",
   "View Original (원문 보기)": "Origineel bekijken",
   "평점 없음": "Nog geen beoordeling",
@@ -2523,5 +2523,6 @@
   "메뉴 카테고리": "Menucategorie",
   "메뉴 카테고리를 선택해 주세요.": "Kies een menucategorie.",
   "메뉴 카테고리 (비우면 시계)": "Menucategorie (leeg = Horloge)",
-  "메뉴 카테고리 선택 (필수)": "Kies een menucategorie (verplicht)"
+  "메뉴 카테고리 선택 (필수)": "Kies een menucategorie (verplicht)",
+  "바로 발송 · Ready to Ship": "Direct verzendbaar"
 }

@@ -632,7 +632,7 @@
   "상품 링크를 복사했습니다.": "Product link copied.",
   "상품 목록": "Product list",
   "상품 문의": "Product inquiries",
-  "상품 사양": "Product Description",
+  "상품 사양": "Product Specifications",
   "상품 사진": "Product Photos",
   "상품 상태 필터": "Product status filter",
   "상품 상태, 배송, 검수 경험을 알려주세요": "Tell us about your experience with product condition, shipping, and inspection",
@@ -1375,5 +1375,9 @@
   "메뉴 카테고리": "Menu category",
   "메뉴 카테고리를 선택해 주세요.": "Please select a menu category.",
   "메뉴 카테고리 (비우면 시계)": "Menu category (blank = Watch)",
-  "메뉴 카테고리 선택 (필수)": "Select a menu category (required)"
+  "메뉴 카테고리 선택 (필수)": "Select a menu category (required)",
+  "Translating…": "Translating…",
+  "Translated by VELA AI": "Translated by VELA AI",
+  "Original text": "Original text",
+  "바로 발송 · Ready to Ship": "Ready to Ship"
 }
