@@ -32,7 +32,7 @@ import { BulkUpload } from './bulk-upload';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = Record<string, string> & { sourceType?: string; factory?: string };
-type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
+type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
 const factoryOptions = [
@@ -57,17 +57,25 @@ export function SellerListings() {
     queryKey: ['my-listings', user?.id], enabled: !!user && canSell,
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,dispatch_time,media_urls,video_url,status,product_status,stock_qty,reserved_qty,specs,video_tags,created_at').eq('user_id', user.id).order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,dispatch_time,media_urls,video_url,status,product_status,stock_qty,reserved_qty,specs,video_tags,created_at,thumbnail_url').eq('user_id', user.id).order('created_at', { ascending: false });
       if (error) throw error;
       const rows = data as unknown as Listing[];
-      const paths = rows.flatMap(r => [...r.media_urls, r.video_url].filter(Boolean)) as string[];
+      // 목록에는 상품당 대표 사진 1장만 서명한다. 100개씩 나눠 요청하고, 일부가 실패해도 목록은 그대로 보여 준다.
+      const pick = (r: Listing) => cardPathOf(r.specs) || r.media_urls[0] || r.thumbnail_url || '';
+      const paths = [...new Set(rows.map(pick).filter(Boolean))];
       const thumbs = new Map<string, string>();
-      if (paths.length) { const { data: signed } = await supabase.storage.from('market-media').createSignedUrls(paths, 3600); signed?.forEach(s => s.path && s.signedUrl && thumbs.set(s.path, s.signedUrl)); }
-      return rows.map(r => ({ ...r, signed_media_urls: r.media_urls.map(path => thumbs.get(path) ?? ''), signed_video_url: r.video_url ? thumbs.get(r.video_url) : undefined, thumb: thumbs.get(r.media_urls[0] ?? ''), video: r.video_url ? thumbs.get(r.video_url) : undefined }));
+      for (let i = 0; i < paths.length; i += 100) {
+        try {
+          const { data: signed } = await supabase.storage.from('market-media').createSignedUrls(paths.slice(i, i + 100), 3600);
+          signed?.forEach(s => s.path && s.signedUrl && thumbs.set(s.path, s.signedUrl));
+        } catch { /* 일부 사진만 못 불러와도 목록은 표시 */ }
+      }
+      return rows.map(r => ({ ...r, thumb: thumbs.get(pick(r)) }));
     },
   });
   const [editing, setEditing] = useState<Listing | 'new' | null>(null);
   const [bulk, setBulk] = useState(false);
+  const [shown, setShown] = useState(24);
   const [replacing, setReplacing] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<string | null>(null);
   const formTop = useRef<HTMLDivElement>(null);
@@ -107,8 +115,8 @@ export function SellerListings() {
     <div ref={formTop} className="scroll-mt-4" />
     {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불러오는 중…")}</span></p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 등록한 상품이 없어요.")}</span></p> :
-      <ul className="seller-inventory-grid mt-5">{listings.data.map(l => <li key={l.id} className="seller-inventory-item">
-        <div className="min-w-0"><figure className={`seller-inventory-media ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`}>{l.video ? <VideoStartPreview src={l.video} className="seller-inventory-image" /> : l.thumb ? <img src={l.thumb} alt={l.title} className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
+      <ul className="seller-inventory-grid mt-5">{listings.data.slice(0, shown).map(l => <li key={l.id} className="seller-inventory-item">
+        <div className="min-w-0"><figure className={`seller-inventory-media ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`}>{l.thumb ? <img src={l.thumb} alt={l.title} loading="lazy" decoding="async" className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
           <div className="min-w-0"><p className="truncate font-medium">{l.title}</p><p className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.price != null ? formatMoney(l.price) : tx('가격 없음')}</span> · <span className="record-status"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.product_status === 'OUT_OF_STOCK' ? tx('판매 완료') : l.status === 'published' ? tx('판매 중') : tx('임시 저장')}</span></span></p>{l.specs.factory && <span className="text-xs text-primary" data-no-translate>{l.specs.factory}</span>}{l.specs.sourceType === 'custom' && <span className="text-xs text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("커스텀 제작")}</span></span>}</div></div>
         <div className="record-actions">
           {l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label={tx("판매 완료")} checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 완료")}</span></label>}
@@ -118,6 +126,7 @@ export function SellerListings() {
           <Button asChild size="sm" variant="ghost"><label aria-label={tx("영상 재업로드")} className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{replacing === l.id ? tx('올리는 중') : tx('재업로드')}</span><input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
           <Button size="sm" variant="ghost" aria-label={tx("삭제")} onClick={() => void remove(l)}><Trash2 /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("삭제")}</span></Button>
         </div></li>)}</ul>}
+    {(listings.data?.length ?? 0) > shown && <div className="mt-4 text-center"><Button variant="outline" onClick={() => setShown(n => n + 24)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("더 보기")} ({shown}/{listings.data?.length})</span></Button></div>}
   {previewing && (() => { const pl = (listings.data ?? []).find(x => x.id === previewing); return pl ? <ListingPreview listing={pl} user={user} onClose={() => setPreviewing(null)} /> : null; })()}
   </section>;
 }
