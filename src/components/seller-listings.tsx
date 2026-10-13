@@ -11,6 +11,7 @@ import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { syncMyPostNickname } from '@/lib/seller-accounts.functions';
+import { signMyMedia } from '@/lib/my-media.functions';
 import { ListingPreview } from './listing-preview';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
@@ -51,6 +52,7 @@ export function SellerListings() {
   const canSell = roles.includes('seller') || roles.includes('admin');
   const qc = useQueryClient();
   const syncNickname = useServerFn(syncMyPostNickname);
+  const signMedia = useServerFn(signMyMedia);
   const synced = useRef(false);
   useEffect(() => { if (!user || !canSell || synced.current) return; synced.current = true; void syncNickname().then(() => qc.invalidateQueries({ queryKey: ['my-listings'] })).catch(() => undefined); }, [user, canSell]);
   const listings = useQuery({
@@ -60,9 +62,13 @@ export function SellerListings() {
       const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,dispatch_time,media_urls,video_url,status,product_status,stock_qty,reserved_qty,specs,video_tags,created_at,thumbnail_url').eq('user_id', user.id).order('created_at', { ascending: false });
       if (error) throw error;
       const rows = data as unknown as Listing[];
-      // 목록에는 상품당 대표 사진 1장만 서명한다. 100개씩 나눠 요청하고, 일부가 실패해도 목록은 그대로 보여 준다.
+      // 목록에는 상품당 대표 사진 1장만 서명한다. 서버에서 소유자를 확인해 서명하고(스토리지 정책 밖 파일도 보이도록), 실패하면 브라우저에서 직접 시도한다.
+      const serverThumbs = new Map<string, string>();
+      for (let i = 0; i < rows.length; i += 100) {
+        try { const res = await signMedia({ data: { ids: rows.slice(i, i + 100).map(r => r.id) } }); Object.entries(res).forEach(([id, v]) => { if (v.thumb) serverThumbs.set(id, v.thumb); }); } catch { /* 아래 직접 서명으로 보완 */ }
+      }
       const pick = (r: Listing) => cardPathOf(r.specs) || r.media_urls[0] || r.thumbnail_url || '';
-      const paths = [...new Set(rows.map(pick).filter(Boolean))];
+      const paths = [...new Set(rows.filter(r => !serverThumbs.has(r.id)).map(pick).filter(Boolean))];
       const thumbs = new Map<string, string>();
       for (let i = 0; i < paths.length; i += 100) {
         try {
@@ -70,7 +76,7 @@ export function SellerListings() {
           signed?.forEach(s => s.path && s.signedUrl && thumbs.set(s.path, s.signedUrl));
         } catch { /* 일부 사진만 못 불러와도 목록은 표시 */ }
       }
-      return rows.map(r => ({ ...r, thumb: thumbs.get(pick(r)) }));
+      return rows.map(r => ({ ...r, thumb: serverThumbs.get(r.id) ?? thumbs.get(pick(r)) }));
     },
   });
   const [editing, setEditing] = useState<Listing | 'new' | null>(null);
@@ -83,6 +89,7 @@ export function SellerListings() {
   const openWithMedia = async (l: Listing, open: (value: Listing) => void) => {
     if (opening) return; setOpening(l.id);
     try {
+      try { const res = (await signMedia({ data: { ids: [l.id], full: true } }))[l.id]; if (res && (res.media.some(Boolean) || res.video)) { open({ ...l, signed_media_urls: res.media, signed_video_url: res.video || undefined }); return; } } catch { /* 직접 서명으로 보완 */ }
       const paths = [...l.media_urls, l.video_url].filter(Boolean) as string[]; const map = new Map<string, string>();
       for (let i = 0; i < paths.length; i += 100) { try { const { data: signed } = await supabase.storage.from('market-media').createSignedUrls(paths.slice(i, i + 100), 3600); signed?.forEach(x => x.path && x.signedUrl && map.set(x.path, x.signedUrl)); } catch { /* 일부 실패해도 열기 */ } }
       open({ ...l, signed_media_urls: l.media_urls.map(p => map.get(p) ?? ''), signed_video_url: l.video_url ? map.get(l.video_url) : undefined });

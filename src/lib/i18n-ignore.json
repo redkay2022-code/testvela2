@@ -149,6 +149,7 @@
     "lib/feed-popularity.functions.ts",
     "lib/personal-feed.ts",
     "lib/seen-history.ts",
-    "lib/use-feed-signals.ts"
+    "lib/use-feed-signals.ts",
+    "lib/my-media.functions.ts"
   ]
 }
