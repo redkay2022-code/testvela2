@@ -7,6 +7,8 @@ import { postCategoryLabels } from '@/lib/feed-categories';
 import { PostCategoryField } from './post-category-field';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
+import { useServerFn } from '@tanstack/react-start';
+import { syncMyPostNickname } from '@/lib/seller-accounts.functions';
 import { ListingPreview } from './listing-preview';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
@@ -46,6 +48,9 @@ export function SellerListings() {
   const roles: string[] = (account.data as { roles?: string[] } | undefined)?.roles ?? [];
   const canSell = roles.includes('seller') || roles.includes('admin');
   const qc = useQueryClient();
+  const syncNickname = useServerFn(syncMyPostNickname);
+  const synced = useRef(false);
+  useEffect(() => { if (!user || !canSell || synced.current) return; synced.current = true; void syncNickname().then(() => qc.invalidateQueries({ queryKey: ['my-listings'] })).catch(() => undefined); }, [user, canSell]);
   const listings = useQuery({
     queryKey: ['my-listings', user?.id], enabled: !!user && canSell,
     queryFn: async () => {

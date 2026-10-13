@@ -1,7 +1,7 @@
 export const watchSpecificationFields = [
   { key: 'brand', label: '브랜드', kind: 'brand' },
   { key: 'model', label: '모델명', kind: 'text', placeholder: 'Daytona 116500LN, Nautilus 5712, Royal Oak' },
-  { key: 'material', label: '케이스 소재', kind: 'select', custom: true, options: ['316L Stainless Steel', '904L Steel', '18K Yellow Gold', 'Rose Gold', 'White Gold', 'Platinum', 'Titanium', 'Carbon', 'Ceramic', '18K Gold Wrapped', 'Tungsten'] },
+  { key: 'material', label: '케이스 소재', kind: 'select', custom: true, options: ['904L stainless', '316L stainless', 'Stainless Steel', 'Tungsten(weighted)', '18k gold wrapped', 'Platinum wrapped', 'Carbon', 'Ceramic'] },
   { key: 'movement', label: '무브먼트', kind: 'text', placeholder: 'Automatic, Manual Winding, Quartz, Tourbillon 등 직접 입력' },
   { key: 'caseSize', label: '케이스 직경', kind: 'number', unit: 'mm', placeholder: '40' },
   { key: 'thickness', label: '두께', kind: 'number', unit: 'mm', placeholder: '12.5' },

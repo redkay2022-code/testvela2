@@ -19,9 +19,9 @@ function SpecificationSelect({ id, label, value, options, custom, onChange }: {
     }}>
       <SelectTrigger {...protectedText} id={id} aria-label={tx(label)} className="notranslate h-11 w-full min-w-0 bg-muted text-foreground"><SelectValue {...protectedText} className="notranslate" placeholder={tx('선택')} /></SelectTrigger>
       <SelectContent {...protectedText} position="popper" className="notranslate z-[200] max-h-80 max-w-[calc(100vw-2rem)] bg-popover text-popover-foreground">
-        {custom && <SelectItem {...protectedText} className="notranslate text-primary" value="__custom"><Tx>Custom Input (직접 입력)</Tx></SelectItem>}
         {unknown && !customMode && <SelectItem {...protectedText} data-i18n-skip className="notranslate" value={value}>{value}</SelectItem>}
-        {options.map(option => <SelectItem {...protectedText} className="notranslate" key={option} value={option}><Tx>{option}</Tx></SelectItem>)}
+        {options.map(option => <SelectItem {...protectedText} data-i18n-skip className="notranslate" key={option} value={option}><span translate="no" data-no-translate="" className="notranslate">{option}</span></SelectItem>)}
+        {custom && <SelectItem {...protectedText} data-i18n-skip className="notranslate text-primary" value="__custom"><span translate="no" data-no-translate="" className="notranslate">직접입력 (Custom Input)</span></SelectItem>}
       </SelectContent>
     </Select>
     {customMode && <input {...protectedText} id={`${id}-custom`} aria-label={`${label} 직접 입력`} className="notranslate form-input min-w-0" maxLength={80} value={value} placeholder="케이스 소재 직접 입력" onChange={event => onChange(event.target.value)} />}

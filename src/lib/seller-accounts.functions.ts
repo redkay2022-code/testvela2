@@ -21,6 +21,24 @@ export const updateNickname = createServerFn({ method: 'POST' })
   .handler(async ({ context, data }) => {
     const { error } = await context.supabase.from('profiles').update({ nickname: data.nickname }).eq('user_id', context.userId);
     if (error) throw new Error('Nickname could not be saved.');
+    await syncPostCreator(context.userId, data.nickname);
+    return { ok: true };
+  });
+
+/** Posts keep a copy of the seller's display name; keep that copy in step with the profile nickname. */
+async function syncPostCreator(userId: string, nickname: string) {
+  try {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    await supabaseAdmin.from('posts').update({ creator: nickname.slice(0, 40) }).eq('user_id', userId).is('store_id', null);
+  } catch { /* the nickname itself is already saved; the next sync repairs the posts */ }
+}
+
+/** Repairs posts written before the nickname was changed (runs when a seller opens their listings). */
+export const syncMyPostNickname = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: profile } = await context.supabase.from('profiles').select('nickname').eq('user_id', context.userId).maybeSingle();
+    if (profile?.nickname) await syncPostCreator(context.userId, profile.nickname);
     return { ok: true };
   });
 

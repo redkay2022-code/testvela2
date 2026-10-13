@@ -64,7 +64,7 @@ export function NicknameEditor({ user, unframed = false }: { user: User | null; 
   const avatarUrl = useAvatarUrl(data?.profile?.avatar_url);
   useEffect(() => { if (data?.profile) setValue(data.profile.nickname); }, [data?.profile]);
   if (!data?.profile || !user) return null;
-  return <form className={unframed ? 'py-4' : 'seller-flow-card'} onSubmit={async e => { e.preventDefault(); setMsg(''); try { await save({ data: { nickname: value } }); await qc.invalidateQueries({ queryKey: ['my-account'] }); setMsg('저장했습니다'); } catch (err) { setMsg(err instanceof Error ? err.message : 'Could not save'); } }}>
+  return <form className={unframed ? 'py-4' : 'seller-flow-card'} onSubmit={async e => { e.preventDefault(); setMsg(''); try { await save({ data: { nickname: value } }); await qc.invalidateQueries({ queryKey: ['my-account'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); void qc.invalidateQueries({ queryKey: ['my-listings'] }); setMsg('저장했습니다'); } catch (err) { setMsg(err instanceof Error ? err.message : 'Could not save'); } }}>
     <label className="mt-3 flex cursor-pointer items-center gap-3">
       <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-input bg-muted">{avatarUrl ? <img src={avatarUrl} alt="프로필 사진" className="size-full object-cover" /> : <UserRound size={22} className="text-muted-foreground" />}</span>
       <span className="text-sm text-muted-foreground">프로필 사진 변경 (5MB 이하)</span>
