@@ -22,7 +22,7 @@ import { ArrowLeft, ArrowRight, Bell, Star, Check, ChevronRight, Compass, Eye, H
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { marketSearch, paths, postsQuery, storesQuery, type Mode } from '@/lib/market';
-import { dollars, luxuryCategories, luxuryPosts, watchImages, type LuxuryPost } from '@/lib/luxury-market';
+import { cardImageOf, dollars, luxuryCategories, luxuryPosts, watchImages, type LuxuryPost } from '@/lib/luxury-market';
 import { useMarketPreview } from './market-preview';
 import { AuthDialog, UploadForm } from './marketplace';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,6 +50,8 @@ import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
 import { rankRecommended } from '@/lib/feed-ranking';
+import { createFeedMemo } from '@/lib/personal-feed';
+import { useFeedSignals } from '@/lib/use-feed-signals';
 import { filterFeed, sortFeed, postFactory, type FeedFilter } from '@/lib/feed-filters';
 import { FeedFilters } from './feed-filters';
 import { useMediaRefresh } from '@/lib/media-refresh';
@@ -95,8 +97,9 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  if(search.tab==='following') posts=posts.filter(p=>preview.isFollowing(sellerIdentity(p))).sort((a,b)=>(Date.parse(b.source?.created_at ?? '')||0)-(Date.parse(a.source?.created_at ?? '')||0));
   const {data:reviewRows}=useQuery({queryKey:['review-counts'],queryFn:async()=>{const {data:rows}=await supabase.from('reviews').select('seller_id');return rows ?? [];},staleTime:30_000});
   const postRatings=usePostRatings();
+  const feedSignals=useFeedSignals(user?.id ?? null,preview.saved,preview.followedSellers),feedMemo=useRef(createFeedMemo()).current;
   const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
-  if(mode==='home'&&(search.tab || 'discover')==='discover') posts=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {}).sort((a,b)=>Number(Boolean(b.featured))-Number(Boolean(a.featured)));
+  if(mode==='home'&&(search.tab || 'discover')==='discover'){const ranked=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {});posts=[...(feedSignals?feedMemo(ranked,{...feedSignals.signals,now:Date.now()},feedSignals.version):ranked)].sort((a,b)=>Number(Boolean(b.featured))-Number(Boolean(a.featured)));}
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
@@ -180,7 +183,7 @@ function Feed({posts,base,search,onSelectProduct}:{onSelectProduct?:(event:React
  useEffect(()=>{if(limit>=posts.length)return;if(typeof IntersectionObserver==='undefined'){setLimit(posts.length);return;}const el=sentinel.current;if(!el)return;const io=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))setLimit(n=>{feedShown=n+FEED_PAGE;return n+FEED_PAGE;});},{rootMargin:'1200px 0px'});io.observe(el);return()=>io.disconnect();},[limit,posts.length]);
  const shown=posts.slice(0,limit);
  return posts.length?<><div className={`lux-waterfall ${compact?'red-home-waterfall':''}`}>{Array.from({length:columns},(_,i)=>i).map(column=><div className="lux-column" key={column}>{shown.filter((_,i)=>i%columns===column).map((post,i)=><article className="lux-post" key={post.id}>
-  <Link onClick={onSelectProduct} to={postMediaRoute(post)} params={{id:post.id}} search={{role:search.role}} className={`lux-post-media shape-${(column+i)%3} ${post.outOfStock?'is-sold-out':''}`} aria-label={post.title}>{post.video?<FeedVideo post={post}/>:<img src={post.images[0]} alt={post.title} width={512} height={512} loading={i<4?'eager':'lazy'} decoding="async" fetchPriority={i<2?'high':'auto'} onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src=watchImages[0] ?? '';}}/>}{post.outOfStock&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}{!post.outOfStock&&isImmediateDispatch(post)&&<span className="lux-ready-badge" data-no-translate>바로 발송</span>}{!compact&&<><span className="lux-views"><Eye size={12}/>{post.views}<span className="views-word"> views</span></span><span className="lux-bag"><ShoppingBag size={15}/></span></>}</Link>
+  <Link onClick={onSelectProduct} to={postMediaRoute(post)} params={{id:post.id}} search={{role:search.role}} className={`lux-post-media shape-${(column+i)%3} ${post.outOfStock?'is-sold-out':''}`} aria-label={post.title}>{post.video?<FeedVideo post={post}/>:<img src={cardImageOf(post)} alt={post.title} width={512} height={512} loading={i<4?'eager':'lazy'} decoding="async" fetchPriority={i<2?'high':'auto'} onError={e=>{const t=e.currentTarget,full=post.images[0];if(full&&t.src!==full){t.src=full;return;}t.onerror=null;t.src=watchImages[0] ?? '';}}/>}{post.outOfStock&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}{!post.outOfStock&&isImmediateDispatch(post)&&<span className="lux-ready-badge" data-no-translate>바로 발송</span>}{!compact&&<><span className="lux-views"><Eye size={12}/>{post.views}<span className="views-word"> views</span></span><span className="lux-bag"><ShoppingBag size={15}/></span></>}</Link>
  <div className="lux-post-copy">{!compact&&<div className="lux-post-tags"><span data-i18n-skip>{post.factory}</span>{(preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified)&&<ShieldCheck size={12}/>}</div>}<Link onClick={onSelectProduct} to={postMediaRoute(post)} params={{id:post.id}} search={{role:search.role}}><FeedPostTitle post={post}/></Link>{!compact&&post.price!==null&&<p className="lux-card-price">{dollars(post.price)}</p>}<div className="lux-post-creator" data-no-translate><Link to="/store" search={{role:search.role,seller:sellerIdentity(post)}}><SellerFeedAvatar post={post}/><span className="lux-card-seller-name notranslate" translate="no" data-i18n-skip title={post.creator}>{post.creator}</span><SellerBadge reputation={post.reputation} compact/></Link><div className="lux-post-engagement" role="group" aria-label="좋아요 및 저장"><Button variant="ghost" className={`lux-heart ${engagement.likedIds.has(post.id)?'active':''}`} aria-label={`좋아요 ${post.title}`} title="내 좋아요 · 선택 1 / 미선택 0" aria-pressed={engagement.likedIds.has(post.id)} disabled={engagement.busy} onClick={()=>engagement.toggleLike(post.id)}><Heart fill={engagement.likedIds.has(post.id)?'currentColor':'none'}/><span>{Number(engagement.likedIds.has(post.id))}</span></Button><Button variant="ghost" className={`lux-heart lux-save ${preview.saved.includes(post.id)?'active':''}`} aria-label={`저장 ${post.title}`} title="이 기기의 내 저장 · 선택 1 / 미선택 0" aria-pressed={preview.saved.includes(post.id)} onClick={()=>preview.toggleSaved(post.id)}><Star fill={preview.saved.includes(post.id)?'currentColor':'none'}/><span>{Number(preview.saved.includes(post.id))}</span></Button></div></div></div>
  </article>)}</div>)}</div>{limit<posts.length&&<div ref={sentinel} aria-hidden="true" style={{height:1}}/>}</>:<div className="lux-empty"><Compass/><h2>No finds here yet.</h2><p>Follow a studio or choose another category.</p><Button asChild variant="goldOutline"><Link to="/store">Explore VS Watch Studio<ArrowRight/></Link></Button></div>;
 }
@@ -199,7 +202,7 @@ function SellerFeedAvatar({post}:{post:LuxuryPost}) {
 
 function FeedVideo({post}:{post:LuxuryPost}) {
  const hasPhoto=Boolean(post.sample||post.source?.thumbnail_url||post.source?.media_urls.length);
- return <span className="feed-video-frame">{hasPhoto||!post.video?<img src={post.images[0]} alt={`${post.title} 영상 썸네일`} loading="lazy"/>:<LazyVideo src={`${post.video}#t=0.5`} poster={post.images[0]} label={`${post.title} 영상 썸네일`}/>}<span className="feed-video-play" aria-hidden="true"><Play size={18} fill="currentColor"/></span></span>;
+ return <span className="feed-video-frame">{hasPhoto||!post.video?<img src={cardImageOf(post)} alt={`${post.title} 영상 썸네일`} loading="lazy" decoding="async" onError={e=>{const t=e.currentTarget,full=post.images[0];if(full&&t.src!==full){t.src=full;return;}t.onerror=null;}}/>:<LazyVideo src={`${post.video}#t=0.5`} poster={cardImageOf(post)} label={`${post.title} 영상 썸네일`}/>}<span className="feed-video-play" aria-hidden="true"><Play size={18} fill="currentColor"/></span></span>;
 }
 function ProductDetail({post,user,requestAuth,close,buy,notify}:{post:LuxuryPost;user:AuthUser|null;requestAuth:()=>void;close:()=>void;buy:(box:boolean)=>void;notify:(s:string)=>void}) {
  const reduced=useReducedMotion();

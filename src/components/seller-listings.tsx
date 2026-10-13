@@ -1,4 +1,6 @@
 import { tx } from '@/lib/dom-translate';
+import { cardPathOf, uploadCardImage } from '@/lib/card-image';
+import { CardImageOptimizer } from './card-image-optimizer';
 import { useCurrency } from './currency';
 import { activeLang } from '@/lib/i18n';
 import { WatchSpecificationsForm } from './watch-specifications-form';
@@ -96,11 +98,12 @@ export function SellerListings() {
     } catch (err) { alert(err instanceof Error ? err.message : '영상 교체에 실패했어요.'); }
     finally { setReplacing(null); }
   };
-  const remove = async (l: Listing) => { if (roles.includes('admin')) { if (!(await gate.ask(tx('상품과 사진·영상을 함께 삭제합니다: {0}', { 0: l.title })))) return; } else if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : [])]; if (media.length) await supabase.storage.from('market-media').remove(media); refresh(); };
+  const remove = async (l: Listing) => { if (roles.includes('admin')) { if (!(await gate.ask(tx('상품과 사진·영상을 함께 삭제합니다: {0}', { 0: l.title })))) return; } else if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : []), ...(cardPathOf(l.specs) ? [cardPathOf(l.specs) as string] : [])]; if (media.length) await supabase.storage.from('market-media').remove(media); refresh(); };
 
   return <section className="seller-flow-card" aria-label={tx("내 상품 관리")}>{gate.dialog}
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><div className="flex gap-2"><Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("일괄 업로드")}</span></Button><Button size="sm" onClick={() => setEditing('new')}><Plus /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새 상품")}</span></Button></div></div>
     {bulk && <BulkUpload user={user} existingTitles={(listings.data ?? []).map(l => l.title)} onClose={() => setBulk(false)} onDone={refresh} />}
+    <CardImageOptimizer user={user} listings={listings.data ?? []} onDone={refresh} />
     <div ref={formTop} className="scroll-mt-4" />
     {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불러오는 중…")}</span></p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 등록한 상품이 없어요.")}</span></p> :
@@ -220,15 +223,22 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       }));
       if (settled.some(r => r.status === 'rejected')) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
       for (const r of settled) if (r.status === 'fulfilled' && r.value) photoPaths.push(r.value);
+      // small picture for feed cards: keep the old one while the first photo is unchanged, otherwise make a new one
+      const prevCard = cardPathOf(listing?.specs);
+      const firstPhoto = photos[0];
+      let card: string | null = null;
+      if (firstPhoto?.path && firstPhoto.path === listing?.media_urls[0]) card = prevCard;
+      else if (firstPhoto?.file) { card = await uploadCardImage(firstPhoto.file, user.id); if (card) uploaded.push(card); }
       const cleanSpecs = cleanWatchSpecs(specs);
       cleanSpecs['sourceType'] = sourceType;
       cleanSpecs['menuCategory'] = menuCategory;
+      if (card) cleanSpecs['cardImage'] = card;
       if (sourceType === 'custom') delete cleanSpecs['factory'];
       else cleanSpecs['factory'] = factory.trim().slice(0, 80);
       const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, dispatch_time: dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
-        const retained = new Set(photoPaths); const removed = [...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await supabase.storage.from('market-media').remove(removed);
+        const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await supabase.storage.from('market-media').remove(removed);
       } else {
         const nickname = (await supabase.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()).data?.nickname || 'vela member';
         const { error: e } = await supabase.from('posts').insert({ ...row, user_id: user.id, creator: nickname.slice(0, 40), image_key: 'uploaded' });

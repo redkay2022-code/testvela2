@@ -92,11 +92,11 @@ export const adminDeletePost = createServerFn({ method: 'POST' })
     const auth = await import('./admin-auth.server');
     await auth.checkAdminPassword(context.supabase, context.userId, data.password);
     const db = await adminDb();
-    const { data: post } = await db.from('posts').select('id, media_urls, video_url, thumbnail_url').eq('id', data.postId).maybeSingle();
+    const { data: post } = await db.from('posts').select('id, media_urls, video_url, thumbnail_url, specs').eq('id', data.postId).maybeSingle();
     if (!post) throw new Error('이미 삭제되었거나 찾을 수 없는 상품입니다.');
     const { error } = await db.from('posts').delete().eq('id', data.postId);
     if (error) throw new Error('상품을 삭제하지 못했습니다.');
-    const files = [...(post.media_urls ?? []), post.video_url, post.thumbnail_url].filter((p: unknown): p is string => typeof p === 'string' && p.length > 0 && !p.startsWith('seed:') && !p.startsWith('http') && !p.includes('..'));
+    const files = [...(post.media_urls ?? []), post.video_url, post.thumbnail_url, post.specs?.cardImage].filter((p: unknown): p is string => typeof p === 'string' && p.length > 0 && !p.startsWith('seed:') && !p.startsWith('http') && !p.includes('..'));
     if (files.length) await db.storage.from('market-media').remove(files);
     return { ok: true };
   });

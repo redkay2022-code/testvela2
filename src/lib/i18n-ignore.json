@@ -143,6 +143,12 @@
     "lib/editor-fonts.ts",
     "lib/video-compress.ts",
     "components/bulk-upload.tsx",
-    "lib/bulk-upload.ts"
+    "lib/bulk-upload.ts",
+    "components/card-image-optimizer.tsx",
+    "lib/card-image.ts",
+    "lib/feed-popularity.functions.ts",
+    "lib/personal-feed.ts",
+    "lib/seen-history.ts",
+    "lib/use-feed-signals.ts"
   ]
 }

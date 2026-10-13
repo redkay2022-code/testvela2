@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { uploadCardImage } from '@/lib/card-image';
 import type { User } from '@supabase/supabase-js';
 import { CheckCircle2, Loader2, TriangleAlert, Upload, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,11 +91,13 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
       // photos keep their number order (-1, -2 … -10); the first photo is the cover of a photo-only product
       const photoPaths: string[] = [];
       for (const photo of item.photos) photoPaths.push(await put(await compressImage(photo)));
+      const card = item.photos[0] ? await uploadCardImage(item.photos[0], user.id) : null; // small picture for feed cards
+      if (card) uploaded.push(card);
       let thumb: string | null = null;
       if (video) { thumb = await uploadVideoThumbnail(video, user.id); if (thumb) uploaded.push(thumb); }
       else thumb = photoPaths[0] ?? null;
       const nickname = (await supabase.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()).data?.nickname || 'vela member';
-      const { error } = await supabase.from('posts').insert({ user_id: user.id, creator: String(nickname).slice(0, 40), image_key: 'uploaded', source_lang: activeLang(), title: plan.title, description: plan.description, category: plan.category, price: plan.price, box_price: plan.boxPrice, dispatch_time: plan.dispatch, media_urls: photoPaths, video_url: videoPath, thumbnail_url: thumb, video_tags: [], specs: plan.specs, status: publish ? 'published' : 'draft' });
+      const { error } = await supabase.from('posts').insert({ user_id: user.id, creator: String(nickname).slice(0, 40), image_key: 'uploaded', source_lang: activeLang(), title: plan.title, description: plan.description, category: plan.category, price: plan.price, box_price: plan.boxPrice, dispatch_time: plan.dispatch, media_urls: photoPaths, video_url: videoPath, thumbnail_url: thumb, video_tags: [], specs: card ? { ...plan.specs, cardImage: card } : plan.specs, status: publish ? 'published' : 'draft' });
       if (error) throw new Error('저장하지 못했어요. 셀러 승인 상태를 확인해 주세요.');
       set(item.id, { status: 'done', pct: 100, step: '완료' });
     } catch (err) {

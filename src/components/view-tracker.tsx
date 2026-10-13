@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useRouterState } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { trackView } from '@/lib/admin-members.functions';
+import { addDwell, recordOpen } from '@/lib/seen-history';
 
 /**
  * First-party visit counter used for the seller and admin analytics.
@@ -33,9 +34,22 @@ export function ViewTracker() {
   const loc = useRouterState({ select: s => s.location });
   const prev = useRef('');
   const last = useRef('');
+  // Which product the visitor is looking at and since when (at = 0 while the tab is hidden). Stays on this device only.
+  const dwell = useRef<{ id: string; at: number } | null>(null);
+  const endDwell = () => { const d = dwell.current; dwell.current = null; if (d && d.at) addDwell(d.id, Date.now() - d.at); };
+  useEffect(() => {
+    const onVisibility = () => {
+      const d = dwell.current; if (!d) return;
+      if (document.hidden) { if (d.at) { addDwell(d.id, Date.now() - d.at); d.at = 0; } } else if (!d.at) d.at = Date.now();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', endDwell);
+    return () => { document.removeEventListener('visibilitychange', onVisibility); window.removeEventListener('pagehide', endDwell); endDwell(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     const path = loc.pathname;
-    if (/^\/(admin|seller|seller-store|seller-messages|upload|me)(\/|$)/.test(path)) { prev.current = path; return; }
+    if (/^\/(admin|seller|seller-store|seller-messages|upload|me)(\/|$)/.test(path)) { endDwell(); prev.current = path; return; }
     const search = (loc.search ?? {}) as Record<string, unknown>;
     const post = /^\/(post|shorts)\/([^/]+)/.exec(path)?.[2] ?? (typeof search['post'] === 'string' && search['post'] ? (search['post'] as string) : typeof search['shorts'] === 'string' && search['shorts'] ? (search['shorts'] as string) : undefined);
     const seller = typeof search['seller'] === 'string' && path.startsWith('/store') ? (search['seller'] as string) : undefined;
@@ -43,6 +57,8 @@ export function ViewTracker() {
     const key = `${kind}:${post ?? seller ?? path}`;
     if (key === last.current) return;
     last.current = key;
+    endDwell();
+    if (post) { let id = post; try { id = decodeURIComponent(post); } catch { /* keep raw id */ } recordOpen(id); dwell.current = { id, at: Date.now() }; }
     const source = classify(prev.current, typeof search['q'] === 'string' && search['q'] !== '', typeof search['category'] === 'string' && search['category'] !== '');
     prev.current = path;
     const timer = window.setTimeout(() => {

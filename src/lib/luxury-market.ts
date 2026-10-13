@@ -49,3 +49,10 @@ export function luxuryPosts(posts:FeedPost[]):LuxuryPost[] {
 }
 /** Formats a base-USD amount in the active display currency. */
 export const dollars=(amount:number)=>formatMoney(amount);
+
+/** Small picture for list cards (made at upload, ~480px). Older products without one fall back to their first full-size photo. */
+export function cardImageOf(post:LuxuryPost):string|undefined{
+ const specs=post.source?.specs;
+ const card=specs&&typeof specs==='object'&&!Array.isArray(specs)?(specs as Record<string,unknown>)['cardImage']:undefined;
+ return typeof card==='string'&&/^https?:\/\//.test(card)?card:post.images[0];
+}

@@ -37,5 +37,10 @@ export function stableUrl<T extends string | null | undefined>(url: T): T {
 export function forgetUrl(url: string) { load().delete(keyOf(url)); persist(); }
 
 export function stabilizePosts<P extends { media_urls: string[]; video_url: string | null; thumbnail_url: string | null }>(posts: P[]): P[] {
-  return posts.map(p => ({ ...p, media_urls: p.media_urls.map(u => stableUrl(u)), video_url: stableUrl(p.video_url), thumbnail_url: stableUrl(p.thumbnail_url) }));
+  return posts.map(p => {
+    const specs = (p as { specs?: unknown }).specs;
+    const card = specs && typeof specs === 'object' && !Array.isArray(specs) ? (specs as Record<string, unknown>)['cardImage'] : undefined;
+    const next = { ...p, media_urls: p.media_urls.map(u => stableUrl(u)), video_url: stableUrl(p.video_url), thumbnail_url: stableUrl(p.thumbnail_url) };
+    return typeof card === 'string' ? { ...next, specs: { ...(specs as Record<string, unknown>), cardImage: stableUrl(card) } } : next;
+  });
 }
