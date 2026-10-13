@@ -2,6 +2,7 @@
  * Bulk upload helpers (pure functions, no network): parse a table pasted from Excel / Google Sheets (or a CSV),
  * match each row to a video file by file name, group photos with their video, and validate every product.
  * One video = one product. Photos named "<video name>-1.jpg", "<video name>_2.png" … belong to that video.
+ * Photos whose video does not exist are grouped by the name in front of the last "-number" ("<product>-1.jpg", "<product>-2.jpg" …) and become a photo-only product.
  */
 import { productCategories } from '@/lib/catalog';
 import { postCategoryLabels } from '@/lib/feed-categories';
@@ -69,34 +70,61 @@ export function parseTable(text: string): Partial<BulkValues>[] {
   });
 }
 
-const stem = (name: string) => name.replace(/\.[^.]+$/, '');
+const MEDIA_EXT = /\.(mp4|mov|jpe?g|png|webp)$/i;
+/** File name without a media extension ("dd(black).mp4" -> "dd(black)"); names without one stay as they are. */
+const stem = (name: string) => name.replace(MEDIA_EXT, '');
 const norm = (s: string) => s.normalize('NFC').trim().toLowerCase();
 
-export type BulkItem = { id: string; video: File; photos: File[]; values: BulkValues };
+/** One product: a video product (video + photos) or a photo-only product (video = null). `name` is what the table's "파일명" refers to. */
+export type BulkItem = { id: string; name: string; video: File | null; photos: File[]; values: BulkValues };
 
-/** Groups the chosen files: each video becomes one product; photos join the video whose name they start with. */
-export function groupFiles(files: File[]): { items: BulkItem[]; orphanPhotos: File[]; extraVideos: File[] } {
+/** "<product>-3.jpg" / "<product>_3.jpg" -> { prefix: "<product>", n: 3 }. Names without a trailing number count as number 0 of their own product. */
+export function photoParts(file: File): { prefix: string; n: number } {
+  const base = stem(file.name).normalize('NFC').trim();
+  const m = /^(.+?)[-_](\d+)$/.exec(base);
+  return m ? { prefix: m[1]!.trim(), n: Number(m[2]) } : { prefix: base, n: 0 };
+}
+/** Number order (-2 before -10), then name. */
+const byPhotoNumber = (a: File, b: File) => photoParts(a).n - photoParts(b).n || a.name.localeCompare(b.name, undefined, { numeric: true });
+
+/**
+ * Groups the chosen files. Each video is one product and takes the photos whose name starts with the video's name.
+ * Remaining photos are grouped by the text before the last "-number" and become photo-only products.
+ * Video products come first; the limit of MAX_BULK counts video and photo products together.
+ */
+export function groupFiles(files: File[]): { items: BulkItem[]; orphanPhotos: File[]; extraVideos: File[]; extraPhotoProducts: string[] } {
   const videos = files.filter(isListingVideo), photos = files.filter(isListingPhoto);
-  const used = videos.slice(0, MAX_BULK);
-  const items = used.map<BulkItem>((video, i) => ({ id: `${i}-${video.name}-${video.size}`, video, photos: [], values: { ...emptyValues(), file: video.name } }));
-  const orphanPhotos: File[] = [];
-  const byLength = [...items].sort((a, b) => stem(b.video.name).length - stem(a.video.name).length);
-  for (const photo of [...photos].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))) {
+  const usedVideos = videos.slice(0, MAX_BULK);
+  const items: BulkItem[] = usedVideos.map((video, i) => ({ id: `${i}-${video.name}-${video.size}`, name: video.name, video, photos: [], values: { ...emptyValues(), file: video.name } }));
+  const byLength = [...items].sort((a, b) => stem(b.name).length - stem(a.name).length);
+  const free: File[] = [];
+  for (const photo of [...photos].sort(byPhotoNumber)) {
     const p = norm(stem(photo.name));
-    const owner = byLength.find(it => { const v = norm(stem(it.video.name)); return p === v || (p.startsWith(v) && /^[-_ .(]/.test(p.slice(v.length))); });
-    if (owner) owner.photos.push(photo); else orphanPhotos.push(photo);
+    const owner = byLength.find(it => { const v = norm(stem(it.name)); return p === v || (p.startsWith(v) && /^[-_ .(]/.test(p.slice(v.length))); });
+    if (owner) owner.photos.push(photo); else free.push(photo);
   }
-  return { items, orphanPhotos, extraVideos: videos.slice(MAX_BULK) };
+  const groups = new Map<string, { name: string; photos: File[] }>();
+  for (const photo of free) {
+    const { prefix } = photoParts(photo), key = norm(prefix);
+    const g = groups.get(key); if (g) g.photos.push(photo); else groups.set(key, { name: prefix, photos: [photo] });
+  }
+  const extraPhotoProducts: string[] = [];
+  [...groups.values()].forEach((g, i) => {
+    if (items.length >= MAX_BULK) { extraPhotoProducts.push(g.name); return; }
+    items.push({ id: `p${i}-${g.name}-${g.photos.reduce((n, f) => n + f.size, 0)}`, name: g.name, video: null, photos: g.photos, values: { ...emptyValues(), file: g.name } });
+  });
+  return { items, orphanPhotos: [], extraVideos: videos.slice(MAX_BULK), extraPhotoProducts };
 }
 
-/** Writes spreadsheet rows into the matching items (by file name; if a row has no file name, by position). */
+/** Writes spreadsheet rows into the matching items (by file name with or without extension; if a row has no file name, by position). */
 export function applyRows(items: BulkItem[], rows: Partial<BulkValues>[]): { items: BulkItem[]; unmatched: string[] } {
   const next = items.map(it => ({ ...it, values: { ...it.values } }));
   const unmatched: string[] = [];
   rows.forEach((row, index) => {
     const key = norm(row.file ?? '');
     if (!key && !(row.title ?? '').trim()) return; // untouched template rows (only default values) are ignored
-    const target = key ? next.find(it => norm(it.video.name) === key || norm(stem(it.video.name)) === norm(stem(row.file ?? ''))) : next[index];
+    const wanted = norm(stem(row.file ?? ''));
+    const target = key ? next.find(it => norm(it.name) === key || norm(stem(it.name)) === wanted) : next[index];
     if (!target) { unmatched.push(row.file || `#${index + 1}`); return; }
     for (const f of BULK_FIELDS) if (f !== 'file' && row[f] !== undefined && row[f] !== '') target.values[f] = row[f]!;
   });
@@ -167,7 +195,8 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   if (sell !== false && (source === 'factory' || source === 'other') && !v.factory.trim()) errors.push('공장(출처)을 입력해 주세요.');
   const boxRaw = v.boxPrice.replace(/[$,\s]/g, ''); const box = boxRaw ? Number(boxRaw) : null;
   if (sell !== false && box !== null && (!Number.isFinite(box) || box < 0 || box > 100000000)) errors.push('박스 가격은 0 이상의 숫자로 입력해 주세요.');
-  if (item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 100MB까지 올릴 수 있어요.');
+  if (!item.video && item.photos.length === 0) errors.push('사진도 영상도 없는 묶음은 올릴 수 없어요.');
+  if (item.video && item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 100MB까지 올릴 수 있어요.');
   if (item.photos.length > MAX_LISTING_PHOTOS) errors.push(`사진은 최대 ${MAX_LISTING_PHOTOS}장까지 올릴 수 있어요.`);
   if (item.photos.some(p => p.size > MAX_PHOTO_BYTES)) errors.push('사진은 장당 최대 10MB까지 올릴 수 있어요.');
   if (v.title.trim().length > 100) warnings.push('제목이 100자를 넘어 잘립니다.');
