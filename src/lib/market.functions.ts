@@ -37,9 +37,17 @@ export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const permitted = (post:typeof uploaded[number],path:string) => !path.includes('..') && (path.startsWith('seed:') || Boolean(post.store_id && path.split('/').length >= 2) || Boolean(post.user_id && path.startsWith(`${post.user_id}/`)));
     const paths = [...new Set(uploaded.flatMap(p => [...p.media_urls,...(p.video_url ? [p.video_url]:[]),...(p.thumbnail_url ? [p.thumbnail_url]:[])].filter(path => permitted(p,path) && !path.startsWith('seed:'))))];
-    const {data:signed,error:signError} = paths.length ? await supabaseAdmin.storage.from('market-media').createSignedUrls(paths,21600) : {data:[],error:null};
-    if(signError) throw new Error('게시물 사진을 불러오지 못했습니다.');
-    const urls = new Map(signed?.map(s => [s.path,s.signedUrl]) || []);
+    // Sign in small batches: one oversized request used to fail the whole feed once many posts were published.
+    // A batch that fails only drops its own media (the post still renders without it) instead of breaking the page.
+    const urls = new Map<string,string>();
+    const batches:string[][] = []; for(let i=0;i<paths.length;i+=100) batches.push(paths.slice(i,i+100));
+    await Promise.all(batches.map(async batch => {
+      try {
+        const {data:signed,error:signError} = await supabaseAdmin.storage.from('market-media').createSignedUrls(batch,21600);
+        if(signError) { console.error('feed media signing failed', signError.message); return; }
+        signed?.forEach(s => { if(s.path && s.signedUrl) urls.set(s.path,s.signedUrl); });
+      } catch(e) { console.error('feed media signing failed', e); }
+    }));
     for(const post of uploaded) {
       const sign = (path:string) => path.startsWith('seed:') ? path : urls.get(path) || '';
       post.media_urls = post.media_urls.filter(path => permitted(post,path)).map(sign).filter(Boolean);
