@@ -2601,5 +2601,6 @@
   "미리보기 닫기": "Fermer l'aperçu",
   "미리보기에서는 로그인이 필요하지 않아요.": "La connexion n'est pas nécessaire dans l'aperçu.",
   "미리보기에서는 구매할 수 없어요.": "Vous ne pouvez pas acheter dans l'aperçu.",
-  "미리보기": "Aperçu"
+  "미리보기": "Aperçu",
+  "기존 영상을 불러오지 못했어요. 영상을 다시 선택해 주세요.": "Impossible de charger la vidéo existante. Veuillez sélectionner à nouveau la vidéo."
 }

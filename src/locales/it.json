@@ -2601,5 +2601,6 @@
   "미리보기 닫기": "Chiudi anteprima",
   "미리보기에서는 로그인이 필요하지 않아요.": "Nell'anteprima non serve accedere.",
   "미리보기에서는 구매할 수 없어요.": "Non puoi acquistare nell'anteprima.",
-  "미리보기": "Anteprima"
+  "미리보기": "Anteprima",
+  "기존 영상을 불러오지 못했어요. 영상을 다시 선택해 주세요.": "Impossibile caricare il video esistente. Seleziona di nuovo il video."
 }
