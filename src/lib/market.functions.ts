@@ -28,8 +28,8 @@ async function callerToken() {
   return h.startsWith('Bearer ') ? h.slice(7) : null;
 }
 
-export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
-  const { data, error } = await publicClient(await callerToken()).from('posts').select('*, store:stores(id,slug,store_name,verification_status,featured)').order('created_at', { ascending: false }).order('id');
+async function loadPosts(token: string | null) {
+  const { data, error } = await publicClient(token).from('posts').select('*, store:stores(id,slug,store_name,verification_status,featured)').order('created_at', { ascending: false }).order('id');
   if (error) throw new Error('피드를 불러오지 못했습니다.');
   const uploaded = data.filter(p => p.image_key === 'uploaded' || p.image_key === 'seed');
   if (uploaded.length) {
@@ -64,6 +64,23 @@ export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
     if (bi < 0) return 1;
     return ai-bi;
   });
+}
+
+/**
+ * Visitors who are not signed in all get the same public feed, so it is built once and shared for 30 seconds
+ * (signed photo/video links stay valid for 6 hours). Many visitors at once, or a quick refresh, no longer each
+ * repeat the database read and the link signing. Signed-in callers are never cached: sellers must see their own drafts.
+ */
+const PUBLIC_FEED_MS = 30_000;
+let publicFeed: { at: number; data: Awaited<ReturnType<typeof loadPosts>> } | null = null;
+let publicFeedLoading: Promise<Awaited<ReturnType<typeof loadPosts>>> | null = null;
+
+export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
+  const token = await callerToken();
+  if (token) return loadPosts(token);
+  if (publicFeed && Date.now() - publicFeed.at < PUBLIC_FEED_MS) return publicFeed.data;
+  publicFeedLoading ??= loadPosts(null).then(data => { publicFeed = { at: Date.now(), data }; return data; }).finally(() => { publicFeedLoading = null; });
+  return publicFeedLoading;
 });
 
 export const getStores = createServerFn({ method: 'GET' }).handler(async () => {

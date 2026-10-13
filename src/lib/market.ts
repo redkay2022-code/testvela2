@@ -2,6 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { getPosts, getStores } from './market.functions';
 import { z } from 'zod';
 import { stabilizePosts } from './media-cache';
+import { perfLog } from './perf';
 import type { Database } from '@/integrations/supabase/types';
 
 export type Post = Database['public']['Tables']['posts']['Row'];
@@ -22,7 +23,7 @@ export const marketSearch = z.object({
 });
 export const storesQuery = queryOptions({queryKey:['stores'],queryFn:() => getStores(),staleTime:0,refetchOnMount:'always',refetchInterval:45*60_000});
 // Fresh for a minute: moving between pages no longer re-downloads and re-signs the whole feed every time.
-export const postsQuery = queryOptions({queryKey:['posts'],queryFn:async () => stabilizePosts(await getPosts()),staleTime:60_000,refetchInterval:45*60_000,refetchIntervalInBackground:false});
+export const postsQuery = queryOptions({queryKey:['posts'],queryFn:async () => { const t0 = typeof performance !== 'undefined' ? performance.now() : 0; const posts = stabilizePosts(await getPosts()); if (t0) perfLog('feed data', performance.now() - t0); return posts; },staleTime:60_000,refetchInterval:45*60_000,refetchIntervalInBackground:false});
 export const pageHead = (title:string,description:string) => ({ meta:[
   {title:`${title} · velamarket 벨라마켓`},
   {name:'description',content:description},
