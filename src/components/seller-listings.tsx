@@ -32,7 +32,7 @@ import { BulkUpload } from './bulk-upload';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = Record<string, string> & { sourceType?: string; factory?: string };
-type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string };
+type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
 const factoryOptions = [
@@ -77,7 +77,17 @@ export function SellerListings() {
   const [bulk, setBulk] = useState(false);
   const [shown, setShown] = useState(24);
   const [replacing, setReplacing] = useState<string | null>(null);
-  const [previewing, setPreviewing] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState<Listing | null>(null);
+  const [opening, setOpening] = useState<string | null>(null);
+  // 목록은 가볍게 대표 사진만 서명하므로, 미리보기·편집을 열 때 해당 상품의 사진·영상을 그때 서명한다.
+  const openWithMedia = async (l: Listing, open: (value: Listing) => void) => {
+    if (opening) return; setOpening(l.id);
+    try {
+      const paths = [...l.media_urls, l.video_url].filter(Boolean) as string[]; const map = new Map<string, string>();
+      for (let i = 0; i < paths.length; i += 100) { try { const { data: signed } = await supabase.storage.from('market-media').createSignedUrls(paths.slice(i, i + 100), 3600); signed?.forEach(x => x.path && x.signedUrl && map.set(x.path, x.signedUrl)); } catch { /* 일부 실패해도 열기 */ } }
+      open({ ...l, signed_media_urls: l.media_urls.map(p => map.get(p) ?? ''), signed_video_url: l.video_url ? map.get(l.video_url) : undefined });
+    } finally { setOpening(null); }
+  };
   const formTop = useRef<HTMLDivElement>(null);
   useEffect(() => { if (editing) formTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [editing]);
   const refresh = () => { void qc.invalidateQueries({ queryKey: ['my-listings'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); void qc.invalidateQueries({ queryKey: ['my-listing-count'] }); };
@@ -121,13 +131,13 @@ export function SellerListings() {
         <div className="record-actions">
           {l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label={tx("판매 완료")} checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 완료")}</span></label>}
            <label className="flex items-center gap-2 text-xs"><Switch aria-label={tx("{0} 판매", { 0: l.title })} checked={l.status==='published'} onCheckedChange={() => void toggle(l)}/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매")}</span></label>
-          <Button size="sm" variant="ghost" aria-label={tx("미리보기")} onClick={() => setPreviewing(l.id)}><Eye /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("미리보기")}</span></Button>
-          <Button size="sm" variant="ghost" aria-label={tx("편집")} onClick={() => setEditing(l)}><Pencil /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("편집")}</span></Button>
+          <Button size="sm" variant="ghost" aria-label={tx("미리보기")} onClick={() => void openWithMedia(l, setPreviewing)}><Eye /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("미리보기")}</span></Button>
+          <Button size="sm" variant="ghost" aria-label={tx("편집")} onClick={() => void openWithMedia(l, setEditing)}><Pencil /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("편집")}</span></Button>
           <Button asChild size="sm" variant="ghost"><label aria-label={tx("영상 재업로드")} className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{replacing === l.id ? tx('올리는 중') : tx('재업로드')}</span><input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
           <Button size="sm" variant="ghost" aria-label={tx("삭제")} onClick={() => void remove(l)}><Trash2 /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("삭제")}</span></Button>
         </div></li>)}</ul>}
     {(listings.data?.length ?? 0) > shown && <div className="mt-4 text-center"><Button variant="outline" onClick={() => setShown(n => n + 24)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("더 보기")} ({shown}/{listings.data?.length})</span></Button></div>}
-  {previewing && (() => { const pl = (listings.data ?? []).find(x => x.id === previewing); return pl ? <ListingPreview listing={pl} user={user} onClose={() => setPreviewing(null)} /> : null; })()}
+  {previewing && (() => { return <ListingPreview listing={previewing} user={user} onClose={() => setPreviewing(null)} />; })()}
   </section>;
 }
 
