@@ -154,9 +154,9 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     if (!video.preview) { setError('기존 영상을 불러오지 못했어요. 영상을 다시 선택해 주세요.'); return; }
     setLoadingVideo(true); setError('');
     try {
-      const res = await fetch(video.preview);
-      if (!res.ok) throw new Error('fetch');
-      const blob = await res.blob();
+      let blob: Blob | null = null;
+      if (video.path) { const { data } = await supabase.storage.from('market-media').download(video.path); blob = data; }
+      if (!blob) { const res = await fetch(video.preview); if (!res.ok) throw new Error('fetch'); blob = await res.blob(); }
       const ext = (video.path?.split('.').pop() ?? 'mp4').replace(/[^a-zA-Z0-9]/g, '') || 'mp4';
       const type = blob.type.startsWith('video/') ? blob.type : ext.toLowerCase() === 'mov' ? 'video/quicktime' : 'video/mp4';
       setEditing(new File([blob], `video.${ext}`, { type }));
