@@ -138,7 +138,7 @@ const SELL_NO = new Set(['아니오', '아니요', '아니', 'n', 'no', 'false',
 export function normalizeSell(raw: string): boolean | null { const t = norm(raw); if (!t || SELL_YES.has(t)) return true; if (SELL_NO.has(t)) return false; return null; }
 export function normalizeDispatch(raw: string): { choice: string; custom: string } {
   const t = raw.trim();
-  if (!t) return { choice: '7d', custom: '' };
+  if (!t) return { choice: '5d', custom: '' };
   if (/^(바로|즉시|바로발송|바로 발송|immediate)$/i.test(t)) return { choice: 'immediate', custom: '' };
   const m = /^(\d{1,2})\s*(일|d|day|days)?(\s*이내)?$/i.exec(t);
   if (m) { const v = `${Number(m[1])}d`; if (DISPATCH_OPTIONS.some(o => o.value === v)) return { choice: v, custom: '' }; }

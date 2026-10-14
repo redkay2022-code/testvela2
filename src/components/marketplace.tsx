@@ -257,7 +257,7 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
   const [editing,setEditing] = useState<File|null>(null);
   const [videoTags,setVideoTags] = useState<VideoTag[]>([]);
   const [music,setMusic] = useState<SelectedMusic|null>(null);
-  const [dispatch,setDispatch] = useState<string>('7d');
+  const [dispatch,setDispatch] = useState<string>('5d');
   const [customDispatch,setCustomDispatch] = useState('');
   /* One cached blob URL per file: a newly picked file shows instantly and the others never reload. */
   const urlCache = useRef(new Map<File,string>());

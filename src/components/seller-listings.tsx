@@ -155,7 +155,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   const [category, setCategory] = useState(listing?.category === '악세사리' ? '악세사리' : '시계');
   const [menuCategory, setMenuCategory] = useState(postCategoryLabels.includes(String(listing?.specs?.['menuCategory'] ?? '')) ? String(listing?.specs?.['menuCategory']) : '');
   const [price, setPrice] = useState(listing?.price != null ? String(listing.price) : '');
-  const initialDispatch = listing?.dispatch_time ?? '7d';
+  const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
   const [dispatch, setDispatch] = useState<string>(initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
   const [customDispatch, setCustomDispatch] = useState(initialDispatch.startsWith('custom:') ? initialDispatch.slice(7) : '');
   const [boxPrice, setBoxPrice] = useState(listing?.box_price != null ? String(listing.box_price) : '');

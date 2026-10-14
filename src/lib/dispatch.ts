@@ -14,11 +14,11 @@ export const isImmediateDispatch = (post: { source?: { dispatch_time?: string | 
 export const filterImmediate = <T extends { source?: { dispatch_time?: string | null } | null }>(posts: T[]) =>
   posts.filter(isImmediateDispatch);
 
-/** Value saved to posts.dispatch_time; custom text is stored as "custom:<text>", empty custom falls back to 7d. */
+/** Value saved to posts.dispatch_time; custom text is stored as "custom:<text>", empty custom falls back to 5d. */
 export const dispatchValue = (choice: string, custom: string) => {
   if (choice !== 'custom') return choice;
   const text = custom.trim().slice(0, 40);
-  return text ? `custom:${text}` : '7d';
+  return text ? `custom:${text}` : '5d';
 };
 
 /** 상세 화면용 표시값: 정해진 선택지는 { label }, 직접 입력한 값은 { text } 로 돌려준다. 값이 없으면 null. */

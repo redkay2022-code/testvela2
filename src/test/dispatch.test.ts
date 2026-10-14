@@ -12,8 +12,8 @@ describe('dispatch time', () => {
 });
 
 describe('custom dispatch input', () => {
-  it('stores custom text and falls back to 7d when empty', () => {
+  it('stores custom text and falls back to 5d when empty', () => {
     expect(dispatchValue('custom', ' 주문 후 10일 ')).toBe('custom:주문 후 10일');
-    expect(dispatchValue('custom', '  ')).toBe('7d');
+    expect(dispatchValue('custom', '  ')).toBe('5d');
   });
 });
