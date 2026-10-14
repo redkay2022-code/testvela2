@@ -133,7 +133,7 @@ function VideoOnlyDetails({post,user,requestAuth,buy}:{post:LuxuryPost;user:User
  <div className="detail-tags"><span><Tx>{post.factory}</Tx></span><span className="notranslate" translate="no"><Tx>{post.category}</Tx></span></div>
  {isImmediateDispatch(post)&&<span className="lux-ready-badge is-inline mt-3" data-no-translate><Tx>바로 발송 · Ready to Ship</Tx></span>}
  <p data-i18n-skip>{post.sample?post.description:tr.description}</p><TranslationToggle t={tr}/>
- <SpecsTable specs={post.sample?post.source.specs:tr.specs}/>
+ <SpecsTable category={post.category} specs={post.sample?post.source.specs:tr.specs}/>
  {post.price!==null&&<Button variant="gold" className="mt-5 w-full" onClick={()=>buy(false)}>{t('buyNow')}<ChevronRight size={16}/></Button>}</div>
  <ProductComments postId={post.id} user={user} requestAuth={requestAuth} composerFirst live/>
  </section>;
