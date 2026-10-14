@@ -13,8 +13,8 @@ describe('watch specification values', () => {
     expect(cleanWatchSpecs({ additionalDetails: details, thickness: '12.5 mm', factory: 'Original source', empty: '' }))
       .toEqual({ additionalDetails: details, thickness: '12.5 mm', factory: 'Original source' });
   });
-  it('offers all eleven requested structured specification fields', () => {
-    expect(watchSpecificationFields.map(field => field.key)).toEqual(['brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'powerReserve', 'glass', 'waterResistance', 'additionalDetails']);
+  it('offers all ten requested structured specification fields', () => {
+    expect(watchSpecificationFields.map(field => field.key)).toEqual(['brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'glass', 'waterResistance', 'additionalDetails']);
   });
   it('lets sellers type movement and glass directly instead of fixed option lists', () => {
     for (const key of ['movement', 'glass']) {

@@ -13,7 +13,7 @@ import { cleanWatchSpecs, numericSpecValue, watchSpecificationFields } from '@/l
 import { knownWatchBrand } from '@/lib/watch-brands';
 
 export const MAX_BULK = 20;
-export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'powerReserve', 'glass', 'waterResistance', 'additionalDetails', 'description', 'menuCategory', 'sell'] as const;
+export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'glass', 'waterResistance', 'additionalDetails', 'description', 'menuCategory', 'sell'] as const;
 export type BulkField = (typeof BULK_FIELDS)[number];
 export type BulkValues = Record<BulkField, string>;
 export const emptyValues = (): BulkValues => Object.fromEntries(BULK_FIELDS.map(f => [f, ''])) as BulkValues;
@@ -25,7 +25,7 @@ const HEADER_ALIASES: Record<BulkField, string[]> = {
   dispatch: ['발송', '예상발송시간', '예상 발송 시간', '발송시기', '발송 시기', 'dispatch'], boxPrice: ['풀셋박스추가금액', '풀셋 박스 추가 금액', '박스가격', '박스 가격', '박스', 'boxprice', 'box'],
   brand: ['브랜드', 'brand'], model: ['모델', '모델명', 'model'], material: ['케이스소재', '케이스 소재', '소재', 'material'],
   movement: ['무브먼트', 'movement'], caseSize: ['케이스직경', '케이스 직경', '케이스크기', '케이스 크기', '다이얼', 'casesize'],
-  thickness: ['두께', 'thickness'], weight: ['무게', 'weight'], powerReserve: ['파워리저브', 'powerreserve'], glass: ['글라스', 'glass'],
+  thickness: ['두께', 'thickness'], weight: ['무게', 'weight'], glass: ['글라스', 'glass'],
   waterResistance: ['방수', 'waterresistance'], additionalDetails: ['추가내용', '추가 내용', 'additionaldetails'], description: ['소개', '제품소개', '설명', 'description'], menuCategory: ['메뉴카테고리', '메뉴 카테고리', 'menucategory', 'menu'], sell: ['마켓에판매하기', '마켓에 판매하기', '판매하기', '판매여부', '판매', 'sell', 'forsale'],
 };
 
@@ -44,7 +44,7 @@ function splitLine(line: string, sep: string): string[] {
 }
 
 /** Column order of the Excel sheet (used when the pasted text has no header row). */
-export const PASTE_ORDER: readonly BulkField[] = ['file', 'menuCategory', 'title', 'description', 'category', 'sell', 'price', 'boxPrice', 'dispatch', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'powerReserve', 'glass', 'waterResistance', 'additionalDetails', 'source', 'factory'];
+export const PASTE_ORDER: readonly BulkField[] = ['file', 'menuCategory', 'title', 'description', 'category', 'sell', 'price', 'boxPrice', 'dispatch', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'glass', 'waterResistance', 'additionalDetails', 'source', 'factory'];
 
 /** Spreadsheet text -> rows of values. Excel/Sheets copy gives tabs; CSV gives commas. Quoted cells may contain line breaks. */
 export function parseTable(text: string): Partial<BulkValues>[] {
@@ -145,7 +145,7 @@ export function normalizeDispatch(raw: string): { choice: string; custom: string
   return { choice: 'custom', custom: t };
 }
 
-const SPEC_UNIT: Record<string, string> = { caseSize: 'mm', thickness: 'mm', weight: 'g', powerReserve: 'Hours' };
+const SPEC_UNIT: Record<string, string> = { caseSize: 'mm', thickness: 'mm', weight: 'g' };
 const optionsOf = (key: string) => { const f = watchSpecificationFields.find(x => x.key === key); return f && 'options' in f ? (f.options as readonly string[]) : []; };
 /** Same stored values as the single upload form: numbers get their unit ("40 mm"), selects use the form's own options. */
 function watchSpecs(v: BulkValues, errors: string[], warnings: string[]): Record<string, string> {
@@ -157,7 +157,7 @@ function watchSpecs(v: BulkValues, errors: string[], warnings: string[]): Record
   const mat = v.material.trim();
   if (mat) out['material'] = optionsOf('material').find(o => norm(o) === norm(mat)) ?? mat;
   if (v.movement.trim()) out['movement'] = v.movement.trim();
-  for (const k of ['caseSize', 'thickness', 'weight', 'powerReserve'] as const) {
+  for (const k of ['caseSize', 'thickness', 'weight'] as const) {
     const raw = v[k].trim(); if (!raw) continue;
     const n = numericSpecValue(raw);
     if (!n) errors.push(`${label(k)}은(는) 숫자만 입력해 주세요. (예: 40)`); else out[k] = `${n} ${SPEC_UNIT[k]}`;

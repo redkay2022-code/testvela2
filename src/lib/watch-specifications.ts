@@ -6,7 +6,6 @@ export const watchSpecificationFields = [
   { key: 'caseSize', label: '케이스 직경', kind: 'number', unit: 'mm', placeholder: '40' },
   { key: 'thickness', label: '두께', kind: 'number', unit: 'mm', placeholder: '12.5' },
   { key: 'weight', label: '무게', kind: 'number', unit: 'g', placeholder: '155' },
-  { key: 'powerReserve', label: '파워리저브', kind: 'number', unit: 'Hours (시간)', placeholder: '72' },
   { key: 'glass', label: '글라스', kind: 'text', placeholder: 'Sapphire Crystal, Mineral Glass 등 직접 입력' },
   { key: 'waterResistance', label: '방수', kind: 'select', options: ['30m / 3 ATM', '50m / 5 ATM', '100m / 10 ATM', '300m / 30 ATM', '1000m+'] },
   { key: 'additionalDetails', label: '추가 내용', kind: 'textarea', placeholder: '다이얼, 금 도금·래핑, 커스텀 부품, 보증 상태, 포함 액세서리 등' },

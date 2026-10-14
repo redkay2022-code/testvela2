@@ -4,7 +4,6 @@ const specLabels: Record<string, string> = {
   brand: '브랜드',
   model: '모델',
   movement: '무브먼트',
-  powerReserve: '파워리저브',
   caseSize: '케이스 직경',
   material: '케이스 소재',
   waterResistance: '방수',
@@ -25,7 +24,7 @@ export function SpecsTable({specs, fallback}: {specs: unknown; fallback?: React.
   let entries: [string, string][] = [];
   if (specs && typeof specs === 'object' && !Array.isArray(specs)) {
     entries = Object.entries(specs as Record<string, unknown>)
-      .filter(([k, v]) => k !== 'sourceType' && typeof v === 'string' && v.trim())
+      .filter(([k, v]) => k !== 'sourceType' && k !== 'powerReserve' && typeof v === 'string' && v.trim())
       .map(([k, v]) => [k, (v as string).trim().slice(0, k === 'additionalDetails' ? 3000 : 80)]);
   }
   if (!entries.length) return <>{fallback ?? null}</>;
