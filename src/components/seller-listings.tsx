@@ -7,7 +7,7 @@ import { WatchSpecificationsForm } from './watch-specifications-form';
 import { cleanWatchSpecs } from '@/lib/watch-specifications';
 import { postCategoryLabels } from '@/lib/feed-categories';
 import { PostCategoryField } from './post-category-field';
-import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
+import { dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { syncMyPostNickname } from '@/lib/seller-accounts.functions';
@@ -30,17 +30,15 @@ import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { compressVideoForWeb, COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
 import { estimateUploadSeconds, useCountdown } from '@/lib/upload-countdown';
 import { BulkUpload } from './bulk-upload';
+import { DispatchSelect } from './dispatch-select';
+import { type SourceType } from './source-factory';
+import { SourceFactorySelect } from './source-factory-select';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = Record<string, string> & { sourceType?: string; factory?: string };
 type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
-const factoryOptions = [
-  'VS Factory (VSF)', 'ZF Factory (ZF)', '3K Factory (3KF)', 'PPF Factory (PPF)', 'APS Factory (APSF)', 'ARF Factory (ARF)',
-  'GMF Factory (GMF)', 'BV Factory (BVF)', 'V7 Factory (V7F)', 'RC Factory', 'RG Factory', 'UMI Factory', 'Rich Factory',
-];
-type SourceType = 'custom' | 'factory' | 'other';
 
 export function SellerListings() {
   const { lang } = useCurrency();
@@ -297,32 +295,21 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     <PostCategoryField value={menuCategory} onChange={setMenuCategory} />
     <label htmlFor="l-title" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품명")}</span></label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
     <label htmlFor="l-cat" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("카테고리")}</span></label><select id="l-cat" className="form-input" value={category} onChange={e => setCategory(e.target.value)}><option value="시계"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("시계")}</span></option><option value="악세사리"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("악세사리")}</span></option></select>
-    <WatchSpecificationsForm idPrefix="l-spec" value={specs} onChange={setSpecs} />
+    <WatchSpecificationsForm idPrefix="l-spec" value={specs} onChange={setSpecs} afterWater={<SourceFactorySelect id="l-source" sourceType={sourceType} factory={factory} onChange={(type, next) => { setSourceType(type); setFactory(next); }} />} />
     <label htmlFor="l-desc" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품 설명")}</span></label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
     <div className="grid grid-cols-2 gap-x-3">
       <div><label htmlFor="l-price" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 가격 (USD $)")}</span></label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>
-      <fieldset className="sm:col-span-2"><legend className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("예상 발송 시간")}</span></legend><div className="flex flex-wrap gap-2" role="radiogroup">{DISPATCH_OPTIONS.map(o => <button type="button" key={o.value} role="radio" aria-checked={dispatch === o.value} onClick={() => setDispatch(o.value)} className={`lux-chip ${dispatch === o.value ? 'active' : ''}`}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(o.label)}</span></button>)}</div><input aria-label={tx("예상 발송 시간 직접 입력")} className="form-input mt-2" maxLength={40} placeholder={tx("직접 입력 (예: 주문 후 10일 이내)")} value={customDispatch} onFocus={() => setDispatch('custom')} onChange={e => { setCustomDispatch(e.target.value); setDispatch('custom'); }} /></fieldset><div><label htmlFor="l-box" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("풀셋 박스 (USD $, 선택)")}</span></label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
+      <fieldset className="sm:col-span-2"><legend className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("예상 발송 시간")}</span></legend><DispatchSelect dispatch={dispatch} customDispatch={customDispatch} onDispatch={setDispatch} onCustom={setCustomDispatch} /></fieldset><div><label htmlFor="l-box" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("풀셋 박스 (USD $, 선택)")}</span></label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
     </div>
     <p className="mt-2 text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("가격은 USD로 저장되며, 구매자에게는 각자의 통화로 자동 환산되어 표시돼요.")}</span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{price && Number(price) > 0 ? tx(" (현재 표시: {0})", { 0: formatMoney(Number(price)) }) : ''}</span></p>
     <div className="mt-1">
-      <div className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("제조 / 출처 구분 (Source & Factory)")}</span></div>
-      <div className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3" role="note">
+      <div className="mt-5 flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3" role="note">
         <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
         <div className="min-w-0">
           <p className="text-xs font-semibold leading-relaxed text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("⚠️ [경고] 허위 공장 표기 또는 출처 정보 도용 적발 시, 예고 없이 상품 삭제 및 셀러 자격이 영구 박탈될 수 있으며 에스크로 정산이 동결 조치됩니다.")}</span></p>
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx('Listing false factory information will result in immediate seller ban and escrow freeze.')}</span></p>
         </div>
       </div>
-      <div role="radiogroup" aria-label={tx("제조 / 출처 구분 (Source & Factory)")} className="mt-3 grid grid-cols-3 gap-2">
-        {([['custom', '커스텀 제작'], ['factory', '공장 선택'], ['other', '기타 - 직접입력']] as const).map(([value, label]) => (
-          <label key={value} className={`flex cursor-pointer items-center justify-center rounded-md border px-2 py-2 text-center text-xs font-medium transition-colors ${sourceType === value ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}>
-            <input type="radio" name="sourceType" className="sr-only" checked={sourceType === value} onChange={() => { setSourceType(value); setFactory(''); }} />
-            <span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(label)}</span>
-          </label>
-        ))}
-      </div>
-      {sourceType === 'factory' && <select aria-label={tx("공장 선택")} className="form-input mt-2" value={factory} onChange={e => setFactory(e.target.value)}><option value=""><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("공장을 선택해 주세요")}</span></option>{factoryOptions.map(f => <option key={f} value={f}>{f}</option>)}</select>}
-      {sourceType === 'other' && <input aria-label={tx("출처 직접 입력")} className="form-input mt-2" placeholder={tx("출처 / 공장을 직접 입력해 주세요")} maxLength={80} value={factory} onChange={e => setFactory(e.target.value)} />}
     </div>
     {error && <p role="alert" className="mt-3 text-sm text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(error)}</span></p>}
     <div className="mt-4 grid grid-cols-2 gap-2"><Button variant="secondary" disabled={pending} onClick={() => void save('draft')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("임시 저장")}</span></Button><Button disabled={pending} onClick={() => void save('published')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{pending ? (convertPct !== null ? `영상 최적화 중… ${convertPct}%` : left > 0 ? `저장 중… ${left}초` : '마무리 중…') : tx('게시하기')}</span></Button></div>

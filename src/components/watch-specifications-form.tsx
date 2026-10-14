@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { watchSpecificationFields, numericSpecValue } from '@/lib/watch-specifications';
 import { BrandSelect } from './brand-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -28,8 +28,8 @@ function SpecificationSelect({ id, label, value, options, custom, onChange }: {
   </div>;
 }
 
-export function WatchSpecificationsForm({ idPrefix, value, onChange }: {
-  idPrefix: string; value: Record<string, string>; onChange: (value: Record<string, string>) => void;
+export function WatchSpecificationsForm({ idPrefix, value, onChange, afterWater }: {
+  idPrefix: string; value: Record<string, string>; onChange: (value: Record<string, string>) => void; afterWater?: ReactNode;
 }) {
   return <section {...protectedText} className="notranslate mt-5 min-w-0" aria-label="시계 사양">
     <h3 {...protectedText} className="notranslate mb-3 text-sm font-semibold text-primary"><Tx>시계 사양</Tx></h3>
@@ -38,7 +38,7 @@ export function WatchSpecificationsForm({ idPrefix, value, onChange }: {
         const id = `${idPrefix}-${field.key}`;
         const current = value[field.key] ?? '';
         const update = (next: string) => onChange({ ...value, [field.key]: next });
-        return <div {...protectedText} className={`notranslate min-w-0 ${field.kind === 'textarea' ? 'md:col-span-2' : ''}`} key={field.key}>
+        return <Fragment key={field.key}><div {...protectedText} className={`notranslate min-w-0 ${field.kind === 'textarea' ? 'md:col-span-2' : ''}`}>
           <label {...protectedText} htmlFor={id} className="notranslate mb-2 block text-sm text-muted-foreground"><Tx>{field.label}</Tx></label>
           {field.kind === 'brand' ? <BrandSelect id={id} value={current} onChange={update} />
             : field.kind === 'select' ? <SpecificationSelect id={id} label={field.label} value={current} options={field.options} custom={'custom' in field && field.custom} onChange={update} />
@@ -48,7 +48,7 @@ export function WatchSpecificationsForm({ idPrefix, value, onChange }: {
               <span {...protectedText} className="notranslate shrink-0 text-xs text-muted-foreground"><Tx>{field.unit}</Tx></span>
             </div>
             : <input {...protectedText} id={id} className="notranslate form-input min-w-0" maxLength={80} placeholder={field.placeholder} value={current} onChange={event => update(event.target.value)} />}
-        </div>;
+        </div>{field.key === 'waterResistance' && afterWater}</Fragment>;
       })}
     </div>
   </section>;
