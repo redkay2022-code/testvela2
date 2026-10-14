@@ -243,7 +243,7 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
   // 카테고리 선택 UI는 폼에서 제거됨: DB posts.category 컬럼은 기본값으로 유지 저장.
   const category = '커스텀제작';
   const [menuCategory,setMenuCategory] = useState('');
-  const [specs,setSpecs] = useState<Record<string,string>>({});
+  const [specs,setSpecs] = useState<Record<string,string>>({waterResistance:'50m / 5 ATM'});
   const [product,setProduct] = useState(false);
   const [price,setPrice] = useState('');
   const [boxPrice,setBoxPrice] = useState('');

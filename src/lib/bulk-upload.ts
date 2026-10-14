@@ -163,7 +163,7 @@ function watchSpecs(v: BulkValues, errors: string[], warnings: string[]): Record
     if (!n) errors.push(`${label(k)}은(는) 숫자만 입력해 주세요. (예: 40)`); else out[k] = `${n} ${SPEC_UNIT[k]}`;
   }
   if (v.glass.trim()) out['glass'] = v.glass.trim();
-  const wr = v.waterResistance.trim();
+  const wr = v.waterResistance.trim() || '50m / 5 ATM';
   if (wr) {
     const opts = optionsOf('waterResistance');
     const num = /^(\d+)\s*m?\b/i.exec(wr)?.[1];
