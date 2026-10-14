@@ -20,13 +20,13 @@ export const emptyValues = (): BulkValues => Object.fromEntries(BULK_FIELDS.map(
 
 /** Header names accepted in the first row (Korean or English). Without a header row the column order above is used. */
 const HEADER_ALIASES: Record<BulkField, string[]> = {
-  file: ['파일명', '파일', 'file', 'filename'], title: ['제목', '상품명', 'title', 'name'], price: ['가격', '판매가격', '판매 가격', '수량', 'price'],
+  file: ['파일명', '파일', 'file', 'filename'], title: ['제목', '상품명', 'title', 'name'], price: ['가격', '판매가격', '판매 가격', 'price'],
   category: ['카테고리', 'category'], source: ['출처', '제조/출처구분', '제조 / 출처 구분', '제조출처구분', 'source'], factory: ['공장', '공장선택', '출처직접입력', '출처/공장', '출처 / 공장', 'factory'],
   dispatch: ['발송', '예상발송시간', '예상 발송 시간', '발송시기', '발송 시기', 'dispatch'], boxPrice: ['풀셋박스추가금액', '풀셋 박스 추가 금액', '박스가격', '박스 가격', '박스', 'boxprice', 'box'],
   brand: ['브랜드', 'brand'], model: ['모델', '모델명', 'model'], material: ['케이스소재', '케이스 소재', '소재', 'material'],
   movement: ['무브먼트', 'movement'], caseSize: ['케이스직경', '케이스 직경', '케이스크기', '케이스 크기', '다이얼', 'casesize'],
   thickness: ['두께', 'thickness'], weight: ['무게', 'weight'], glass: ['글라스', 'glass'],
-  waterResistance: ['방수', 'waterresistance'], additionalDetails: ['추가내용', '추가 내용', 'additionaldetails'], description: ['소개', '제품소개', '설명', 'description'], menuCategory: ['메뉴카테고리', '메뉴 카테고리', 'menucategory', 'menu'], sell: ['내용확인하기', '내용 확인하기', '마켓에판매하기', '마켓에 판매하기', '판매하기', '판매여부', '판매', 'sell', 'forsale'],
+  waterResistance: ['방수', 'waterresistance'], additionalDetails: ['추가내용', '추가 내용', 'additionaldetails'], description: ['소개', '제품소개', '설명', 'description'], menuCategory: ['메뉴카테고리', '메뉴 카테고리', 'menucategory', 'menu'], sell: ['마켓에판매하기', '마켓에 판매하기', '판매하기', '판매여부', '판매', 'sell', 'forsale'],
 };
 
 /** Splits one line of CSV / TSV, honouring "quoted, values". */
@@ -182,9 +182,9 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   const v = item.values, errors: string[] = [], warnings: string[] = [];
   const titleError = validatePostTitle(v.title); if (titleError) errors.push(titleError);
   const sell = normalizeSell(v.sell);
-  if (sell === null) errors.push('내용 확인하기는 예 / 아니오 중 하나로 입력해 주세요. (비우면 예)');
+  if (sell === null) errors.push('마켓에 판매하기는 예 / 아니오 중 하나로 입력해 주세요. (비우면 예)');
   const price = Number(v.price.replace(/[$,\s]/g, ''));
-  if (sell !== false && (!Number.isFinite(price) || price < 1 || price > 100000000)) errors.push('수량은 1 이상의 숫자로 입력해 주세요.');
+  if (sell !== false && (!Number.isFinite(price) || price < 1 || price > 100000000)) errors.push('판매 가격(USD)은 1 이상의 숫자로 입력해 주세요.');
   const category = productCategories.find(c => norm(c) === norm(v.category)) ?? (v.category ? undefined : '커스텀제작');
   if (!category) errors.push(`카테고리는 ${productCategories.join(' / ')} 중 하나여야 해요.`);
   const menuCategory = v.menuCategory.trim() ? postCategoryLabels.find(c => norm(c) === norm(v.menuCategory)) : '시계';
