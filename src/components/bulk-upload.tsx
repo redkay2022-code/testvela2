@@ -17,7 +17,7 @@ import { applyRows, BULK_FIELDS, groupFiles, MAX_BULK, PASTE_ORDER, parseTable, 
 
 type State = { status: 'idle' | 'working' | 'done' | 'error'; pct: number; step: string; error: string };
 const idle: State = { status: 'idle', pct: 0, step: '', error: '' };
-const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '판매 가격', category: '카테고리', source: '제조/출처 구분', factory: '공장', dispatch: '예상 발송 시간', boxPrice: '풀셋 박스 추가 금액', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경', thickness: '두께', weight: '무게', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '제품 소개', menuCategory: '메뉴 카테고리', sell: '마켓에 판매하기' };
+const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '수량', category: '카테고리', source: '제조/출처 구분', factory: '공장', dispatch: '예상 발송 시간', boxPrice: '풀셋 박스 추가 금액', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경', thickness: '두께', weight: '무게', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '제품 소개', menuCategory: '메뉴 카테고리', sell: '내용 확인하기' };
 const EDIT_FIELDS = BULK_FIELDS.filter(f => f !== 'file');
 
 /**
@@ -155,7 +155,7 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
               : f === 'menuCategory'
                 ? <select key={f} className="form-input notranslate" translate="no" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">메뉴 카테고리 (비우면 시계)</option>{postCategoryLabels.map(cat => <option key={cat} translate="no" className="notranslate">{cat}</option>)}</select>
                 : f === 'sell'
-                  ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">마켓에 판매하기 (비우면 예)</option><option>예</option><option>아니오</option></select>
+                  ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">내용 확인하기 (비우면 예)</option><option>예</option><option>아니오</option></select>
                   : f === 'source'
                     ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running}><option value="">제조 / 출처 구분 (비우면 커스텀 제작)</option><option>커스텀 제작</option><option>공장 선택</option><option>기타 - 직접입력</option></select>
                     : <input key={f} list={f === 'dispatch' ? 'bulk-dispatch-list' : f === 'factory' ? 'bulk-factory-list' : undefined} className="form-input" aria-label={FIELD_LABEL[f]} placeholder={FIELD_LABEL[f]} value={it.values[f]} onChange={e => edit(it.id, f, e.target.value)} disabled={running} />)}</div>}

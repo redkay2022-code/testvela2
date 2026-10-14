@@ -224,7 +224,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
   const save = async (status: 'draft' | 'published') => {
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
     if (!postCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
-    const p = Number(price); if (!Number.isFinite(p) || p < 1) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
+    const p = Number(price); if (!Number.isFinite(p) || p < 1) { setError('수량을 입력해 주세요.'); return; }
     if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
     if (sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
     if (sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
@@ -300,7 +300,7 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
     <WatchSpecificationsForm idPrefix="l-spec" value={specs} onChange={setSpecs} />
     <label htmlFor="l-desc" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품 설명")}</span></label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
     <div className="grid grid-cols-2 gap-x-3">
-      <div><label htmlFor="l-price" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 가격 (USD $)")}</span></label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>
+      <div><label htmlFor="l-price" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("수량")}</span></label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>
       <fieldset className="sm:col-span-2"><legend className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("예상 발송 시간")}</span></legend><div className="flex flex-wrap gap-2" role="radiogroup">{DISPATCH_OPTIONS.map(o => <button type="button" key={o.value} role="radio" aria-checked={dispatch === o.value} onClick={() => setDispatch(o.value)} className={`lux-chip ${dispatch === o.value ? 'active' : ''}`}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(o.label)}</span></button>)}</div><input aria-label={tx("예상 발송 시간 직접 입력")} className="form-input mt-2" maxLength={40} placeholder={tx("직접 입력 (예: 주문 후 10일 이내)")} value={customDispatch} onFocus={() => setDispatch('custom')} onChange={e => { setCustomDispatch(e.target.value); setDispatch('custom'); }} /></fieldset><div><label htmlFor="l-box" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("풀셋 박스 (USD $, 선택)")}</span></label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
     </div>
     <p className="mt-2 text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("가격은 USD로 저장되며, 구매자에게는 각자의 통화로 자동 환산되어 표시돼요.")}</span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{price && Number(price) > 0 ? tx(" (현재 표시: {0})", { 0: formatMoney(Number(price)) }) : ''}</span></p>
