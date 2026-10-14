@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import { Tx } from './tx';
+import { dispatchDisplay } from '@/lib/dispatch';
 
 const specLabels: Record<string, string> = {
   brand: '브랜드',
@@ -21,22 +22,26 @@ function labelFor(key: string) {
 
 /** 공통 사양 표: seller-listings에서 저장한 specs(jsonb)를 라벨/값 2열 표로 렌더링한다.
  *  값이 하나도 없으면 fallback(에디토리 샘플용 기본 사양)을 대신 렌더링한다. */
+/** 화면용이 아닌 내부 저장 값(분류·미리보기 이미지 경로 등)은 사양 표에 보이지 않게 한다. */
+const HIDDEN_SPEC_KEYS = new Set(['sourceType', 'powerReserve', 'cardImage', 'menuCategory']);
 const WATER_NOTICE_TITLE = "Notice on Water Resistance:";
 const WATER_NOTICE_FACTORY = "Factory Products: Factory water-resistance ratings are for reference purposes only. Please avoid submerging or exposing the watch to water unless it has received professional waterproofing. We do not guarantee water resistance, and water damage is ineligible for refunds, exchanges, or free repairs.";
 const WATER_NOTICE_CUSTOM = "Custom Products: For inquiries regarding the water resistance of custom-crafted timepieces, please contact the seller directly.";
 
-export function SpecsTable({specs, fallback}: {specs: unknown; fallback?: React.ReactNode; category?: string}) {
+export function SpecsTable({specs, fallback, dispatch}: {specs: unknown; fallback?: React.ReactNode; category?: string; dispatch?: string | null}) {
   let entries: [string, string][] = [];
   if (specs && typeof specs === 'object' && !Array.isArray(specs)) {
     entries = Object.entries(specs as Record<string, unknown>)
-      .filter(([k, v]) => k !== 'sourceType' && k !== 'powerReserve' && typeof v === 'string' && v.trim())
+      .filter(([k, v]) => !HIDDEN_SPEC_KEYS.has(k) && typeof v === 'string' && v.trim())
       .map(([k, v]) => [k, (v as string).trim().slice(0, k === 'additionalDetails' ? 3000 : 80)]);
   }
-  if (!entries.length) return <>{fallback ?? null}</>;
+  const ship = dispatchDisplay(dispatch);
+  if (!entries.length && !ship) return <>{fallback ?? null}</>;
   return (
     <div className="mt-5">
       <h3 className="mb-1 text-sm font-semibold"><Tx>상품 사양</Tx></h3>
       <dl className="lux-specs notranslate" translate="no" data-no-translate>
+        {ship && <div><dt><Tx>예상 발송 시간</Tx></dt><dd data-i18n-skip className="whitespace-pre-wrap" style={{overflowWrap: 'anywhere'}}>{ship.label ? <Tx>{ship.label}</Tx> : ship.text}</dd></div>}
         {entries.map(([key, value]) => (
           <Fragment key={key}>
             <div><dt><Tx>{labelFor(key)}</Tx></dt><dd data-i18n-skip className="whitespace-pre-wrap" style={{overflowWrap: 'anywhere'}}>{value}</dd></div>

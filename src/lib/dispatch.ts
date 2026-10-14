@@ -20,3 +20,11 @@ export const dispatchValue = (choice: string, custom: string) => {
   const text = custom.trim().slice(0, 40);
   return text ? `custom:${text}` : '7d';
 };
+
+/** 상세 화면용 표시값: 정해진 선택지는 { label }, 직접 입력한 값은 { text } 로 돌려준다. 값이 없으면 null. */
+export const dispatchDisplay = (value: string | null | undefined): { label?: string; text?: string } | null => {
+  if (!value) return null;
+  if (value.startsWith('custom:')) { const text = value.slice(7).trim(); return text ? { text } : null; }
+  const hit = DISPATCH_OPTIONS.find(option => option.value === value);
+  return hit ? { label: hit.label } : null;
+};
