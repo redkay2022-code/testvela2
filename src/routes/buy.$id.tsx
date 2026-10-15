@@ -14,6 +14,7 @@ import { CheckoutForm } from '@/components/luxury-marketplace';
 import { SellerBadge } from '@/components/reputation';
 import { ProductComments } from '@/components/product-comments';
 import { EscrowGuarantee } from '@/components/escrow';
+import { TranslatableText } from '@/components/translatable-text';
 
 export const Route = createFileRoute('/buy/$id')({
   validateSearch: marketSearch,
@@ -61,7 +62,7 @@ function BuyPage() {
     <EscrowGuarantee />
     <section className="mt-6">
       <h2 className="text-sm font-semibold">구매자 리뷰</h2>
-      {reviews.data?.length ? <div className="mt-3 grid gap-3">{reviews.data.map(r => <article key={r.id} className="rounded-lg border border-border bg-card p-4"><div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1 font-semibold" data-no-translate>{r.nickname}<BadgeCheck size={14} className="text-primary" aria-label="인증 구매자" /></span><span className="text-muted-foreground">{formatDate(r.created_at)}</span></div>{r.rating !== null && <div className="mt-2"><Stars value={r.rating} size={12} /></div>}<p className="mt-2 text-sm leading-6 text-muted-foreground">{r.body}</p></article>)}</div>
+      {reviews.data?.length ? <div className="mt-3 grid gap-3">{reviews.data.map(r => <article key={r.id} className="rounded-lg border border-border bg-card p-4"><div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1 font-semibold" data-no-translate>{r.nickname}<BadgeCheck size={14} className="text-primary" aria-label="인증 구매자" /></span><span className="text-muted-foreground">{formatDate(r.created_at)}</span></div>{r.rating !== null && <div className="mt-2"><Stars value={r.rating} size={12} /></div>}<TranslatableText as="p" className="mt-2 text-sm leading-6 text-muted-foreground" text={r.body}/></article>)}</div>
         : <p className="mt-2 text-sm text-muted-foreground">아직 이 상품의 리뷰가 없습니다. 구매 후 수령 확인을 하면 별점과 리뷰를 남길 수 있습니다.</p>}
     </section>
   </main>;

@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDate } from '@/lib/i18n';
 import { sellerKey } from '@/lib/seller-directory';
 import { getPublicReviews } from '@/lib/market.functions';
+import { TranslatableText } from './translatable-text';
 
 const BUCKET = 'review-media';
 type Review = { id: string; nickname: string; seller_id: string; seller_name: string; body: string; media_urls: string[]; video_url: string | null; created_at: string; urls: Record<string, string> };
@@ -29,7 +30,7 @@ export function ReviewList({ sellerId, role, posts }: { sellerId?: string; role?
     <Link to="/store" search={{ role, seller: r.seller_id, storeTab: 'reviews' }} className="mt-2 inline-flex items-center gap-1 rounded-full border border-primary/50 px-3 py-1 text-xs text-primary" data-no-translate><Store size={12}/>구매처: {r.seller_name}</Link>{(() => { const rep = repFor(r.seller_id, r.seller_name); return rep ? <span className="ml-2 align-middle"><SellerBadge reputation={rep}/></span> : null; })()}
     {r.video_url && r.urls[r.video_url] && <video src={r.urls[r.video_url]} className="mt-3 aspect-[9/16] max-h-96 w-full rounded-md bg-background object-cover" controls muted playsInline preload="metadata"/>}
     {r.media_urls.length > 0 && <div className="mt-3 grid grid-cols-3 gap-2">{r.media_urls.map(p => r.urls[p] && <img key={p} src={r.urls[p]} alt="리뷰 사진" className="aspect-square w-full rounded-md object-cover" loading="lazy"/>)}</div>}
-    <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{r.body}</p>
+    <TranslatableText as="p" className="mt-3 whitespace-pre-wrap text-sm leading-6" text={r.body}/>
   </article>)}</div>;
 }
 

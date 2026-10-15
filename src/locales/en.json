@@ -1464,5 +1464,6 @@
   "미리보기에서는 구매할 수 없어요.": "You cannot buy in the preview.",
   "미리보기": "Preview",
   "기존 영상을 불러오지 못했어요. 영상을 다시 선택해 주세요.": "Could not load the existing video. Please select the video again.",
-  "직접 입력": "Custom input"
+  "직접 입력": "Custom input",
+  "No translation available": "No translation available"
 }

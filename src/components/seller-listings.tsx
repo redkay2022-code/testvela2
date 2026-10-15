@@ -12,6 +12,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { syncMyPostNickname } from '@/lib/seller-accounts.functions';
 import { signMyMedia } from '@/lib/my-media.functions';
+import { removeMarketMedia } from '@/lib/proxy-seller.functions';
+import { MemberPicker, PROXY_NOT_SELLER_MESSAGE, type ProxyTarget } from './member-picker';
 import { ListingPreview } from './listing-preview';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User } from '@supabase/supabase-js';
@@ -51,19 +53,20 @@ export function SellerListings() {
   const qc = useQueryClient();
   const syncNickname = useServerFn(syncMyPostNickname);
   const signMedia = useServerFn(signMyMedia);
+  const [acting, setActing] = useState<ProxyTarget | null>(null);
   const synced = useRef(false);
   useEffect(() => { if (!user || !canSell || synced.current) return; synced.current = true; void syncNickname().then(() => qc.invalidateQueries({ queryKey: ['my-listings'] })).catch(() => undefined); }, [user, canSell]);
   const listings = useQuery({
-    queryKey: ['my-listings', user?.id], enabled: !!user && canSell,
+    queryKey: ['my-listings', acting?.id ?? user?.id], enabled: !!user && canSell,
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,dispatch_time,media_urls,video_url,status,product_status,stock_qty,reserved_qty,specs,video_tags,created_at,thumbnail_url').eq('user_id', user.id).order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('posts').select('id,title,description,category,price,box_price,dispatch_time,media_urls,video_url,status,product_status,stock_qty,reserved_qty,specs,video_tags,created_at,thumbnail_url').eq('user_id', acting?.id ?? user.id).order('created_at', { ascending: false });
       if (error) throw error;
       const rows = data as unknown as Listing[];
       // 목록에는 상품당 대표 사진 1장만 서명한다. 서버에서 소유자를 확인해 서명하고(스토리지 정책 밖 파일도 보이도록), 실패하면 브라우저에서 직접 시도한다.
       const serverThumbs = new Map<string, string>();
       for (let i = 0; i < rows.length; i += 100) {
-        try { const res = await signMedia({ data: { ids: rows.slice(i, i + 100).map(r => r.id) } }); Object.entries(res).forEach(([id, v]) => { if (v.thumb) serverThumbs.set(id, v.thumb); }); } catch { /* 아래 직접 서명으로 보완 */ }
+        try { const res = await signMedia({ data: { ids: rows.slice(i, i + 100).map(r => r.id), ...(acting ? { ownerId: acting.id } : {}) } }); Object.entries(res).forEach(([id, v]) => { if (v.thumb) serverThumbs.set(id, v.thumb); }); } catch { /* 아래 직접 서명으로 보완 */ }
       }
       const pick = (r: Listing) => cardPathOf(r.specs) || r.media_urls[0] || r.thumbnail_url || '';
       const paths = [...new Set(rows.filter(r => !serverThumbs.has(r.id)).map(pick).filter(Boolean))];
@@ -87,7 +90,7 @@ export function SellerListings() {
   const openWithMedia = async (l: Listing, open: (value: Listing) => void) => {
     if (opening) return; setOpening(l.id);
     try {
-      try { const res = (await signMedia({ data: { ids: [l.id], full: true } }))[l.id]; if (res && (res.media.some(Boolean) || res.video)) { open({ ...l, signed_media_urls: res.media, signed_video_url: res.video || undefined }); return; } } catch { /* 직접 서명으로 보완 */ }
+      try { const res = (await signMedia({ data: { ids: [l.id], full: true, ...(acting ? { ownerId: acting.id } : {}) } }))[l.id]; if (res && (res.media.some(Boolean) || res.video)) { open({ ...l, signed_media_urls: res.media, signed_video_url: res.video || undefined }); return; } } catch { /* 직접 서명으로 보완 */ }
       const paths = [...l.media_urls, l.video_url].filter(Boolean) as string[]; const map = new Map<string, string>();
       for (let i = 0; i < paths.length; i += 100) { try { const { data: signed } = await supabase.storage.from('market-media').createSignedUrls(paths.slice(i, i + 100), 3600); signed?.forEach(x => x.path && x.signedUrl && map.set(x.path, x.signedUrl)); } catch { /* 일부 실패해도 열기 */ } }
       open({ ...l, signed_media_urls: l.media_urls.map(p => map.get(p) ?? ''), signed_video_url: l.video_url ? map.get(l.video_url) : undefined });
@@ -101,8 +104,8 @@ export function SellerListings() {
   if (account.isLoading) return <section className="seller-flow-card"><p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("계정 확인 중…")}</span></p></section>;
   if (!canSell) return <section className="seller-flow-card"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><p className="mt-2 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("승인된 셀러만 상품을 등록할 수 있어요. “나” 탭에서 셀러 계정을 신청해 주세요.")}</span></p></section>;
 
-  const toggleSold = async (l: Listing, sold: boolean) => { const {error}=await supabase.from('posts').update({ stock_qty: sold ? (l.reserved_qty ?? 0) : Math.max(1, (l.reserved_qty ?? 0) + 1) }).eq('id', l.id).eq('user_id',user.id); if(error){alert('판매 완료 상태를 변경하지 못했습니다.');return;} refresh(); void qc.invalidateQueries({ queryKey: ['seller-stats'] }); };
-  const toggle = async (l: Listing) => { const {error} = await supabase.from('posts').update(publicationUpdate(l.status !== 'published')).eq('id', l.id).eq('user_id',user.id); if(error){alert('판매 상태를 변경하지 못했습니다.');return;} refresh(); };
+  const toggleSold = async (l: Listing, sold: boolean) => { const {error}=await supabase.from('posts').update({ stock_qty: sold ? (l.reserved_qty ?? 0) : Math.max(1, (l.reserved_qty ?? 0) + 1) }).eq('id', l.id).eq('user_id',acting?.id ?? user.id); if(error){alert('판매 완료 상태를 변경하지 못했습니다.');return;} refresh(); void qc.invalidateQueries({ queryKey: ['seller-stats'] }); };
+  const toggle = async (l: Listing) => { const {error} = await supabase.from('posts').update(publicationUpdate(l.status !== 'published')).eq('id', l.id).eq('user_id',acting?.id ?? user.id); if(error){alert('판매 상태를 변경하지 못했습니다.');return;} refresh(); };
   const replaceVideo = async (l: Listing, original: File) => {
     let file = original;
     if (!isListingVideo(file)) { alert('영상 파일(MP4/WEBM/MOV)을 선택해 주세요.'); return; }
@@ -116,19 +119,20 @@ export function SellerListings() {
       if (up) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.');
       const { error: e } = await supabase.from('posts').update({ video_url: path, thumbnail_url: await uploadVideoThumbnail(file, user.id), video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
       if (e) { await supabase.storage.from('market-media').remove([path]); throw new Error('게시물을 수정하지 못했어요.'); }
-      if (l.video_url) await supabase.storage.from('market-media').remove([l.video_url]);
+      if (l.video_url) await (acting ? removeMarketMedia({ data: { paths: [l.video_url] } }).catch(() => undefined) : supabase.storage.from('market-media').remove([l.video_url]));
       refresh();
     } catch (err) { alert(err instanceof Error ? err.message : '영상 교체에 실패했어요.'); }
     finally { setReplacing(null); }
   };
-  const remove = async (l: Listing) => { if (roles.includes('admin')) { if (!(await gate.ask(tx('상품과 사진·영상을 함께 삭제합니다: {0}', { 0: l.title })))) return; } else if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : []), ...(cardPathOf(l.specs) ? [cardPathOf(l.specs) as string] : [])]; if (media.length) await supabase.storage.from('market-media').remove(media); refresh(); };
+  const remove = async (l: Listing) => { if (roles.includes('admin')) { if (!(await gate.ask(tx('상품과 사진·영상을 함께 삭제합니다: {0}', { 0: l.title })))) return; } else if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : []), ...(cardPathOf(l.specs) ? [cardPathOf(l.specs) as string] : [])]; if (media.length) await (acting ? removeMarketMedia({ data: { paths: media } }).catch(() => undefined) : supabase.storage.from('market-media').remove(media)); refresh(); };
 
   return <section className="seller-flow-card" aria-label={tx("내 상품 관리")}>{gate.dialog}
-    <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><div className="flex gap-2"><Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("일괄 업로드")}</span></Button><Button size="sm" onClick={() => setEditing('new')}><Plus /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새 상품")}</span></Button></div></div>
-    {bulk && <BulkUpload user={user} existingTitles={(listings.data ?? []).map(l => l.title)} onClose={() => setBulk(false)} onDone={refresh} />}
-    <CardImageOptimizer user={user} listings={listings.data ?? []} onDone={refresh} />
+    <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><div className="flex gap-2">{!acting && <Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("일괄 업로드")}</span></Button>}<Button size="sm" onClick={() => setEditing('new')}><Plus /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새 상품")}</span></Button></div></div>
+    <MemberPicker userId={user.id} value={acting} onChange={next => { setActing(next); setEditing(null); setPreviewing(null); setBulk(false); setShown(24); }} />
+    {bulk && !acting && <BulkUpload user={user} existingTitles={(listings.data ?? []).map(l => l.title)} onClose={() => setBulk(false)} onDone={refresh} />}
+    {!acting && <CardImageOptimizer user={user} listings={listings.data ?? []} onDone={refresh} />}
     <div ref={formTop} className="scroll-mt-4" />
-    {editing && <ListingForm user={user} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
+    {editing && <ListingForm user={user} owner={acting} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불러오는 중…")}</span></p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 등록한 상품이 없어요.")}</span></p> :
       <ul className="seller-inventory-grid mt-5">{listings.data.slice(0, shown).map(l => <li key={l.id} className="seller-inventory-item">
         <div className="min-w-0"><figure className={`seller-inventory-media ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`}>{l.thumb ? <img src={l.thumb} alt={l.title} loading="lazy" decoding="async" className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
@@ -146,7 +150,7 @@ export function SellerListings() {
   </section>;
 }
 
-function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User; listing: Listing | null; catalog: { id: string; title: string }[]; onClose: () => void; onSaved: () => void }) {
+function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user: User; owner?: ProxyTarget | null; listing: Listing | null; catalog: { id: string; title: string }[]; onClose: () => void; onSaved: () => void }) {
   const { lang } = useCurrency();
   const [videoTags, setVideoTags] = useState<VideoTag[]>(listing?.video_tags ?? []);
   const [editing, setEditing] = useState<File | null>(null);
@@ -262,10 +266,11 @@ function ListingForm({ user, listing, catalog, onClose, onSaved }: { user: User;
       const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPrice ? Math.round(Number(boxPrice)) : null, dispatch_time: dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
-        const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await supabase.storage.from('market-media').remove(removed);
+        const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await (owner ? removeMarketMedia({ data: { paths: removed } }).catch(() => undefined) : supabase.storage.from('market-media').remove(removed));
       } else {
-        const nickname = (await supabase.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()).data?.nickname || 'vela member';
-        const { error: e } = await supabase.from('posts').insert({ ...row, user_id: user.id, creator: nickname.slice(0, 40), image_key: 'uploaded' });
+        if (owner && !owner.seller) throw new Error(PROXY_NOT_SELLER_MESSAGE);
+        const nickname = owner?.nickname || (await supabase.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()).data?.nickname || 'vela member';
+        const { error: e } = await supabase.from('posts').insert({ ...row, user_id: owner?.id ?? user.id, creator: nickname.slice(0, 40), image_key: 'uploaded' });
         if (e) throw new Error('저장하지 못했어요. 셀러 승인 상태를 확인해 주세요.');
       }
       onSaved();

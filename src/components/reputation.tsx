@@ -1,6 +1,7 @@
 import { automatedTier, buyerLabels, nextSellerTier, ratingAverage, ratingCriteria, sellerLabels, sellerTier, sellerTiers, studioNames, tierRules, type BuyerTier, type SellerReputation, type SellerTier } from '@/lib/reputation';
 import type { RatingStats } from '@/lib/studio-metrics';
 import type { RecentReview } from '@/lib/studio-tier';
+import { TranslatableText } from './translatable-text';
 
 type Emblem = BuyerTier;
 export function LuxuryEmblem({ tier }: { tier: Emblem }) {
@@ -69,7 +70,7 @@ export function StudioTierPanel({ reputation, live, stats, recent }: { reputatio
     <div className="studio-tier-progress"><div className="flex items-center justify-between text-sm"><span>평균 평점 <strong className="text-primary">★ {average === null ? '—' : average.toFixed(2)}</strong></span><span className="text-xs text-muted-foreground">{`리뷰 ${stats?.count ?? reputation.ratingCount ?? 0}개 · 별점 합계 ÷ 리뷰 수`}</span></div>
       {stats && <div className="rating-breakdown">{[5, 4, 3, 2, 1].map(n => { const c = stats.breakdown[n - 1]!; return <div key={n}><span>{n}★</span><progress max={Math.max(1, stats.count)} value={c} aria-label={`${n}점 리뷰`}/><span>{c}</span></div>; })}</div>}
     </div>
-    {recent && <div className="studio-tier-progress"><h3 className="text-sm font-semibold">최근 고객 리뷰</h3>{recent.length ? recent.map(r => <div key={r.id} className="border-t border-border pt-2 text-xs"><div className="flex justify-between"><span data-no-translate>{r.nickname}</span><span className="text-primary">{r.rating ? '★'.repeat(r.rating) : '별점 없음'}</span></div><p className="mt-1 line-clamp-2 text-muted-foreground">{r.body}</p></div>) : <p className="text-xs text-muted-foreground">아직 리뷰가 없습니다.</p>}</div>}
+    {recent && <div className="studio-tier-progress"><h3 className="text-sm font-semibold">최근 고객 리뷰</h3>{recent.length ? recent.map(r => <div key={r.id} className="border-t border-border pt-2 text-xs"><div className="flex justify-between"><span data-no-translate>{r.nickname}</span><span className="text-primary">{r.rating ? '★'.repeat(r.rating) : '별점 없음'}</span></div><TranslatableText as="p" className="mt-1 line-clamp-2 text-muted-foreground" text={r.body} /></div>) : <p className="text-xs text-muted-foreground">아직 리뷰가 없습니다.</p>}</div>}
     <div className="studio-tier-table-wrap"><table className="studio-tier-table">
       <thead><tr><th>등급</th><th>누적 매출</th><th>완료 주문</th><th>평점</th><th>분쟁률</th><th>수수료</th><th>노출 혜택</th></tr></thead>
       <tbody>{sellerTiers.map(t => { const r = tierRules[t]; return <tr key={t} className={t === tier ? 'current' : ''}><td><StudioTierBadge tier={t}/></td><td>{t === 'standard' ? '$0+' : `${usd(r.volume)} 초과`}</td><td>{t === 'standard' ? '—' : `${r.sales}+`}</td><td>{t === 'standard' ? '—' : `${r.rating.toFixed(1)}+`}</td><td>{t === 'standard' ? '—' : `<${r.maxDispute}%`}</td><td>{r.fee}%</td><td>{r.boost}</td></tr>; })}</tbody>

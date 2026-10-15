@@ -31,7 +31,7 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  const pr=usePostRatings().data?.[post.id];
  const sellerAvg=ratingAverage(post.reputation),sellerCount=post.reputation.ratingCount;
  const sellerAvatar=useQuery({queryKey:['seller-header-avatar',post.source.store_id ?? post.source.user_id ?? null],enabled:!post.sample&&Boolean(post.source.store_id||post.source.user_id),queryFn:()=>getSellerAvatar({data:{storeId:post.source.store_id ?? undefined,userId:post.source.user_id ?? undefined}})});
- const tr=usePostTranslation(post.source,!post.sample);
+ const tr=usePostTranslation(post.source,!post.sample,false);
  const verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
  const qna=search.detailTab==='qna',boxPrice=post.boxPrice ?? 0;
  const openQna=()=>{pushed.current=true;void navigate({to:'.',search:prev=>({...prev,detailTab:'qna'}),resetScroll:false});};

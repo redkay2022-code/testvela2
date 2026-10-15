@@ -5,6 +5,7 @@ import { Star, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAdminPasswordGate } from './admin-password-gate';
 import { adminDeleteReview, adminHoldReview, adminListReviews } from '@/lib/admin-members.functions';
+import { TranslatableText } from './translatable-text';
 
 /** Back-office review moderation: hold (hidden from everyone but the author and admins) or delete permanently. */
 export function AdminReviews() {
@@ -38,7 +39,7 @@ export function AdminReviews() {
       {rows.map(r => <tr key={r.id} className={r.held ? 'opacity-60' : ''}>
         <td><strong>{r.nickname}</strong></td><td>{r.seller_name}</td>
         <td>{r.rating ? <span className="inline-flex items-center gap-1"><Star size={13} className="fill-primary text-primary"/>{r.rating}</span> : '—'}</td>
-        <td className="max-w-[260px] whitespace-normal text-xs leading-5">{r.body}{r.media > 0 && <small className="block text-muted-foreground">사진·영상 {r.media}개</small>}</td>
+        <td className="max-w-[260px] whitespace-normal text-xs leading-5"><TranslatableText as="span" text={r.body} />{r.media > 0 && <small className="block text-muted-foreground">사진·영상 {r.media}개</small>}</td>
         <td>{new Date(r.created_at).toLocaleDateString('ko-KR')}</td>
         <td><label className="inline-flex cursor-pointer items-center gap-1 text-xs"><input type="checkbox" className="size-4 accent-[var(--primary)]" checked={r.held} disabled={busy === r.id} onChange={e => void toggle(r.id, e.target.checked)}/>보류</label></td>
         <td><Button size="sm" variant="ghost" className="text-destructive" disabled={busy === r.id} onClick={() => void del(r.id, r.nickname)}><Trash2/>삭제</Button></td>

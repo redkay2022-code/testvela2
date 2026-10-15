@@ -150,6 +150,9 @@
     "lib/personal-feed.ts",
     "lib/seen-history.ts",
     "lib/use-feed-signals.ts",
-    "lib/my-media.functions.ts"
+    "lib/my-media.functions.ts",
+    "lib/proxy-seller.functions.ts",
+    "components/member-picker.tsx",
+    "lib/text-language.ts"
   ]
 }

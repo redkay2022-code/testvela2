@@ -8,7 +8,7 @@ const langEnum = z.enum(Object.keys(langNames) as [string, ...string[]]);
 
 /** Machine-translates user/seller-written snippets into the target language; returns originals on failure. */
 export const translateTexts = createServerFn({ method: 'POST' })
-  .inputValidator((d) => z.object({ lang: langEnum, texts: z.array(z.string().min(1).max(600)).min(1).max(40) }).parse(d))
+  .inputValidator((d) => z.object({ lang: langEnum, texts: z.array(z.string().min(1).max(3000)).min(1).max(40) }).parse(d))
   .handler(async ({ data }) => {
     const out: string[] = data.texts.map((t) => cache.get(`${data.lang}\u0000${t}`) ?? '');
     const todo = data.texts.map((t, i) => ({ t, i })).filter(({ i }) => !out[i]);

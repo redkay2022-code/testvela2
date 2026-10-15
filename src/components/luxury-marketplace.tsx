@@ -243,7 +243,7 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
  const checkoutSearch=useRouterState({select:s=>marketSearch.parse(s.location.search)});
  const [box,setBox]=useState(Boolean(checkoutSearch.checkoutBox));
  const ship=useSavedShipping();
- const [f,setF]=useState<ShippingInput>(emptyShipping); const [remember,setRemember]=useState(true); const loaded=useRef(false);
+ const [f,setF]=useState<ShippingInput>(emptyShipping); const [remember,setRemember]=useState(false); const loaded=useRef(false);
  useEffect(()=>{if(loaded.current||ship.loading)return;loaded.current=true;if(ship.saved)setF(ship.saved);else setF({...emptyShipping,recipient:p.recipient||'',phone:p.phone.startsWith('@')?'':p.phone,line1:p.address,postal:p.postal});},[ship.loading,ship.saved,p]);
   const price=item.price ?? 0, boxPrice=item.boxPrice ?? 0;
   const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [deposit,setDeposit]=useState(false); const [points,setPoints]=useState(0); const [err,setErr]=useState('');

@@ -8,9 +8,16 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
  */
 export const signMyMedia = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ ids: z.array(z.string().uuid()).min(1).max(100), full: z.boolean().optional() }).parse(data))
+  .inputValidator((data: unknown) => z.object({ ids: z.array(z.string().uuid()).min(1).max(100), full: z.boolean().optional(), ownerId: z.string().uuid().optional() }).parse(data))
   .handler(async ({ data, context }) => {
-    const { data: rows, error } = await context.supabase.from('posts').select('id,media_urls,video_url,thumbnail_url,specs').in('id', data.ids).eq('user_id', context.userId);
+    // 관리자는 다른 회원의 상품 미리보기도 볼 수 있다. 관리자가 아니면 본인 상품만 허용한다.
+    let ownerId = context.userId;
+    if (data.ownerId && data.ownerId !== context.userId) {
+      const { data: isAdmin } = await context.supabase.rpc('has_role', { _user_id: context.userId, _role: 'admin' });
+      if (!isAdmin) throw new Error('Forbidden');
+      ownerId = data.ownerId;
+    }
+    const { data: rows, error } = await context.supabase.from('posts').select('id,media_urls,video_url,thumbnail_url,specs').in('id', data.ids).eq('user_id', ownerId);
     if (error) throw new Error('상품 미디어를 불러오지 못했어요.');
     type Row = { id: string; media_urls: string[] | null; video_url: string | null; thumbnail_url: string | null; specs: Record<string, unknown> | null };
     const list = (rows ?? []) as unknown as Row[];

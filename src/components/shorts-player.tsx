@@ -125,7 +125,7 @@ function ShortSellerIdentity({post}:{post:LuxuryPost}) {
  return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><Avatar className="shorts-anonymous-avatar"><AvatarImage src={sellerAvatar.data?.avatar ?? undefined} alt={`${post.creator} 프로필 사진`} className="object-cover"/><AvatarFallback className="bg-transparent" aria-label="판매자 프로필"><UserRound/></AvatarFallback></Avatar><strong data-i18n-skip className="notranslate" translate="no">{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
 }
 function VideoOnlyDetails({post,user,requestAuth,buy}:{post:LuxuryPost;user:User|null;requestAuth:()=>void;buy:Props['buy']}) {
- const tr=usePostTranslation(post.source,!post.sample);
+ const tr=usePostTranslation(post.source,!post.sample,false);
  return <section className="shorts-video-details notranslate" data-no-translate translate="no">
  <header className="shorts-video-details-seller" aria-label="판매자 정보"><ShortSellerIdentity post={post}/></header>
  <div className="shorts-video-details-body"><h2 data-i18n-skip>{post.sample?post.title:tr.title}</h2>

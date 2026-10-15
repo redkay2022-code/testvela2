@@ -16,6 +16,7 @@ import { dollars } from '@/lib/luxury-market';
 import { qcAreas, stageLabel, type EscrowStage } from '@/lib/escrow';
 import { getOrderTracking } from '@/lib/tracking.functions';
 import { EscrowTimeline } from './escrow';
+import { TranslatableText } from './translatable-text';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1;
 const BUCKET = 'qc-media';
@@ -90,7 +91,7 @@ function Thread({ msgs }: { msgs: Msg[] }) {
   return <ul className="mt-3 grid gap-2 text-sm">{msgs.map(m => <li key={m.id} className={`rounded-md border p-2 ${m.author_role === 'admin' ? 'border-primary bg-primary/20' : m.author_role === 'seller' ? 'border-border bg-card' : 'border-border bg-primary/10'}`}>
     <div className="flex justify-between text-xs text-muted-foreground"><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{m.author_role === 'admin' ? tx('관리자 (중재)') : m.author_role === 'seller' ? tx('셀러') : tx('구매자')}</span> · <span data-i18n-skip data-no-translate translate="no" className="notranslate">{m.kind === 'request' ? tx('추가 사진 요청') : m.kind === 'qc' ? tx('QC 업로드') : tx('메시지')}</span></span><span>{new Date(m.created_at).toLocaleString()}</span></div>
     {m.areas.length > 0 && <p className="mt-1 text-primary">{m.areas.join(', ')}</p>}
-    {m.body && <p className="mt-1 whitespace-pre-wrap">{m.body}</p>}
+    {m.body && <TranslatableText as="p" className="mt-1 whitespace-pre-wrap" text={m.body} />}
   </li>)}</ul>;
 }
 
