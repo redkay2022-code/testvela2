@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, Check, Plus, Star, Store } from 'lucide-react';
+import { ArrowRight, Check, Plus, Star, Store, UserRound } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { getSellerAvatar } from '@/lib/market.functions';
 import { Button } from './ui/button';
 import { SellerBadge } from './reputation';
 import { useMarketPreview } from './market-preview';
@@ -8,6 +10,14 @@ import { cardImageOf } from '@/lib/luxury-market';
 import type { LuxuryPost } from '@/lib/luxury-market';
 import { postMediaRoute } from '@/lib/post-media';
 import { TranslatableText } from './translatable-text';
+
+/** 셀러가 직접 등록한 프로필 사진(스토어 아바타 → 프로필 사진). 상품 사진은 절대 대신 쓰지 않는다. */
+function DirectoryAvatar({ post }: { post: LuxuryPost }) {
+  const storeId = post.source.store_id ?? undefined, userId = post.source.user_id ?? undefined;
+  const avatar = useQuery({ queryKey: ['seller-header-avatar', storeId ?? userId ?? null], enabled: !post.sample && Boolean(storeId || userId), queryFn: () => getSellerAvatar({ data: { storeId, userId } }), staleTime: 300_000 });
+  if (avatar.data?.avatar) return <img src={avatar.data.avatar} width={48} height={48} alt={post.creator}/>;
+  return <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground" role="img" aria-label={post.creator}><UserRound size={22}/></span>;
+}
 
 export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost[]; category?:StoreCategory|undefined; role?:'buyer'|'seller'|'admin'|undefined}) {
   const preview = useMarketPreview();
@@ -18,7 +28,7 @@ export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost
     <div className="directory-grid">{sellers.map(seller=>{
       const following = preview.isFollowing(seller.id);
       return <article className="directory-card" key={seller.id}>
-        <div className="directory-identity" data-no-translate><img src={seller.post.images[0]} width={48} height={48} alt={seller.post.creator}/><div><h2>{seller.post.creator}</h2><SellerBadge reputation={seller.post.reputation}/></div></div>
+        <div className="directory-identity" data-no-translate><DirectoryAvatar post={seller.post}/><div><h2>{seller.post.creator}</h2><SellerBadge reputation={seller.post.reputation}/></div></div>
         <TranslatableText as="p" className="directory-bio" text={seller.bio} />
         
         <div className="directory-metrics"><span><Star size={13}/><strong>{seller.rating?.toFixed(2) ?? '—'}</strong> Rating</span><span><strong>{seller.reviews ?? '—'}</strong> Reviews</span><span><strong>{seller.followers===null?'—':new Intl.NumberFormat('en',{notation:'compact'}).format(seller.followers+(following?1:0))}</strong> Followers</span></div>

@@ -60,3 +60,66 @@ export const removeMarketMedia = createServerFn({ method: 'POST' })
     if (paths.length) await supabaseAdmin.storage.from('market-media').remove(paths);
     return { ok: true };
   });
+
+const idSchema = z.string().uuid();
+const AVATAR_BUCKET = 'avatars';
+
+/** 관리자가 고른 셀러의 프로필(닉네임·시스템 코드·사진)을 읽는다. 사진은 잠깐 쓰는 서명 주소로 돌려준다. */
+export const getProxyProfile = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ userId: idSchema }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: profile } = await supabaseAdmin.from('profiles').select('nickname,system_code,avatar_url').eq('user_id', data.userId).maybeSingle();
+    if (!profile) throw new Error('Not found');
+    let avatarUrl: string | null = null;
+    if (profile.avatar_url) {
+      const { data: signed } = await supabaseAdmin.storage.from(AVATAR_BUCKET).createSignedUrl(profile.avatar_url, 3600);
+      avatarUrl = signed?.signedUrl ?? null;
+    }
+    return { nickname: profile.nickname as string, systemCode: profile.system_code as string, avatarUrl };
+  });
+
+/** 닉네임 변경 + 그 셀러의 기존 상품에 복사돼 있는 표시 이름도 함께 맞춘다. */
+export const updateProxyNickname = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ userId: idSchema, nickname: z.string().trim().min(1).max(30) }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { error } = await supabaseAdmin.from('profiles').update({ nickname: data.nickname }).eq('user_id', data.userId);
+    if (error) throw new Error('Nickname could not be saved.');
+    await supabaseAdmin.from('seller_applications').update({ nickname: data.nickname }).eq('user_id', data.userId);
+    await supabaseAdmin.from('posts').update({ creator: data.nickname.slice(0, 40) }).eq('user_id', data.userId).is('store_id', null);
+    return { ok: true };
+  });
+
+/** 1단계: 사진을 직접 올릴 수 있는 1회용 주소를 만든다(기존 사진은 지운다). */
+export const signProxyAvatarUpload = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ userId: idSchema, ext: z.enum(['jpg', 'jpeg', 'png', 'webp']) }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: profile } = await supabaseAdmin.from('profiles').select('avatar_url').eq('user_id', data.userId).maybeSingle();
+    if (!profile) throw new Error('Not found');
+    const path = `${data.userId}/avatar.${data.ext}`;
+    await supabaseAdmin.storage.from(AVATAR_BUCKET).remove([path, ...(profile.avatar_url ? [profile.avatar_url as string] : [])]);
+    const { data: signed, error } = await supabaseAdmin.storage.from(AVATAR_BUCKET).createSignedUploadUrl(path);
+    if (error || !signed) throw new Error('Could not prepare upload.');
+    return { path, token: signed.token };
+  });
+
+/** 2단계: 올린 사진을 프로필 사진으로 지정한다. */
+export const setProxyAvatar = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ userId: idSchema, path: z.string().min(1).max(200) }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    if (!data.path.startsWith(`${data.userId}/`) || data.path.includes('..')) throw new Error('Invalid path');
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { error } = await supabaseAdmin.from('profiles').update({ avatar_url: data.path }).eq('user_id', data.userId);
+    if (error) throw new Error('Profile could not be saved.');
+    return { ok: true };
+  });

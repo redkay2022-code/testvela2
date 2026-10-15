@@ -1,16 +1,70 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { UserRound } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { createProxySellers } from '@/lib/proxy-seller.functions';
+import { createProxySellers, getProxyProfile, updateProxyNickname, signProxyAvatarUpload, setProxyAvatar } from '@/lib/proxy-seller.functions';
+import { MAX_AVATAR_BYTES } from '@/lib/avatar';
 import { SellerListings } from './seller-listings';
 import type { ProxyTarget } from './member-picker';
 
 export const PROXY_TAB_LABEL = '셀러 대리 관리';
-export const PROXY_TAB_NOTE = '셀러 계정 만들기 · 셀러 대신 상품 등록·수정·삭제';
+export const PROXY_TAB_NOTE = '셀러 계정 만들기 · 셀러 대신 프로필·상품 등록·수정·삭제';
 
 const clean = (q: string) => q.replace(/[%,()"'\\*]/g, ' ').trim().slice(0, 40);
+
+/** 선택한 셀러의 닉네임·프로필 사진을 일반 셀러의 프로필 화면처럼 등록·수정한다. */
+function ProxyProfile({ target, onRenamed }: { target: ProxyTarget; onRenamed: (nickname: string) => void }) {
+  const qc = useQueryClient();
+  const readFn = useServerFn(getProxyProfile);
+  const nickFn = useServerFn(updateProxyNickname);
+  const signFn = useServerFn(signProxyAvatarUpload);
+  const setFn = useServerFn(setProxyAvatar);
+  const [value, setValue] = useState('');
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  const profile = useQuery({ queryKey: ['proxy-profile', target.id], queryFn: () => readFn({ data: { userId: target.id } }), refetchOnWindowFocus: false });
+  useEffect(() => { if (profile.data) setValue(profile.data.nickname); }, [profile.data]);
+  const refresh = () => { void qc.invalidateQueries({ queryKey: ['proxy-profile', target.id] }); void qc.invalidateQueries({ queryKey: ['proxy-admin-members'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); void qc.invalidateQueries({ queryKey: ['my-listings'] }); void qc.invalidateQueries({ queryKey: ['seller-header-avatar'] }); };
+  const saveNickname = async (e: React.FormEvent) => {
+    e.preventDefault(); setMsg(''); setBusy(true);
+    try { await nickFn({ data: { userId: target.id, nickname: value } }); onRenamed(value.trim()); refresh(); setMsg('닉네임을 저장했어요.'); }
+    catch { setMsg('닉네임을 저장하지 못했어요. 다시 시도해 주세요.'); }
+    finally { setBusy(false); }
+  };
+  const uploadPhoto = async (file: File | undefined) => {
+    if (!file) return; setMsg('');
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!['jpg', 'jpeg', 'png', 'webp'].includes(ext) || !file.type.startsWith('image/')) { setMsg('JPG, PNG, WEBP 사진만 올릴 수 있어요.'); return; }
+    if (file.size > MAX_AVATAR_BYTES) { setMsg('사진은 5MB 이하로 선택해 주세요.'); return; }
+    setBusy(true);
+    try {
+      const { path, token } = await signFn({ data: { userId: target.id, ext: ext as 'jpg' | 'jpeg' | 'png' | 'webp' } });
+      const { error } = await supabase.storage.from('avatars').uploadToSignedUrl(path, token, file, { contentType: file.type });
+      if (error) throw error;
+      await setFn({ data: { userId: target.id, path } });
+      refresh(); setMsg('프로필 사진을 저장했어요.');
+    } catch { setMsg('사진을 올리지 못했어요. 다시 시도해 주세요.'); }
+    finally { setBusy(false); }
+  };
+  return <section className="seller-flow-card mb-4">
+    <h2 className="text-lg font-semibold">셀러 프로필</h2>
+    {profile.isLoading ? <p className="mt-2 text-xs text-muted-foreground">불러오는 중…</p> : profile.isError || !profile.data ? <p className="mt-2 text-xs text-destructive">프로필을 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.</p> :
+      <form onSubmit={e => void saveNickname(e)}>
+        <label className="mt-3 flex cursor-pointer items-center gap-3">
+          <span className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-input bg-muted">{profile.data.avatarUrl ? <img src={profile.data.avatarUrl} alt="프로필 사진" className="size-full object-cover" /> : <UserRound size={22} className="text-muted-foreground" />}</span>
+          <span className="text-sm text-muted-foreground">프로필 사진 변경 (5MB 이하)</span>
+          <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" aria-label="프로필 사진 변경" disabled={busy} onChange={e => { void uploadPhoto(e.target.files?.[0]); e.target.value = ''; }} />
+        </label>
+        <p className="mt-2 text-sm text-muted-foreground">System ID <strong className="text-foreground">#{profile.data.systemCode}</strong></p>
+        <label className="form-label" htmlFor="proxy-nick">닉네임</label>
+        <input id="proxy-nick" className="form-input" required maxLength={30} value={value} onChange={e => setValue(e.target.value)} />
+        <Button variant="goldOutline" size="sm" className="mt-3" disabled={busy}>프로필 저장</Button>
+        {msg && <small role="status" className="ml-3 text-muted-foreground">{msg}</small>}
+      </form>}
+  </section>;
+}
 
 /** 관리자 백오피스 > 셀러 대리 관리: 셀러 계정을 만들고, 고른 셀러의 상품 관리 화면(일반 셀러와 동일)을 그대로 연다. */
 export function AdminProxy() {
@@ -67,10 +121,11 @@ export function AdminProxy() {
   return <div className="notranslate space-y-6" translate="no" data-no-translate="">
     {target ? <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary bg-primary/10 p-3">
-        <p className="text-sm font-semibold">지금 “{target.nickname}” 셀러의 상품을 관리하고 있어요.</p>
+        <p className="text-sm font-semibold">지금 “{target.nickname}” 셀러의 프로필·상품을 관리하고 있어요.</p>
         <Button type="button" size="sm" variant="outline" onClick={() => setTarget(null)}>셀러 목록으로 돌아가기</Button>
       </div>
-      <SellerListings key={target.id} actAs={target} />
+      <ProxyProfile key={target.id} target={target} onRenamed={nickname => setTarget(t => (t ? { ...t, nickname } : t))} />
+      <SellerListings key={`${target.id}-listings`} actAs={target} />
     </div> : <>
       <section className="seller-flow-card">
         <h2 className="text-lg font-semibold">셀러 선택</h2>
@@ -95,7 +150,7 @@ export function AdminProxy() {
       </section>
       <section className="seller-flow-card">
         <h2 className="text-lg font-semibold">셀러 계정 만들기</h2>
-        <p className="mt-1 text-xs text-muted-foreground">닉네임을 한 줄에 하나씩, 한 번에 최대 10개까지 입력하세요. 로그인할 수 없는 승인된 셀러 계정이 만들어지고, 위 목록에서 바로 상품을 올릴 수 있어요.</p>
+        <p className="mt-1 text-xs text-muted-foreground">닉네임을 한 줄에 하나씩, 한 번에 최대 10개까지 입력하세요. 로그인할 수 없는 승인된 셀러 계정이 만들어지고, 위 목록에서 프로필(닉네임·사진)과 상품을 바로 관리할 수 있어요.</p>
         <textarea className="form-input mt-2 min-h-24" aria-label="새 계정 닉네임 목록" placeholder={'닉네임1\n닉네임2\n…'} maxLength={400} value={names} onChange={e => setNames(e.target.value)} />
         <Button type="button" size="sm" className="mt-2" disabled={busy} onClick={() => void create()}>{busy ? '만드는 중…' : '계정 만들기'}</Button>
         {note && <p role="status" className="mt-2 text-xs text-muted-foreground">{note}</p>}
