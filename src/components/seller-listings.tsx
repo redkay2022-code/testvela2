@@ -13,6 +13,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { syncMyPostNickname } from '@/lib/seller-accounts.functions';
 import { signMyMedia } from '@/lib/my-media.functions';
 import { removeMarketMedia } from '@/lib/proxy-seller.functions';
+import { useLeaveWarning } from '@/lib/leave-warning';
 import { MemberPicker, PROXY_NOT_SELLER_MESSAGE, type ProxyTarget } from './member-picker';
 import { ListingPreview } from './listing-preview';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -35,7 +36,7 @@ import { BulkUpload } from './bulk-upload';
 import { DispatchSelect } from './dispatch-select';
 import { type SourceType } from './source-factory';
 import { SourceFactorySelect } from './source-factory-select';
-import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, validateListingFiles } from '@/lib/listing-media';
+import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, readVideoDuration, validateListingFiles } from '@/lib/listing-media';
 
 type Specs = Record<string, string> & { sourceType?: string; factory?: string };
 type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
@@ -217,7 +218,8 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     if (newVideo) { setVideo(newVideo); setEditing(newVideo.file); }
     if (newPhotos.length) setPhotos(current => [...current, ...newPhotos]);
     setError('');
-    if (newVideo) validateListingFiles([newVideo.file]).catch(err => {
+    /* 길이(30초) 검사는 여기서 하지 않는다: 긴 영상은 편집기에서 잘라 쓰는 것이 정상 흐름이고, 길이는 저장할 때 확인한다. 여기서는 영상을 읽을 수 있는지만 본다. */
+    if (newVideo) readVideoDuration(newVideo.file).catch(err => {
       setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.');
       URL.revokeObjectURL(newVideo.preview); objectUrls.current.delete(newVideo.preview);
       setVideo(cur => (cur?.preview === newVideo.preview ? null : cur)); setEditing(cur => (cur === newVideo.file ? null : cur));
@@ -229,6 +231,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     if (!postCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
     const p = Number(price); if (!Number.isFinite(p) || p < 1) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
     if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
+    if (video?.file) { try { await validateListingFiles([video.file]); } catch (err) { setError(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; } }
     if (sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
     if (sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
     setError(''); setPending(true);
@@ -274,6 +277,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
         const { error: e } = await supabase.from('posts').insert({ ...row, user_id: owner?.id ?? user.id, creator: nickname.slice(0, 40), image_key: 'uploaded' });
         if (e) throw new Error('저장하지 못했어요. 셀러 승인 상태를 확인해 주세요.');
       }
+      releaseLeaveWarning();
       onSaved();
     } catch (err) { if (uploaded.length) await supabase.storage.from('market-media').remove(uploaded); setError(err instanceof Error ? err.message : '잠시 후 다시 시도해 주세요.'); }
     finally { setPending(false); setConvertPct(null); }
@@ -281,7 +285,9 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
 
   const photoPicker = useRef<HTMLInputElement>(null);
   const photoTotal = photos.length;
-  return <div className="form-panel mt-4 rounded-lg border border-border p-4">
+  const [touched, setTouched] = useState(false);
+  const releaseLeaveWarning = useLeaveWarning(pending || touched || (!listing && (photos.length > 0 || video !== null || title.trim() !== '' || description.trim() !== '' || price !== '')));
+  return <div className="form-panel mt-4 rounded-lg border border-border p-4" onChange={() => setTouched(true)}>
     {editing && <VideoEditor file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags }) => { if (video?.file) { URL.revokeObjectURL(video.preview); objectUrls.current.delete(video.preview); } setVideo({ file, preview: createPreview(file) }); setVideoTags(tags); setEditing(null); }} />}
     <div className="flex items-center justify-between"><h3 className="font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{listing ? tx('상품 수정') : tx('새 상품 등록')}</span></h3><Button size="icon" variant="ghost" aria-label={tx("닫기")} onClick={onClose}><X /></Button></div>
     <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-destructive bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("영상과 사진 한 번에 선택")}</span></span><span className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx('영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}', { 0: photoTotal, 1: MAX_LISTING_PHOTOS })}</span></span>

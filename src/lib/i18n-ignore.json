@@ -154,6 +154,7 @@
     "lib/proxy-seller.functions.ts",
     "components/member-picker.tsx",
     "components/admin-proxy.tsx",
-    "lib/text-language.ts"
+    "lib/text-language.ts",
+    "lib/leave-warning.ts"
   ]
 }

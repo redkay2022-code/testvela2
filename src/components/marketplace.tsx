@@ -24,6 +24,7 @@ import { marketSearch, paths, postsQuery, type Mode, type Post } from '@/lib/mar
 import { setLike } from '@/lib/market.functions';
 import { signInWithPhone, signUpWithPhone } from '@/lib/phone-auth.functions';
 import { uploadAvatar } from '@/lib/avatar';
+import { useLeaveWarning } from '@/lib/leave-warning';
 import { PostCategoryField } from './post-category-field';
 import { postCategoryLabels } from '@/lib/feed-categories';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
@@ -261,6 +262,7 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
   const [dispatch,setDispatch] = useState<string>('5d');
   const [customDispatch,setCustomDispatch] = useState('');
   const [proxy,setProxy] = useState<ProxyTarget|null>(null);
+  const releaseLeaveWarning = useLeaveWarning(pending || files.length>0 || title.trim()!=='' || description.trim()!=='' || price!=='' || boxPrice!=='' || menuCategory!=='' || factory.trim()!=='' || videoTags.length>0 || music!==null);
   /* One cached blob URL per file: a newly picked file shows instantly and the others never reload. */
   const urlCache = useRef(new Map<File,string>());
   const previews = useMemo(() => {const m=urlCache.current,live=new Set(files);for(const [f,u] of m) if(!live.has(f)){URL.revokeObjectURL(u);m.delete(f);}return files.map(f => {let u=m.get(f);if(!u){u=URL.createObjectURL(f);m.set(f,u);}return u;});},[files]);
@@ -313,6 +315,7 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
       if (card) uploaded.push(card);
       const {error:saveError} = await supabase.from('posts').insert({user_id:proxy?proxy.id:user.id,title:title.trim(),description:description.trim(),category,source_lang:activeLang(),creator:proxy?proxy.nickname.slice(0,40):String((await supabase.from('profiles').select('nickname').eq('user_id',user.id).maybeSingle()).data?.nickname || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex] ?? null:null,thumbnail_url:thumb,price:product?Number(price):null,box_price:product&&boxPrice?Number(boxPrice):null,dispatch_time:product?dispatchValue(dispatch,customDispatch):null,specs:{...cleanWatchSpecs(specs),menuCategory,...(card?{cardImage:card}:{}),...(product?{sourceType,...(sourceType!=='custom'?{factory:factory.trim().slice(0,80)}:{})}:{})},video_tags:videoTags,...(videoIndex >= 0 && music ? music : {})});
       if(saveError) throw new Error('게시물을 저장하지 못했어요. 다시 시도해 주세요.');
+      releaseLeaveWarning();
       onPosted();
     } catch(err) {if(uploaded.length) await supabase.storage.from('market-media').remove(uploaded);setError(err instanceof Error?err.message:'잠시 후 다시 시도해 주세요.');}
     finally {setPending(false);setConvertPct(null);}
