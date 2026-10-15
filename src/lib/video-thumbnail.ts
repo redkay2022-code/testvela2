@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { putMarketMedia } from './market-upload';
 
 /** Captures one JPEG frame (~1s in, or the middle of short clips) from a local video file in the browser. */
 export async function captureVideoFrame(file: Blob, maxWidth = 720, startTime = 1): Promise<Blob | null> {
@@ -35,6 +35,6 @@ export async function uploadVideoThumbnail(file: Blob, folder: string): Promise<
   const frame = await captureVideoFrame(file).catch(() => null);
   if (!frame) return null;
   const path = `${folder}/${crypto.randomUUID()}-thumb.jpg`;
-  const { error } = await supabase.storage.from('market-media').upload(path, frame, { contentType: 'image/jpeg' });
+  const { error } = await putMarketMedia(path, frame, { contentType: 'image/jpeg' });
   return error ? null : path;
 }

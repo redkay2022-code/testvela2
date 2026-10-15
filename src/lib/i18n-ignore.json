@@ -155,6 +155,7 @@
     "components/member-picker.tsx",
     "components/admin-proxy.tsx",
     "lib/text-language.ts",
-    "lib/leave-warning.ts"
+    "lib/leave-warning.ts",
+    "lib/market-upload.ts"
   ]
 }

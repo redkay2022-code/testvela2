@@ -123,3 +123,23 @@ export const setProxyAvatar = createServerFn({ method: 'POST' })
     if (error) throw new Error('Profile could not be saved.');
     return { ok: true };
   });
+
+/**
+ * 관리자가 다른 회원(대리 셀러) 폴더에 사진·영상을 올릴 수 있도록, 그 폴더 안의 새 파일 경로마다 1회용 업로드 토큰을 만든다.
+ * 스토리지 정책상 본인 폴더 밖에는 직접 올릴 수 없어서 서버가 대신 허락해 주는 방식이다.
+ */
+export const signMarketUploads = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ paths: z.array(z.string().min(3).max(200)).min(1).max(20) }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const tokens: Record<string, string> = {};
+    for (const path of data.paths) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[A-Za-z0-9._-]{1,120}$/i.test(path) || path.includes('..')) throw new Error('Invalid path');
+      const { data: signed, error } = await supabaseAdmin.storage.from('market-media').createSignedUploadUrl(path);
+      if (error || !signed) throw new Error('Could not prepare upload.');
+      tokens[path] = signed.token;
+    }
+    return { tokens };
+  });

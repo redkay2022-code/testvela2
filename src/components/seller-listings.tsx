@@ -14,6 +14,7 @@ import { syncMyPostNickname } from '@/lib/seller-accounts.functions';
 import { signMyMedia } from '@/lib/my-media.functions';
 import { removeMarketMedia } from '@/lib/proxy-seller.functions';
 import { useLeaveWarning } from '@/lib/leave-warning';
+import { putMarketMedia, removeMarketFiles } from '@/lib/market-upload';
 import { MemberPicker, PROXY_NOT_SELLER_MESSAGE, type ProxyTarget } from './member-picker';
 import { ListingPreview } from './listing-preview';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -116,11 +117,12 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
     try {
       file = await compressVideoForWeb(file);
       const ext = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4';
-      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-      const { error: up } = await supabase.storage.from('market-media').upload(path, file, { cacheControl: LONG_CACHE });
+      const folder = acting?.id ?? user.id;
+      const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+      const { error: up } = await putMarketMedia(path, file, { cacheControl: LONG_CACHE });
       if (up) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.');
-      const { error: e } = await supabase.from('posts').update({ video_url: path, thumbnail_url: await uploadVideoThumbnail(file, user.id), video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
-      if (e) { await supabase.storage.from('market-media').remove([path]); throw new Error('게시물을 수정하지 못했어요.'); }
+      const { error: e } = await supabase.from('posts').update({ video_url: path, thumbnail_url: await uploadVideoThumbnail(file, folder), video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
+      if (e) { await removeMarketFiles([path]); throw new Error('게시물을 수정하지 못했어요.'); }
       if (l.video_url) await (acting ? removeMarketMedia({ data: { paths: [l.video_url] } }).catch(() => undefined) : supabase.storage.from('market-media').remove([l.video_url]));
       refresh();
     } catch (err) { alert(err instanceof Error ? err.message : '영상 교체에 실패했어요.'); }
@@ -240,15 +242,15 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       let nextVideo = video?.path ?? null;
       let nextThumb: string | null | undefined = video?.file ? null : undefined;
       setEta(estimateUploadSeconds([...photos.flatMap(p => p.file ? [p.file] : []), ...(video?.file ? [video.file] : [])], 30, Boolean(video?.file && video.file.size > COMPRESS_THRESHOLD_BYTES)));
-      if (video?.file) { setConvertPct(0); const ready = await compressVideoForWeb(video.file, r => setConvertPct(Math.round(r * 100))); setConvertPct(null); setEta(estimateUploadSeconds([ready, ...photos.flatMap(p => p.file ? [p.file] : [])])); const ext = ready.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${user.id}/${crypto.randomUUID()}.${ext}`; const { error: e } = await supabase.storage.from('market-media').upload(path, ready, { cacheControl: LONG_CACHE }); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(ready, user.id); if (nextThumb) uploaded.push(nextThumb); }
+      if (video?.file) { setConvertPct(0); const ready = await compressVideoForWeb(video.file, r => setConvertPct(Math.round(r * 100))); setConvertPct(null); setEta(estimateUploadSeconds([ready, ...photos.flatMap(p => p.file ? [p.file] : [])])); const ext = ready.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${folder}/${crypto.randomUUID()}.${ext}`; const { error: e } = await putMarketMedia(path, ready, { cacheControl: LONG_CACHE }); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(ready, folder); if (nextThumb) uploaded.push(nextThumb); }
       const photoPaths: string[] = [];
       const settled = await Promise.allSettled(photos.map(async photo => {
         if (photo.path) return photo.path;
         if (!photo.file) return null;
         const file = await compressImage(photo.file);
         const ext = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
-        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: e } = await supabase.storage.from('market-media').upload(path, file, { cacheControl: LONG_CACHE });
+        const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+        const { error: e } = await putMarketMedia(path, file, { cacheControl: LONG_CACHE });
         if (e) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
         uploaded.push(path);
         return path;
@@ -260,7 +262,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       const firstPhoto = photos[0];
       let card: string | null = null;
       if (firstPhoto?.path && firstPhoto.path === listing?.media_urls[0]) card = prevCard;
-      else if (firstPhoto?.file) { card = await uploadCardImage(firstPhoto.file, user.id); if (card) uploaded.push(card); }
+      else if (firstPhoto?.file) { card = await uploadCardImage(firstPhoto.file, folder); if (card) uploaded.push(card); }
       const cleanSpecs = cleanWatchSpecs(specs);
       cleanSpecs['sourceType'] = sourceType;
       cleanSpecs['menuCategory'] = menuCategory;
@@ -279,13 +281,15 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       }
       releaseLeaveWarning();
       onSaved();
-    } catch (err) { if (uploaded.length) await supabase.storage.from('market-media').remove(uploaded); setError(err instanceof Error ? err.message : '잠시 후 다시 시도해 주세요.'); }
+    } catch (err) { if (uploaded.length) await removeMarketFiles(uploaded); setError(err instanceof Error ? err.message : '잠시 후 다시 시도해 주세요.'); }
     finally { setPending(false); setConvertPct(null); }
   };
 
   const photoPicker = useRef<HTMLInputElement>(null);
   const photoTotal = photos.length;
   const [touched, setTouched] = useState(false);
+  /* 파일은 항상 상품 주인(대리 셀러면 그 셀러)의 폴더에 저장한다. 그래야 피드가 사진·영상을 정상적으로 불러온다. */
+  const folder = owner?.id ?? user.id;
   const releaseLeaveWarning = useLeaveWarning(pending || touched || (!listing && (photos.length > 0 || video !== null || title.trim() !== '' || description.trim() !== '' || price !== '')));
   return <div className="form-panel mt-4 rounded-lg border border-border p-4" onChange={() => setTouched(true)}>
     {editing && <VideoEditor file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags }) => { if (video?.file) { URL.revokeObjectURL(video.preview); objectUrls.current.delete(video.preview); } setVideo({ file, preview: createPreview(file) }); setVideoTags(tags); setEditing(null); }} />}

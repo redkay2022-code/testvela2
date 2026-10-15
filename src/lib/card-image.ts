@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { putMarketMedia } from './market-upload';
 import { LONG_CACHE } from './image-compress';
 
 /**
@@ -31,7 +31,7 @@ export async function uploadCardImage(photo: Blob, folder: string): Promise<stri
   const card = await makeCardImage(photo);
   if (!card) return null;
   const path = `${folder}/${crypto.randomUUID()}-card.webp`;
-  const { error } = await supabase.storage.from('market-media').upload(path, card, { contentType: 'image/webp', cacheControl: LONG_CACHE });
+  const { error } = await putMarketMedia(path, card, { contentType: 'image/webp', cacheControl: LONG_CACHE });
   return error ? null : path;
 }
 
