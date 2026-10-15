@@ -153,6 +153,7 @@
     "lib/my-media.functions.ts",
     "lib/proxy-seller.functions.ts",
     "components/member-picker.tsx",
+    "components/admin-proxy.tsx",
     "lib/text-language.ts"
   ]
 }

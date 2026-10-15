@@ -42,7 +42,7 @@ type Listing = { id: string; title: string; description: string; category: strin
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
 
-export function SellerListings() {
+export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   const { lang } = useCurrency();
   const [user, setUser] = useState<User | null>(null);
   useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUser(data.user)); const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null)); return () => subscription.unsubscribe(); }, []);
@@ -53,7 +53,8 @@ export function SellerListings() {
   const qc = useQueryClient();
   const syncNickname = useServerFn(syncMyPostNickname);
   const signMedia = useServerFn(signMyMedia);
-  const [acting, setActing] = useState<ProxyTarget | null>(null);
+  const [picked, setActing] = useState<ProxyTarget | null>(null);
+  const acting = actAs ?? picked;
   const synced = useRef(false);
   useEffect(() => { if (!user || !canSell || synced.current) return; synced.current = true; void syncNickname().then(() => qc.invalidateQueries({ queryKey: ['my-listings'] })).catch(() => undefined); }, [user, canSell]);
   const listings = useQuery({
@@ -128,7 +129,7 @@ export function SellerListings() {
 
   return <section className="seller-flow-card" aria-label={tx("내 상품 관리")}>{gate.dialog}
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><div className="flex gap-2">{!acting && <Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("일괄 업로드")}</span></Button>}<Button size="sm" onClick={() => setEditing('new')}><Plus /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새 상품")}</span></Button></div></div>
-    <MemberPicker userId={user.id} value={acting} onChange={next => { setActing(next); setEditing(null); setPreviewing(null); setBulk(false); setShown(24); }} />
+    {!actAs && <MemberPicker userId={user.id} value={acting} onChange={next => { setActing(next); setEditing(null); setPreviewing(null); setBulk(false); setShown(24); }} />}
     {bulk && !acting && <BulkUpload user={user} existingTitles={(listings.data ?? []).map(l => l.title)} onClose={() => setBulk(false)} onDone={refresh} />}
     {!acting && <CardImageOptimizer user={user} listings={listings.data ?? []} onDone={refresh} />}
     <div ref={formTop} className="scroll-mt-4" />
