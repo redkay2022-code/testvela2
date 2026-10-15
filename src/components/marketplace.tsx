@@ -25,6 +25,7 @@ import { setLike } from '@/lib/market.functions';
 import { signInWithPhone, signUpWithPhone } from '@/lib/phone-auth.functions';
 import { uploadAvatar } from '@/lib/avatar';
 import { useLeaveWarning } from '@/lib/leave-warning';
+import { boxPriceOrDefault } from '@/lib/box-price';
 import { putMarketMedia, removeMarketFiles } from '@/lib/market-upload';
 import { PostCategoryField } from './post-category-field';
 import { postCategoryLabels } from '@/lib/feed-categories';
@@ -314,7 +315,7 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
       const videoIndex = prepared.findIndex(isListingVideo);
       const firstPhoto = prepared.find(isListingPhoto), card = firstPhoto ? await uploadCardImage(firstPhoto, proxy?proxy.id:user.id) : null; /* small picture for feed cards */
       if (card) uploaded.push(card);
-      const {error:saveError} = await supabase.from('posts').insert({user_id:proxy?proxy.id:user.id,title:title.trim(),description:description.trim(),category,source_lang:activeLang(),creator:proxy?proxy.nickname.slice(0,40):String((await supabase.from('profiles').select('nickname').eq('user_id',user.id).maybeSingle()).data?.nickname || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex] ?? null:null,thumbnail_url:thumb,price:product?Number(price):null,box_price:product&&boxPrice?Number(boxPrice):null,dispatch_time:product?dispatchValue(dispatch,customDispatch):null,specs:{...cleanWatchSpecs(specs),menuCategory,...(card?{cardImage:card}:{}),...(product?{sourceType,...(sourceType!=='custom'?{factory:factory.trim().slice(0,80)}:{})}:{})},video_tags:videoTags,...(videoIndex >= 0 && music ? music : {})});
+      const {error:saveError} = await supabase.from('posts').insert({user_id:proxy?proxy.id:user.id,title:title.trim(),description:description.trim(),category,source_lang:activeLang(),creator:proxy?proxy.nickname.slice(0,40):String((await supabase.from('profiles').select('nickname').eq('user_id',user.id).maybeSingle()).data?.nickname || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex] ?? null:null,thumbnail_url:thumb,price:product?Number(price):null,box_price:product?boxPriceOrDefault(boxPrice):null,dispatch_time:product?dispatchValue(dispatch,customDispatch):null,specs:{...cleanWatchSpecs(specs),menuCategory,...(card?{cardImage:card}:{}),...(product?{sourceType,...(sourceType!=='custom'?{factory:factory.trim().slice(0,80)}:{})}:{})},video_tags:videoTags,...(videoIndex >= 0 && music ? music : {})});
       if(saveError) throw new Error('게시물을 저장하지 못했어요. 다시 시도해 주세요.');
       releaseLeaveWarning();
       onPosted();

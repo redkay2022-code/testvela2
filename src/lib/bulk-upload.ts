@@ -11,6 +11,7 @@ import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MA
 import { validatePostTitle } from '@/lib/post-title';
 import { cleanWatchSpecs, numericSpecValue, watchSpecificationFields } from '@/lib/watch-specifications';
 import { knownWatchBrand } from '@/lib/watch-brands';
+import { DEFAULT_BOX_PRICE } from './box-price';
 
 export const MAX_BULK = 20;
 export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'glass', 'waterResistance', 'additionalDetails', 'description', 'menuCategory', 'sell'] as const;
@@ -207,7 +208,7 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   if (errors.length) return { errors, warnings, plan: null };
   const specs: Record<string, string> = { ...spec };
   specs['menuCategory'] = menuCategory; if (sell && source) { specs['sourceType'] = source; if (source !== 'custom') specs['factory'] = v.factory.trim().slice(0, 80); }
-  return { errors, warnings, plan: { title: v.title.trim().slice(0, 100), description: v.description.trim().slice(0, 3000), category, sell, price: sell ? Math.round(price) : null, boxPrice: sell && box !== null ? Math.round(box) : null, dispatch: sell ? dispatchValue(d.choice, d.custom) : null, specs } };
+  return { errors, warnings, plan: { title: v.title.trim().slice(0, 100), description: v.description.trim().slice(0, 3000), category, sell, price: sell ? Math.round(price) : null, boxPrice: sell ? (box !== null && Number.isFinite(box) && box >= 0 ? Math.round(box) : DEFAULT_BOX_PRICE) : null, dispatch: sell ? dispatchValue(d.choice, d.custom) : null, specs } };
 }
 
 /** Decodes a CSV file: UTF-8 first, then EUC-KR (Excel on Korean Windows/Mac often saves CSV that way). */
