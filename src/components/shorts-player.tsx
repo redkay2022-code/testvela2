@@ -18,9 +18,6 @@ import { useMarketPreview } from './market-preview';
 import { type LuxuryPost } from '@/lib/luxury-market';
 import { SellerBadge, SellerRatings } from './reputation';
 import { ShortsGallery } from './shorts-gallery';
-import { SpecsTable } from './specs-table';
-import { Tx } from './tx';
-import { usePostTranslation, TranslationToggle } from './post-translation';
 import { marketSearch } from '@/lib/market';
 import { getComments, getSellerAvatar } from '@/lib/market.functions';
 import { stableMediaSrc } from '@/lib/media-refresh';
@@ -28,10 +25,7 @@ import { attachHls, isHlsUrl } from '@/lib/hls-loader';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { useEngagement } from '@/lib/use-engagement';
 import { isHybridPost } from '@/lib/post-media';
-import { isImmediateDispatch } from '@/lib/dispatch';
-import { t } from '@/lib/i18n';
 
-const usd=(amount:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(amount);
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean)=>void; notify:(text:string)=>void };
 export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onSearch,user,close,closeSheet,change,openSheet,requestAuth,buy,notify}:Props) {
  const preview=useMarketPreview();
@@ -57,7 +51,7 @@ export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onS
  {!posts.length&&<div className="shorts-follow-empty"><UserRound/><h2>팔로잉한 셀러의 영상이 없습니다.</h2><Button variant="goldOutline" onClick={()=>onTab('recommend')}>추천 영상 보기</Button></div>}
  </div>
  <AnimatePresence>{sheet&&post&&<ShortSheet key={sheet} kind={sheet} close={closeSheet}>
-  {sheet==='comments'?<ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>:isHybridPost(post)?<ProductDetailContent key={post.id} post={post} user={user} requestAuth={requestAuth} buy={buy} notify={notify} shorts/>:<VideoOnlyDetails key={post.id} post={post} user={user} requestAuth={requestAuth} buy={buy}/>}
+  {sheet==='comments'?<ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>:<ProductDetailContent key={post.id} post={post} user={user} requestAuth={requestAuth} buy={buy} notify={notify} shorts/>}
  </ShortSheet>}</AnimatePresence>
  </motion.div></Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
@@ -106,7 +100,7 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
   <div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
  <div className="shorts-seller-row">
   <ShortSellerIdentity post={post}/>
-  {hybrid?<Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>:<Button variant="gold" className="shorts-view-details" aria-label="상세 보기" onClick={()=>openSheet('product')}>상세 보기<ChevronRight size={17}/></Button>}
+  <Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>
  </div>
  </div>
  <footer className="shorts-bottom-bar">
@@ -123,20 +117,6 @@ function ShortSellerIdentity({post}:{post:LuxuryPost}) {
  const preview=useMarketPreview(),identity=sellerIdentity(post),following=preview.isFollowing(identity);
  const sellerAvatar=useQuery({queryKey:['seller-header-avatar',post.source.store_id ?? post.source.user_id ?? null],enabled:!post.sample&&Boolean(post.source.store_id||post.source.user_id),queryFn:()=>getSellerAvatar({data:{storeId:post.source.store_id ?? undefined,userId:post.source.user_id ?? undefined}}),staleTime:300_000});
  return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><Avatar className="shorts-anonymous-avatar"><AvatarImage src={sellerAvatar.data?.avatar ?? undefined} alt={`${post.creator} 프로필 사진`} className="object-cover"/><AvatarFallback className="bg-transparent" aria-label="판매자 프로필"><UserRound/></AvatarFallback></Avatar><strong data-i18n-skip className="notranslate" translate="no">{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
-}
-function VideoOnlyDetails({post,user,requestAuth,buy}:{post:LuxuryPost;user:User|null;requestAuth:()=>void;buy:Props['buy']}) {
- const tr=usePostTranslation(post.source,!post.sample,false);
- return <section className="shorts-video-details notranslate" data-no-translate translate="no">
- <header className="shorts-video-details-seller" aria-label="판매자 정보"><ShortSellerIdentity post={post}/></header>
- <div className="shorts-video-details-body"><h2 data-i18n-skip>{post.sample?post.title:tr.title}</h2>
- {post.price!==null&&<p className="shorts-video-price" data-no-translate>{usd(post.price)}</p>}
- 
- {isImmediateDispatch(post)&&<span className="lux-ready-badge is-inline mt-3" data-no-translate><Tx>바로 발송 · Ready to Ship</Tx></span>}
- <p data-i18n-skip>{post.sample?post.description:tr.description}</p><TranslationToggle t={tr}/>
- <SpecsTable category={post.category} dispatch={post.source.dispatch_time} specs={post.sample?post.source.specs:tr.specs}/>
- {post.price!==null&&<Button variant="gold" className="mt-5 w-full" onClick={()=>buy(false)}>{t('buyNow')}<ChevronRight size={16}/></Button>}</div>
- <ProductComments postId={post.id} user={user} requestAuth={requestAuth} composerFirst live/>
- </section>;
 }
 function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>void;children:React.ReactNode}) {
  const reduced=useReducedMotion();

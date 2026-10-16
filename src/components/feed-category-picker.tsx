@@ -31,7 +31,8 @@ const allBrands:Item[]=[...brandMenu.popular,...brandMenu.accessories,...brandMe
 function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPostLike[];selected:string;onClose:()=>void;onSelect:(id:string,keepOpen?:boolean)=>void}){
  const {lang}=useCurrency(),[query,setQuery]=useState(''),[tab,setTab]=useState<string>(()=>{const c=splitFeedId(selected).category;return productCategoryItems.some(i=>i[0]===c)?c:'';});
  const byCategory=useMemo(()=>brandsByCategory(catalog),[catalog]);
- const tabBrands=useMemo(()=>sortBrandChoices(tab?byCategory[tab] ?? []:[],lang),[tab,byCategory,lang]);
+ /* Every brand a seller can pick when uploading, plus brands typed in by sellers for this category. */
+ const tabBrands=useMemo(()=>{if(!tab)return [];const known=new Set(allBrands.map(b=>b[0])),extra=(byCategory[tab] ?? []).filter(b=>!known.has(b.id)).map(b=>({id:b.id,label:b.label}));return sortBrandChoices([...allBrands.map(([id,label])=>({id,label})),...extra],lang);},[tab,byCategory,lang]);
  const q=query.trim().toLowerCase();
  const found=useMemo<Item[]>(()=>{
   if(!q)return [];
@@ -52,7 +53,7 @@ function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPo
    <div className="flex flex-wrap gap-2">{viewItems.map(([id,label])=><Button key={id} variant="ghost" translate="no" className={chipClass(selected===id)} aria-pressed={selected===id} onClick={()=>onSelect(id)}><Tx>{label}</Tx></Button>)}</div></section>
   <section className="mt-5 border-t border-border pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>상품 카테고리</Tx></h2>
    <div className="flex flex-wrap gap-2" role="tablist" aria-label={tx('상품 카테고리')}>{productCategoryItems.map(([id,label])=>{const active=tab===id;
-    return <Button key={id} variant="ghost" translate="no" role="tab" aria-selected={active} className={chipClass(active)} onClick={()=>{setTab(id);if(!(byCategory[id]?.length))onSelect(id);}}><Tx>{label}</Tx></Button>;})}</div>
+    return <Button key={id} variant="ghost" translate="no" role="tab" aria-selected={active} className={chipClass(active)} onClick={()=>setTab(id)}><Tx>{label}</Tx></Button>;})}</div>
    <div className="mt-4">
     <h3 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>브랜드</Tx></h3>
     {tab?<Select value={splitFeedId(selected).category===tab?selected:''} onValueChange={next=>onSelect(next)}>
@@ -63,7 +64,6 @@ function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPo
       {tabBrands.map(b=><SelectItem key={b.id} value={`${tab}~${b.id}`} translate="no" data-no-translate className="notranslate py-2.5"><span translate="no" data-no-translate className="notranslate">{brandText(b.id,b.label,lang)}</span></SelectItem>)}
      </SelectContent>
     </Select>:<p className="rounded-lg border border-dashed border-border px-3 py-3 text-xs text-muted-foreground"><Tx>상품 카테고리를 선택하면 브랜드를 고를 수 있어요.</Tx></p>}
-    {tab&&tabBrands.length===0&&<p className="mt-2 text-xs text-muted-foreground"><Tx>등록된 브랜드가 없습니다.</Tx></p>}
    </div>
   </section></>}
   {selected!=='recommend'&&<div className="mt-5 flex justify-end border-t border-border pt-3"><Button variant="ghost" className="h-8 text-xs text-muted-foreground" onClick={()=>onSelect('recommend')}><Tx>필터 초기화</Tx></Button></div>}
