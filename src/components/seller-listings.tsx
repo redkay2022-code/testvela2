@@ -44,7 +44,7 @@ import { SourceFactorySelect } from './source-factory-select';
 import { isListingPhoto, isListingVideo, MAX_EDITOR_VIDEO_BYTES, MAX_LISTING_PHOTOS, photoTooLarge, readVideoDuration, validateListingFiles, videoOverLimit } from '@/lib/listing-media';
 
 type Specs = Record<string, string> & { sourceType?: string; factory?: string };
-type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
+type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string | undefined; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
 
@@ -145,7 +145,7 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
     <div ref={formTop} className="scroll-mt-4" />
     {editing && <ListingForm key={editing === 'new' ? 'new' : editing.id} user={user} owner={acting} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불러오는 중…")}</span></p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 등록한 상품이 없어요.")}</span></p> :
-      <div ref={listTop} className="scroll-mt-4" /><ul className="seller-inventory-grid mt-5">{pager.items.map(l => <li key={l.id} className="seller-inventory-item">
+    <><div ref={listTop} className="scroll-mt-4" /><ul className="seller-inventory-grid mt-5">{pager.items.map(l => <li key={l.id} className="seller-inventory-item">
         <div className="min-w-0"><figure className={`seller-inventory-media ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`}>{l.thumb ? <img src={l.thumb} alt={l.title} loading="lazy" decoding="async" className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
           <div className="min-w-0"><p className="truncate font-medium">{l.title}</p><p className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.price != null ? formatMoney(l.price) : tx('가격 없음')}</span> · <span className="record-status"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.product_status === 'OUT_OF_STOCK' ? tx('판매 완료') : l.status === 'published' ? tx('판매 중') : tx('임시 저장')}</span></span></p>{l.specs.factory && <span className="text-xs text-primary" data-no-translate>{l.specs.factory}</span>}{l.specs.sourceType === 'custom' && <span className="text-xs text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("커스텀 제작")}</span></span>}</div></div>
         <div className="record-actions">
@@ -155,7 +155,7 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
           <Button size="sm" variant="ghost" aria-label={tx("편집")} onClick={() => void openWithMedia(l, setEditing)}><Pencil /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("편집")}</span></Button>
           <Button asChild size="sm" variant="ghost"><label aria-label={tx("영상 재업로드")} className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{replacing === l.id ? tx('올리는 중') : tx('재업로드')}</span><input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
           <Button size="sm" variant="ghost" aria-label={tx("삭제")} onClick={() => void remove(l)}><Trash2 /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("삭제")}</span></Button>
-        </div></li>)}</ul>}
+        </div></li>)}</ul></>}
     <ListPagination pager={pager} onChange={() => listTop.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })} />
   {previewing && (() => { return <ListingPreview listing={previewing} user={user} onClose={() => setPreviewing(null)} />; })()}
   </section>;

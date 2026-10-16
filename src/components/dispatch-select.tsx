@@ -11,7 +11,7 @@ export function DispatchSelect({ dispatch, customDispatch, onDispatch, onCustom 
 }) {
   useCurrency();
   return <div {...protectedText} className="notranslate min-w-0 space-y-2">
-    <Select value={dispatch || undefined} onValueChange={onDispatch}>
+    <Select {...(dispatch ? { value: dispatch } : {})} onValueChange={onDispatch}>
       <SelectTrigger {...protectedText} aria-label={tx('예상 발송 시간')} className="notranslate h-11 w-full min-w-0 bg-muted text-foreground"><SelectValue {...protectedText} className="notranslate" placeholder={tx('선택')} /></SelectTrigger>
       <SelectContent {...protectedText} position="popper" className="notranslate z-[200] max-h-80 max-w-[calc(100vw-2rem)] bg-popover text-popover-foreground">
         {DISPATCH_OPTIONS.map(option => <SelectItem {...protectedText} data-i18n-skip className="notranslate" key={option.value} value={option.value}><span translate="no" data-no-translate="" className="notranslate">{tx(option.label)}</span></SelectItem>)}

@@ -15,7 +15,7 @@ export function SourceFactorySelect({ id, sourceType, factory, onChange }: {
   return <div {...protectedText} className="notranslate min-w-0">
     <label {...protectedText} htmlFor={id} className="notranslate mb-2 block text-sm text-muted-foreground">{tx('제조 / 출처 구분 (Source & Factory)')}</label>
     <div {...protectedText} className="notranslate min-w-0 space-y-2">
-      <Select value={current} onValueChange={next => {
+      <Select {...(current ? { value: current } : {})} onValueChange={next => {
         if (next === 'custom') onChange('custom', '');
         else if (next === 'other') onChange('other', sourceType === 'other' ? factory : '');
         else if (next.startsWith(FACTORY_PREFIX)) onChange('factory', next.slice(FACTORY_PREFIX.length));

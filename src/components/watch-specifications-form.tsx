@@ -44,7 +44,7 @@ export function WatchSpecificationsForm({ idPrefix, value, onChange, afterWater 
             : field.kind === 'select' ? <SpecificationSelect id={id} label={field.label} value={current} options={field.options} custom={'custom' in field && field.custom} onChange={update} />
             : field.kind === 'textarea' ? <textarea {...protectedText} id={id} className="notranslate form-input min-h-28 resize-y" rows={4} maxLength={3000} placeholder={field.placeholder} value={current} onChange={event => update(event.target.value)} />
             : field.kind === 'number' ? <div {...protectedText} className="notranslate flex min-w-0 items-center gap-3">
-              <input {...protectedText} id={id} type="number" inputMode="decimal" min={0} step="any" className="notranslate form-input min-w-0 flex-1" placeholder={field.placeholder} value={numericSpecValue(current)} onChange={event => update(event.target.value ? `${event.target.value} ${field.key === 'powerReserve' ? 'Hours' : field.unit}` : '')} />
+              <input {...protectedText} id={id} type="number" inputMode="decimal" min={0} step="any" className="notranslate form-input min-w-0 flex-1" placeholder={field.placeholder} value={numericSpecValue(current)} onChange={event => update(event.target.value ? `${event.target.value} ${field.unit}` : '')} />
               <span {...protectedText} className="notranslate shrink-0 text-xs text-muted-foreground"><Tx>{field.unit}</Tx></span>
             </div>
             : <input {...protectedText} id={id} className="notranslate form-input min-w-0" maxLength={80} placeholder={field.placeholder} value={current} onChange={event => update(event.target.value)} />}
