@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import {motion,useReducedMotion} from 'motion/react';
-import {Check,ChevronDown,Search,X} from 'lucide-react';
+import {ChevronDown,Search,X} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {brandDisplayName,brandEnglishName,brandIds,brandMenu,brandsByCategory,categoryLabel,sortBrandChoices,primaryCategories,productCategoryItems,splitFeedId,viewCategoryIds,type FeedPostLike} from '@/lib/feed-categories';
 import {Select,SelectContent,SelectGroup,SelectItem,SelectLabel,SelectSeparator,SelectTrigger,SelectValue} from '@/components/ui/select';
@@ -14,7 +14,7 @@ const viewItems:readonly Item[]=primaryCategories.filter(item=>viewCategoryIds.i
 const chipBase='notranslate inline-flex h-8 items-center gap-1 rounded-full border px-3 text-xs leading-none transition-colors';
 const chipClass=(on:boolean)=>`${chipBase} ${on?'border-primary bg-accent font-semibold text-primary':'border-border bg-card text-foreground hover:border-primary/60'}`;
 
-export function FeedCategoryPicker({catalog,selected='recommend',open,onOpen,onClose,onSelect}:{catalog:readonly FeedPostLike[];selected?:string|undefined;open:boolean;onOpen:()=>void;onClose:()=>void;onSelect:(id:string)=>void}){
+export function FeedCategoryPicker({catalog,selected='recommend',open,onOpen,onClose,onSelect}:{catalog:readonly FeedPostLike[];selected?:string|undefined;open:boolean;onOpen:()=>void;onClose:()=>void;onSelect:(id:string,keepOpen?:boolean)=>void}){
  const reduced=useReducedMotion(),bar=useRef<HTMLDivElement>(null),{lang}=useCurrency();
  const chips:readonly Item[]=primaryCategories.some(item=>item[0]===selected)?primaryCategories:[...primaryCategories,[selected,categoryLabel(selected)]];
  useEffect(()=>{bar.current?.querySelector('[aria-pressed="true"]')?.scrollIntoView({block:'nearest',inline:'nearest',behavior:reduced?'auto':'smooth'});},[selected,reduced]);
@@ -28,7 +28,7 @@ const brandText=(id:string,label:string,lang:string)=>{const name=brandDisplayNa
 const selectionLabel=(id:string,lang:string)=>{const {category,brand}=splitFeedId(id);const brandName=(b:string)=>brandText(b,categoryLabel(b),lang);const cat=tx(categoryLabel(category));return brand?`${cat} · ${brandName(brand)}`:brandIds.has(id)||id.startsWith('b:')?brandName(id):tx(categoryLabel(id));};
 const allBrands:Item[]=[...brandMenu.popular,...brandMenu.accessories,...brandMenu.others];
 
-function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPostLike[];selected:string;onClose:()=>void;onSelect:(id:string)=>void}){
+function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPostLike[];selected:string;onClose:()=>void;onSelect:(id:string,keepOpen?:boolean)=>void}){
  const {lang}=useCurrency(),[query,setQuery]=useState(''),[tab,setTab]=useState<string>(()=>{const c=splitFeedId(selected).category;return productCategoryItems.some(i=>i[0]===c)?c:'';});
  const byCategory=useMemo(()=>brandsByCategory(catalog),[catalog]);
  const tabBrands=useMemo(()=>sortBrandChoices(tab?byCategory[tab] ?? []:[],lang),[tab,byCategory,lang]);
@@ -45,14 +45,14 @@ function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPo
    <label className="mt-3 flex h-10 items-center gap-2 rounded-lg border border-border bg-muted px-3 text-sm focus-within:border-primary"><Search size={16} className="shrink-0 text-muted-foreground" aria-hidden="true"/><input type="search" className="min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground" placeholder={tx('카테고리·브랜드 검색')} aria-label={tx('카테고리·브랜드 검색')} value={query} onChange={e=>setQuery(e.target.value)}/></label>
   </div>
   {q?<section className="pt-4" aria-live="polite">
-    {found.length?<div className="flex flex-wrap gap-2">{found.map(([id,label])=><Button key={id} variant="ghost" translate="no" className={chipClass(selected===id)} aria-pressed={selected===id} onClick={()=>onSelect(id)}>{brandIds.has(id)?brandText(id,label,lang):<Tx>{label}</Tx>}{selected===id&&<Check size={12}/>}</Button>)}</div>
+    {found.length?<div className="flex flex-wrap gap-2">{found.map(([id,label])=><Button key={id} variant="ghost" translate="no" className={chipClass(selected===id)} aria-pressed={selected===id} onClick={()=>onSelect(id)}>{brandIds.has(id)?brandText(id,label,lang):<Tx>{label}</Tx>}</Button>)}</div>
      :<p className="py-6 text-center text-sm text-muted-foreground"><Tx>검색 결과가 없습니다.</Tx></p>}
   </section>:<>
   <section className="pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>보기</Tx></h2>
-   <div className="flex flex-wrap gap-2">{viewItems.map(([id,label])=><Button key={id} variant="ghost" translate="no" className={chipClass(selected===id)} aria-pressed={selected===id} onClick={()=>onSelect(id)}><Tx>{label}</Tx>{selected===id&&<Check size={12}/>}</Button>)}</div></section>
+   <div className="flex flex-wrap gap-2">{viewItems.map(([id,label])=><Button key={id} variant="ghost" translate="no" className={chipClass(selected===id)} aria-pressed={selected===id} onClick={()=>onSelect(id)}><Tx>{label}</Tx></Button>)}</div></section>
   <section className="mt-5 border-t border-border pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>상품 카테고리</Tx></h2>
-   <div className="flex flex-wrap gap-2" role="tablist" aria-label={tx('상품 카테고리')}>{productCategoryItems.map(([id,label])=>{const on=tab===id,active=splitFeedId(selected).category===id;
-    return <Button key={id} variant="ghost" translate="no" role="tab" aria-selected={on} className={chipClass(on||active)} onClick={()=>setTab(id)}><Tx>{label}</Tx>{active&&<Check size={12}/>}</Button>;})}</div>
+   <div className="flex flex-wrap gap-2" role="tablist" aria-label={tx('상품 카테고리')}>{productCategoryItems.map(([id,label])=>{const active=splitFeedId(selected).category===id;
+    return <Button key={id} variant="ghost" translate="no" role="tab" aria-selected={active} className={chipClass(active)} onClick={()=>{setTab(id);onSelect(id,(byCategory[id]?.length ?? 0)>0);}}><Tx>{label}</Tx></Button>;})}</div>
    <div className="mt-4">
     <h3 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>브랜드</Tx></h3>
     {tab?<Select value={splitFeedId(selected).category===tab?selected:''} onValueChange={next=>onSelect(next)}>
@@ -60,7 +60,7 @@ function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPo
      <SelectContent translate="no" data-no-translate position="popper" className="notranslate z-[200] max-h-80 max-w-[calc(100vw-2rem)] border-primary/30 bg-popover text-popover-foreground">
       <SelectItem value={tab} translate="no" data-no-translate className="notranslate py-2.5 text-primary"><span translate="no" data-no-translate className="notranslate"><Tx>{categoryLabel(tab)}</Tx> <Tx>전체</Tx></span></SelectItem>
       {tabBrands.length>0&&<SelectSeparator className="my-2 bg-border"/>}
-      {tabBrands.map(b=><SelectItem key={b.id} value={`${tab}~${b.id}`} translate="no" data-no-translate className="notranslate py-2.5"><span translate="no" data-no-translate className="notranslate">{brandText(b.id,b.label,lang)} · {b.count}</span></SelectItem>)}
+      {tabBrands.map(b=><SelectItem key={b.id} value={`${tab}~${b.id}`} translate="no" data-no-translate className="notranslate py-2.5"><span translate="no" data-no-translate className="notranslate">{brandText(b.id,b.label,lang)}</span></SelectItem>)}
      </SelectContent>
     </Select>:<p className="rounded-lg border border-dashed border-border px-3 py-3 text-xs text-muted-foreground"><Tx>상품 카테고리를 선택하면 브랜드를 고를 수 있어요.</Tx></p>}
     {tab&&tabBrands.length===0&&<p className="mt-2 text-xs text-muted-foreground"><Tx>등록된 브랜드가 없습니다.</Tx></p>}
