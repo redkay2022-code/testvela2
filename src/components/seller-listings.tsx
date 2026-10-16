@@ -5,7 +5,7 @@ import { useCurrency } from './currency';
 import { activeLang } from '@/lib/i18n';
 import { WatchSpecificationsForm } from './watch-specifications-form';
 import { cleanWatchSpecs } from '@/lib/watch-specifications';
-import { postCategoryLabels } from '@/lib/feed-categories';
+import { normalizeMenuCategory, postCategoryLabels } from '@/lib/feed-categories';
 import { PostCategoryField } from './post-category-field';
 import { dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
@@ -172,7 +172,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const [title, setTitle] = useSessionState(draftKey + 'title', listing?.title ?? '');
   const [description, setDescription] = useSessionState(draftKey + 'description', listing?.description ?? '');
   const [category, setCategory] = useSessionState(draftKey + 'category', listing?.category === '악세사리' ? '악세사리' : '시계');
-  const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(String(listing?.specs?.['menuCategory'] ?? '')) ? String(listing?.specs?.['menuCategory']) : '');
+  const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '') ? String(normalizeMenuCategory(String(listing?.specs?.['menuCategory']))) : '');
   const [price, setPrice] = useSessionState(draftKey + 'price', listing?.price != null ? String(listing.price) : '');
   const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
   const [dispatch, setDispatch] = useSessionState<string>(draftKey + 'dispatch', initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);

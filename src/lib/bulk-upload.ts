@@ -5,7 +5,7 @@
  * Photos whose video does not exist are grouped by the name in front of the last "-number" ("<product>-1.jpg", "<product>-2.jpg" …) and become a photo-only product.
  */
 import { productCategories } from '@/lib/catalog';
-import { postCategoryLabels } from '@/lib/feed-categories';
+import { normalizeMenuCategory, postCategoryLabels } from '@/lib/feed-categories';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from '@/lib/listing-media';
 import { validatePostTitle } from '@/lib/post-title';
@@ -188,7 +188,7 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   if (sell !== false && (!Number.isFinite(price) || price < 1 || price > 100000000)) errors.push('판매 가격(USD)은 1 이상의 숫자로 입력해 주세요.');
   const category = productCategories.find(c => norm(c) === norm(v.category)) ?? (v.category ? undefined : '커스텀제작');
   if (!category) errors.push(`카테고리는 ${productCategories.join(' / ')} 중 하나여야 해요.`);
-  const menuCategory = v.menuCategory.trim() ? postCategoryLabels.find(c => norm(c) === norm(v.menuCategory)) : '시계';
+  const menuCategory = v.menuCategory.trim() ? postCategoryLabels.find(c => norm(c) === norm(normalizeMenuCategory(v.menuCategory) ?? '')) : '시계';
   if (!menuCategory) errors.push(`메뉴 카테고리는 ${postCategoryLabels.join(' / ')} 중 하나여야 해요.`);
   else if (!v.menuCategory.trim()) warnings.push('메뉴 카테고리가 비어 있어 “시계”로 저장돼요.');
   const source = v.source ? SOURCE_ALIASES[norm(v.source)] : (v.factory ? 'factory' : 'custom');
