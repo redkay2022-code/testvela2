@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,18 +9,18 @@ import type { FeedSignals } from './personal-feed';
 
 const EMPTY: ReadonlySet<string> = new Set();
 
-/** Per-tab-session random seed: the order stays put while browsing, and is reshuffled in a new session. */
-function sessionSeed(): string {
-  try { let v = sessionStorage.getItem('vela.feedseed'); if (!v) { v = Math.random().toString(36).slice(2, 10); sessionStorage.setItem('vela.feedseed', v); } return v; } catch { return 'fixed'; }
-}
+/** A fresh random seed every time: each page load, and each return from a product, reshuffles the Home order. */
+function newSeed(): string { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
 
 /**
  * Everything the Home order needs to know about this visitor. Returns null on the server and on the very first
  * browser render (so the page hydrates identically), then the real signals right after.
  */
-export function useFeedSignals(userId: string | null, saved: readonly string[], followed: readonly string[]): { signals: FeedSignals; version: string } | null {
+export function useFeedSignals(userId: string | null, saved: readonly string[], followed: readonly string[]): { signals: FeedSignals; version: string; reshuffle: () => void } | null {
   const [boot, setBoot] = useState<{ seed: string; seen: SeenMap } | null>(null);
-  useEffect(() => { setBoot({ seed: sessionSeed(), seen: loadSeen() }); }, []);
+  useEffect(() => { setBoot({ seed: newSeed(), seen: loadSeen() }); }, []);
+  /** New random order + re-read of what the visitor has just opened (those products move down). */
+  const reshuffle = useCallback(() => setBoot({ seed: newSeed(), seen: loadSeen() }), []);
   const popularityFn = useServerFn(getFeedPopularity);
   const popularity = useQuery({ queryKey: ['feed-popularity'], queryFn: () => popularityFn(), staleTime: 10 * 60_000, retry: false });
   const likes = useQuery({
@@ -38,7 +38,7 @@ export function useFeedSignals(userId: string | null, saved: readonly string[], 
       followedSellers: new Set(followKey ? followKey.split(',').map(sellerKey) : []),
       popularity: popularity.data ?? {},
     };
-    return { signals, version: [boot.seed, userId ?? '', likeKey, savedKey, followKey, popKey].join('|') };
+    return { signals, version: [boot.seed, userId ?? '', likeKey, savedKey, followKey, popKey].join('|'), reshuffle };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [boot, userId, likeKey, savedKey, followKey, popKey]);
+  }, [boot, userId, likeKey, savedKey, followKey, popKey, reshuffle]);
 }

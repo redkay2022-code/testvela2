@@ -102,6 +102,8 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   const {data:reviewRows}=useQuery({queryKey:['review-counts'],queryFn:async()=>{const {data:rows}=await supabase.from('reviews').select('seller_id');return rows ?? [];},staleTime:30_000});
   const postRatings=usePostRatings();
   const feedSignals=useFeedSignals(user?.id ?? null,preview.saved,preview.followedSellers),feedMemo=useRef(createFeedMemo()).current;
+  const detailOpen=Boolean(postId||shortsId),wasDetailOpen=useRef(detailOpen);
+  useEffect(()=>{if(wasDetailOpen.current&&!detailOpen)feedSignals?.reshuffle();wasDetailOpen.current=detailOpen;},[detailOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
   if(mode==='home'&&(search.tab || 'discover')==='discover'){const ranked=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {});posts=mixSellers([...(feedSignals?feedMemo(ranked,{...feedSignals.signals,now:Date.now()},feedSignals.version):ranked)].sort((a,b)=>Number(Boolean(b.featured))-Number(Boolean(a.featured))),2);}
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));

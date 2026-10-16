@@ -2,7 +2,7 @@ import { TriangleAlert } from 'lucide-react';
 
 export const factoryOptions = [
   'VS Factory (VSF)', 'ZF Factory (ZF)', '3K Factory (3KF)', 'PPF Factory (PPF)', 'APS Factory (APSF)', 'ARF Factory (ARF)',
-  'GMF Factory (GMF)', 'BV Factory (BVF)', 'V7 Factory (V7F)', 'RC Factory', 'RG Factory', 'UMI Factory', 'Rich Factory',
+  'GMF Factory (GMF)', 'BV Factory (BVF)', 'V7 Factory (V7F)', 'RC Factory', 'RG Factory', 'UMI Factory', 'Rich Factory', 'Unnamed',
 ];
 export type SourceType = 'custom' | 'factory' | 'other';
 

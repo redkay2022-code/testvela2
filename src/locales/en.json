@@ -1476,5 +1476,6 @@
   "{0}페이지": "Page {0}",
   "다음 페이지": "Next page",
   "표시 개수": "Items per page",
-  "페이지당 {0}개": "{0} per page"
+  "페이지당 {0}개": "{0} per page",
+  "Unnamed": "Unnamed"
 }
