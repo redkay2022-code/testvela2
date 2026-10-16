@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { ArrowDown, ArrowUp, CheckCircle2, GripVertical, Loader2, Pause, Play, TriangleAlert, Upload, X } from 'lucide-react';
+import { CheckCircle2, Loader2, Pause, Play, TriangleAlert, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { productCategories } from '@/lib/catalog';
 import { DISPATCH_OPTIONS } from '@/lib/dispatch';
@@ -18,7 +18,7 @@ const EDIT_FIELDS = BULK_FIELDS.filter(f => f !== 'file');
  * single upload form, so the seller's login permissions apply. Two buttons: save as draft (hidden from buyers) or publish now.
  * Order shown to buyers: the video first, then the photos.
  * The job itself lives in lib/bulk-job.ts (outside React), so leaving the page and coming back shows the same list and progress;
- * it can be paused (finishes the current product), edited and re-ordered (drag the handle or use the arrows), then resumed.
+ * it can be paused (finishes the current product), edited, then resumed.
  */
 /** Small preview of a photo (cover image of a photo-only product). */
 function CoverThumb({ file }: { file: File }) {
@@ -32,7 +32,6 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
   const { items, states, notes, phase } = job;
   const [paste, setPaste] = useSessionState('bulk-upload:paste', '');
   const [open, setOpen] = useSessionState<string | null>('bulk-upload:open', null);
-  const [dragId, setDragId] = useState<string | null>(null);
   const titles = useMemo(() => new Set(existingTitles.map(t => t.normalize('NFC').trim().toLowerCase())), [existingTitles]);
   const checks = useMemo(() => Object.fromEntries(items.map(it => [it.id, validateItem(it, titles)])), [items, titles]);
   useEffect(() => { bulkJob.setContext({ user, titles, onDone }); });
@@ -52,8 +51,8 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
     <ol className="mt-3 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
       <li>영상과 사진을 한꺼번에 선택해요. 사진 이름은 “상품이름-1.jpg”, “상품이름-2.jpg”처럼 맞춰요. 같은 이름의 영상이 있으면 그 영상 상품에 묶이고, 영상이 없으면 사진만으로 된 상품이 돼요. 첫 번째 사진(-1)이 대표 이미지예요.</li>
       <li>엑셀/구글 시트의 표를 복사해 아래 칸에 붙여넣어요. 열 순서: {PASTE_ORDER.map(f => FIELD_LABEL[f]).join(' · ')} (첫 줄에 머리글을 넣으면 순서가 달라도 돼요)</li>
-      <li>줄마다 문제가 없는지 확인하고 “업로드 시작”을 눌러요. 줄 왼쪽의 손잡이를 끌거나 ▲▼ 버튼으로 순서를 바꿀 수 있어요. 위에서부터 차례로 올라가고, 내 상품 목록에는 나중에 올라간 상품이 위에 보여요.</li>
-      <li>올리는 중에 “일시정지”를 누르면 지금 올리는 상품까지 마친 뒤 멈춰요. 멈춘 동안 남은 상품을 고치거나 순서를 바꾸고 “이어서 올리기”를 누르면 돼요. 다른 페이지에 갔다가 돌아와도 진행 상황이 그대로 보여요. 새로고침하거나 탭을 닫으면 선택한 파일이 사라져요.</li>
+      <li>줄마다 문제가 없는지 확인하고 “업로드 시작”을 눌러요.</li>
+      <li>올리는 중에 “일시정지”를 누르면 지금 올리는 상품까지 마친 뒤 멈춰요. 멈춘 동안 남은 상품을 고치고 “이어서 올리기”를 누르면 돼요. 다른 페이지에 갔다가 돌아와도 진행 상황이 그대로 보여요. 새로고침하거나 탭을 닫으면 선택한 파일이 사라져요.</li>
     </ol>
     <div className="mt-3 flex min-h-20 flex-wrap items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted p-3 text-sm" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (!running) addFiles(e.dataTransfer.files); }}>
       <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2"><Upload size={18} />파일 선택 (여러 개)<input className="sr-only" type="file" multiple accept="video/mp4,video/quicktime,.mov,image/jpeg,image/png,image/webp" aria-label="영상과 사진 선택" disabled={running} onChange={e => { addFiles(e.target.files); e.target.value = ''; }} /></label>
@@ -68,20 +67,17 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
     </div>
     {notes.map(n => <p key={n} className="mt-2 text-xs text-muted-foreground" role="status">{n}</p>)}
     {items.length > 0 && <>
-      {paused && <p className="mt-3 rounded-md border border-primary bg-primary/10 p-2 text-xs" role="status">일시정지됨 · 남은 상품을 고치거나 순서를 바꾼 뒤 “이어서 올리기”를 눌러 주세요.</p>}
+      {paused && <p className="mt-3 rounded-md border border-primary bg-primary/10 p-2 text-xs" role="status">일시정지됨 · 남은 상품을 고친 뒤 “이어서 올리기”를 눌러 주세요.</p>}
       {phase === 'pausing' && <p className="mt-3 rounded-md border border-border bg-muted p-2 text-xs" role="status">지금 올리는 상품까지 마치고 멈춰요…</p>}
       <ul className="mt-4 grid gap-2">{items.map((it, idx) => {
         const c = checks[it.id]!, s = states[it.id] ?? idle;
-        const movable = !running && s.status !== 'done';
-        return <li key={it.id} className={`rounded-lg border p-3 text-sm ${dragId === it.id ? 'border-primary opacity-60' : 'border-border'}`} onDragOver={e => { if (dragId && movable) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (dragId) bulkJob.moveTo(dragId, it.id); setDragId(null); }}>
+        return <li key={it.id} className="rounded-lg border border-border p-3 text-sm">
           <div className="flex items-start justify-between gap-2">
-            {movable && <span draggable className="mt-0.5 shrink-0 cursor-grab touch-none text-muted-foreground active:cursor-grabbing" aria-label="끌어서 순서 바꾸기" title="끌어서 순서 바꾸기" onDragStart={e => { setDragId(it.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', it.id); const row = e.currentTarget.closest('li'); if (row) e.dataTransfer.setDragImage(row, 16, 16); }} onDragEnd={() => setDragId(null)}><GripVertical className="size-5" aria-hidden="true" /></span>}
             <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setOpen(open === it.id ? null : it.id)} aria-expanded={open === it.id}>
               <span className="flex items-center gap-2">{!it.video && it.photos[0] && <CoverThumb file={it.photos[0]} />}<span className="block min-w-0 truncate font-medium">{idx + 1}. {it.values.title || '(제목 없음)'}</span></span>
               <span className="block truncate text-xs text-muted-foreground">{it.video ? it.video.name : `영상 없음 · ${it.name}`} · 사진 {it.photos.length}장 · {it.values.price ? `$${it.values.price}` : '가격 없음'}</span>
             </button>
             {s.status === 'done' ? <CheckCircle2 className="size-5 text-primary" aria-label="완료" /> : s.status === 'working' ? <span className="flex items-center gap-1 text-xs"><Loader2 className="size-4 animate-spin" />{s.step}{s.step === '영상 변환' ? ` ${s.pct}%` : ''}</span> : c.plan ? <span className="text-xs text-primary">준비됨</span> : <span className="flex items-center gap-1 text-xs text-destructive"><TriangleAlert className="size-4" />수정 필요</span>}
-            {movable && <span className="flex shrink-0"><Button variant="ghost" size="icon" className="size-7" aria-label="위로 옮기기" disabled={idx === 0} onClick={() => bulkJob.moveBy(it.id, -1)}><ArrowUp className="size-4" /></Button><Button variant="ghost" size="icon" className="size-7" aria-label="아래로 옮기기" disabled={idx === items.length - 1} onClick={() => bulkJob.moveBy(it.id, 1)}><ArrowDown className="size-4" /></Button></span>}
             {s.status !== 'working' && s.status !== 'done' && <Button variant="ghost" size="icon" aria-label="이 상품 빼기" disabled={running} onClick={() => bulkJob.remove(it.id)}><X className="size-4" /></Button>}
           </div>
           {[...c.errors, ...c.warnings.map(w => `주의: ${w}`)].map(m => <p key={m} className={`mt-1 text-xs ${m.startsWith('주의') ? 'text-muted-foreground' : 'text-destructive'}`}>{m}</p>)}

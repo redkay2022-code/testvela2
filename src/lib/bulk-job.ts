@@ -12,7 +12,7 @@ import { applyRows, groupFiles, MAX_BULK, parseTable, validateItem, type BulkFie
 /**
  * 일괄 업로드 작업을 화면(컴포넌트) 밖에서 들고 있는 저장소.
  * - 다른 페이지로 갔다가 돌아와도 목록·진행 상황이 그대로 보이고, 올리는 작업도 계속 이어진다.
- * - 일시정지: 지금 올리는 상품까지 마친 뒤 멈추고, 그동안 남은 상품을 고치거나 순서를 바꿀 수 있다.
+ * - 일시정지: 지금 올리는 상품까지 마친 뒤 멈추고, 그동안 남은 상품을 고칠 수 있다.
  * 새로고침·탭 닫기·로그아웃을 하면 선택한 파일이 사라지므로 비워진다.
  */
 export type ItemState = { status: 'idle' | 'working' | 'done' | 'error'; pct: number; step: string; error: string };
@@ -96,19 +96,6 @@ export const bulkJob = {
     picked = picked.filter(f => f !== it.video && !it.photos.includes(f));
     const states = Object.fromEntries(Object.entries(snap.states).filter(([key]) => key !== id));
     emit({ items: snap.items.filter(i => i.id !== id), states });
-  },
-  /** fromId 상품을 toId 상품이 있는 자리로 옮긴다. */
-  moveTo(fromId: string, toId: string) {
-    if (snap.phase === 'running' || snap.phase === 'pausing' || fromId === toId || isDone(fromId)) return;
-    const from = snap.items.findIndex(i => i.id === fromId), to = snap.items.findIndex(i => i.id === toId);
-    if (from < 0 || to < 0) return;
-    const next = [...snap.items]; const [item] = next.splice(from, 1); if (!item) return;
-    next.splice(to, 0, item); emit({ items: next });
-  },
-  moveBy(id: string, offset: number) {
-    const from = snap.items.findIndex(i => i.id === id), target = snap.items[from + offset];
-    if (from < 0 || !target) return;
-    bulkJob.moveTo(id, target.id);
   },
   start(publish: boolean) { if (snap.phase === 'running' || snap.phase === 'pausing') return; emit({ publish }); void run(); },
   pause() { if (snap.phase !== 'running') return; pauseRequested = true; emit({ phase: 'pausing' }); },
