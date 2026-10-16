@@ -17,6 +17,7 @@ import { qcAreas, stageLabel, type EscrowStage } from '@/lib/escrow';
 import { getOrderTracking } from '@/lib/tracking.functions';
 import { EscrowTimeline } from './escrow';
 import { TranslatableText } from './translatable-text';
+import { ListPagination, usePagination } from './list-pagination';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1;
 const BUCKET = 'qc-media';
@@ -179,8 +180,10 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
   const [asking, setAsking] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [chat, setChat] = useState<string | null>(null);
+  const orders = !user ? [] : (q.data?.orders ?? []).filter(o => (as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin))) && (!search.orderId||o.id===search.orderId));
+  /* 셀러의 물류/배송 목록은 페이지 번호로 나누어 보여 준다(구매자 화면은 그대로). */
+  const pager = usePagination(orders, as + (search.orderId ?? ''));
   if (!user) return null;
-  const orders = (q.data?.orders ?? []).filter(o => (as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin))) && (!search.orderId||o.id===search.orderId));
   const setStage = (id: string, stage: EscrowStage) => void supabase.from('orders').update({ stage }).eq('id', id);
   return <section className="escrow-board mb-6 notranslate" aria-label={tx("QC 게시판")} lang={lang} translate="no" data-no-translate>
     {reviewing && <ReviewModal orderId={reviewing} close={() => setReviewing(null)} requestAuth={() => setReviewing(null)} />}
@@ -188,7 +191,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
     {q.isError&&<p role="alert" className="text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문 정보를 불러오지 못했습니다.")}</span></p>}
     {q.isLoading&&<p><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문을 불러오는 중…")}</span></p>}
     {!q.isLoading&&!orders.length && <p className="py-6 text-center text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{as === 'buyer' ? tx('결제한 실제 주문이 여기에 표시됩니다.') : tx('받은 실제 주문이 여기에 표시됩니다.')}</span></p>}
-    {orders.map(o => {
+    {(as === 'seller' ? pager.items : orders).map(o => {
       const media = (q.data?.media ?? []).filter(m => m.order_id === o.id);
       const msgs = (q.data?.msgs ?? []).filter(m => m.order_id === o.id);
       const round = media.reduce((r, m) => Math.max(r, m.round), 0);
@@ -223,6 +226,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
         {chat === o.id && <div className="mt-2"><p className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{o.dispute_open ? tx('구매자 · 셀러 · 관리자 3자 대화') : tx('익명 1:1 주문 대화 · 닉네임과 연락처는 공유되지 않습니다')}</span></p><Thread msgs={msgs} /><Composer orderId={o.id} role={as} /></div>}
       </article>;
     })}
+    {as === 'seller' && <ListPagination pager={pager} />}
   </section>;
 }
 

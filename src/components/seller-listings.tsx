@@ -9,6 +9,7 @@ import { postCategoryLabels } from '@/lib/feed-categories';
 import { PostCategoryField } from './post-category-field';
 import { dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
+import { ListPagination, usePagination } from './list-pagination';
 import { useServerFn } from '@tanstack/react-start';
 import { syncMyPostNickname } from '@/lib/seller-accounts.functions';
 import { signMyMedia } from '@/lib/my-media.functions';
@@ -90,7 +91,8 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   const scope = actAs?.id ?? 'self';
   const [editing, setEditing] = useSessionState<Listing | 'new' | null>(`seller-listings:${scope}:editing`, null);
   const [bulk, setBulk] = useSessionState(`seller-listings:${scope}:bulk`, false);
-  const [shown, setShown] = useState(24);
+  const pager = usePagination(listings.data ?? [], acting?.id ?? 'self');
+  const listTop = useRef<HTMLDivElement>(null);
   const [replacing, setReplacing] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<Listing | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
@@ -137,13 +139,13 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
 
   return <section className="seller-flow-card" aria-label={tx("내 상품 관리")}>{gate.dialog}
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><div className="flex gap-2">{!acting && <Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("일괄 업로드")}</span></Button>}<Button size="sm" onClick={() => setEditing('new')}><Plus /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새 상품")}</span></Button></div></div>
-    {!actAs && <MemberPicker userId={user.id} value={acting} onChange={next => { clearSession('listing-form:'); setActing(next); setEditing(null); setPreviewing(null); setBulk(false); setShown(24); }} />}
+    {!actAs && <MemberPicker userId={user.id} value={acting} onChange={next => { clearSession('listing-form:'); setActing(next); setEditing(null); setPreviewing(null); setBulk(false); }} />}
     {bulk && !acting && <BulkUpload user={user} existingTitles={(listings.data ?? []).map(l => l.title)} onClose={() => setBulk(false)} onDone={refresh} />}
     {!acting && <CardImageOptimizer user={user} listings={listings.data ?? []} onDone={refresh} />}
     <div ref={formTop} className="scroll-mt-4" />
     {editing && <ListingForm key={editing === 'new' ? 'new' : editing.id} user={user} owner={acting} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불러오는 중…")}</span></p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 등록한 상품이 없어요.")}</span></p> :
-      <ul className="seller-inventory-grid mt-5">{listings.data.slice(0, shown).map(l => <li key={l.id} className="seller-inventory-item">
+      <div ref={listTop} className="scroll-mt-4" /><ul className="seller-inventory-grid mt-5">{pager.items.map(l => <li key={l.id} className="seller-inventory-item">
         <div className="min-w-0"><figure className={`seller-inventory-media ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`}>{l.thumb ? <img src={l.thumb} alt={l.title} loading="lazy" decoding="async" className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
           <div className="min-w-0"><p className="truncate font-medium">{l.title}</p><p className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.price != null ? formatMoney(l.price) : tx('가격 없음')}</span> · <span className="record-status"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.product_status === 'OUT_OF_STOCK' ? tx('판매 완료') : l.status === 'published' ? tx('판매 중') : tx('임시 저장')}</span></span></p>{l.specs.factory && <span className="text-xs text-primary" data-no-translate>{l.specs.factory}</span>}{l.specs.sourceType === 'custom' && <span className="text-xs text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("커스텀 제작")}</span></span>}</div></div>
         <div className="record-actions">
@@ -154,7 +156,7 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
           <Button asChild size="sm" variant="ghost"><label aria-label={tx("영상 재업로드")} className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{replacing === l.id ? tx('올리는 중') : tx('재업로드')}</span><input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
           <Button size="sm" variant="ghost" aria-label={tx("삭제")} onClick={() => void remove(l)}><Trash2 /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("삭제")}</span></Button>
         </div></li>)}</ul>}
-    {(listings.data?.length ?? 0) > shown && <div className="mt-4 text-center"><Button variant="outline" onClick={() => setShown(n => n + 24)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("더 보기")} ({shown}/{listings.data?.length})</span></Button></div>}
+    <ListPagination pager={pager} onChange={() => listTop.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })} />
   {previewing && (() => { return <ListingPreview listing={previewing} user={user} onClose={() => setPreviewing(null)} />; })()}
   </section>;
 }

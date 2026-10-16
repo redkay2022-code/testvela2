@@ -2612,5 +2612,11 @@
   "영상이 30초를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "La vidéo dépasse 30 secondes. Raccourcissez-la avec « Modifier la vidéo » (30 secondes et 100 Mo maximum), puis importez-la.",
   "영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "La vidéo dépasse 30 secondes ou 100 Mo. Raccourcissez-la avec « Modifier la vidéo » (30 secondes et 100 Mo maximum), puis importez-la.",
   "영상이 30초 또는 100MB를 넘어요. 해당 상품의 “편집”에서 영상을 선택해 편집기로 줄인 뒤 올려 주세요.": "La vidéo dépasse 30 secondes ou 100 Mo. Ouvrez « Modifier » sur ce produit, choisissez la vidéo, raccourcissez-la dans l’éditeur, puis importez-la.",
-  "영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.": "Le fichier vidéo est trop volumineux (plus de 2 Go). Réduisez-le d’abord, puis sélectionnez-le."
+  "영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.": "Le fichier vidéo est trop volumineux (plus de 2 Go). Réduisez-le d’abord, puis sélectionnez-le.",
+  "페이지 이동": "Navigation des pages",
+  "이전 페이지": "Page précédente",
+  "{0}페이지": "Page {0}",
+  "다음 페이지": "Page suivante",
+  "표시 개수": "Éléments par page",
+  "페이지당 {0}개": "{0} par page"
 }

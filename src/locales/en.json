@@ -1470,5 +1470,11 @@
   "영상이 30초를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "The video is longer than 30 seconds. Use “Edit video” to trim it to 30 seconds and 100 MB or less, then upload.",
   "영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "The video is over 30 seconds or 100 MB. Use “Edit video” to trim it to 30 seconds and 100 MB or less, then upload.",
   "영상이 30초 또는 100MB를 넘어요. 해당 상품의 “편집”에서 영상을 선택해 편집기로 줄인 뒤 올려 주세요.": "The video is over 30 seconds or 100 MB. Open this product’s “Edit”, choose the video and shorten it in the editor, then upload.",
-  "영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.": "The video file is too large (over 2 GB). Please shrink it first, then select it."
+  "영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.": "The video file is too large (over 2 GB). Please shrink it first, then select it.",
+  "페이지 이동": "Page navigation",
+  "이전 페이지": "Previous page",
+  "{0}페이지": "Page {0}",
+  "다음 페이지": "Next page",
+  "표시 개수": "Items per page",
+  "페이지당 {0}개": "{0} per page"
 }

@@ -2617,5 +2617,11 @@
   "영상이 30초를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "Video longius est quam 30 secunda. In «Video emendare» ad 30 secunda et 100 MB contrahe, deinde impone.",
   "영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "Video longius est quam 30 secunda aut maius quam 100 MB. In «Video emendare» ad 30 secunda et 100 MB contrahe, deinde impone.",
   "영상이 30초 또는 100MB를 넘어요. 해당 상품의 “편집”에서 영상을 선택해 편집기로 줄인 뒤 올려 주세요.": "Video longius est quam 30 secunda aut maius quam 100 MB. «Emendare» huius mercis aperi, video elige, in editore contrahe, deinde impone.",
-  "영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.": "Fasciculus video nimis magnus est (supra 2 GB). Prius minue, deinde elige."
+  "영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.": "Fasciculus video nimis magnus est (supra 2 GB). Prius minue, deinde elige.",
+  "페이지 이동": "Navigatio paginarum",
+  "이전 페이지": "Pagina prior",
+  "{0}페이지": "Pagina {0}",
+  "다음 페이지": "Pagina sequens",
+  "표시 개수": "Res per paginam",
+  "페이지당 {0}개": "{0} per paginam"
 }
