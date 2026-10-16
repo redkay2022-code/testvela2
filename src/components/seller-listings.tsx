@@ -44,7 +44,7 @@ import { SourceFactorySelect } from './source-factory-select';
 import { isListingPhoto, isListingVideo, MAX_EDITOR_VIDEO_BYTES, MAX_LISTING_PHOTOS, photoTooLarge, readVideoDuration, validateListingFiles, videoOverLimit } from '@/lib/listing-media';
 
 type Specs = Record<string, string> & { sourceType?: string; factory?: string };
-type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
+type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string | undefined; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
 type VideoItem = { path?: string; file?: File; preview: string };
 
