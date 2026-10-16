@@ -81,7 +81,7 @@ function Gallery({ media }: { media: Media[] }) {
   const { lang } = useCurrency();
   const [open, setOpen] = useState<number | null>(null);
   const cur = open !== null ? media[open] : undefined;
-  return <><div className="qc-grid">{media.map((m, i) => <button type="button" key={m.id} onClick={() => setOpen(i)} aria-label={tx("QC 파일 {0} 열기", { 0: i + 1 })}>{m.kind === 'video' ? <video src={m.url} muted playsInline preload="metadata" /> : <img src={m.url} alt={tx("QC 사진 {0}", { 0: i + 1 })} />}<span>{i + 1}</span></button>)}</div>
+  return <><div className="qc-grid">{media.map((m, i) => <button type="button" key={m.id} onClick={() => setOpen(i)} aria-label={tx("QC 파일 {0} 열기", { 0: i + 1 })}>{m.kind === 'video' ? <video src={m.url} muted playsInline preload="metadata" /> : <img src={m.url} alt={tx("QC 사진 {0}", { 0: i + 1 })} loading="lazy" decoding="async" />}<span>{i + 1}</span></button>)}</div>
     {cur && <div className="qc-lightbox" role="dialog" aria-label={tx("QC 파일")}><Button variant="ghost" size="icon" aria-label={tx("닫기")} onClick={() => setOpen(null)}><X /></Button>{cur.kind === 'video' ? <video src={cur.url} controls autoPlay playsInline /> : <img src={cur.url} alt={tx("QC 사진")} />}<p>{open! + 1} / {media.length}</p></div>}</>;
 }
 
@@ -196,7 +196,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
       const isSeller = as === 'seller';
       const product=catalog.data?.find(p=>p.id===o.post_id);
       return <article className="escrow-order" key={o.id}>
-        <div className="escrow-order-head">{o.image_url ? <img src={o.image_url} width={52} height={52} alt="" /> : <Camera className="text-primary" />}<div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
+        <div className="escrow-order-head">{o.image_url ? <img src={o.image_url} width={52} height={52} alt="" loading="lazy" decoding="async" /> : <Camera className="text-primary" />}<div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
         <EscrowTimeline stage={stage} />
         {search.orderView==='tracking'&&!o.tracking_number&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("송장번호가 아직 등록되지 않았습니다.")}</span></p>}
         {search.orderView==='qc'&&!media.length&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("출고 QC 사진·영상이 아직 등록되지 않았습니다.")}</span></p>}

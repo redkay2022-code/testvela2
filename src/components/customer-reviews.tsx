@@ -29,7 +29,7 @@ export function ReviewList({ sellerId, role, posts }: { sellerId?: string; role?
     <div className="flex items-center justify-between gap-2 text-xs"><span className="flex items-center gap-1 font-semibold" data-no-translate>{r.nickname}<BadgeCheck size={14} className="text-primary" aria-label="인증 구매자"/></span><span className="text-muted-foreground">{formatDate(r.created_at)}</span></div>
     <Link to="/store" search={{ role, seller: r.seller_id, storeTab: 'reviews' }} className="mt-2 inline-flex items-center gap-1 rounded-full border border-primary/50 px-3 py-1 text-xs text-primary" data-no-translate><Store size={12}/>구매처: {r.seller_name}</Link>{(() => { const rep = repFor(r.seller_id, r.seller_name); return rep ? <span className="ml-2 align-middle"><SellerBadge reputation={rep}/></span> : null; })()}
     {r.video_url && r.urls[r.video_url] && <video src={r.urls[r.video_url]} className="mt-3 aspect-[9/16] max-h-96 w-full rounded-md bg-background object-cover" controls muted playsInline preload="metadata"/>}
-    {r.media_urls.length > 0 && <div className="mt-3 grid grid-cols-3 gap-2">{r.media_urls.map(p => r.urls[p] && <img key={p} src={r.urls[p]} alt="리뷰 사진" className="aspect-square w-full rounded-md object-cover" loading="lazy"/>)}</div>}
+    {r.media_urls.length > 0 && <div className="mt-3 grid grid-cols-3 gap-2">{r.media_urls.map(p => r.urls[p] && <img key={p} src={r.urls[p]} alt="리뷰 사진" className="aspect-square w-full rounded-md object-cover" loading="lazy" decoding="async"/>)}</div>}
     <TranslatableText as="p" className="mt-3 whitespace-pre-wrap text-sm leading-6" text={r.body}/>
   </article>)}</div>;
 }
@@ -87,7 +87,7 @@ export function ReviewComposer({ orderId, requestAuth, onDone }: { orderId?: str
 }
 
 function OrderThumb({ image }: { image?: string | undefined }) {
-  return image ? <img src={image} width={48} height={48} alt="" className="size-12 rounded-md object-cover"/> : <span className="flex size-12 items-center justify-center rounded-md bg-muted"><Package size={18} className="text-primary"/></span>;
+  return image ? <img src={image} width={48} height={48} alt="" className="size-12 rounded-md object-cover" loading="lazy" decoding="async"/> : <span className="flex size-12 items-center justify-center rounded-md bg-muted"><Package size={18} className="text-primary"/></span>;
 }
 
 /** Opens right after purchase confirmation with the order pre-filled. */
