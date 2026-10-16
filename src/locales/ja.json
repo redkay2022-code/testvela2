@@ -2608,5 +2608,10 @@
   "Factory Products: Factory water-resistance ratings are for reference purposes only. Please avoid submerging or exposing the watch to water unless it has received professional waterproofing. We do not guarantee water resistance, and water damage is ineligible for refunds, exchanges, or free repairs.": "ファクトリー製品: ファクトリー製品の防水等級は参考値です。専門的な防水処理を受けていない限り、時計を水に浸けたり水にさらしたりしないでください。防水性能は保証しておらず、浸水による損傷は返金・交換・無償修理の対象外です。",
   "Custom Products: For inquiries regarding the water resistance of custom-crafted timepieces, please contact the seller directly.": "カスタム製品: カスタム製作の時計の防水性に関するお問い合わせは、販売者へ直接ご連絡ください。",
   "직접 입력": "直接入力",
-  "No translation available": "翻訳できません"
+  "No translation available": "翻訳できません",
+  "영상이 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "動画が100MBを超えています。「動画を編集」で30秒・100MB以内に短くしてからアップロードしてください。",
+  "영상이 30초를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "動画が30秒を超えています。「動画を編集」で30秒・100MB以内に短くしてからアップロードしてください。",
+  "영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "動画が30秒または100MBを超えています。「動画を編集」で30秒・100MB以内に短くしてからアップロードしてください。",
+  "영상이 30초 또는 100MB를 넘어요. 해당 상품의 “편집”에서 영상을 선택해 편집기로 줄인 뒤 올려 주세요.": "動画が30秒または100MBを超えています。この商品の「編集」で動画を選び、編集機能で短くしてからアップロードしてください。",
+  "영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.": "動画ファイルが大きすぎます（2GB超）。先に小さくしてから選択してください。"
 }

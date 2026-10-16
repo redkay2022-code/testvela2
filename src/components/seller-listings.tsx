@@ -40,7 +40,7 @@ import { BulkUpload } from './bulk-upload';
 import { DispatchSelect } from './dispatch-select';
 import { type SourceType } from './source-factory';
 import { SourceFactorySelect } from './source-factory-select';
-import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_VIDEO_BYTES, photoTooLarge, readVideoDuration, validateListingFiles } from '@/lib/listing-media';
+import { isListingPhoto, isListingVideo, MAX_EDITOR_VIDEO_BYTES, MAX_LISTING_PHOTOS, photoTooLarge, readVideoDuration, validateListingFiles, videoOverLimit } from '@/lib/listing-media';
 
 type Specs = Record<string, string> & { sourceType?: string; factory?: string };
 type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string; signed_media_urls?: string[]; signed_video_url?: string | undefined };
@@ -117,7 +117,7 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   const replaceVideo = async (l: Listing, original: File) => {
     let file = original;
     if (!isListingVideo(file)) { alert('영상 파일(MP4/WEBM/MOV)을 선택해 주세요.'); return; }
-    try { await validateListingFiles([file]); } catch (err) { alert(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; }
+    try { await validateListingFiles([file]); } catch (err) { alert(err instanceof Error && err.message.includes('“영상 편집”') ? '영상이 30초 또는 100MB를 넘어요. 해당 상품의 “편집”에서 영상을 선택해 편집기로 줄인 뒤 올려 주세요.' : err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; }
     setReplacing(l.id);
     try {
       file = await compressVideoForWeb(file);
@@ -220,7 +220,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     const selectedVideos = selected.filter(isListingVideo);
     if (photos.length + selectedPhotos.length > MAX_LISTING_PHOTOS || Number(Boolean(video)) + selectedVideos.length > 1) { setError(`사진은 최대 ${MAX_LISTING_PHOTOS}장, 영상은 1개까지 선택할 수 있어요.`); return; }
     /* Show the previews immediately; the slower duration check runs in the background. */
-    const quick = selected.filter(f => !isListingPhoto(f) && !isListingVideo(f)).length ? '사진은 JPG·PNG·WEBP, 영상은 MP4·MOV·WEBM 형식만 지원해요.' : selectedPhotos.some(photoTooLarge) ? '사진은 장당 최대 10MB까지 올릴 수 있어요.' : selectedVideos[0] && selectedVideos[0].size > MAX_VIDEO_BYTES ? '영상은 최대 100MB까지 올릴 수 있어요.' : '';
+    const quick = selected.filter(f => !isListingPhoto(f) && !isListingVideo(f)).length ? '사진은 JPG·PNG·WEBP, 영상은 MP4·MOV·WEBM 형식만 지원해요.' : selectedPhotos.some(photoTooLarge) ? '사진은 장당 최대 10MB까지 올릴 수 있어요.' : selectedVideos[0] && selectedVideos[0].size > MAX_EDITOR_VIDEO_BYTES ? '영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.' : '';
     if (quick) { setError(quick); return; }
     const newVideo = selectedVideos[0] ? { file: selectedVideos[0], preview: createPreview(selectedVideos[0]) } : null;
     const newPhotos = selectedPhotos.map(file => ({ id: crypto.randomUUID(), file, preview: createPreview(file) }));
@@ -228,7 +228,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     if (newPhotos.length) setPhotos(current => [...current, ...newPhotos]);
     setError('');
     /* 길이(30초) 검사는 여기서 하지 않는다: 긴 영상은 편집기에서 잘라 쓰는 것이 정상 흐름이고, 길이는 저장할 때 확인한다. 여기서는 영상을 읽을 수 있는지만 본다. */
-    if (newVideo) readVideoDuration(newVideo.file).catch(err => {
+    if (newVideo) readVideoDuration(newVideo.file).then(seconds => { if (videoOverLimit(newVideo.file, seconds)) setError('영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.'); }).catch(err => {
       setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.');
       previewUrls.drop(newVideo.preview);
       setVideo(cur => (cur?.preview === newVideo.preview ? null : cur)); setEditing(cur => (cur === newVideo.file ? null : cur));

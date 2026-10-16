@@ -2607,5 +2607,10 @@
   "Factory Products: Factory water-resistance ratings are for reference purposes only. Please avoid submerging or exposing the watch to water unless it has received professional waterproofing. We do not guarantee water resistance, and water damage is ineligible for refunds, exchanges, or free repairs.": "Produits d'usine : Les indices d'étanchéité des produits d'usine sont donnés à titre indicatif uniquement. Évitez d'immerger la montre ou de l'exposer à l'eau, sauf si elle a reçu un traitement d'étanchéité professionnel. L'étanchéité n'est pas garantie et les dégâts des eaux ne donnent droit ni à un remboursement, ni à un échange, ni à une réparation gratuite.",
   "Custom Products: For inquiries regarding the water resistance of custom-crafted timepieces, please contact the seller directly.": "Produits sur mesure : Pour toute question sur l'étanchéité des montres sur mesure, veuillez contacter directement le vendeur.",
   "직접 입력": "Saisie libre",
-  "No translation available": "Aucune traduction disponible"
+  "No translation available": "Aucune traduction disponible",
+  "영상이 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "La vidéo dépasse 100 Mo. Raccourcissez-la avec « Modifier la vidéo » (30 secondes et 100 Mo maximum), puis importez-la.",
+  "영상이 30초를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "La vidéo dépasse 30 secondes. Raccourcissez-la avec « Modifier la vidéo » (30 secondes et 100 Mo maximum), puis importez-la.",
+  "영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.": "La vidéo dépasse 30 secondes ou 100 Mo. Raccourcissez-la avec « Modifier la vidéo » (30 secondes et 100 Mo maximum), puis importez-la.",
+  "영상이 30초 또는 100MB를 넘어요. 해당 상품의 “편집”에서 영상을 선택해 편집기로 줄인 뒤 올려 주세요.": "La vidéo dépasse 30 secondes ou 100 Mo. Ouvrez « Modifier » sur ce produit, choisissez la vidéo, raccourcissez-la dans l’éditeur, puis importez-la.",
+  "영상 파일이 너무 커요(2GB 초과). 먼저 줄인 뒤 선택해 주세요.": "Le fichier vidéo est trop volumineux (plus de 2 Go). Réduisez-le d’abord, puis sélectionnez-le."
 }
