@@ -130,7 +130,7 @@ function VideoOnlyDetails({post,user,requestAuth,buy}:{post:LuxuryPost;user:User
  <header className="shorts-video-details-seller" aria-label="판매자 정보"><ShortSellerIdentity post={post}/></header>
  <div className="shorts-video-details-body"><h2 data-i18n-skip>{post.sample?post.title:tr.title}</h2>
  {post.price!==null&&<p className="shorts-video-price" data-no-translate>{usd(post.price)}</p>}
- <div className="detail-tags"><span><Tx>{post.factory}</Tx></span><span className="notranslate" translate="no"><Tx>{post.category}</Tx></span></div>
+ 
  {isImmediateDispatch(post)&&<span className="lux-ready-badge is-inline mt-3" data-no-translate><Tx>바로 발송 · Ready to Ship</Tx></span>}
  <p data-i18n-skip>{post.sample?post.description:tr.description}</p><TranslationToggle t={tr}/>
  <SpecsTable category={post.category} dispatch={post.source.dispatch_time} specs={post.sample?post.source.specs:tr.specs}/>

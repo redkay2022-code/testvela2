@@ -1,9 +1,10 @@
 import {describe,it,expect} from 'vitest';
-import {categoryGroups,matchesFeedCategory,normalizeMenuCategory,pickerCategoryOf,postCategoryLabels,primaryCategories} from '@/lib/feed-categories';
+import {categoryGroups,brandMenu,matchesFeedCategory,normalizeMenuCategory,postCategoryLabels,primaryCategories} from '@/lib/feed-categories';
+import {ALL_WATCH_BRANDS} from '@/lib/watch-brands';
 import {marketSearch} from '@/lib/market';
 const post={title:'Rolex watch',description:'Inspection',category:'Ready to Ship',factory:'VS Factory',sample:false};
 describe('Home category filters',()=>{
- it('contains all requested category and brand choices',()=>expect(categoryGroups.flatMap(g=>g.items)).toHaveLength(23));
+ it('contains every upload brand plus the category choices',()=>expect(categoryGroups.flatMap(g=>g.items).length).toBeGreaterThan(60));
  it('matches relevant multilingual categories and brands',()=>{
   expect(matchesFeedCategory(post,'rolex')).toBe(true);
   expect(matchesFeedCategory(post,'ready')).toBe(true);
@@ -31,7 +32,17 @@ describe('Home category filters',()=>{
   const watch={...post,title:'Leather tote bag',category:'시계',menuCategory:'커스텀'};
   expect(matchesFeedCategory(watch,'custom')).toBe(true);expect(normalizeMenuCategory('18K 금')).toBe('기타');expect(matchesFeedCategory({...watch,menuCategory:'18K 금'},'etc')).toBe(true);
  });
- it('knows which picker tab a brand belongs to',()=>{expect(pickerCategoryOf('rolex')).toBe('watches');expect(pickerCategoryOf('tiffany')).toBe('accessories');expect(pickerCategoryOf('bags')).toBe('bags');expect(pickerCategoryOf('recommend')).toBeUndefined();});
+ it('offers every brand a seller can pick when uploading',()=>{
+  const ids=new Set(categoryGroups.flatMap(g=>g.items).map(i=>i[0]));
+  for(const name of ALL_WATCH_BRANDS){const slug=name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,' ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+   const merged=slug==='bulgari'?'bvlgari':slug==='van-cleef-arpels'?'van-cleef':slug;expect(ids.has(merged)).toBe(true);}
+  expect(brandMenu.popular.map(b=>b[0])).toContain('hublot');
+ });
+ it('matches newly added brands as whole words',()=>{
+  expect(matchesFeedCategory({...post,title:'Tag Heuer Carrera',category:'시계'},'tag-heuer')).toBe(true);
+  expect(matchesFeedCategory({...post,title:'Colorado watch',category:'시계'},'rado')).toBe(false);
+  expect(matchesFeedCategory({...post,title:'Bulgari ring',category:'악세사리'},'bvlgari')).toBe(true);
+ });
  it('does not assign a brand to generic watch samples',()=>expect(matchesFeedCategory({...post,title:'Everyday diver',sample:true},'rolex')).toBe(false));
  it('retains the selection below the open picker',()=>expect(marketSearch.parse({feedCategory:'rolex',categoriesOpen:true})).toMatchObject({feedCategory:'rolex',categoriesOpen:true}));
 });
