@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { tx } from '@/lib/dom-translate';
 import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 /** How many rows a seller can show on one page. */
 export const PAGE_SIZES = [5, 10, 15, 20] as const;
@@ -46,8 +47,11 @@ export function ListPagination({ pager, onChange }: { pager: Pick<Pager, 'page' 
         : <span key={n} className="px-1 text-muted-foreground" aria-hidden="true">…</span>)}
       <Button type="button" size="icon" variant="ghost" aria-label={tx('다음 페이지')} disabled={pager.page >= pager.pageCount} onClick={() => go(pager.page + 1)}><ChevronRight /></Button>
     </nav>
-    <select className="form-input h-9 w-auto min-w-28 px-3 text-sm" aria-label={tx('표시 개수')} value={pager.size} onChange={e => { pager.setSize(Number(e.target.value)); onChange?.(); }}>
-      {PAGE_SIZES.map(n => <option key={n} value={n}>{tx('페이지당 {0}개', { 0: n })}</option>)}
-    </select>
+    <Select value={String(pager.size)} onValueChange={value => { pager.setSize(Number(value)); onChange?.(); }}>
+      <SelectTrigger aria-label={tx('표시 개수')} className="h-10 w-40 border-primary/60 bg-muted text-sm font-medium text-foreground"><SelectValue /></SelectTrigger>
+      <SelectContent position="popper" className="z-[200] bg-popover text-popover-foreground">
+        {PAGE_SIZES.map(n => <SelectItem key={n} value={String(n)} className="text-sm text-popover-foreground">{tx('페이지당 {0}개', { 0: n })}</SelectItem>)}
+      </SelectContent>
+    </Select>
   </div>;
 }
