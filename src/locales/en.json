@@ -1491,5 +1491,7 @@
   "Boucheron": "Boucheron",
   "Tiffany & Co.": "Tiffany & Co.",
   "상품 카테고리를 선택하면 브랜드를 고를 수 있어요.": "Select a product category to pick a brand.",
-  "등록된 브랜드가 없습니다.": "No brands registered yet."
+  "등록된 브랜드가 없습니다.": "No brands registered yet.",
+  "아직 발견된 내용이 없습니다.": "Nothing found here yet.",
+  "이 브랜드의 상품이 등록되면 자동으로 이곳에 표시됩니다.": "Products of this brand will appear here once they are listed."
 }
