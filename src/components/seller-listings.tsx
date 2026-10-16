@@ -155,7 +155,7 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
           <Button size="sm" variant="ghost" aria-label={tx("편집")} onClick={() => void openWithMedia(l, setEditing)}><Pencil /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("편집")}</span></Button>
           <Button asChild size="sm" variant="ghost"><label aria-label={tx("영상 재업로드")} className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{replacing === l.id ? tx('올리는 중') : tx('재업로드')}</span><input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
           <Button size="sm" variant="ghost" aria-label={tx("삭제")} onClick={() => void remove(l)}><Trash2 /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("삭제")}</span></Button>
-        </div></li>)}</ul>}
+        </div></li>)}</ul></>}
     <ListPagination pager={pager} onChange={() => listTop.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })} />
   {previewing && (() => { return <ListingPreview listing={previewing} user={user} onClose={() => setPreviewing(null)} />; })()}
   </section>;
