@@ -8,7 +8,7 @@ import type { SeenMap } from './seen-history';
  * this step only re-orders it:
  *   1. score = base position + freshness + popularity + followed seller + taste + (already seen: lower) + a little per-session randomness
  *   2. then spread sellers apart: the next card comes from a different seller than the previous two whenever one of
- *      similar quality is available, so one seller's many uploads never fill a whole screen.
+ *      similar quality is available, so one seller's many uploads never fill a whole screen (a hard rule, even when that seller's cards score far higher).
  * Every knob is in WEIGHTS below. Nothing is hidden; products are only moved.
  */
 export const WEIGHTS = {
@@ -21,8 +21,7 @@ export const WEIGHTS = {
   seen: 0.45,       // already opened in the last 24 h (half that within 7 days)
   jitter: 0.22,     // per-session shuffle so everyone does not see an identical order
   ownFresh: 0.60,   // a seller's own new upload stays near the top of their Home
-  spreadWindow: 60, // spreading looks this far down the list for a different seller
-  spreadGap: 0.7,   // ...but never takes a card scoring more than this below the best remaining one
+  spreadWindow: 400, // spreading looks this far down the list for a different seller (hard rule: no seller twice within 2 cards)
 } as const;
 
 export type Popularity = Record<string, { views: number; likes: number }>;
@@ -110,12 +109,10 @@ export function personalFeed(posts: readonly LuxuryPost[], s: FeedSignals): Luxu
   const sellerOf = (p: LuxuryPost) => sellerKey(sellerIdentity(p));
   while (pool.length) {
     const prev = out[out.length - 1], prev2 = out[out.length - 2];
-    const top = scores.get(pool[0]!.id) ?? 0;
     let pick = -1, fallback = -1;
+    // Hard rule: take the best-scoring card whose seller is not among the last two cards, however far down it is.
     for (let i = 0; i < Math.min(WEIGHTS.spreadWindow, pool.length); i++) {
-      const c = pool[i]!;
-      if ((scores.get(c.id) ?? 0) < top - WEIGHTS.spreadGap) break; // pool is sorted: everything after is even lower
-      const who = sellerOf(c);
+      const who = sellerOf(pool[i]!);
       if (prev && sellerOf(prev) === who) continue;
       if (fallback < 0) fallback = i;
       if (!(prev2 && sellerOf(prev2) === who)) { pick = i; break; }

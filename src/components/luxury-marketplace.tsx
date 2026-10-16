@@ -103,7 +103,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   const postRatings=usePostRatings();
   const feedSignals=useFeedSignals(user?.id ?? null,preview.saved,preview.followedSellers),feedMemo=useRef(createFeedMemo()).current;
   const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
-  if(mode==='home'&&(search.tab || 'discover')==='discover'){const ranked=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {});posts=[...(feedSignals?feedMemo(ranked,{...feedSignals.signals,now:Date.now()},feedSignals.version):ranked)].sort((a,b)=>Number(Boolean(b.featured))-Number(Boolean(a.featured)));}
+  if(mode==='home'&&(search.tab || 'discover')==='discover'){const ranked=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {});posts=mixSellers([...(feedSignals?feedMemo(ranked,{...feedSignals.signals,now:Date.now()},feedSignals.version):ranked)].sort((a,b)=>Number(Boolean(b.featured))-Number(Boolean(a.featured))),2);}
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
