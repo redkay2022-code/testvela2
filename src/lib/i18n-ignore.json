@@ -160,6 +160,7 @@
     "lib/leave-warning.ts",
     "lib/market-upload.ts",
     "lib/bulk-job.ts",
-    "lib/session-state.ts"
+    "lib/session-state.ts",
+    "lib/brand-names.ts"
   ]
 }
