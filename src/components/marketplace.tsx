@@ -31,6 +31,7 @@ import { PostCategoryField } from './post-category-field';
 import { postCategoryLabels } from '@/lib/feed-categories';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
+import { matchesTextQuery } from '@/lib/product-search';
 import { appendListingFiles, isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, readVideoDuration, validateListingFiles } from '@/lib/listing-media';
 import { compressVideoForWeb, COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
 import { estimateUploadSeconds, useCountdown } from '@/lib/upload-countdown';
@@ -106,7 +107,7 @@ export function Marketplace({ mode = 'home' }: { mode?: Mode }) {
     if (mode === 'me') return search.tab === 'posts' ? post.user_id === user?.id : likes.has(post.id);
     if (search.tab === 'following') return false;
     if (search.category && search.category !== '전체' && post.category !== search.category) return false;
-    if (search.q && !`${post.title} ${post.creator} ${post.category} ${post.description}`.toLowerCase().includes(search.q.toLowerCase())) return false;
+    if (search.q && !matchesTextQuery(`${post.title} ${post.creator} ${post.category} ${post.description}`, search.q)) return false;
     if (search.tab === 'nearby') return post.category === '푸드' || post.category === '일상';
     return true;
   });

@@ -27,3 +27,18 @@ export function rankRecommended(posts: LuxuryPost[], reviewCounts: Record<string
     .sort((a, b) => b.fresh - a.fresh || b.score - a.score || a.index - b.index)
     .map(entry => entry.post);
 }
+
+/**
+ * Keeps the recommended order but avoids showing the same seller back to back: the next item is the best-ranked one whose
+ * seller was not among the last `gap` items (falls back to the best-ranked item when only that seller is left).
+ */
+export function mixSellers(posts: LuxuryPost[], gap = 2): LuxuryPost[] {
+  const rest = [...posts];
+  const out: LuxuryPost[] = [];
+  while (rest.length) {
+    const recent = new Set(out.slice(-gap).map(sellerIdentity));
+    const pick = rest.findIndex(p => !recent.has(sellerIdentity(p)));
+    out.push(...rest.splice(pick < 0 ? 0 : pick, 1));
+  }
+  return out;
+}

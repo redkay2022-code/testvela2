@@ -133,6 +133,8 @@
     "^width=device-width"
   ],
   "ignoreFiles": [
+    "lib/product-search.ts",
+    "lib/feed-return.ts",
     "components/admin-members.tsx",
     "components/seller-analytics.tsx",
     "components/mini-charts.tsx",
