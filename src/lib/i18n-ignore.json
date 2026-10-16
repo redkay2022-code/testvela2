@@ -156,6 +156,8 @@
     "components/admin-proxy.tsx",
     "lib/text-language.ts",
     "lib/leave-warning.ts",
-    "lib/market-upload.ts"
+    "lib/market-upload.ts",
+    "lib/bulk-job.ts",
+    "lib/session-state.ts"
   ]
 }

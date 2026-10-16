@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { clearSession, sessionGet, sessionHas, useSessionState } from '@/lib/session-state';
+import { LEAVE_WARNING_MESSAGE } from '@/lib/leave-warning';
 import { UserRound } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
@@ -11,6 +13,9 @@ import type { ProxyTarget } from './member-picker';
 
 export const PROXY_TAB_LABEL = '셀러 대리 관리';
 export const PROXY_TAB_NOTE = '셀러 계정 만들기 · 셀러 대신 프로필·상품 등록·수정·삭제';
+
+/** 셀러 대리 관리에서 상품을 수정하던 중이면 true. 관리자 화면을 다시 열 때 백오피스 첫 화면 대신 수정 화면으로 돌려보내는 데 쓴다. */
+export const hasProxyEditInProgress = () => { const t = sessionGet<ProxyTarget>('admin-proxy:target'); return !!t && sessionHas(`seller-listings:${t.id}:editing`); };
 
 const clean = (q: string) => q.replace(/[%,()"'\\*]/g, ' ').trim().slice(0, 40);
 
@@ -70,7 +75,8 @@ function ProxyProfile({ target, onRenamed }: { target: ProxyTarget; onRenamed: (
 export function AdminProxy() {
   const qc = useQueryClient();
   const createFn = useServerFn(createProxySellers);
-  const [target, setTarget] = useState<ProxyTarget | null>(null);
+  /* 고른 셀러는 메모리에 보관한다: 다른 페이지에 갔다가 돌아와도 같은 셀러의 상품 관리 화면이 열린다. */
+  const [target, setTarget] = useSessionState<ProxyTarget | null>('admin-proxy:target', null);
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
   const [onlySellers, setOnlySellers] = useState(true);
@@ -122,7 +128,7 @@ export function AdminProxy() {
     {target ? <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary bg-primary/10 p-3">
         <p className="text-sm font-semibold">지금 “{target.nickname}” 셀러의 프로필·상품을 관리하고 있어요.</p>
-        <Button type="button" size="sm" variant="outline" onClick={() => setTarget(null)}>셀러 목록으로 돌아가기</Button>
+        <Button type="button" size="sm" variant="outline" onClick={() => { if (hasProxyEditInProgress() && !window.confirm(LEAVE_WARNING_MESSAGE)) return; clearSession(`listing-form:${target.id}:`); clearSession(`seller-listings:${target.id}:`); setTarget(null); }}>셀러 목록으로 돌아가기</Button>
       </div>
       <ProxyProfile key={target.id} target={target} onRenamed={nickname => setTarget(t => (t ? { ...t, nickname } : t))} />
       <SellerListings key={`${target.id}-listings`} actAs={target} />

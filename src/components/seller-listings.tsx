@@ -13,7 +13,9 @@ import { useServerFn } from '@tanstack/react-start';
 import { syncMyPostNickname } from '@/lib/seller-accounts.functions';
 import { signMyMedia } from '@/lib/my-media.functions';
 import { removeMarketMedia } from '@/lib/proxy-seller.functions';
-import { useLeaveWarning } from '@/lib/leave-warning';
+import { useLeaveWarning, LEAVE_WARNING_MESSAGE } from '@/lib/leave-warning';
+import { clearSession, sessionBag, useSessionState } from '@/lib/session-state';
+import { bulkJob } from '@/lib/bulk-job';
 import { boxPriceOrDefault } from '@/lib/box-price';
 import { putMarketMedia, removeMarketFiles } from '@/lib/market-upload';
 import { MemberPicker, PROXY_NOT_SELLER_MESSAGE, type ProxyTarget } from './member-picker';
@@ -48,7 +50,7 @@ type VideoItem = { path?: string; file?: File; preview: string };
 export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   const { lang } = useCurrency();
   const [user, setUser] = useState<User | null>(null);
-  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUser(data.user)); const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null)); return () => subscription.unsubscribe(); }, []);
+  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUser(data.user)); const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => { if (event === 'SIGNED_OUT') { clearSession(''); bulkJob.forceReset(); } setUser(s?.user ?? null); }); return () => subscription.unsubscribe(); }, []);
   const account = useMyAccount(user);
   const gate = useAdminPasswordGate();
   const roles: string[] = (account.data as { roles?: string[] } | undefined)?.roles ?? [];
@@ -56,7 +58,7 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   const qc = useQueryClient();
   const syncNickname = useServerFn(syncMyPostNickname);
   const signMedia = useServerFn(signMyMedia);
-  const [picked, setActing] = useState<ProxyTarget | null>(null);
+  const [picked, setActing] = useSessionState<ProxyTarget | null>('seller-listings:picked', null);
   const acting = actAs ?? picked;
   const synced = useRef(false);
   useEffect(() => { if (!user || !canSell || synced.current) return; synced.current = true; void syncNickname().then(() => qc.invalidateQueries({ queryKey: ['my-listings'] })).catch(() => undefined); }, [user, canSell]);
@@ -84,8 +86,10 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
       return rows.map(r => ({ ...r, thumb: serverThumbs.get(r.id) ?? thumbs.get(pick(r)) }));
     },
   });
-  const [editing, setEditing] = useState<Listing | 'new' | null>(null);
-  const [bulk, setBulk] = useState(false);
+  /* 다른 페이지에 갔다가 돌아와도 수정 중이던 화면·일괄 업로드 화면이 그대로 열리도록 메모리에 보관한다. */
+  const scope = actAs?.id ?? 'self';
+  const [editing, setEditing] = useSessionState<Listing | 'new' | null>(`seller-listings:${scope}:editing`, null);
+  const [bulk, setBulk] = useSessionState(`seller-listings:${scope}:bulk`, false);
   const [shown, setShown] = useState(24);
   const [replacing, setReplacing] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<Listing | null>(null);
@@ -133,11 +137,11 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
 
   return <section className="seller-flow-card" aria-label={tx("내 상품 관리")}>{gate.dialog}
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><div className="flex gap-2">{!acting && <Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("일괄 업로드")}</span></Button>}<Button size="sm" onClick={() => setEditing('new')}><Plus /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새 상품")}</span></Button></div></div>
-    {!actAs && <MemberPicker userId={user.id} value={acting} onChange={next => { setActing(next); setEditing(null); setPreviewing(null); setBulk(false); setShown(24); }} />}
+    {!actAs && <MemberPicker userId={user.id} value={acting} onChange={next => { clearSession('listing-form:'); setActing(next); setEditing(null); setPreviewing(null); setBulk(false); setShown(24); }} />}
     {bulk && !acting && <BulkUpload user={user} existingTitles={(listings.data ?? []).map(l => l.title)} onClose={() => setBulk(false)} onDone={refresh} />}
     {!acting && <CardImageOptimizer user={user} listings={listings.data ?? []} onDone={refresh} />}
     <div ref={formTop} className="scroll-mt-4" />
-    {editing && <ListingForm user={user} owner={acting} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
+    {editing && <ListingForm key={editing === 'new' ? 'new' : editing.id} user={user} owner={acting} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불러오는 중…")}</span></p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 등록한 상품이 없어요.")}</span></p> :
       <ul className="seller-inventory-grid mt-5">{listings.data.slice(0, shown).map(l => <li key={l.id} className="seller-inventory-item">
         <div className="min-w-0"><figure className={`seller-inventory-media ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`}>{l.thumb ? <img src={l.thumb} alt={l.title} loading="lazy" decoding="async" className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
@@ -157,36 +161,38 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
 
 function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user: User; owner?: ProxyTarget | null; listing: Listing | null; catalog: { id: string; title: string }[]; onClose: () => void; onSaved: () => void }) {
   const { lang } = useCurrency();
-  const [videoTags, setVideoTags] = useState<VideoTag[]>(listing?.video_tags ?? []);
+  /* 작성 중인 내용은 메모리에 함께 보관해서, 다른 페이지에 갔다가 돌아와도 그대로 이어서 수정할 수 있다. 저장하거나 닫으면 비운다. */
+  const draftKey = `listing-form:${owner?.id ?? user.id}:${listing?.id ?? 'new'}:`;
+  const previewUrls = sessionBag(draftKey + 'urls');
+  const discardDraft = () => clearSession(draftKey);
+  const [videoTags, setVideoTags] = useSessionState<VideoTag[]>(draftKey + 'tags', listing?.video_tags ?? []);
   const [editing, setEditing] = useState<File | null>(null);
-  const [title, setTitle] = useState(listing?.title ?? '');
-  const [description, setDescription] = useState(listing?.description ?? '');
-  const [category, setCategory] = useState(listing?.category === '악세사리' ? '악세사리' : '시계');
-  const [menuCategory, setMenuCategory] = useState(postCategoryLabels.includes(String(listing?.specs?.['menuCategory'] ?? '')) ? String(listing?.specs?.['menuCategory']) : '');
-  const [price, setPrice] = useState(listing?.price != null ? String(listing.price) : '');
+  const [title, setTitle] = useSessionState(draftKey + 'title', listing?.title ?? '');
+  const [description, setDescription] = useSessionState(draftKey + 'description', listing?.description ?? '');
+  const [category, setCategory] = useSessionState(draftKey + 'category', listing?.category === '악세사리' ? '악세사리' : '시계');
+  const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(String(listing?.specs?.['menuCategory'] ?? '')) ? String(listing?.specs?.['menuCategory']) : '');
+  const [price, setPrice] = useSessionState(draftKey + 'price', listing?.price != null ? String(listing.price) : '');
   const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
-  const [dispatch, setDispatch] = useState<string>(initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
-  const [customDispatch, setCustomDispatch] = useState(initialDispatch.startsWith('custom:') ? initialDispatch.slice(7) : '');
-  const [boxPrice, setBoxPrice] = useState(listing?.box_price != null ? String(listing.box_price) : '');
-  const [specs, setSpecs] = useState<Specs>(listing?.specs ?? {});
-  const [sourceType, setSourceType] = useState<SourceType>(() => {
+  const [dispatch, setDispatch] = useSessionState<string>(draftKey + 'dispatch', initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
+  const [customDispatch, setCustomDispatch] = useSessionState(draftKey + 'customDispatch', initialDispatch.startsWith('custom:') ? initialDispatch.slice(7) : '');
+  const [boxPrice, setBoxPrice] = useSessionState(draftKey + 'box', listing?.box_price != null ? String(listing.box_price) : '');
+  const [specs, setSpecs] = useSessionState<Specs>(draftKey + 'specs', listing?.specs ?? {});
+  const [sourceType, setSourceType] = useSessionState<SourceType>(draftKey + 'sourceType', () => {
     const t = listing?.specs?.sourceType;
     return t === 'factory' || t === 'other' ? t : 'custom';
   });
-  const [factory, setFactory] = useState(listing?.specs?.factory ?? '');
-  const [photos, setPhotos] = useState<PhotoItem[]>(() => listing?.media_urls.map((path, index) => ({ id: `existing:${path}`, path, preview: listing.signed_media_urls?.[index] ?? '' })) ?? []);
-  const [video, setVideo] = useState<VideoItem | null>(() => listing?.video_url ? { path: listing.video_url, preview: listing.signed_video_url ?? '' } : null);
+  const [factory, setFactory] = useSessionState(draftKey + 'factory', listing?.specs?.factory ?? '');
+  const [photos, setPhotos] = useSessionState<PhotoItem[]>(draftKey + 'photos', () => listing?.media_urls.map((path, index) => ({ id: `existing:${path}`, path, preview: listing.signed_media_urls?.[index] ?? '' })) ?? []);
+  const [video, setVideo] = useSessionState<VideoItem | null>(draftKey + 'video', () => listing?.video_url ? { path: listing.video_url, preview: listing.signed_video_url ?? '' } : null);
   const [draggedPhoto, setDraggedPhoto] = useState<string | null>(null);
-  const objectUrls = useRef<Set<string>>(new Set());
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [eta, setEta] = useState(10);
   const [convertPct, setConvertPct] = useState<number | null>(null);
   const left = useCountdown(pending, eta);
-  useEffect(() => () => { objectUrls.current.forEach(url => URL.revokeObjectURL(url)); }, []);
 
-  const createPreview = (file: File) => { const url = URL.createObjectURL(file); objectUrls.current.add(url); return url; };
-  const removePhoto = (id: string) => setPhotos(current => { const item = current.find(photo => photo.id === id); if (item?.file) { URL.revokeObjectURL(item.preview); objectUrls.current.delete(item.preview); } return current.filter(photo => photo.id !== id); });
+  const createPreview = (file: File) => previewUrls.add(URL.createObjectURL(file));
+  const removePhoto = (id: string) => setPhotos(current => { const item = current.find(photo => photo.id === id); if (item?.file) { previewUrls.drop(item.preview); } return current.filter(photo => photo.id !== id); });
   const [loadingVideo, setLoadingVideo] = useState(false);
   /** Opens the video editor. A video that is already saved (e.g. from bulk upload) is downloaded first so it can be trimmed/tagged like a new one. */
   const editVideo = async () => {
@@ -204,7 +210,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     } catch { setError('기존 영상을 불러오지 못했어요. 영상을 다시 선택해 주세요.'); }
     finally { setLoadingVideo(false); }
   };
-  const removeVideo = () => { if (video?.file) { URL.revokeObjectURL(video.preview); objectUrls.current.delete(video.preview); } setVideo(null); };
+  const removeVideo = () => { if (video?.file) { previewUrls.drop(video.preview); } setVideo(null); };
   const movePhoto = (id: string, offset: number) => setPhotos(current => { const from = current.findIndex(photo => photo.id === id); const to = from + offset; if (from < 0 || to < 0 || to >= current.length) return current; const next = [...current]; const [item] = next.splice(from, 1); if (!item) return current; next.splice(to, 0, item); return next; });
   const dropPhoto = (targetId: string) => { if (!draggedPhoto || draggedPhoto === targetId) return; setPhotos(current => { const from = current.findIndex(photo => photo.id === draggedPhoto); const to = current.findIndex(photo => photo.id === targetId); if (from < 0 || to < 0) return current; const next = [...current]; const [item] = next.splice(from, 1); if (!item) return current; next.splice(to, 0, item); return next; }); setDraggedPhoto(null); };
 
@@ -224,7 +230,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     /* 길이(30초) 검사는 여기서 하지 않는다: 긴 영상은 편집기에서 잘라 쓰는 것이 정상 흐름이고, 길이는 저장할 때 확인한다. 여기서는 영상을 읽을 수 있는지만 본다. */
     if (newVideo) readVideoDuration(newVideo.file).catch(err => {
       setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.');
-      URL.revokeObjectURL(newVideo.preview); objectUrls.current.delete(newVideo.preview);
+      previewUrls.drop(newVideo.preview);
       setVideo(cur => (cur?.preview === newVideo.preview ? null : cur)); setEditing(cur => (cur === newVideo.file ? null : cur));
     });
   };
@@ -281,6 +287,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
         if (e) throw new Error('저장하지 못했어요. 셀러 승인 상태를 확인해 주세요.');
       }
       releaseLeaveWarning();
+      discardDraft();
       onSaved();
     } catch (err) { if (uploaded.length) await removeMarketFiles(uploaded); setError(err instanceof Error ? err.message : '잠시 후 다시 시도해 주세요.'); }
     finally { setPending(false); setConvertPct(null); }
@@ -288,13 +295,14 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
 
   const photoPicker = useRef<HTMLInputElement>(null);
   const photoTotal = photos.length;
-  const [touched, setTouched] = useState(false);
+  const [touched, setTouched] = useSessionState(draftKey + 'touched', false);
   /* 파일은 항상 상품 주인(대리 셀러면 그 셀러)의 폴더에 저장한다. 그래야 피드가 사진·영상을 정상적으로 불러온다. */
   const folder = owner?.id ?? user.id;
-  const releaseLeaveWarning = useLeaveWarning(pending || touched || (!listing && (photos.length > 0 || video !== null || title.trim() !== '' || description.trim() !== '' || price !== '')));
+  const releaseLeaveWarning = useLeaveWarning(pending || touched || (!listing && (photos.length > 0 || video !== null || title.trim() !== '' || description.trim() !== '' || price !== '')), { keepOnNavigate: true });
+  const closeForm = () => { if (touched && !window.confirm(LEAVE_WARNING_MESSAGE)) return; releaseLeaveWarning(); discardDraft(); onClose(); };
   return <div className="form-panel mt-4 rounded-lg border border-border p-4" onChange={() => setTouched(true)}>
-    {editing && <VideoEditor file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags }) => { if (video?.file) { URL.revokeObjectURL(video.preview); objectUrls.current.delete(video.preview); } setVideo({ file, preview: createPreview(file) }); setVideoTags(tags); setEditing(null); }} />}
-    <div className="flex items-center justify-between"><h3 className="font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{listing ? tx('상품 수정') : tx('새 상품 등록')}</span></h3><Button size="icon" variant="ghost" aria-label={tx("닫기")} onClick={onClose}><X /></Button></div>
+    {editing && <VideoEditor file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags }) => { if (video?.file) { previewUrls.drop(video.preview); } setVideo({ file, preview: createPreview(file) }); setVideoTags(tags); setEditing(null); }} />}
+    <div className="flex items-center justify-between"><h3 className="font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{listing ? tx('상품 수정') : tx('새 상품 등록')}</span></h3><Button size="icon" variant="ghost" aria-label={tx("닫기")} onClick={closeForm}><X /></Button></div>
     <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-destructive bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("영상과 사진 한 번에 선택")}</span></span><span className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx('영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}', { 0: photoTotal, 1: MAX_LISTING_PHOTOS })}</span></span>
       <input className="sr-only" type="file" accept="image/*,video/*" multiple aria-label={tx("상품 영상과 사진 한 번에 선택")} onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} /></label>
     {(video || photos.length > 0) && <div className="mt-3 space-y-3" aria-label={tx("선택한 상품 미디어")}>
