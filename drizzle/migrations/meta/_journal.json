@@ -274,6 +274,13 @@
       "when": 1792241342302,
       "tag": "0038_mux_video",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1792242621178,
+      "tag": "0039_mux_migrate_existing",
+      "breakpoints": true
     }
   ]
 }

@@ -307,7 +307,9 @@ export type Database = {
           asset_id: string | null
           created_at: string
           playback_id: string | null
+          post_id: string | null
           ref: string
+          source_path: string | null
           status: string
           updated_at: string
           upload_id: string
@@ -317,7 +319,9 @@ export type Database = {
           asset_id?: string | null
           created_at?: string
           playback_id?: string | null
+          post_id?: string | null
           ref: string
+          source_path?: string | null
           status?: string
           updated_at?: string
           upload_id: string
@@ -327,7 +331,9 @@ export type Database = {
           asset_id?: string | null
           created_at?: string
           playback_id?: string | null
+          post_id?: string | null
           ref?: string
+          source_path?: string | null
           status?: string
           updated_at?: string
           upload_id?: string
