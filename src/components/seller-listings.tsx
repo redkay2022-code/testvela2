@@ -173,6 +173,8 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const [description, setDescription] = useSessionState(draftKey + 'description', listing?.description ?? '');
   const [category, setCategory] = useSessionState(draftKey + 'category', listing?.category === '악세사리' ? '악세사리' : '시계');
   const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '') ? String(normalizeMenuCategory(String(listing?.specs?.['menuCategory']))) : '');
+  /* Story posts only have a title and text: no price, dispatch time, specification or factory fields. */
+  const story = menuCategory === '스토리';
   const [price, setPrice] = useSessionState(draftKey + 'price', listing?.price != null ? String(listing.price) : '');
   const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
   const [dispatch, setDispatch] = useSessionState<string>(draftKey + 'dispatch', initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
@@ -240,11 +242,11 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const save = async (status: 'draft' | 'published') => {
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
     if (!postCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
-    const p = Number(price); if (!Number.isFinite(p) || p < 1) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
+    const p = Number(price); if (!story && (!Number.isFinite(p) || p < 1)) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
     if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
     if (video?.file) { try { await validateListingFiles([video.file]); } catch (err) { setError(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; } }
-    if (sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
-    if (sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
+    if (!story && sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
+    if (!story && sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
     setError(''); setPending(true);
     const uploaded: string[] = [];
     try {
@@ -272,13 +274,12 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       let card: string | null = null;
       if (firstPhoto?.path && firstPhoto.path === listing?.media_urls[0]) card = prevCard;
       else if (firstPhoto?.file) { card = await uploadCardImage(firstPhoto.file, folder); if (card) uploaded.push(card); }
-      const cleanSpecs = cleanWatchSpecs(specs);
-      cleanSpecs['sourceType'] = sourceType;
+      const cleanSpecs = story ? {} as Record<string, string> : cleanWatchSpecs(specs);
+      if (!story) cleanSpecs['sourceType'] = sourceType;
       cleanSpecs['menuCategory'] = menuCategory;
       if (card) cleanSpecs['cardImage'] = card;
-      if (sourceType === 'custom') delete cleanSpecs['factory'];
-      else cleanSpecs['factory'] = factory.trim().slice(0, 80);
-      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: Math.round(p), box_price: boxPriceOrDefault(boxPrice), dispatch_time: dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
+      if (!story) { if (sourceType === 'custom') delete cleanSpecs['factory']; else cleanSpecs['factory'] = factory.trim().slice(0, 80); }
+      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
         const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await (owner ? removeMarketMedia({ data: { paths: removed } }).catch(() => undefined) : supabase.storage.from('market-media').remove(removed));
@@ -320,10 +321,11 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     </div>}
     <input ref={photoPicker} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label={tx("추가 사진 선택")} onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} />
     <PostCategoryField value={menuCategory} onChange={setMenuCategory} />
-    <label htmlFor="l-title" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품명")}</span></label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
-    <label htmlFor="l-cat" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("카테고리")}</span></label><select id="l-cat" className="form-input" value={category} onChange={e => setCategory(e.target.value)}><option value="시계"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("시계")}</span></option><option value="악세사리"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("악세사리")}</span></option></select>
-    <WatchSpecificationsForm idPrefix="l-spec" value={specs} onChange={setSpecs} afterWater={<SourceFactorySelect id="l-source" sourceType={sourceType} factory={factory} onChange={(type, next) => { setSourceType(type); setFactory(next); }} />} />
-    <label htmlFor="l-desc" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품 설명")}</span></label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
+    <label htmlFor="l-title" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{story ? tx("제목") : tx("상품명")}</span></label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
+    {!story && <><label htmlFor="l-cat" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("카테고리")}</span></label><select id="l-cat" className="form-input" value={category} onChange={e => setCategory(e.target.value)}><option value="시계"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("시계")}</span></option><option value="악세사리"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("악세사리")}</span></option></select>
+    <WatchSpecificationsForm idPrefix="l-spec" value={specs} onChange={setSpecs} afterWater={<SourceFactorySelect id="l-source" sourceType={sourceType} factory={factory} onChange={(type, next) => { setSourceType(type); setFactory(next); }} />} /></>}
+    <label htmlFor="l-desc" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{story ? tx("내용") : tx("상품 설명")}</span></label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
+    {!story && <>
     <div className="grid grid-cols-2 gap-x-3">
       <div><label htmlFor="l-price" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 가격 (USD $)")}</span></label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>
       <fieldset className="sm:col-span-2"><legend className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("예상 발송 시간")}</span></legend><DispatchSelect dispatch={dispatch} customDispatch={customDispatch} onDispatch={setDispatch} onCustom={setCustomDispatch} /></fieldset><div><label htmlFor="l-box" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("풀셋 박스 (USD $, 선택)")}</span></label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
@@ -338,6 +340,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
         </div>
       </div>
     </div>
+    </>}
     {error && <p role="alert" className="mt-3 text-sm text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(error)}</span></p>}
     <div className="mt-4 grid grid-cols-2 gap-2"><Button variant="secondary" disabled={pending} onClick={() => void save('draft')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("임시 저장")}</span></Button><Button disabled={pending} onClick={() => void save('published')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{pending ? (convertPct !== null ? `영상 최적화 중… ${convertPct}%` : left > 0 ? `저장 중… ${left}초` : '마무리 중…') : tx('게시하기')}</span></Button></div>
   </div>;
