@@ -14,6 +14,7 @@ import { AdminReset } from './admin-reset';
 import { AdminProxy, hasProxyEditInProgress, PROXY_TAB_LABEL, PROXY_TAB_NOTE } from './admin-proxy';
 import { AdminReviews } from './admin-reviews';
 import { AdminCatalog, type CatalogSection } from './admin-catalog';
+import { AdminMuxMigration } from './admin-mux-migration';
 import type { LuxuryPost } from '@/lib/luxury-market';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +40,7 @@ export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
   if (top === 'reviews') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>리뷰 관리</h1><p>보류 · 삭제</p></div></div>{nav}<AdminReviews/></div>;
   if (top === 'reset') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>데이터 초기화</h1><p>테스트 회원 · 게시물 삭제</p></div></div>{nav}<AdminReset/></div>;
   if (top === 'loyalty') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>Loyalty / Points</h1><p>VELA Point 발행·사용·예산 관리</p></div></div>{nav}<AdminLoyalty/></div>;
-  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}{top === 'dashboard' && <><div lang="ko" data-no-translate><TrafficSummary/></div><div className="section-heading"><h2>판매자 신청</h2><span>대기 중인 신청</span></div><AdminApplications/></>}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
+  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}{top === 'dashboard' && <><AdminMuxMigration/><div lang="ko" data-no-translate><TrafficSummary/></div><div className="section-heading"><h2>판매자 신청</h2><span>대기 중인 신청</span></div><AdminApplications/></>}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
   return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1></div></div>{nav}<LegacyAdmin posts={posts}/></div>;
 }
 

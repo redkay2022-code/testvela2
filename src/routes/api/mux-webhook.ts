@@ -44,13 +44,22 @@ async function handle(request: Request): Promise<Response> {
   if (event.type === 'video.asset.ready') {
     const playbackId = event.data?.playback_ids?.find(p => p.policy === 'public')?.id;
     if (!playbackId) return new Response('no public playback id', { status: 200 });
-    const { error: upErr } = await supabaseAdmin.from('mux_uploads')
+    const { data: upload, error: upErr } = await supabaseAdmin.from('mux_uploads')
       .update({ asset_id: event.data?.id ?? null, playback_id: playbackId, status: 'ready', updated_at: now })
-      .eq('ref', ref);
+      .eq('ref', ref)
+      .select('post_id,source_path')
+      .maybeSingle();
     if (upErr) { console.error('mux webhook: mux_uploads update failed', upErr.message); return new Response('retry', { status: 500 }); }
+    const stream = muxStreamUrl(playbackId);
     // Posts saved before the video was ready still hold the placeholder: swap it now.
-    const { error: postErr } = await supabaseAdmin.from('posts').update({ video_url: muxStreamUrl(playbackId) }).eq('video_url', muxPending(ref));
+    const { error: postErr } = await supabaseAdmin.from('posts').update({ video_url: stream }).eq('video_url', muxPending(ref));
     if (postErr) { console.error('mux webhook: posts update failed', postErr.message); return new Response('retry', { status: 500 }); }
+    // An old video moved to Mux by the admin migration: swap it only if the post still uses that same old file
+    // (if the seller replaced the video meanwhile, the newer video is kept).
+    if (upload?.post_id && upload.source_path) {
+      const { error: migErr } = await supabaseAdmin.from('posts').update({ video_url: stream }).eq('id', upload.post_id).eq('video_url', upload.source_path);
+      if (migErr) { console.error('mux webhook: migrated post update failed', migErr.message); return new Response('retry', { status: 500 }); }
+    }
   } else if (event.type === 'video.asset.errored') {
     await supabaseAdmin.from('mux_uploads').update({ asset_id: event.data?.id ?? null, status: 'errored', updated_at: now }).eq('ref', ref);
   }
