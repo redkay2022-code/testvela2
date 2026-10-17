@@ -25,7 +25,7 @@ export const muxStreamUrl = (playbackId: string) => `https://stream.mux.com/${pl
 export const muxPending = (ref: string) => `${MUX_PENDING_PREFIX}${ref}`;
 
 /** Poster image served by Mux's image CDN (stable URL, cached by browsers and CDNs, no signing). */
-export const muxThumbnailUrl = (streamUrl: string, width = 640): string => {
+export const muxThumbnailUrl = (streamUrl: string, width = 960): string => {
   const id = streamUrl.slice('https://stream.mux.com/'.length).replace(/\.m3u8$/, '');
   return `https://image.mux.com/${id}/thumbnail.webp?width=${width}&time=1`;
 };

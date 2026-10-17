@@ -14,10 +14,17 @@
  * hls.js is bundled with the site (npm package) but split into its own chunk, so it is downloaded only when the first
  * .m3u8 is about to play (warmHls() starts that download early). No third-party CDN is involved.
  */
-type HlsInstance = { loadSource(url: string): void; attachMedia(v: HTMLVideoElement): void; detachMedia(): void; stopLoad(): void; startLoad(): void; recoverMediaError(): void; destroy(): void; on(event: string, cb: (...a: unknown[]) => void): void };
+type HlsInstance = { bandwidthEstimate?: number; loadSource(url: string): void; attachMedia(v: HTMLVideoElement): void; detachMedia(): void; stopLoad(): void; startLoad(): void; recoverMediaError(): void; destroy(): void; on(event: string, cb: (...a: unknown[]) => void): void };
 type HlsStatic = { new (config?: Record<string, unknown>): HlsInstance; isSupported(): boolean; Events: Record<string, string> };
 
 let loading: Promise<HlsStatic | null> | null = null;
+
+/**
+ * Last measured network speed (bits/s), shared by every video on the page. The first video measures the connection;
+ * every following Short starts directly at the quality that connection can carry instead of starting blurry again.
+ */
+let lastBandwidth = 0;
+const START_ESTIMATE = 3_000_000;
 
 export const isHlsUrl = (url: string | null | undefined) => Boolean(url && /\.m3u8(\?|#|$)/i.test(url));
 
@@ -52,7 +59,7 @@ export function attachHls(video: HTMLVideoElement, url: string, handlers: HlsHan
   let hls: HlsInstance | null = null;
   const release = () => {
     disposed = true;
-    if (hls) { try { hls.stopLoad(); hls.detachMedia(); hls.destroy(); } catch { /* already gone */ } hls = null; }
+    if (hls) { const bw = hls.bandwidthEstimate; if (bw && Number.isFinite(bw) && bw > 0) lastBandwidth = bw; try { hls.stopLoad(); hls.detachMedia(); hls.destroy(); } catch { /* already gone */ } hls = null; }
     video.pause(); video.removeAttribute('src'); video.load();
   };
   // Safari / iOS: native HLS, no library needed.
@@ -65,13 +72,16 @@ export function attachHls(video: HTMLVideoElement, url: string, handlers: HlsHan
       handlers.onFatal?.(); return;
     }
     const instance = new Hls({
-      // --- Fast start: keep the pre-buffer small. Playback begins as soon as the first segment is ready. ---
-      maxBufferLength: 6, maxMaxBufferLength: 12, maxBufferSize: 12 * 1000 * 1000, backBufferLength: 0, maxBufferHole: 0.5,
+      // --- Buffer enough ahead that the quality logic has time to step UP during a short clip. ---
+      maxBufferLength: 12, maxMaxBufferLength: 30, maxBufferSize: 12 * 1000 * 1000, backBufferLength: 0, maxBufferHole: 0.5,
       startFragPrefetch: false,
       progressive: false, lowLatencyMode: false, enableWorker: true,
-      // --- Adaptive bitrate. Start on the lowest variant, go up slowly, drop fast when bandwidth falls. ---
-      startLevel: 0, autoStartLoad: true, capLevelToPlayerSize: true, capLevelOnFPSDrop: true,
-      abrEwmaDefaultEstimate: 1_500_000, abrBandWidthFactor: 0.8, abrBandWidthUpFactor: 0.6, abrEwmaFastVoD: 2, abrEwmaSlowVoD: 6,
+      // --- Adaptive bitrate (quality). ---
+      // startLevel -1 = pick the starting quality from the measured speed (the first ever video measures it quickly on a
+      // small segment). Quality then rises as soon as the connection allows it, and still drops quickly when it slows.
+      // capLevelToPlayerSize keeps the quality matched to the screen size (including retina / high-DPI phones).
+      startLevel: -1, testBandwidth: true, autoStartLoad: true, capLevelToPlayerSize: true, capLevelOnFPSDrop: true,
+      abrEwmaDefaultEstimate: lastBandwidth || START_ESTIMATE, abrBandWidthFactor: 0.9, abrBandWidthUpFactor: 0.85, abrEwmaFastVoD: 3, abrEwmaSlowVoD: 9,
       // --- Slow or distant networks: wait longer and retry more before calling a request failed. ---
       manifestLoadingTimeOut: 15000, manifestLoadingMaxRetry: 4, manifestLoadingRetryDelay: 500,
       levelLoadingTimeOut: 15000, levelLoadingMaxRetry: 4, levelLoadingRetryDelay: 500,
@@ -95,7 +105,7 @@ export function attachHls(video: HTMLVideoElement, url: string, handlers: HlsHan
       }
     });
     // A healthy segment resets the counters, so later hiccups get the full number of retries again.
-    instance.on(ev['FRAG_LOADED'] ?? 'hlsFragLoaded', () => { netRetries = 0; });
+    instance.on(ev['FRAG_LOADED'] ?? 'hlsFragLoaded', () => { netRetries = 0; const bw = instance.bandwidthEstimate; if (bw && Number.isFinite(bw) && bw > 0) lastBandwidth = bw; });
     instance.attachMedia(video);
     instance.loadSource(url);
   });

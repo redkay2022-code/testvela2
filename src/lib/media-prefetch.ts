@@ -23,7 +23,7 @@ export function prefetchShort(video: string | null | undefined, fallbackImage: s
     const net = (navigator as Navigator & { connection?: NetInfo }).connection;
     if (net?.saveData || net?.effectiveType === 'slow-2g' || net?.effectiveType === '2g') return;
     warmHls();
-    prefetchImage(muxThumbnailUrl(video, 720));
+    prefetchImage(muxThumbnailUrl(video, 1080));
     if (started.has(video)) return;
     started.add(video);
     void fetch(video, { mode: 'cors', credentials: 'omit' }).catch(() => started.delete(video));
