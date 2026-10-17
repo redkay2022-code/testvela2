@@ -66,8 +66,11 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
  useEffect(()=>{if(active||dist!==1){setWarm(false);return;}/* Data-saver mode: no background downloads. The next video (swipe direction) starts at once, the previous one a little later. */const saver=(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData;if(saver){setWarm(false);return;}const t=window.setTimeout(()=>setWarm(true),ahead?60:700);return()=>window.clearTimeout(t);},[active,dist,ahead]);
  const [failed,setFailed]=useState(false);const videoSrc=stableMediaSrc(post.video,failed);const [blocked,setBlocked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
  const hlsMode=isHlsUrl(videoSrc);useEffect(()=>{if(hlsMode&&dist<=1)warmHls();},[hlsMode,dist]);const [buf,setBuf]=useState<{wait:boolean;pct:number}>({wait:false,pct:0});
- /* HLS: only the visible video owns a stream. When it scrolls away the stream is destroyed (no background download). */
- useEffect(()=>{const v=video.current;if(!hlsMode||!active||!v||!videoSrc)return;const stop=attachHls(v,videoSrc,{onFatal:()=>setFailed(true)});return stop;},[hlsMode,active,videoSrc]);
+ /* HLS: the visible video AND the next one (swipe direction) own a stream. The next one only buffers its first few seconds
+    (lowest quality first), so a swipe starts playing at once. The same stream is kept when it becomes the visible video;
+    anything further away is destroyed (no background download). Data-saver mode skips the warm-up (warm stays false). */
+ const streamOn=active||(dist===1&&ahead&&warm);
+ useEffect(()=>{const v=video.current;if(!hlsMode||!streamOn||!v||!videoSrc)return;const stop=attachHls(v,videoSrc,{onFatal:()=>setFailed(true)});return stop;},[hlsMode,streamOn,videoSrc]);
  /* Buffer indicator: a thin bar fills while the video waits for data. */
  useEffect(()=>{const v=video.current;if(!v||!active)return;const wait=()=>setBuf(b=>b.wait?b:{...b,wait:true});const done=()=>setBuf(b=>b.wait?{...b,wait:false}:b);const prog=()=>{const n=v.buffered.length;const end=n?v.buffered.end(n-1):0;const pct=v.duration?Math.min(100,Math.round(((end-v.currentTime)/Math.max(3,Math.min(v.duration,8)))*100)):0;setBuf(b=>Math.abs(b.pct-pct)>=5?{...b,pct}:b);};const on:[string,()=>void][]=[['waiting',wait],['stalled',wait],['playing',done],['canplay',done],['progress',prog]];on.forEach(([e,f])=>v.addEventListener(e,f));return()=>on.forEach(([e,f])=>v.removeEventListener(e,f));},[active,videoSrc]);
  const bgm=useRef<HTMLAudioElement>(null),src=post.source as {music_audio_url?:string|null;music_title?:string|null;music_artist?:string|null}|undefined;
