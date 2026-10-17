@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -34,9 +34,9 @@ export async function validateLoungeFiles(files: File[]): Promise<void> {
   if (loungeTooLong(await readVideoDuration(video))) throw new Error(tx('라운지 영상은 5분 이내만 올릴 수 있어요.'));
 }
 
-type Props = { posts: LuxuryPost[]; user: User | null; isSeller: boolean; requestAuth: () => void; notify: (text: string) => void; role?: 'buyer' | 'seller' | 'admin' | undefined };
+type Props = { posts: LuxuryPost[]; user: User | null; isSeller: boolean; requestAuth: () => void; notify: (text: string) => void; role?: 'buyer' | 'seller' | 'admin' | undefined; children?: ReactNode };
 
-export function LoungeFeed({ posts, user, isSeller, requestAuth, notify, role }: Props) {
+export function LoungeFeed({ posts, user, isSeller, requestAuth, notify, role, children }: Props) {
   const [open, setOpen] = useState(false);
   const client = useQueryClient();
   return <section className="mt-4 grid gap-5" aria-label={tx('라운지')}>
@@ -46,7 +46,7 @@ export function LoungeFeed({ posts, user, isSeller, requestAuth, notify, role }:
     </div>
     {open && user && <LoungeUpload user={user} onClose={() => setOpen(false)} onDone={() => { setOpen(false); void client.invalidateQueries({ queryKey: ['posts'] }); notify(tx('라운지에 올렸습니다.')); }}/>}
     {posts.length === 0 && <div className="lux-empty"><Film/><h2><Tx>라운지 영상이 아직 없습니다.</Tx></h2><p><Tx>셀러가 영상을 올리면 이곳에 표시됩니다.</Tx></p></div>}
-    {posts.map(post => <LoungeCard key={post.id} post={post} user={user} requestAuth={requestAuth} notify={notify} role={role}/>)}
+    {children}
   </section>;
 }
 
