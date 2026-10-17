@@ -29,6 +29,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { AccountView } from './role-views';
 import { ProductDetailContent } from './product-detail-content';
 import { ShortsPlayer } from './shorts-player';
+import { LoungeFeed } from './lounge';
+import { isLoungePost } from '@/lib/lounge';
 import { BuyerBadge, SellerBadge, SellerRatings } from './reputation';
 import { usePostRatings, useSellerRatingMap, withLiveRatings } from '@/lib/studio-tier';
 import { SpecsTable } from './specs-table';
@@ -68,7 +70,7 @@ import { prefetchImage } from '@/lib/media-prefetch';
 
 type View=Mode|'store'|'seller'|'admin';
 export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{mode?:View;children?:React.ReactNode;shortsId?:string;postId?:string;help?:'escrow'|'support'|'privacy'}) {
- const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const all=withLiveRatings(luxuryPosts(data),ratingMap.data); const preview=useMarketPreview();
+ const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const allRaw=withLiveRatings(luxuryPosts(data),ratingMap.data),all=allRaw.filter(p=>!isLoungePost(p)),loungePosts=allRaw.filter(isLoungePost); const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const search=marketSearch.parse(location.search);
  const helpPath=help==='escrow'?'/escrow-guide':help==='support'?'/support':help==='privacy'?'/privacy':undefined;
  const navigate=useNavigate(),router=useRouter(); const base=location.pathname==='/seller-store'?'/seller-store':location.pathname==='/seller-messages'?'/seller-messages':mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
@@ -125,7 +127,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const guestSignup=()=>update({auth:true,authSignup:undefined});
  const guardGuest=(event:React.MouseEvent)=>{if(!guest)return;event.preventDefault();guestSignup();};
  const swipeStart=useRef<{x:number;y:number;t:number}|null>(null);
- const swipeTabs=['following','discover','reviews'] as const;
+ const swipeTabs=['following','discover','lounge','reviews'] as const;
  const swipeBusy=Boolean(shortsId||postId||search.auth||search.menu||search.searchOpen||search.categoriesOpen||search.notice||search.panel||search.shortSheet);
  const onSwipeStart=(e:React.TouchEvent)=>{const t=e.touches[0];if(!t){swipeStart.current=null;return;}const el=e.target as HTMLElement;swipeStart.current=!cleanHome||swipeBusy||e.touches.length!==1||t.clientX<24||t.clientX>window.innerWidth-24||el.closest('input,textarea,select,video,[data-no-swipe],.lux-categories,.red-home-subtabs')?null:{x:t.clientX,y:t.clientY,t:Date.now()};};
  const onSwipeEnd=(e:React.TouchEvent)=>{const s0=swipeStart.current;swipeStart.current=null;if(!s0)return;const t=e.changedTouches[0];if(!t)return;const dx=t.clientX-s0.x,dy=t.clientY-s0.y;if(Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-s0.t>900)return;const cur=swipeTabs.indexOf((search.tab||'discover') as typeof swipeTabs[number]);const next=swipeTabs[cur+(dx>0?1:-1)];if(!next)return;if(guest){guestSignup();return;}document.documentElement.dataset["slide"]=dx>0?'right':'left';window.setTimeout(()=>{delete document.documentElement.dataset["slide"];},320);void navigate({to:'/',search:{role:search.role,feedCategory:search.feedCategory,tab:next},resetScroll:false});};
@@ -148,10 +150,10 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   <div className="lux-header-inner">
   <Button variant="ghost" size="icon" className="relative" aria-label={notifications.unread?`메뉴 열기 · 읽지 않은 알림 ${notifications.unread}개`:'메뉴 열기'} onClick={()=>{if(guest){guestSignup();return;}update({menu:true});}}><Menu/>{notifications.unread>0&&<span aria-hidden="true" className="absolute right-0 top-1 size-2 rounded-full bg-destructive"/>}</Button>
     <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>
-    <nav className="lux-header-tabs notranslate" translate="no" aria-label="Feed tabs">{[['following','팔로잉'],['discover','추천'],['reviews','리뷰']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,feedCategory:search.feedCategory,tab:tab as 'following'|'discover'|'reviews'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false} onClick={guardGuest}><Tx>{label}</Tx></Link></Button>)}</nav>
+    <nav className="lux-header-tabs notranslate" translate="no" aria-label="Feed tabs">{[['following','팔로잉'],['discover','추천'],['lounge','라운지'],['reviews','리뷰']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,feedCategory:search.feedCategory,tab:tab as 'following'|'discover'|'lounge'|'reviews'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false} onClick={guardGuest}><Tx>{label}</Tx></Link></Button>)}</nav>
    <CurrencySelect/><Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{if(guest){guestSignup();return;}searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button>
   </div>
-   {cleanHome&&<FeedCategoryPicker catalog={all} selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{if(guest){guestSignup();return;}categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
+   {cleanHome&&search.tab!=='lounge'&&<FeedCategoryPicker catalog={all} selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{if(guest){guestSignup();return;}categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
  </>
  </header>}
   <main className={`lux-shell ${cleanHome&&!backOnlyHeader?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`} onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
@@ -161,7 +163,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  <nav className="lux-categories notranslate" translate="no" aria-label="Categories">{luxuryCategories.map(category=><Button asChild key={category} variant="ghost" className={`lux-chip ${(search.category || 'All')===category?'active':''}`}><Link to={base} search={prev=>({...prev,category:category==='All'?undefined:category})} resetScroll={false} onClick={guardGuest}>{category}</Link></Button>)}<Button variant="ghost" size="icon" className="shrink-0" aria-label="Toggle newest first" aria-pressed={newest} onClick={()=>setNewest(p=>!p)}><SlidersHorizontal/></Button></nav>
  <div className="lux-feed-heading"><div><span className="lux-eyebrow">THE EDIT · OCTOBER 2026</span><h1>{search.q?`Results for “${search.q}”`:search.tab==='following'?'From your studios':mode==='market'?(search.collection==='accessories'?'액세서리 컬렉션':'시계 컬렉션'):'Exceptional finds.'}</h1></div><span className="curated-label"><span className="status-dot"/>Curated daily</span></div>
  </>}
- {help?<MarketHelp kind={help} user={user} requestAuth={()=>update({auth:true})}/>:cleanHome&&search.tab==='reviews'?<section className="mt-4 grid gap-4"><ReviewComposer requestAuth={()=>update({auth:true})}/><ReviewList role={search.role} posts={posts}/></section>:
+ {help?<MarketHelp kind={help} user={user} requestAuth={()=>update({auth:true})}/>:cleanHome&&search.tab==='lounge'?<LoungeFeed posts={loungePosts} user={user} isSeller={Boolean(account.data?.roles.includes('seller'))} requestAuth={()=>update({auth:true})} notify={setToast} role={search.role}/>:cleanHome&&search.tab==='reviews'?<section className="mt-4 grid gap-4"><ReviewComposer requestAuth={()=>update({auth:true})}/><ReviewList role={search.role} posts={posts}/></section>:
  mode==='me'?(user&&(!account.data||myPage==='/seller')?<div className="lux-empty">Loading…</div>:<AccountView posts={all} user={user} onPanel={panel=>update({panel})} requestAuth={signup=>update({auth:true,authSignup:signup||undefined})}/>):
  mode==='upload'?<><div className="sample-notice">Product publishing · Account sign-in required</div><UploadForm user={user} requestAuth={()=>update({auth:true})} onPosted={()=>{void queryClient.invalidateQueries({queryKey:['posts']});void router.invalidate();void navigate({to:'/',search:{role:search.role}});}}/></>:
   mode==='store'?search.seller?<><SellerStoreHeader post={storePosts[0]} count={storePosts.length} search={search} notify={setToast}/>{search.storeTab==='reviews'?<><h2 className="mt-6 text-base font-semibold">고객 리뷰</h2><ReviewList posts={posts} sellerId={search.seller} role={search.role}/></>:<Feed posts={posts} base={base} search={search} onSelectProduct={selectProduct}/>}</>:<><SellerDirectory posts={all.filter(p=>!preview.hidden.includes(p.id))} category={search.storeCategory} role={search.role}/></>:
