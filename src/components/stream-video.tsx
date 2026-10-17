@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, type ComponentPropsWithoutRef, type Ref } from 'react';
-import { attachHls, isHlsUrl } from '@/lib/hls-loader';
+import { attachHls, isHlsUrl, warmHls } from '@/lib/hls-loader';
 
 type Props = Omit<ComponentPropsWithoutRef<'video'>, 'src'> & { src: string; ref?: Ref<HTMLVideoElement> };
 
@@ -15,6 +15,7 @@ export function StreamVideo({ src, ref, ...rest }: Props) {
     if (typeof ref === 'function') ref(el);
     else if (ref) (ref as { current: HTMLVideoElement | null }).current = el;
   }, [ref]);
+  useEffect(() => { if (hls) warmHls(); }, [hls]);
   useEffect(() => {
     const v = own.current;
     if (!hls || !v) return;

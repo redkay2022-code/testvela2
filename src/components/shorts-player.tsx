@@ -21,7 +21,7 @@ import { ShortsGallery } from './shorts-gallery';
 import { marketSearch } from '@/lib/market';
 import { getComments, getSellerAvatar } from '@/lib/market.functions';
 import { stableMediaSrc } from '@/lib/media-refresh';
-import { attachHls, isHlsUrl } from '@/lib/hls-loader';
+import { attachHls, isHlsUrl, warmHls } from '@/lib/hls-loader';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { useEngagement } from '@/lib/use-engagement';
 import { isHybridPost } from '@/lib/post-media';
@@ -65,7 +65,7 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
  const [warm,setWarm]=useState(false);
  useEffect(()=>{if(active||dist!==1){setWarm(false);return;}/* Data-saver mode: no background downloads. The next video (swipe direction) starts at once, the previous one a little later. */const saver=(navigator as Navigator&{connection?:{saveData?:boolean}}).connection?.saveData;if(saver){setWarm(false);return;}const t=window.setTimeout(()=>setWarm(true),ahead?60:700);return()=>window.clearTimeout(t);},[active,dist,ahead]);
  const [failed,setFailed]=useState(false);const videoSrc=stableMediaSrc(post.video,failed);const [blocked,setBlocked]=useState(false),[sound,setSound]=useState(shortsSound),[ready,setReady]=useState(false);
- const hlsMode=isHlsUrl(videoSrc);const [buf,setBuf]=useState<{wait:boolean;pct:number}>({wait:false,pct:0});
+ const hlsMode=isHlsUrl(videoSrc);useEffect(()=>{if(hlsMode&&dist<=1)warmHls();},[hlsMode,dist]);const [buf,setBuf]=useState<{wait:boolean;pct:number}>({wait:false,pct:0});
  /* HLS: only the visible video owns a stream. When it scrolls away the stream is destroyed (no background download). */
  useEffect(()=>{const v=video.current;if(!hlsMode||!active||!v||!videoSrc)return;const stop=attachHls(v,videoSrc,{onFatal:()=>setFailed(true)});return stop;},[hlsMode,active,videoSrc]);
  /* Buffer indicator: a thin bar fills while the video waits for data. */
