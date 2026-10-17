@@ -14,11 +14,11 @@ import { getSellerAvatar } from '@/lib/market.functions';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { type LuxuryPost } from '@/lib/luxury-market';
 import { isListingPhoto, isListingVideo, readVideoDuration } from '@/lib/listing-media';
-import { faststartMp4 } from '@/lib/mp4-faststart';
-import { putMarketMedia, removeMarketFiles } from '@/lib/market-upload';
+import { uploadListingVideo } from '@/lib/video-upload';
+import { StreamVideo } from './stream-video';
+import { removeMarketFiles } from '@/lib/market-upload';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { validatePostTitle } from '@/lib/post-title';
-import { LONG_CACHE } from '@/lib/image-compress';
 import { activeLang } from '@/lib/i18n';
 import { tx } from '@/lib/dom-translate';
 import { useLeaveWarning } from '@/lib/leave-warning';
@@ -75,7 +75,7 @@ function LoungeCard({ post, user, requestAuth, notify, role }: { post: LuxuryPos
       <Button variant="goldOutline" size="sm" aria-pressed={following} onClick={() => { if (!user) { requestAuth(); return; } preview.toggleSeller(identity); }}>{following ? <Check size={13}/> : <Plus size={13}/>} <Tx>{following ? '팔로잉' : '팔로우'}</Tx></Button>
       <Button asChild variant="gold" size="sm"><Link to="/store" search={{ role, seller: identity, storeTab: 'products' }} className="notranslate" translate="no"><Tx>셀러 스토어 들어가기</Tx></Link></Button>
     </header>
-    {post.video && <video className="aspect-video max-h-[75vh] w-full bg-black" data-lounge src={post.video} poster={post.images[0]} controls playsInline preload="none" onPlay={e => { document.querySelectorAll<HTMLVideoElement>('video[data-lounge]').forEach(v => { if (v !== e.currentTarget) v.pause(); }); }}/>}
+    {post.video && <StreamVideo className="aspect-video max-h-[75vh] w-full bg-black" data-lounge src={post.video} poster={post.images[0]} controls playsInline preload="none" onPlay={e => { document.querySelectorAll<HTMLVideoElement>('video[data-lounge]').forEach(v => { if (v !== e.currentTarget) v.pause(); }); }}/>}
     <div className="p-4">
       <h2 className="notranslate break-words text-base font-semibold" translate="no" data-i18n-skip>{post.sample ? post.title : tr.title}</h2>
       <p className="notranslate mt-2 whitespace-pre-line break-words text-sm leading-7 text-muted-foreground" translate="no" data-i18n-skip>{post.sample ? post.description : tr.description}</p>
@@ -110,13 +110,11 @@ function LoungeUpload({ user, onClose, onDone }: { user: User; onClose: () => vo
     setError(''); setPending(true);
     const uploaded: string[] = [];
     try {
-      const ready = await faststartMp4(file).catch(() => file);
-      const ext = ready.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4';
-      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-      const { error: upError } = await putMarketMedia(path, ready, { cacheControl: LONG_CACHE });
-      if (upError) throw new Error(tx('영상을 올리지 못했어요. 다시 시도해 주세요.'));
-      uploaded.push(path);
-      const thumb = await uploadVideoThumbnail(ready, user.id);
+      // Mux (HLS streaming) when configured; otherwise storage upload with the MP4 index moved to the front.
+      const up = await uploadListingVideo(file, user.id, undefined, { compress: false });
+      if (up.storagePath) uploaded.push(up.storagePath);
+      const path = up.videoUrl;
+      const thumb = await uploadVideoThumbnail(up.file, user.id);
       if (thumb) uploaded.push(thumb);
       const nickname = String((await supabase.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()).data?.nickname || 'vela member').slice(0, 40);
       const { error: saveError } = await supabase.from('posts').insert({ user_id: user.id, title: title.trim(), description: body.trim(), category: LOUNGE_CATEGORY, source_lang: activeLang(), creator: nickname, image_key: 'uploaded', media_urls: [], video_url: path, thumbnail_url: thumb, price: null, box_price: null, dispatch_time: null, specs: { lounge: true }, video_tags: [] });

@@ -3,7 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadCardImage } from '@/lib/card-image';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
-import { compressVideoForWeb } from '@/lib/video-compress';
+import { uploadListingVideo } from '@/lib/video-upload';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { readVideoDuration, MAX_VIDEO_SECONDS } from '@/lib/listing-media';
 import { activeLang } from '@/lib/i18n';
@@ -137,11 +137,14 @@ async function uploadOne(item: BulkItem, publish: boolean) {
     setItemState(item.id, { status: 'working', pct: 0, step: item.video ? '영상 확인' : '사진 확인', error: '' });
     // 영상 상품: 길이를 확인하고 변환한다. 사진만 있는 상품은 영상 단계를 모두 건너뛴다.
     let video: File | null = null;
+    let videoUrl: string | null = null;
     if (item.video) {
       const seconds = await readVideoDuration(item.video).catch(() => 0);
       if (!seconds || seconds > MAX_VIDEO_SECONDS + 0.05) throw new Error(`영상 길이는 최대 ${MAX_VIDEO_SECONDS}초까지 가능해요.`);
-      setItemState(item.id, { step: '영상 변환' });
-      video = await compressVideoForWeb(item.video, r => setItemState(item.id, { pct: Math.round(r * 100) }));
+      setItemState(item.id, { step: '영상 업로드' });
+      const up = await uploadListingVideo(item.video, userId, r => setItemState(item.id, { pct: Math.round(r * 100) }));
+      if (up.storagePath) uploaded.push(up.storagePath);
+      video = up.file; videoUrl = up.videoUrl;
     }
     setItemState(item.id, { pct: 100, step: '업로드' });
     const put = async (file: File) => {
@@ -151,7 +154,7 @@ async function uploadOne(item: BulkItem, publish: boolean) {
       if (error) throw new Error('파일을 올리지 못했어요. 다시 시도해 주세요.');
       uploaded.push(path); return path;
     };
-    const videoPath = video ? await put(video) : null;
+    const videoPath = videoUrl;
     // 사진은 번호 순서(-1, -2 … -10)를 지킨다. 사진만 있는 상품은 첫 사진이 대표 이미지다.
     const photoPaths: string[] = [];
     for (const photo of item.photos) photoPaths.push(await put(await compressImage(photo)));

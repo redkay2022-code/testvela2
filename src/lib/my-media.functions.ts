@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
+import { isExternalVideo, isMuxStreamUrl } from './mux';
 
 /**
  * 셀러가 자기 상품의 사진·영상 미리보기 주소를 받는 함수.
@@ -23,7 +24,7 @@ export const signMyMedia = createServerFn({ method: 'POST' })
     const list = (rows ?? []) as unknown as Row[];
     const card = (r: Row) => { const c = r.specs?.['cardImage']; return typeof c === 'string' && c && !/^https?:\/\//.test(c) ? c : ''; };
     const pick = (r: Row) => card(r) || r.media_urls?.[0] || r.thumbnail_url || '';
-    const wanted = data.full ? list.flatMap(r => [...(r.media_urls ?? []), r.video_url ?? '']) : list.map(pick);
+    const wanted = data.full ? list.flatMap(r => [...(r.media_urls ?? []), isExternalVideo(r.video_url) ? '' : r.video_url ?? '']) : list.map(pick);
     const paths = [...new Set(wanted.filter(Boolean))];
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const urls = new Map<string, string>();
@@ -36,6 +37,6 @@ export const signMyMedia = createServerFn({ method: 'POST' })
     return Object.fromEntries(list.map(r => [r.id, {
       thumb: urls.get(pick(r)) ?? '',
       media: (r.media_urls ?? []).map(p => urls.get(p) ?? ''),
-      video: r.video_url ? urls.get(r.video_url) ?? '' : '',
+      video: isMuxStreamUrl(r.video_url) ? r.video_url : r.video_url ? urls.get(r.video_url) ?? '' : '',
     }]));
   });
