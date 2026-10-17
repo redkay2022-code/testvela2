@@ -35,7 +35,8 @@ export const postCategories:readonly (readonly [string,string])[]=(categoryGroup
 export const postCategoryLabels:readonly string[]=postCategories.map(item=>item[1]);
 /** Lounge is a menu category of the upload forms only (sellers and admins): its videos are kept out of the product feed. */
 export const LOUNGE_MENU_LABEL='라운지';
-export const uploadCategoryLabels:readonly string[]=[...postCategoryLabels,LOUNGE_MENU_LABEL];
+/** Upload dropdown order: 라운지 right after 뉴스, 파츠 right after 시계. */
+export const uploadCategoryLabels:readonly string[]=(()=>{const out:string[]=postCategoryLabels.filter(l=>l!=='파츠');const news=out.indexOf('뉴스'),watch=out.indexOf('시계');out.splice(watch<0?out.length:watch+1,0,'파츠');out.splice(news<0?0:news+1,0,LOUNGE_MENU_LABEL);return out;})();
 const baseCategoryLabel=(id:string)=>id.startsWith('b:')?id.slice(2):categoryGroups.flatMap(group=>group.items).find(item=>item[0]===id)?.[1] ?? id;
 /** Feed ids are a category ("watches"), a brand ("rolex") or both joined with "~" ("watches~rolex" = Rolex within 시계). */
 export const splitFeedId=(id:string|undefined):{category:string;brand:string}=>{const i=(id ?? '').indexOf('~');return i<0?{category:id ?? '',brand:''}:{category:id!.slice(0,i),brand:id!.slice(i+1)};};

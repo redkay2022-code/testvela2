@@ -11,6 +11,7 @@ import { ArrowLeft, Check, ChevronRight, Heart, MessageCircle, Play, Plus, Searc
 let shortsSound=false;
 import { Link, useRouterState } from '@tanstack/react-router';
 import type { User } from '@supabase/supabase-js';
+import { isLoungePost } from '@/lib/lounge';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { ProductComments } from './product-comments';
@@ -106,7 +107,7 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
   <div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
  <div className="shorts-seller-row">
   <ShortSellerIdentity post={post}/>
-  <Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>
+  {!isLoungePost(post)&&<Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>}
  </div>
  </div>
  <footer className="shorts-bottom-bar">
