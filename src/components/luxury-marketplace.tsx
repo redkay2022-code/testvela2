@@ -51,7 +51,8 @@ import { InsuranceBreakdown, InsuranceTeaser } from './insurance';
 import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
 import { ReviewComposer, ReviewList } from './customer-reviews';
-import { mixSellers, rankRecommended } from '@/lib/feed-ranking';
+import { mixSellers } from '@/lib/feed-ranking';
+import { randomFeed } from '@/lib/random-feed';
 import { createFeedMemo } from '@/lib/personal-feed';
 import { useFeedSignals } from '@/lib/use-feed-signals';
 import { filterFeed, sortFeed, postFactory, type FeedFilter } from '@/lib/feed-filters';
@@ -107,7 +108,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
   const detailOpen=Boolean(postId||shortsId),wasDetailOpen=useRef(detailOpen);
   useEffect(()=>{if(wasDetailOpen.current&&!detailOpen)feedSignals?.reshuffle();wasDetailOpen.current=detailOpen;},[detailOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   const reviewCounts=(reviewRows ?? []).reduce<Record<string,number>>((counts,row)=>{counts[row.seller_id]=(counts[row.seller_id] ?? 0)+1;return counts;},{});
-  if(mode==='home'&&(search.tab || 'discover')==='discover'){const ranked=rankRecommended(posts,reviewCounts,Date.now(),postRatings.data ?? {});posts=mixSellers([...(feedSignals?feedMemo(ranked,{...feedSignals.signals,now:Date.now()},feedSignals.version):ranked)].sort((a,b)=>Number(Boolean(b.featured))-Number(Boolean(a.featured))),2);}
+  if(mode==='home'&&(search.tab || 'discover')==='discover'){posts=randomFeed([...posts,...loungePosts.filter(p=>!preview.hidden.includes(p.id)&&matchesProductQuery(p,search.q))],feedSignals?`${feedSignals.signals.seed}`:'',2);}
   const storePosts=all.filter(p=>!preview.hidden.includes(p.id)&&(search.seller?sellerMatches(p,search.seller):p.sample));
   if(mode==='store'&&search.seller)posts=posts.filter(p=>storePosts.some(s=>s.id===p.id));
  if(mode==='store'&&search.storeTab==='shorts') posts=posts.filter(p=>p.short);
