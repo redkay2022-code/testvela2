@@ -2653,5 +2653,8 @@
   "영상": "Video",
   "영상 선택": "Video auswählen",
   "MP4·MOV·WEBM · 5분 이내 · 300MB 이하": "MP4·MOV·WEBM · bis 5 Min. · bis 300 MB",
-  "올리기": "Hochladen"
+  "올리기": "Hochladen",
+  "라운지에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "In der Lounge sind nur Videos erlaubt. Bitte Fotos entfernen.",
+  "라운지 영상 1개를 선택해 주세요.": "Bitte ein Lounge-Video auswählen.",
+  "라운지는 셀러만 올릴 수 있어요.": "Nur Verkäufer können in der Lounge veröffentlichen."
 }

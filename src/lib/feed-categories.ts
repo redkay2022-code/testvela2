@@ -33,6 +33,9 @@ export const primaryCategories=categoryGroups[0]?.items ?? [];
 /** Menu categories sellers choose from (stored in posts.specs.menuCategory, separate from the older 카테고리 field) (the "전체" entry is a filter only, never a post category). */
 export const postCategories:readonly (readonly [string,string])[]=(categoryGroups[0]?.items ?? []).filter(item=>item[0]!=='recommend');
 export const postCategoryLabels:readonly string[]=postCategories.map(item=>item[1]);
+/** Lounge is a menu category of the upload forms only (sellers and admins): its videos are kept out of the product feed. */
+export const LOUNGE_MENU_LABEL='라운지';
+export const uploadCategoryLabels:readonly string[]=[...postCategoryLabels,LOUNGE_MENU_LABEL];
 const baseCategoryLabel=(id:string)=>id.startsWith('b:')?id.slice(2):categoryGroups.flatMap(group=>group.items).find(item=>item[0]===id)?.[1] ?? id;
 /** Feed ids are a category ("watches"), a brand ("rolex") or both joined with "~" ("watches~rolex" = Rolex within 시계). */
 export const splitFeedId=(id:string|undefined):{category:string;brand:string}=>{const i=(id ?? '').indexOf('~');return i<0?{category:id ?? '',brand:''}:{category:id!.slice(0,i),brand:id!.slice(i+1)};};

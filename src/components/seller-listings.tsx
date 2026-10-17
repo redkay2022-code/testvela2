@@ -5,7 +5,10 @@ import { useCurrency } from './currency';
 import { activeLang } from '@/lib/i18n';
 import { WatchSpecificationsForm } from './watch-specifications-form';
 import { cleanWatchSpecs } from '@/lib/watch-specifications';
-import { normalizeMenuCategory, postCategoryLabels } from '@/lib/feed-categories';
+import { normalizeMenuCategory, postCategoryLabels, uploadCategoryLabels } from '@/lib/feed-categories';
+import { validateLoungeFiles } from './lounge';
+import { LOUNGE_CATEGORY, LOUNGE_MAX_BYTES, loungeTooLong } from '@/lib/lounge';
+import { faststartMp4 } from '@/lib/mp4-faststart';
 import { PostCategoryField } from './post-category-field';
 import { dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
@@ -174,7 +177,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const [category, setCategory] = useSessionState(draftKey + 'category', listing?.category === '악세사리' ? '악세사리' : '시계');
   const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '') ? String(normalizeMenuCategory(String(listing?.specs?.['menuCategory']))) : '');
   /* Story posts only have a title and text: no price, dispatch time, specification or factory fields. */
-  const story = menuCategory === '스토리';
+  const lounge = menuCategory === '라운지', story = menuCategory === '스토리' || lounge;
   const [price, setPrice] = useSessionState(draftKey + 'price', listing?.price != null ? String(listing.price) : '');
   const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
   const [dispatch, setDispatch] = useSessionState<string>(draftKey + 'dispatch', initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
@@ -228,11 +231,11 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     if (quick) { setError(quick); return; }
     const newVideo = selectedVideos[0] ? { file: selectedVideos[0], preview: createPreview(selectedVideos[0]) } : null;
     const newPhotos = selectedPhotos.map(file => ({ id: crypto.randomUUID(), file, preview: createPreview(file) }));
-    if (newVideo) { setVideo(newVideo); setEditing(newVideo.file); }
+    if (newVideo) { setVideo(newVideo); if (!lounge) setEditing(newVideo.file); }
     if (newPhotos.length) setPhotos(current => [...current, ...newPhotos]);
     setError('');
     /* 길이(30초) 검사는 여기서 하지 않는다: 긴 영상은 편집기에서 잘라 쓰는 것이 정상 흐름이고, 길이는 저장할 때 확인한다. 여기서는 영상을 읽을 수 있는지만 본다. */
-    if (newVideo) readVideoDuration(newVideo.file).then(seconds => { if (videoOverLimit(newVideo.file, seconds)) setError('영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.'); }).catch(err => {
+    if (newVideo) readVideoDuration(newVideo.file).then(seconds => { if (lounge ? (loungeTooLong(seconds) || newVideo.file.size > LOUNGE_MAX_BYTES) : videoOverLimit(newVideo.file, seconds)) setError(lounge ? tx('라운지 영상은 5분 이내만 올릴 수 있어요.') : '영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.'); }).catch(err => {
       setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.');
       previewUrls.drop(newVideo.preview);
       setVideo(cur => (cur?.preview === newVideo.preview ? null : cur)); setEditing(cur => (cur === newVideo.file ? null : cur));
@@ -241,10 +244,12 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
 
   const save = async (status: 'draft' | 'published') => {
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
-    if (!postCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
+    if (!uploadCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
     const p = Number(price); if (!story && (!Number.isFinite(p) || p < 1)) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
+    if (lounge && !video) { setError(tx('라운지 영상 1개를 선택해 주세요.')); return; }
+    if (lounge && photos.length > 0) { setError(tx('라운지에는 영상만 올릴 수 있어요. 사진은 빼 주세요.')); return; }
     if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
-    if (video?.file) { try { await validateListingFiles([video.file]); } catch (err) { setError(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; } }
+    if (video?.file) { try { if (lounge) await validateLoungeFiles([video.file]); else await validateListingFiles([video.file]); } catch (err) { setError(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; } }
     if (!story && sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
     if (!story && sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
     setError(''); setPending(true);
@@ -253,7 +258,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       let nextVideo = video?.path ?? null;
       let nextThumb: string | null | undefined = video?.file ? null : undefined;
       setEta(estimateUploadSeconds([...photos.flatMap(p => p.file ? [p.file] : []), ...(video?.file ? [video.file] : [])], 30, Boolean(video?.file && video.file.size > COMPRESS_THRESHOLD_BYTES)));
-      if (video?.file) { setConvertPct(0); const ready = await compressVideoForWeb(video.file, r => setConvertPct(Math.round(r * 100))); setConvertPct(null); setEta(estimateUploadSeconds([ready, ...photos.flatMap(p => p.file ? [p.file] : [])])); const ext = ready.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${folder}/${crypto.randomUUID()}.${ext}`; const { error: e } = await putMarketMedia(path, ready, { cacheControl: LONG_CACHE }); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(ready, folder); if (nextThumb) uploaded.push(nextThumb); }
+      if (video?.file) { setConvertPct(0); const ready = lounge ? await faststartMp4(video.file).catch(() => video.file as File) : await compressVideoForWeb(video.file, r => setConvertPct(Math.round(r * 100))); setConvertPct(null); setEta(estimateUploadSeconds([ready, ...photos.flatMap(p => p.file ? [p.file] : [])])); const ext = ready.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${folder}/${crypto.randomUUID()}.${ext}`; const { error: e } = await putMarketMedia(path, ready, { cacheControl: LONG_CACHE }); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(ready, folder); if (nextThumb) uploaded.push(nextThumb); }
       const photoPaths: string[] = [];
       const settled = await Promise.allSettled(photos.map(async photo => {
         if (photo.path) return photo.path;
@@ -277,9 +282,10 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       const cleanSpecs = story ? {} as Record<string, string> : cleanWatchSpecs(specs);
       if (!story) cleanSpecs['sourceType'] = sourceType;
       cleanSpecs['menuCategory'] = menuCategory;
+      if (lounge) (cleanSpecs as Record<string, unknown>)['lounge'] = true;
       if (card) cleanSpecs['cardImage'] = card;
       if (!story) { if (sourceType === 'custom') delete cleanSpecs['factory']; else cleanSpecs['factory'] = factory.trim().slice(0, 80); }
-      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
+      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category: lounge ? LOUNGE_CATEGORY : category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
         const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await (owner ? removeMarketMedia({ data: { paths: removed } }).catch(() => undefined) : supabase.storage.from('market-media').remove(removed));
@@ -309,7 +315,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-destructive bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("영상과 사진 한 번에 선택")}</span></span><span className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx('영상 1개 · 30초 · 100MB · 사진 10MB / 사진 {0}/{1}', { 0: photoTotal, 1: MAX_LISTING_PHOTOS })}</span></span>
       <input className="sr-only" type="file" accept="image/*,video/*" multiple aria-label={tx("상품 영상과 사진 한 번에 선택")} onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} /></label>
     {(video || photos.length > 0) && <div className="mt-3 space-y-3" aria-label={tx("선택한 상품 미디어")}>
-      {video && <div className="grid grid-cols-2 gap-2"><div className="relative overflow-hidden rounded-md border border-primary bg-muted"><VideoStartPreview file={video.file} src={video.preview} className="aspect-square w-full object-cover"/><span className="absolute left-2 top-2 rounded bg-background/80 px-2 py-1 text-[11px] font-semibold text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("메인 피드 영상")}</span></span><Button type="button" size="icon" variant="secondary" className="absolute right-2 top-2 size-7" aria-label={tx("영상 제거")} onClick={removeVideo}><X /></Button><Button type="button" size="sm" variant="gold" className="absolute bottom-2 right-2" disabled={loadingVideo} onClick={() => void editVideo()}>{loadingVideo ? <RefreshCw className="animate-spin" /> : <Scissors />}<span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("영상 편집")}</span></Button>{videoTags.length > 0 && <span className="absolute bottom-2 left-2 rounded bg-background/80 px-2 py-1 text-[11px] text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품 태그 {0}개", { 0: videoTags.length })}</span></span>}</div>{photoTotal < MAX_LISTING_PHOTOS && <Button type="button" variant="outline" className="aspect-square h-auto w-full flex-col gap-2 border-2 border-dashed border-destructive bg-muted text-primary" aria-label={tx("사진 추가")} onClick={() => photoPicker.current?.click()}><ImagePlus className="size-7"/><span className="text-xs"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("사진 추가")}</span></span><span className="text-[11px] text-muted-foreground">{photoTotal}/{MAX_LISTING_PHOTOS}</span></Button>}</div>}
+      {video && <div className="grid grid-cols-2 gap-2"><div className="relative overflow-hidden rounded-md border border-primary bg-muted"><VideoStartPreview file={video.file} src={video.preview} className="aspect-square w-full object-cover"/><span className="absolute left-2 top-2 rounded bg-background/80 px-2 py-1 text-[11px] font-semibold text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("메인 피드 영상")}</span></span><Button type="button" size="icon" variant="secondary" className="absolute right-2 top-2 size-7" aria-label={tx("영상 제거")} onClick={removeVideo}><X /></Button>{!lounge && <Button type="button" size="sm" variant="gold" className="absolute bottom-2 right-2" disabled={loadingVideo} onClick={() => void editVideo()}>{loadingVideo ? <RefreshCw className="animate-spin" /> : <Scissors />}<span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("영상 편집")}</span></Button>}{videoTags.length > 0 && <span className="absolute bottom-2 left-2 rounded bg-background/80 px-2 py-1 text-[11px] text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품 태그 {0}개", { 0: videoTags.length })}</span></span>}</div>{photoTotal < MAX_LISTING_PHOTOS && <Button type="button" variant="outline" className="aspect-square h-auto w-full flex-col gap-2 border-2 border-dashed border-destructive bg-muted text-primary" aria-label={tx("사진 추가")} onClick={() => photoPicker.current?.click()}><ImagePlus className="size-7"/><span className="text-xs"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("사진 추가")}</span></span><span className="text-[11px] text-muted-foreground">{photoTotal}/{MAX_LISTING_PHOTOS}</span></Button>}</div>}
       {photos.length > 0 && <div><p className="mb-2 text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상세 사진 갤러리 · 끌어서 또는 화살표로 순서 변경")}</span></p><div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {photos.map((photo, index) => <div key={photo.id} draggable onDragStart={() => setDraggedPhoto(photo.id)} onDragEnd={() => setDraggedPhoto(null)} onDragOver={event => event.preventDefault()} onDrop={() => dropPhoto(photo.id)} className={`relative overflow-hidden rounded-md border bg-muted ${draggedPhoto === photo.id ? 'border-primary opacity-60' : 'border-border'}`}>
           {photo.preview ? <img src={photo.preview} alt={tx("상세 사진 {0}", { 0: index + 1 })} className="aspect-square w-full object-cover"/> : <div className="grid aspect-square place-items-center text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("사진 {0}", { 0: index + 1 })}</span></div>}
