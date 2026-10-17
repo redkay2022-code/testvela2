@@ -20,7 +20,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const detected = detectLocale(Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.languages ?? [navigator.language]);
     const savedLang = localStorage.getItem(LANG_KEY), savedCur = localStorage.getItem(CUR_KEY);
-    const nextLang = isLang(savedLang) ? savedLang : detected.lang;
+    const nextLang = isLang(savedLang) ? savedLang : 'en'; // 처음 접속하면 영어가 기본
     const nextCur = isCurrency(savedCur) ? savedCur : detected.currency;
     let alive = true;
     const request = selection.current;
