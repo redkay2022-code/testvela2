@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { attachHls, isHlsUrl } from '@/lib/hls-loader';
+import { attachHls, isHlsUrl, warmHls } from '@/lib/hls-loader';
 
 /**
  * Feed video that only loads and plays while it is on screen (Intersection Observer).
@@ -60,6 +60,8 @@ function LazyVideoBase({ src, poster, className, label }: Props) {
     return () => { nearObs.disconnect(); farObs.disconnect(); playObs.disconnect(); document.removeEventListener('visibilitychange', onVis); if (currentPlayer?.id === id) currentPlayer = null; };
   }, [claim, id]);
 
+  // HLS: download the player code as soon as the card is near, so the first frame is not delayed by it.
+  useEffect(() => { if (hls && near) warmHls(); }, [hls, near]);
   // HLS: the stream exists only while the video is visible; leaving the screen destroys it completely.
   useEffect(() => { const v = video.current; if (!hls || !near || !visible || !v) return; return attachHls(v, src, { onFatal: () => setReady(false) }); }, [hls, near, visible, src]);
 

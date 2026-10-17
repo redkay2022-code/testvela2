@@ -11,27 +11,29 @@
  * switch down when the network slows, and (2) SHORT segments of 1-2 seconds. Segment length is decided on the server when the
  * stream is created; the player cannot change it. With short segments the config below starts playback after ~1 segment.
  *
- * hls.js is loaded on demand from a CDN the first time an .m3u8 is needed, so it adds nothing to the normal bundle.
+ * hls.js is bundled with the site (npm package) but split into its own chunk, so it is downloaded only when the first
+ * .m3u8 is about to play (warmHls() starts that download early). No third-party CDN is involved.
  */
 type HlsInstance = { loadSource(url: string): void; attachMedia(v: HTMLVideoElement): void; detachMedia(): void; stopLoad(): void; startLoad(): void; recoverMediaError(): void; destroy(): void; on(event: string, cb: (...a: unknown[]) => void): void };
 type HlsStatic = { new (config?: Record<string, unknown>): HlsInstance; isSupported(): boolean; Events: Record<string, string> };
 
-const HLS_JS = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';
 let loading: Promise<HlsStatic | null> | null = null;
 
 export const isHlsUrl = (url: string | null | undefined) => Boolean(url && /\.m3u8(\?|#|$)/i.test(url));
 
 function loadHlsJs(): Promise<HlsStatic | null> {
-  const w = window as unknown as { Hls?: HlsStatic };
-  if (w.Hls) return Promise.resolve(w.Hls);
-  loading ??= new Promise<HlsStatic | null>(resolve => {
-    const s = document.createElement('script');
-    s.src = HLS_JS; s.async = true; s.crossOrigin = 'anonymous';
-    s.onload = () => resolve(w.Hls ?? null);
-    s.onerror = () => { loading = null; resolve(null); };
-    document.head.appendChild(s);
-  });
+  loading ??= import('hls.js')
+    .then(m => (m.default as unknown as HlsStatic) ?? null)
+    .catch(() => { loading = null; return null; });
   return loading;
+}
+
+/** Starts downloading the player code in the background (call when an HLS video is about to be shown). Safe to call often. */
+export function warmHls(): void {
+  if (typeof window === 'undefined') return;
+  const v = document.createElement('video');
+  if (v.canPlayType('application/vnd.apple.mpegurl')) return; // Safari / iOS play HLS natively
+  void loadHlsJs();
 }
 
 export type HlsHandlers = { onBuffering?: (buffering: boolean) => void; onFatal?: () => void };

@@ -102,6 +102,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       ...(import.meta.env['VITE_SUPABASE_URL'] ? [{ rel: "preconnect", href: String(import.meta.env['VITE_SUPABASE_URL']), crossOrigin: "anonymous" as const }] : []),
+      // Open the connections to Mux early so the first video and poster do not wait for DNS/TLS.
+      { rel: "preconnect", href: "https://stream.mux.com", crossOrigin: "anonymous" as const },
+      { rel: "preconnect", href: "https://image.mux.com" },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icons/icon-180.png" },
       { rel: "manifest", href: "/manifest.json" },
