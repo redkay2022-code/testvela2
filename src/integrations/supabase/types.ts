@@ -302,39 +302,6 @@ export type Database = {
         }
         Relationships: []
       }
-      mux_uploads: {
-        Row: {
-          asset_id: string | null
-          created_at: string
-          playback_id: string | null
-          ref: string
-          status: string
-          updated_at: string
-          upload_id: string
-          user_id: string
-        }
-        Insert: {
-          asset_id?: string | null
-          created_at?: string
-          playback_id?: string | null
-          ref: string
-          status?: string
-          updated_at?: string
-          upload_id: string
-          user_id: string
-        }
-        Update: {
-          asset_id?: string | null
-          created_at?: string
-          playback_id?: string | null
-          ref?: string
-          status?: string
-          updated_at?: string
-          upload_id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       notifications: {
         Row: {
           body: string
