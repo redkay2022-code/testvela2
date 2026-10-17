@@ -7,7 +7,7 @@ import { Archive, Copy, Eye, ImagePlus, Pencil, Plus, Power, Star, Trash2, Uploa
 import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
-import { compressVideoForWeb } from '@/lib/video-compress';
+import { uploadListingVideo } from '@/lib/video-upload';
 import { useAdminPasswordGate } from './admin-password-gate';
 import { useServerFn } from '@tanstack/react-start';
 import { adminDeletePost } from '@/lib/admin-members.functions';
@@ -52,9 +52,11 @@ function useMediaUrls(paths: string[]) {
 }
 
 async function uploadMedia(input: File, folder: string) {
-  const file = input.type.startsWith('image/') ? await compressImage(input) : input.type.startsWith('video/') ? await compressVideoForWeb(input) : input;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('관리자 로그인이 필요합니다.');
+  // Videos go to Mux (HLS streaming); without Mux they fall back to compression + storage.
+  if (input.type.startsWith('video/')) return (await uploadListingVideo(input, `${user.id}/${folder}`)).videoUrl;
+  const file = input.type.startsWith('image/') ? await compressImage(input) : input;
   const ext = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
   const path = `${user.id}/${folder}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from('market-media').upload(path, file, { contentType: file.type, cacheControl: LONG_CACHE });

@@ -34,12 +34,13 @@ import { useMyAccount } from './seller-account';
 import { Tx } from './tx';
 import { validateLoungeFiles } from './lounge';
 import { LOUNGE_CATEGORY } from '@/lib/lounge';
-import { faststartMp4 } from '@/lib/mp4-faststart';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { matchesTextQuery } from '@/lib/product-search';
 import { appendListingFiles, isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, readVideoDuration, validateListingFiles } from '@/lib/listing-media';
-import { compressVideoForWeb, COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
+import { COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
+import { uploadListingVideo } from '@/lib/video-upload';
+import { StreamVideo } from './stream-video';
 import { estimateUploadSeconds, useCountdown } from '@/lib/upload-countdown';
 import { SpecsTable } from './specs-table';
 import { SourceFactoryField, type SourceType } from './source-factory';
@@ -199,7 +200,7 @@ function DetailDrawer({post,user,liked,onLike,onClose,requestAuth,notify}:{post:
     <Dialog.Content asChild aria-describedby={undefined}><motion.div className="detail-drawer" initial={{y:reducedMotion?0:'100%'}} animate={{y:0}} exit={{y:reducedMotion?0:'100%'}} transition={{type:'spring',damping:32,stiffness:300}}>
       <div className="drawer-top"><Button variant="ghost" size="icon" onClick={onClose} aria-label="게시물 닫기"><ArrowLeft/></Button><div className="creator"><span className="creator-avatar creator-avatar-fallback" aria-hidden="true"><User size={13}/></span><span className="truncate text-sm text-foreground">{post.creator}</span></div><Button variant="ghost" size="icon" aria-label="공유" onClick={async () => {try{const url = window.location.href;if(navigator.share) await navigator.share({title:post.title,url});else {await navigator.clipboard.writeText(url);notify('링크를 복사했어요.');}}catch{/* Share cancellation is not an error. */}}}><Share2/></Button></div>
       <div className="drawer-body">
-        <div ref={carousel} className="detail-carousel" onScroll={e => setSlide(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))}>{post.video_url && <video src={post.video_url} poster={pictures[0]} controls playsInline preload="metadata"/>}{pictures.map((src,i) => <img key={i} src={src} alt={`${post.title} 상세 사진 ${i+1}`} width={512} height={768} loading={i<2?'eager':'lazy'} decoding="async"/>)}</div>
+        <div ref={carousel} className="detail-carousel" onScroll={e => setSlide(Math.round(e.currentTarget.scrollLeft/e.currentTarget.clientWidth))}>{post.video_url && <StreamVideo src={post.video_url} poster={pictures[0]} controls playsInline preload="metadata"/>}{pictures.map((src,i) => <img key={i} src={src} alt={`${post.title} 상세 사진 ${i+1}`} width={512} height={768} loading={i<2?'eager':'lazy'} decoding="async"/>)}</div>
         {pictures.length + (post.video_url ? 1 : 0) > 1 && <div className="flex items-center justify-center gap-3 py-2"><Button variant="ghost" size="icon" aria-label="이전 미디어" disabled={slide === 0} onClick={() => carousel.current?.scrollBy({left:-(carousel.current?.clientWidth || 0),behavior:reducedMotion?'auto':'smooth'})}><ArrowLeft/></Button><span className="text-xs text-muted-foreground">{slide+1} / {pictures.length + (post.video_url ? 1 : 0)}</span><Button variant="ghost" size="icon" aria-label="다음 미디어" disabled={slide >= pictures.length + (post.video_url ? 1 : 0)-1} onClick={() => carousel.current?.scrollBy({left:carousel.current?.clientWidth || 0,behavior:reducedMotion?'auto':'smooth'})}><ArrowRight/></Button></div>}
         <div className="detail-copy"><span className="mb-2 inline-block text-xs text-primary">#{post.category}</span><Dialog.Title asChild><h2>{post.title}</h2></Dialog.Title>{post.price !== null && <p className="mt-3 text-2xl font-bold text-primary">{priceLabel(post.price)}</p>}<p className="detail-description whitespace-pre-wrap">{post.description}</p><SpecsTable specs={post.specs}/>{post.duration && !post.video_url && <p className="mb-5 text-xs text-muted-foreground">영상 미리보기 이미지</p>}<p className="text-[11px] text-muted-foreground">{formatDate(post.created_at)} · {post.creator}</p>
           <ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>
@@ -303,30 +304,31 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
     const uploaded:string[]=[];
     try {
       const rawVideo = files.find(isListingVideo);
+      const folder = proxy?proxy.id:user.id;
       const seconds = rawVideo ? await readVideoDuration(rawVideo).catch(() => 0) : 0;
       setEta(estimateUploadSeconds(files,seconds,Boolean(rawVideo && rawVideo.size > COMPRESS_THRESHOLD_BYTES)));
-      /* Heavy videos are converted to a light web MP4 first (the original is kept when the picture would look worse). */
-      const prepared = await Promise.all(files.map(async f => {if(!isListingVideo(f)) return f;setConvertPct(0);const out = lounge ? await faststartMp4(f).catch(() => f) : await compressVideoForWeb(f,r => setConvertPct(Math.round(r*100)));setConvertPct(null);return out;}));
-      setEta(estimateUploadSeconds(prepared,0,false));
-      const video = prepared.find(isListingVideo);
-      /* Upload all files at the same time (each photo is shrunk first) instead of one after another. */
-      const results = await Promise.allSettled(prepared.map(async original => {
-        const file = isListingPhoto(original) ? await compressImage(original) : original;
+      /* The video goes straight to Mux (HLS streaming). Without Mux it falls back to in-browser compression + storage. */
+      let videoUrl:string|null = null, videoFile:File|null = null;
+      if(rawVideo) {setConvertPct(0);const up = await uploadListingVideo(rawVideo,folder,r => setConvertPct(Math.round(r*100)),{compress:!lounge});setConvertPct(null);if(up.storagePath) uploaded.push(up.storagePath);videoUrl = up.videoUrl;videoFile = up.file;}
+      const photoFiles = files.filter(isListingPhoto);
+      setEta(estimateUploadSeconds(photoFiles,0,false));
+      /* Upload all photos at the same time (each photo is shrunk first) instead of one after another. */
+      const results = await Promise.allSettled(photoFiles.map(async original => {
+        const file = await compressImage(original);
         const extension = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g,'') || 'bin';
-        const path = `${proxy?proxy.id:user.id}/${crypto.randomUUID()}.${extension}`;
+        const path = `${folder}/${crypto.randomUUID()}.${extension}`;
         const {error:uploadError} = await putMarketMedia(path,file,{cacheControl:LONG_CACHE});
         if(uploadError) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
         return path;
       }));
-      for(const r of results) if(r.status==='fulfilled') uploaded.push(r.value);
+      const imagePaths:string[] = [];
+      for(const r of results) if(r.status==='fulfilled') {uploaded.push(r.value);imagePaths.push(r.value);}
       if(results.some(r => r.status==='rejected')) throw new Error('사진을 올리지 못했어요. 다시 시도해 주세요.');
-      const thumb = video ? await uploadVideoThumbnail(video, proxy?proxy.id:user.id) : null;
+      const thumb = videoFile ? await uploadVideoThumbnail(videoFile, folder) : null;
       if(thumb) uploaded.push(thumb);
-      const imagePaths = uploaded.filter((_,i) => prepared[i] ? isListingPhoto(prepared[i]) : false);
-      const videoIndex = prepared.findIndex(isListingVideo);
-      const firstPhoto = prepared.find(isListingPhoto), card = firstPhoto ? await uploadCardImage(firstPhoto, proxy?proxy.id:user.id) : null; /* small picture for feed cards */
+      const firstPhoto = photoFiles[0], card = firstPhoto ? await uploadCardImage(firstPhoto, folder) : null; /* small picture for feed cards */
       if (card) uploaded.push(card);
-      const {error:saveError} = await supabase.from('posts').insert({user_id:proxy?proxy.id:user.id,title:title.trim(),description:description.trim(),category:lounge?LOUNGE_CATEGORY:category,source_lang:activeLang(),creator:proxy?proxy.nickname.slice(0,40):String((await supabase.from('profiles').select('nickname').eq('user_id',user.id).maybeSingle()).data?.nickname || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoIndex >= 0 ? uploaded[videoIndex] ?? null:null,thumbnail_url:thumb,price:sellProduct?Number(price):null,box_price:sellProduct?boxPriceOrDefault(boxPrice):null,dispatch_time:sellProduct?dispatchValue(dispatch,customDispatch):null,specs:{...(story?{}:cleanWatchSpecs(specs)),...(lounge?{lounge:true}:{}),menuCategory,...(card?{cardImage:card}:{}),...(sellProduct?{sourceType,...(sourceType!=='custom'?{factory:factory.trim().slice(0,80)}:{})}:{})},video_tags:videoTags,...(videoIndex >= 0 && music ? music : {})});
+      const {error:saveError} = await supabase.from('posts').insert({user_id:proxy?proxy.id:user.id,title:title.trim(),description:description.trim(),category:lounge?LOUNGE_CATEGORY:category,source_lang:activeLang(),creator:proxy?proxy.nickname.slice(0,40):String((await supabase.from('profiles').select('nickname').eq('user_id',user.id).maybeSingle()).data?.nickname || 'vela member').slice(0,40),image_key:'uploaded',media_urls:imagePaths,video_url:videoUrl,thumbnail_url:thumb,price:sellProduct?Number(price):null,box_price:sellProduct?boxPriceOrDefault(boxPrice):null,dispatch_time:sellProduct?dispatchValue(dispatch,customDispatch):null,specs:{...(story?{}:cleanWatchSpecs(specs)),...(lounge?{lounge:true}:{}),menuCategory,...(card?{cardImage:card}:{}),...(sellProduct?{sourceType,...(sourceType!=='custom'?{factory:factory.trim().slice(0,80)}:{})}:{})},video_tags:videoTags,...(videoUrl && music ? music : {})});
       if(saveError) throw new Error('게시물을 저장하지 못했어요. 다시 시도해 주세요.');
       releaseLeaveWarning();
       onPosted();

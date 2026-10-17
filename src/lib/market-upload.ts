@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { removeMarketMedia, signMarketUploads } from '@/lib/proxy-seller.functions';
+import { isExternalVideo } from '@/lib/mux';
 
 const BUCKET = 'market-media';
 
@@ -29,7 +30,8 @@ export async function putMarketMedia(path: string, body: Blob, options: PutOptio
 }
 
 /** 올리다 실패했을 때 지우기. 내 폴더 파일은 직접, 다른 회원 폴더 파일은 관리자 권한으로 서버가 지운다. */
-export async function removeMarketFiles(paths: string[]): Promise<void> {
+export async function removeMarketFiles(input: string[]): Promise<void> {
+  const paths = input.filter(p => !isExternalVideo(p));
   if (!paths.length) return;
   const uid = await currentUserId();
   const own = paths.filter(p => !uid || p.split('/')[0] === uid);

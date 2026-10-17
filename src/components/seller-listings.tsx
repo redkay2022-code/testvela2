@@ -8,7 +8,6 @@ import { cleanWatchSpecs } from '@/lib/watch-specifications';
 import { normalizeMenuCategory, postCategoryLabels, uploadCategoryLabels } from '@/lib/feed-categories';
 import { validateLoungeFiles } from './lounge';
 import { LOUNGE_CATEGORY, LOUNGE_MAX_BYTES, loungeTooLong } from '@/lib/lounge';
-import { faststartMp4 } from '@/lib/mp4-faststart';
 import { PostCategoryField } from './post-category-field';
 import { dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
@@ -38,7 +37,9 @@ import { VideoEditor, type VideoTag } from './video-editor';
 import { VideoStartPreview } from './video-start-preview';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
-import { compressVideoForWeb, COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
+import { COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
+import { uploadListingVideo } from '@/lib/video-upload';
+import { isExternalVideo, isMuxStreamUrl } from '@/lib/mux';
 import { estimateUploadSeconds, useCountdown } from '@/lib/upload-countdown';
 import { BulkUpload } from './bulk-upload';
 import { DispatchSelect } from './dispatch-select';
@@ -104,9 +105,9 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
     if (opening) return; setOpening(l.id);
     try {
       try { const res = (await signMedia({ data: { ids: [l.id], full: true, ...(acting ? { ownerId: acting.id } : {}) } }))[l.id]; if (res && (res.media.some(Boolean) || res.video)) { open({ ...l, signed_media_urls: res.media, signed_video_url: res.video || undefined }); return; } } catch { /* 직접 서명으로 보완 */ }
-      const paths = [...l.media_urls, l.video_url].filter(Boolean) as string[]; const map = new Map<string, string>();
+      const paths = [...l.media_urls, isExternalVideo(l.video_url) ? null : l.video_url].filter(Boolean) as string[]; const map = new Map<string, string>();
       for (let i = 0; i < paths.length; i += 100) { try { const { data: signed } = await supabase.storage.from('market-media').createSignedUrls(paths.slice(i, i + 100), 3600); signed?.forEach(x => x.path && x.signedUrl && map.set(x.path, x.signedUrl)); } catch { /* 일부 실패해도 열기 */ } }
-      open({ ...l, signed_media_urls: l.media_urls.map(p => map.get(p) ?? ''), signed_video_url: l.video_url ? map.get(l.video_url) : undefined });
+      open({ ...l, signed_media_urls: l.media_urls.map(p => map.get(p) ?? ''), signed_video_url: isMuxStreamUrl(l.video_url) ? l.video_url : l.video_url ? map.get(l.video_url) : undefined });
     } finally { setOpening(null); }
   };
   const formTop = useRef<HTMLDivElement>(null);
@@ -125,20 +126,17 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
     try { await validateListingFiles([file]); } catch (err) { alert(err instanceof Error && err.message.includes('“영상 편집”') ? '영상이 30초 또는 100MB를 넘어요. 해당 상품의 “편집”에서 영상을 선택해 편집기로 줄인 뒤 올려 주세요.' : err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; }
     setReplacing(l.id);
     try {
-      file = await compressVideoForWeb(file);
-      const ext = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4';
       const folder = acting?.id ?? user.id;
-      const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-      const { error: up } = await putMarketMedia(path, file, { cacheControl: LONG_CACHE });
-      if (up) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.');
-      const { error: e } = await supabase.from('posts').update({ video_url: path, thumbnail_url: await uploadVideoThumbnail(file, folder), video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
-      if (e) { await removeMarketFiles([path]); throw new Error('게시물을 수정하지 못했어요.'); }
-      if (l.video_url) await (acting ? removeMarketMedia({ data: { paths: [l.video_url] } }).catch(() => undefined) : supabase.storage.from('market-media').remove([l.video_url]));
+      const up = await uploadListingVideo(file, folder);
+      file = up.file;
+      const { error: e } = await supabase.from('posts').update({ video_url: up.videoUrl, thumbnail_url: await uploadVideoThumbnail(file, folder), video_tags: [], updated_at: new Date().toISOString() }).eq('id', l.id);
+      if (e) { if (up.storagePath) await removeMarketFiles([up.storagePath]); throw new Error('게시물을 수정하지 못했어요.'); }
+      if (l.video_url && !isExternalVideo(l.video_url)) await (acting ? removeMarketMedia({ data: { paths: [l.video_url] } }).catch(() => undefined) : supabase.storage.from('market-media').remove([l.video_url]));
       refresh();
     } catch (err) { alert(err instanceof Error ? err.message : '영상 교체에 실패했어요.'); }
     finally { setReplacing(null); }
   };
-  const remove = async (l: Listing) => { if (roles.includes('admin')) { if (!(await gate.ask(tx('상품과 사진·영상을 함께 삭제합니다: {0}', { 0: l.title })))) return; } else if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url ? [l.video_url] : []), ...(cardPathOf(l.specs) ? [cardPathOf(l.specs) as string] : [])]; if (media.length) await (acting ? removeMarketMedia({ data: { paths: media } }).catch(() => undefined) : supabase.storage.from('market-media').remove(media)); refresh(); };
+  const remove = async (l: Listing) => { if (roles.includes('admin')) { if (!(await gate.ask(tx('상품과 사진·영상을 함께 삭제합니다: {0}', { 0: l.title })))) return; } else if (!confirm('이 상품을 삭제할까요?')) return; await supabase.from('posts').delete().eq('id', l.id); const media = [...l.media_urls, ...(l.video_url && !isExternalVideo(l.video_url) ? [l.video_url] : []), ...(cardPathOf(l.specs) ? [cardPathOf(l.specs) as string] : [])]; if (media.length) await (acting ? removeMarketMedia({ data: { paths: media } }).catch(() => undefined) : supabase.storage.from('market-media').remove(media)); refresh(); };
 
   return <section className="seller-flow-card" aria-label={tx("내 상품 관리")}>{gate.dialog}
     <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("내 상품 관리")}</span></h2><div className="flex gap-2">{!acting && <Button size="sm" variant="goldOutline" onClick={() => setBulk(b => !b)}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("일괄 업로드")}</span></Button>}<Button size="sm" onClick={() => setEditing('new')}><Plus /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("새 상품")}</span></Button></div></div>
@@ -258,7 +256,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       let nextVideo = video?.path ?? null;
       let nextThumb: string | null | undefined = video?.file ? null : undefined;
       setEta(estimateUploadSeconds([...photos.flatMap(p => p.file ? [p.file] : []), ...(video?.file ? [video.file] : [])], 30, Boolean(video?.file && video.file.size > COMPRESS_THRESHOLD_BYTES)));
-      if (video?.file) { setConvertPct(0); const ready = lounge ? await faststartMp4(video.file).catch(() => video.file as File) : await compressVideoForWeb(video.file, r => setConvertPct(Math.round(r * 100))); setConvertPct(null); setEta(estimateUploadSeconds([ready, ...photos.flatMap(p => p.file ? [p.file] : [])])); const ext = ready.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'mp4'; const path = `${folder}/${crypto.randomUUID()}.${ext}`; const { error: e } = await putMarketMedia(path, ready, { cacheControl: LONG_CACHE }); if (e) throw new Error('영상을 올리지 못했어요. 다시 시도해 주세요.'); uploaded.push(path); nextVideo = path; nextThumb = await uploadVideoThumbnail(ready, folder); if (nextThumb) uploaded.push(nextThumb); }
+      if (video?.file) { setConvertPct(0); const up = await uploadListingVideo(video.file, folder, r => setConvertPct(Math.round(r * 100)), { compress: !lounge }); setConvertPct(null); setEta(estimateUploadSeconds(photos.flatMap(p => p.file ? [p.file] : []))); if (up.storagePath) uploaded.push(up.storagePath); nextVideo = up.videoUrl; nextThumb = await uploadVideoThumbnail(up.file, folder); if (nextThumb) uploaded.push(nextThumb); }
       const photoPaths: string[] = [];
       const settled = await Promise.allSettled(photos.map(async photo => {
         if (photo.path) return photo.path;
@@ -288,7 +286,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category: lounge ? LOUNGE_CATEGORY : category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
-        const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo ? [listing.video_url] : [])]; if (removed.length) await (owner ? removeMarketMedia({ data: { paths: removed } }).catch(() => undefined) : supabase.storage.from('market-media').remove(removed));
+        const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo && !isExternalVideo(listing.video_url) ? [listing.video_url] : [])]; if (removed.length) await (owner ? removeMarketMedia({ data: { paths: removed } }).catch(() => undefined) : supabase.storage.from('market-media').remove(removed));
       } else {
         if (owner && !owner.seller) throw new Error(PROXY_NOT_SELLER_MESSAGE);
         const nickname = owner?.nickname || (await supabase.from('profiles').select('nickname').eq('user_id', user.id).maybeSingle()).data?.nickname || 'vela member';
