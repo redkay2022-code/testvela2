@@ -27,7 +27,7 @@ import { sellerIdentity } from '@/lib/seller-directory';
 import { useEngagement } from '@/lib/use-engagement';
 import { isHybridPost } from '@/lib/post-media';
 
-type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean)=>void; notify:(text:string)=>void };
+type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean,insured?:boolean)=>void; notify:(text:string)=>void };
 export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onSearch,user,close,closeSheet,change,openSheet,requestAuth,buy,notify}:Props) {
  const preview=useMarketPreview();
  const posts=shortTab==='following'?allPosts.filter(p=>preview.isFollowing(sellerIdentity(p))):allPosts;

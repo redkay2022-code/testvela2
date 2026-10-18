@@ -20,8 +20,6 @@ import { useLeaveWarning, LEAVE_WARNING_MESSAGE } from '@/lib/leave-warning';
 import { clearSession, sessionBag, useSessionState } from '@/lib/session-state';
 import { bulkJob } from '@/lib/bulk-job';
 import { boxPriceOrDefault } from '@/lib/box-price';
-import { InsuranceOption } from './insurance-option';
-import { insuranceFeeFor } from '@/lib/insurance-option';
 import { putMarketMedia, removeMarketFiles } from '@/lib/market-upload';
 import { MemberPicker, PROXY_NOT_SELLER_MESSAGE, type ProxyTarget } from './member-picker';
 import { ListingPreview } from './listing-preview';
@@ -184,7 +182,6 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
   const [dispatch, setDispatch] = useSessionState<string>(draftKey + 'dispatch', initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
   const [customDispatch, setCustomDispatch] = useSessionState(draftKey + 'customDispatch', initialDispatch.startsWith('custom:') ? initialDispatch.slice(7) : '');
-  const [insured, setInsured] = useSessionState(draftKey + 'ins', String(listing?.specs?.['has_insurance']) === 'true');
   const [boxPrice, setBoxPrice] = useSessionState(draftKey + 'box', listing?.box_price != null ? String(listing.box_price) : '');
   const [specs, setSpecs] = useSessionState<Specs>(draftKey + 'specs', listing?.specs ?? {});
   const [sourceType, setSourceType] = useSessionState<SourceType>(draftKey + 'sourceType', () => {
@@ -282,7 +279,6 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       else if (firstPhoto?.file) { card = await uploadCardImage(firstPhoto.file, folder); if (card) uploaded.push(card); }
       const cleanSpecs = story ? {} as Record<string, string> : cleanWatchSpecs(specs);
       if (!story) cleanSpecs['sourceType'] = sourceType;
-      if (!story) { (cleanSpecs as Record<string, unknown>)['has_insurance'] = insured; (cleanSpecs as Record<string, unknown>)['insurance_fee'] = insured ? insuranceFeeFor(price) : 0; }
       cleanSpecs['menuCategory'] = menuCategory;
       if (card) cleanSpecs['cardImage'] = card;
       if (!story) { if (sourceType === 'custom') delete cleanSpecs['factory']; else cleanSpecs['factory'] = factory.trim().slice(0, 80); }
@@ -335,7 +331,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     {!story && <>
     <div className="grid grid-cols-2 gap-x-3">
       <div><label htmlFor="l-price" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 가격 (USD $)")}</span></label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>
-      <div className="sm:col-span-2"><InsuranceOption price={price} checked={insured} onChange={setInsured}/></div><fieldset className="sm:col-span-2"><legend className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("예상 발송 시간")}</span></legend><DispatchSelect dispatch={dispatch} customDispatch={customDispatch} onDispatch={setDispatch} onCustom={setCustomDispatch} /></fieldset><div><label htmlFor="l-box" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("풀셋 박스 (USD $, 선택)")}</span></label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
+      <fieldset className="sm:col-span-2"><legend className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("예상 발송 시간")}</span></legend><DispatchSelect dispatch={dispatch} customDispatch={customDispatch} onDispatch={setDispatch} onCustom={setCustomDispatch} /></fieldset><div><label htmlFor="l-box" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("풀셋 박스 (USD $, 선택)")}</span></label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>
     </div>
     <p className="mt-2 text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("가격은 USD로 저장되며, 구매자에게는 각자의 통화로 자동 환산되어 표시돼요.")}</span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{price && Number(price) > 0 ? tx(" (현재 표시: {0})", { 0: formatMoney(Number(price)) }) : ''}</span></p>
     <div className="mt-1">

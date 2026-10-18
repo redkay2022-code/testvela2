@@ -27,8 +27,8 @@ export function insuranceFee(price: number, tier: InsuranceTier = 'bronze') {
 }
 export const won = (n: number) => `₩${new Intl.NumberFormat('ko-KR').format(Math.round(n))}`;
 
-/** Mandatory delivery insurance is based only on the seller product price. */
-export function insuredPurchase(price: number, box = 0) {
-  const insurance = Math.round(price * BASE_FEE_RATE * 100) / 100;
+/** Purchase insurance is based only on the seller item price, never the box. */
+export function insuredPurchase(price: number, box = 0, insured = true) {
+  const insurance = insured ? Math.round(price * BASE_FEE_RATE * 100) / 100 : 0;
   return { insurance, total: Math.round((price + box + insurance) * 100) / 100 };
 }
