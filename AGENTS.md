@@ -45,6 +45,5 @@
 - Seller translations reset on edit.
 
 - Payment verification stays separate from escrow; triggers sync private notices/transactions and dashboards use role-scoped reads.
-- Isolate transaction samples from live orders/metrics; never write them to production.
 
-- Store content uses owner-scoped seller actions, never display identity; order history stays separate from active QC/logistics.
+- Store content shares owner-scoped actions/validation: Profile Settings edits introductions, Store Manager edits notices, public storefronts only read. Keep order history separate from active QC/logistics.

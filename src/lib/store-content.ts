@@ -1,3 +1,7 @@
+import { z } from 'zod';
+
+export const storeIntroductionSchema = z.string().trim().max(150);
+
 export function canEditStoreContent(viewerId: string | undefined, sellerId: string | undefined, roles: readonly string[]) {
   return Boolean(viewerId && sellerId && viewerId === sellerId && roles.includes('seller'));
 }
