@@ -56,7 +56,9 @@ function useLive(userId: string | null) {
       const [m, msgs] = ids.length ? await Promise.all([
         supabase.from('order_qc_media').select('id,order_id,path,kind,round').in('order_id', ids).order('created_at'),
         supabase.from('order_messages').select('id,order_id,author_role,kind,body,areas,created_at').in('order_id', ids).order('created_at'),
-      ]) : [{ data: [] }, { data: [] }];
+      ]) : [{ data: [], error: null }, { data: [], error: null }];
+      if (m.error) throw m.error;
+      if (msgs.error) throw msgs.error;
       const media = (m.data ?? []) as Media[];
       if (media.length) { const { data: s } = await supabase.storage.from(BUCKET).createSignedUrls(media.map(x => x.path), 3600); const map = new Map(s?.map(x => [x.path, x.signedUrl])); media.forEach(x => { const u = map.get(x.path); if (u) x.url = u; }); }
       return { orders: (orders ?? []) as Order[], media, msgs: (msgs.data ?? []) as Msg[] };
@@ -87,11 +89,11 @@ function Gallery({ media }: { media: Media[] }) {
     {cur && <div className="qc-lightbox" role="dialog" aria-label={tx("QC 파일")}><Button variant="ghost" size="icon" aria-label={tx("닫기")} onClick={() => setOpen(null)}><X /></Button>{cur.kind === 'video' ? <video src={cur.url} controls autoPlay playsInline /> : <img src={cur.url} alt={tx("QC 사진")} />}<p>{open! + 1} / {media.length}</p></div>}</>;
 }
 
-function Thread({ msgs }: { msgs: Msg[] }) {
+function Thread({ msgs, sellerName }: { msgs: Msg[]; sellerName?: string }) {
   const { lang } = useCurrency();
   if (!msgs.length) return null;
   return <ul className="mt-3 grid gap-2 text-sm">{msgs.map(m => <li key={m.id} className={`rounded-md border p-2 ${m.author_role === 'admin' ? 'border-primary bg-primary/20' : m.author_role === 'seller' ? 'border-border bg-card' : 'border-border bg-primary/10'}`}>
-    <div className="flex justify-between text-xs text-muted-foreground"><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{m.author_role === 'admin' ? tx('관리자 (중재)') : m.author_role === 'seller' ? tx('셀러') : tx('구매자')}</span> · <span data-i18n-skip data-no-translate translate="no" className="notranslate">{m.kind === 'request' ? tx('추가 사진 요청') : m.kind === 'qc' ? tx('QC 업로드') : tx('메시지')}</span></span><span>{new Date(m.created_at).toLocaleString()}</span></div>
+    <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground"><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{m.author_role === 'admin' ? tx('관리자 (중재)') : m.author_role === 'seller' ? sellerName || tx('셀러') : tx('구매자')}</span> · <span data-i18n-skip data-no-translate translate="no" className="notranslate">{m.kind === 'request' ? tx('추가 사진 요청') : m.kind === 'qc' ? tx('QC 업로드') : tx('메시지')}</span></span><span>{new Date(m.created_at).toLocaleString()}</span></div>
     {m.areas.length > 0 && <p className="mt-1 text-primary">{m.areas.join(', ')}</p>}
     {m.body && <TranslatableText as="p" className="mt-1 whitespace-pre-wrap" text={m.body} />}
   </li>)}</ul>;
@@ -224,7 +226,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
           <Button variant="goldOutline" onClick={() => setChat(chat === o.id ? null : o.id)}><MessageSquareText /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{o.dispute_open ? tx('분쟁방 열기') : isSeller ? tx('구매자에게 메시지') : tx('판매자에게 메시지')}</span>{msgs.length ? ` (${msgs.length})` : ''}</Button>
           {!o.dispute_open && stage !== 'delivered' && <Button variant="ghost" onClick={() => { if (confirm('분쟁을 열면 관리자가 대화에 참여하고 에스크로 대금이 보류됩니다. 계속할까요?')) void supabase.from('orders').update({ dispute_open: true }).eq('id', o.id).then(r => { if (r.error) toast.error(r.error.message); else setChat(o.id); }); }}><AlertTriangle /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("분쟁 열기")}</span></Button>}
         </div>
-        {chat === o.id && <div className="mt-2"><p className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{o.dispute_open ? tx('구매자 · 셀러 · 관리자 3자 대화') : tx('익명 1:1 주문 대화 · 닉네임과 연락처는 공유되지 않습니다')}</span></p><Thread msgs={msgs} /><Composer orderId={o.id} role={as} /></div>}
+        {(chat === o.id || search.orderView === 'messages') && <div className="mt-2"><h3 className="text-sm font-semibold"><span data-i18n-skip translate="no" className="notranslate">{tx('메시지')}</span> · <span data-i18n-skip>{o.seller_name}</span></h3><Thread msgs={msgs} sellerName={o.seller_name}/><Composer orderId={o.id} role={as} onSent={() => void q.refetch()} /></div>}
       </article>;
     })}
     {as === 'seller' && <ListPagination pager={pager} />}
