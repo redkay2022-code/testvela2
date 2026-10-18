@@ -1,4 +1,7 @@
 # velamarket
+- [x] Remove insurance choices/metadata writes from seller creation/edit; optional buyer insurance forwarded to checkout and included only when selected at fixed 10% item price, box excluded. 21 tests pass; authenticated real RM07-01 detail/checkout selection readback and 390/707px no overflow verified; upload has no insurance checkbox. No payment or production order submitted. Build OK.
+- [x] Show seller identity and latest seller message on buyer purchase cards; direct order conversation opens existing messages and reply input. Real Mola order VM-35FAFF34: Valee&Time and stored seller message read back, conversation/Back verified, 390px no overflow or page errors, 33 tests pass; build OK. No production messages or orders changed.
+- [x] Correct My VELA customer dashboard role selection using trusted account roles; buyer orders entry stays on /me and opens buyer order/QC/shipping board, seller links retained. 32 focused tests pass, build OK; stale seller URL guest entry and 390px no-overflow verified. Actual customer order readback blocked: requester auth-session --self has no matching account; customer sign-in required.
 - [x] Sync verified order state, private party notifications and role-scoped active transactions; isolated sample confirmation syncs across admin/buyer/seller views. Admin live participant readback, My VELA access, sample confirmation popup, mobile no-overflow and 34 tests verified; build OK. Database rollback test verifies confirmation, notifications and idempotence without retained test data.
 - [ ] Verify real buyer/seller account receipt of a newly confirmed payment end-to-end. Blocker: only the approved administrator session was used; no real payment or production order was changed for testing.
 - [x] Complete reactive seller dashboard/store-management translations across all 11 locales. Authenticated admin session: live language switching, 11-language store views, English/Chinese Q&A, shipping, analytics, messages, studio tabs, wallet/history dialogs and new-product forms verified with no residual Korean or page errors. Seller-only menu labels audited against every locale; seller-specific populated metrics remain unverified with the admin session. Focused tests pass; build OK.
@@ -78,9 +81,12 @@
 ## Payments
 - [x] USDT payment modal: direct transfer, card/Apple Pay via MoonPay, wallet connect, escrow trust banner
 - [ ] MoonPay partner key for guaranteed wallet prefill (waiting on user)
+- [x] Separate seller order history from active QC/logistics; add owner-only notices/introduction. Authenticated save/reload/public readback and cleanup verified, cross-owner insert rejected (403); 18 tests and build pass; 390px no overflow.
 
 - [x] Update all three product creation/edit brand selectors: custom entry first, requested top nine, alphabetical full catalog and translation protection. Three tests pass; authenticated upload and seller new-product selection/custom entry/scroll verified, no runtime errors, build OK. No live product created.
 
 - [x] Brand custom mode reopens the option list whether text is empty or typed; listed/custom switching retains translation protection.
 
 - [x] Add shared eleven-field watch specifications to upload, seller creation/edit and admin catalog; retain units/multiline content. Sixteen tests and build pass; browser input/custom selection and 390px single-column layout verified. No live product was created, so saved-product end-to-end readback remains unverified.
+
+- [x] Move store introduction editing to seller profile (150 characters); notices editing to Store Manager; public storefront stays read-only. Shared client/server length validation and 3 tests pass. Public placement verified; seller save end-to-end awaits seller session.

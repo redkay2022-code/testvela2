@@ -1099,6 +1099,51 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_store_content: {
+        Row: {
+          introduction: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          introduction?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          introduction?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      seller_store_notices: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       seller_tier_overrides: {
         Row: {
           seller_id: string
