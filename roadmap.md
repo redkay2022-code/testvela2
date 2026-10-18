@@ -1,4 +1,5 @@
 # velamarket
+- [ ] Show seller identity and latest seller message on buyer purchase cards; open existing order conversation directly and verify the screenshot's buyer order.
 - [x] Correct My VELA customer dashboard role selection using trusted account roles; buyer orders entry stays on /me and opens buyer order/QC/shipping board, seller links retained. 32 focused tests pass, build OK; stale seller URL guest entry and 390px no-overflow verified. Actual customer order readback blocked: requester auth-session --self has no matching account; customer sign-in required.
 - [x] Sync verified order state, private party notifications and role-scoped active transactions; isolated sample confirmation syncs across admin/buyer/seller views. Admin live participant readback, My VELA access, sample confirmation popup, mobile no-overflow and 34 tests verified; build OK. Database rollback test verifies confirmation, notifications and idempotence without retained test data.
 - [ ] Verify real buyer/seller account receipt of a newly confirmed payment end-to-end. Blocker: only the approved administrator session was used; no real payment or production order was changed for testing.

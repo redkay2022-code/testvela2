@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { customerTabs, purchaseMilestones, toggleCollection } from '@/lib/customer-dashboard';
+import { customerTabs, latestSellerMessage, purchaseMilestones, toggleCollection } from '@/lib/customer-dashboard';
 describe('customer dashboard rules', () => {
+  it('shows only the latest seller message for the purchased order', () => {
+    const messages = [
+      { order_id: 'VM-35FAFF34', author_role: 'seller', created_at: '2026-10-17', body: '준비 중입니다' },
+      { order_id: 'VM-35FAFF34', author_role: 'seller', created_at: '2026-10-18', body: 'QC 사진을 보내겠습니다' },
+      { order_id: 'other-order', author_role: 'seller', created_at: '2026-10-19', body: '다른 주문' },
+      { order_id: 'VM-35FAFF34', author_role: 'buyer', created_at: '2026-10-20', body: '구매자 글' },
+    ];
+    expect(latestSellerMessage(messages, 'VM-35FAFF34')?.body).toBe('QC 사진을 보내겠습니다');
+    expect(latestSellerMessage(messages, 'missing')).toBeUndefined();
+  });
   it('defaults to saved, then orders, inquiries and likes', () => expect(customerTabs).toEqual(['saved', 'orders', 'qna', 'likes']));
   it('immediately saves once and removes on second selection', () => {
     expect(toggleCollection(['old'], 'new')).toEqual(['new', 'old']);

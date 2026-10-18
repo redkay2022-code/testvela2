@@ -9,7 +9,7 @@ export type Post = Database['public']['Tables']['posts']['Row'];
 export type Mode = 'home' | 'explore' | 'market' | 'me' | 'upload';
 export const paths = { home:'/', explore:'/explore', market:'/market', me:'/me', upload:'/upload' } as const;
 export const marketSearch = z.object({
-  customerTab:z.enum(['saved','orders','qna','likes']).optional(), orderId:z.string().uuid().optional(), orderView:z.enum(['tracking','qc','specs','defect']).optional(),
+  customerTab:z.enum(['saved','orders','qna','likes']).optional(), orderId:z.string().uuid().optional(), orderView:z.enum(['tracking','qc','specs','defect','messages']).optional(),
   studioTab:z.enum(['tier','replacement','reviews']).optional(),
   sellerView:z.enum(['inventory','qna','shipping','analytics']).optional(), activity:z.enum(['likes','followers','comments']).optional(), salesPeriod:z.enum(['daily','monthly','yearly']).optional(), salesDate:z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), studioDialog:z.enum(['history','reviews','wallet']).optional(), conversation:z.string().uuid().optional(), question:z.string().optional(),
   collection:z.enum(['watches','accessories']).optional(), watchType:z.enum(['all','automatic','manual','quartz','chronograph','diver','dress','sport']).optional(),
