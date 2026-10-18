@@ -9,7 +9,7 @@ import { Button } from './ui/button';
 import { Tx } from './tx';
 import { TranslatableText } from './translatable-text';
 
-export function PurchaseSellerMessages({ order, userId, product }: { order: { id: string; seller_id: string | null; seller_name: string }; userId: string; product?: LuxuryPost }) {
+export function PurchaseSellerMessages({ order, userId, product }: { order: { id: string; seller_id: string | null; seller_name: string }; userId: string; product?: LuxuryPost | undefined }) {
   const messages = useQuery({
     queryKey: ['buyer-order-messages', userId, order.id],
     refetchInterval: 5000,
