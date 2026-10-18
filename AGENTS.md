@@ -45,6 +45,6 @@
 - Seller text uses cached translations reset on edit.
 
 - Payment verification stays separate from escrow; triggers sync private notices/transactions and dashboards use role-scoped reads.
-- Isolate transaction samples in a shared provider, never live orders or financial metrics, to avoid production writes.
+- Isolate transaction samples from live orders/metrics; never write them to production.
 
 - Store content uses owner-scoped seller actions, never display identity; order history stays separate from active QC/logistics.
