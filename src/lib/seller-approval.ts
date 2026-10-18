@@ -2,6 +2,13 @@ import { sellerTier, type SellerReputation } from './reputation';
 
 export type SellerApprovalState = { roles: string[]; application: { status: string } | null };
 
+/** URL preview roles never grant dashboard access. */
+export function accountDashboardRole(account: Pick<SellerApprovalState, 'roles'> | undefined, selectedRole?: 'buyer' | 'seller' | 'admin') {
+  if (account?.roles.includes('seller')) return 'seller' as const;
+  if (selectedRole === 'admin' && account?.roles.includes('admin')) return 'admin' as const;
+  return 'buyer' as const;
+}
+
 /** Account navigation uses trusted roles, never selected preview roles. */
 export function accountPage(account: Pick<SellerApprovalState, 'roles'> | undefined) {
   return account?.roles.includes('seller') ? '/seller' as const : '/me' as const;

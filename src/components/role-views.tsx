@@ -9,7 +9,7 @@ import { type LuxuryPost } from '@/lib/luxury-market';
 import { marketSearch } from '@/lib/market';
 import { useMarketPreview } from './market-preview';
 import { BuyerBadge, StudioTierBadge } from './reputation';
-import { accountSellerTier } from '@/lib/seller-approval';
+import { accountDashboardRole, accountSellerTier } from '@/lib/seller-approval';
 import { useStudioReputation } from '@/lib/studio-tier';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ import { MyActivity } from './my-activity';
 import { SellerStudio } from './seller-studio';
 import { LogoutItem } from './logout-item';
 import { ActiveTransactions } from './active-transactions';
+import { Tx } from './tx';
 
 export function RoleSwitcher(){
  const location=useRouterState({select:s=>s.location}),search=marketSearch.parse(location.search),navigate=useNavigate();
@@ -25,11 +26,12 @@ export function RoleSwitcher(){
 }
 export function AccountView({posts,user,onPanel,requestAuth}:{posts:LuxuryPost[];user:AuthUser|null;onPanel:(panel:'orders'|'settings'|'apply'|'wallet')=>void;requestAuth:(signup?:boolean)=>void}){
  const search=marketSearch.parse(useRouterState({select:s=>s.location.search})),p=useMarketPreview();
- const role=search.role || 'buyer';const acct=useMyAccount(user);const avatarUrl=useAvatarUrl(acct.data?.profile?.avatar_url);const saved=posts.filter(post=>p.saved.includes(post.id));
+ const acct=useMyAccount(user);const role=accountDashboardRole(user?acct.data:undefined,search.role);const avatarUrl=useAvatarUrl(acct.data?.profile?.avatar_url);
  const sellerReputation=useStudioReputation(user&&acct.data?.roles.includes('seller')?user.id:null);const badgeTier=accountSellerTier(user?acct.data:undefined,sellerReputation.data?.reputation);
  return <div className="account-page" lang="ko" data-no-translate><div className="account-heading"><span className="lux-eyebrow">나만의 컬렉션</span><h1>내 VELA</h1></div><div className="account-profile"><div className="account-avatar">{avatarUrl?<img src={avatarUrl} alt="프로필 사진" className="size-full rounded-full object-cover"/>:<User size={44}/>}</div><div><div className="account-name-line"><h2><span data-no-translate>{user?(acct.data?.profile?.nickname ?? 'Vela Member'):p.profile.name}</span></h2>{badgeTier?<StudioTierBadge tier={badgeTier}/>:<BuyerBadge/>}</div>{user&&acct.data?.profile&&<small className="block text-xs text-muted-foreground" data-no-translate>#{acct.data.profile.system_code}</small>}<span className="text-sm text-muted-foreground">{role==='admin'?'플랫폼 관리자':badgeTier?'셀러 계정':'고객 계정'}</span></div>{user?<Button variant="goldOutline" size="sm" className="ml-auto shrink-0" onClick={()=>onPanel('settings')}><Pencil size={15}/>편집</Button>:<div className="ml-auto flex shrink-0 flex-wrap gap-2" role="group" aria-label="회원 계정"><Button variant="gold" size="sm" onClick={()=>requestAuth(true)}>회원가입</Button><Button variant="goldOutline" size="sm" onClick={()=>requestAuth(false)}>로그인</Button></div>}</div>{role==='buyer'&&<MyActivity user={user} posts={posts} onOrders={()=>onPanel('orders')}/>}<AdminToggle user={user} role={role}/>{role==='buyer'&&user&&<MembershipCard onWallet={()=>onPanel('wallet')}/>}
- {role==='seller'?<div className="account-destination"><Store className="text-primary"/><div><h2>Your studio, at a glance.</h2><p>Products, orders and earnings.</p></div><Button asChild variant="gold"><Link to="/seller" search={{role}}>Open dashboard<ArrowRight/></Link></Button></div>:role==='admin'?<div className="account-destination"><ShieldCheck className="text-primary"/><div><h2>Platform management</h2><p>Review, verify and oversee.</p></div><Button asChild variant="gold"><Link to="/admin" search={{role}}>Open back office<ArrowRight/></Link></Button></div>:<div className="customer-seller-callout"><div><h2>판매자 계정 신청</h2><p>VELA에서 나만의 스토어를 시작하세요.</p></div><Button variant="ghost" onClick={()=>onPanel('apply')}>{acct.data?.application?.status==='approved'?'승인 완료':acct.data?.application?'신청 내역':'신청하기'}<ArrowRight/></Button></div>}
+ {role==='seller'?<div className="account-destination"><Store className="text-primary"/><div><h2><Tx>Your studio, at a glance.</Tx></h2><p><Tx>Products, orders and earnings.</Tx></p></div><Button asChild variant="gold"><Link to="/seller" search={{role}}><Tx>Open dashboard</Tx><ArrowRight/></Link></Button></div>:role==='admin'?<div className="account-destination"><ShieldCheck className="text-primary"/><div><h2>Platform management</h2><p>Review, verify and oversee.</p></div><Button asChild variant="gold"><Link to="/admin" search={{role}}>Open back office<ArrowRight/></Link></Button></div>:<section className="account-destination notranslate" translate="no" aria-label="구매자 주문 내역 및 배송 조회"><Package className="shrink-0 text-primary"/><div className="min-w-0"><h2><Tx>구매한 제품 정보</Tx></h2><p><Tx>진행 중인 거래</Tx> · <Tx>배송 추적</Tx></p></div><Button asChild variant="gold" className="shrink-0"><Link to="/me" search={prev=>({...prev,role:'buyer',customerTab:'orders',panel:'orders',orderId:undefined,orderView:undefined})} resetScroll={false}><Tx>View orders</Tx><ArrowRight/></Link></Button></section>}
  {role==='buyer'&&user&&<ActiveTransactions role="buyer" userId={user.id}/>}
+  {role==='buyer'&&<div className="customer-seller-callout"><div><h2>판매자 계정 신청</h2><p>VELA에서 나만의 스토어를 시작하세요.</p></div><Button variant="ghost" onClick={()=>onPanel('apply')}>{acct.data?.application?.status==='approved'?'승인 완료':acct.data?.application?'신청 내역':'신청하기'}<ArrowRight/></Button></div>}
  <LogoutItem/>
  </div>;
 }

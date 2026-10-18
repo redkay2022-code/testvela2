@@ -1,5 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { accountPage, accountSellerTier, accountUploadRole, shouldOpenSellerDashboard } from '@/lib/seller-approval';
+import { accountDashboardRole, accountPage, accountSellerTier, accountUploadRole, shouldOpenSellerDashboard } from '@/lib/seller-approval';
+
+describe('My VELA dashboard role', () => {
+  it('keeps buyers on buyer orders despite a stale seller URL role', () => {
+    expect(accountDashboardRole({roles:['user']}, 'seller')).toBe('buyer');
+    expect(accountPage({roles:['user']})).toBe('/me');
+  });
+  it('preserves trusted sellers studio navigation', () => {
+    expect(accountDashboardRole({roles:['user','seller']}, 'buyer')).toBe('seller');
+    expect(accountPage({roles:['user','seller']})).toBe('/seller');
+  });
+  it('does not accept guest or buyer URL roles as privileges', () => {
+    expect(accountDashboardRole(undefined, 'seller')).toBe('buyer');
+    expect(accountDashboardRole({roles:['user']}, 'admin')).toBe('buyer');
+  });
+  it('retains verified admin mode without turning an admin into a seller', () => {
+    expect(accountDashboardRole({roles:['admin']}, 'admin')).toBe('admin');
+    expect(accountDashboardRole({roles:['admin']}, 'seller')).toBe('buyer');
+  });
+});
 
 describe('trusted account page', () => {
   it('always opens the seller dashboard for a trusted seller', () => {

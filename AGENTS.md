@@ -20,9 +20,9 @@
 - Isolate demo role previews and commerce/moderation actions in a shared React provider; they never grant Cloud privileges or change production rows.
 - Share photo/Shorts detail content; product Q&A uses authenticated post comments and validated detailTab for Back navigation, separate from simulated commerce.
 - Shorts use /shorts/$id with validated nested sheets; swipes replace the ID so Back exits rather than replaying swipes.
-- Derive seller reputation and account badges with shared pure functions and local SVG emblems; account badges use trusted roles, not URL view state; keep editorial metrics sample-only and leave unknown live sellers unbadged until trusted approval data exists.
+- Shared pure reputation functions/local SVG badges use trusted roles; editorial metrics stay sample-only and unknown live sellers stay unbadged.
 - Buyer tiers are trusted, never inferred from client orders/metadata; default to Member.
-- Resolve storefronts from public feed rows by seller identity, creator name and slug-insensitive keys; reviews share that canonical identity so 구매처 opens the correct store. Never attribute sample reputation or reviews to another seller.
+- Storefronts/reviews share canonical feed seller identity with slug-insensitive keys; never attribute sample reputation/reviews to another seller.
 - Build the public seller directory from visible feed listings grouped by stable seller identity; directory filters use validated URL search state and unknown live metrics remain unavailable.
 - Use insuredPurchase for mandatory delivery insurance and checkout totals; calculate on the seller item price, excluding the optional box, to keep displayed and submitted totals consistent.
 - Store item/box prices in USD; display via src/lib/currency formatMoney for consistent totals/fees.
@@ -33,7 +33,7 @@
 - Real orders, QC media and the buyer/seller QC board live in Cloud (orders, order_qc_media, order_messages, private qc-media bucket); a database trigger enforces role-based stage changes and the 9-photo + 1-video QC minimum so clients cannot skip steps. Live courier status comes from 17TRACK via a cached authenticated server function (TRACK17_API_KEY).
 - Help/privacy are public; settings use URL tabs. Presentation: src/components/AGENTS.md.
 - USDT display estimates parity; stored prices/networks stay unchanged.
-- Seed stores/products live in the database (data_source SEED), not local arrays. Catalog is Seller → Store → Product: products extend `posts` (store_id, product_status, inventory, data_source) with `product_images`/`product_qc`; a DB trigger owns status/stock transitions and syncs legacy `status`, so existing feed/search/buy code keeps reading `posts`. Inactive stores hide their products via a restrictive RLS policy.
+- Database SEED catalog is Seller → Store → Product, extending posts with store_id/product_status/inventory/data_source and product_images/product_qc. DB triggers own stock/status and sync legacy status; restrictive RLS hides inactive-store products.
 - Categories live in public.categories (admin-managed parent/child rows); forms render them via CategoryOptions and posts keep the category name, so renames also update posts. Video uploads auto-generate a JPEG frame into posts.thumbnail_url in the browser so feeds never load video just for a cover.
 - Shorts share seller controls: hybrid details use /post/$id; video-only uses URL sheets and ProductComments. Posters are not photos. Leaf head() sets share metadata.
 - Media self-heals via src/lib/media-refresh.ts. Comments use scoped profile RPCs and authorized signed avatars; no private fields.
@@ -41,7 +41,7 @@
 
 - Seller pages share trusted queries; studioTab limits scrolling. PullToRefresh invalidates active queries from top-only document/nested gestures. discoveryListings excludes sold stock only from discovery, retaining storefront history.
 
-- Customer activity uses validated customerTab/orderId/orderView and authorized live orders/QC/messages; share owner likes and account-keyed local saves. Feed counters are owner state.
+- Customer activity uses validated customerTab/orderId/orderView and authorized orders/QC/messages; likes, saves and counters are owner state. My VELA resolves trusted roles, never URL previews; buyer links reuse the buyer order board to prevent seller access failures.
 - Seller post text is AI-translated on demand into posts.translations; a trigger resets it on edit.
 
 - Keep payment verification separate from escrow stage; database triggers synchronize transactions and private party notifications, and all dashboards share authenticated role-scoped transaction reads. This preserves QC transitions and prevents cross-account leaks.
