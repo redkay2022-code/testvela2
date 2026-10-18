@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
-import { escrowTotals } from './seller-workflows';
+import { orderEscrow } from './seller-workflows';
 
 export const getSellerWorkflows = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
   const { supabase, userId } = context;
@@ -9,17 +9,14 @@ export const getSellerWorkflows = createServerFn({ method: 'POST' }).middleware(
   if (roleError || !roles?.some(r => r.role === 'seller' || r.role === 'admin')) throw new Error('승인된 셀러만 이용할 수 있습니다.');
   const [activity, orders, replacements] = await Promise.all([
     supabase.rpc('seller_activity_summary'),
-    supabase.from('orders').select('id,order_no,title,amount_usd,stage,created_at,updated_at,cancelled_at,refunded_amount_usd,dispute_open').eq('seller_id', userId).order('created_at', { ascending: false }),
+    supabase.from('orders').select('id,order_no,title,amount_usd,stage,created_at,updated_at,cancelled_at,refunded_amount_usd,dispute_open,payment_verified_at,network,txid').eq('seller_id', userId).order('created_at', { ascending: false }),
     supabase.from('order_replacements').select('*').eq('seller_id', userId),
   ]);
   if (activity.error || orders.error || replacements.error) throw new Error('셀러 정보를 불러오지 못했습니다.');
   const ids = (orders.data ?? []).map(o => o.id);
-  const [payments, messages] = ids.length ? await Promise.all([
-    supabase.from('payment_transactions').select('amount_usd,escrow_status').in('order_id', ids),
-    supabase.from('order_messages').select('id,order_id,author_role,body,created_at').in('order_id', ids).order('created_at', { ascending: false }),
-  ]) : [{ data: [], error: null }, { data: [], error: null }];
-  if (payments.error || messages.error) throw new Error('대화·입금 정보를 불러오지 못했습니다.');
-  return { activity: activity.data, orders: orders.data ?? [], messages: messages.data ?? [], replacements: replacements.data ?? [], escrow: escrowTotals(payments.data ?? []) };
+  const messages = ids.length ? await supabase.from('order_messages').select('id,order_id,author_role,body,created_at').in('order_id', ids).order('created_at', { ascending: false }) : { data: [], error: null };
+  if (messages.error) throw new Error('대화 정보를 불러오지 못했습니다.');
+  return { activity: activity.data, orders: orders.data ?? [], messages: messages.data ?? [], replacements: replacements.data ?? [], escrow: orderEscrow(orders.data ?? []) };
 });
 
 export const saveReplacement = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])

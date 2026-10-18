@@ -20,4 +20,13 @@ export function salesTrend(orders: SalesOrder[], period: SalesPeriod, date: stri
 export function escrowTotals(payments: { amount_usd: number; escrow_status: string }[]) {
   return payments.reduce((s, p) => ({ released: s.released + (p.escrow_status === 'RELEASED' ? Number(p.amount_usd) : 0), pending: s.pending + (p.escrow_status === 'HELD' ? Number(p.amount_usd) : 0) }), { released: 0, pending: 0 });
 }
+/** 셀러 입금 현황은 실제 주문에서 계산한다: 확인 대기 / 에스크로 보관 / 구매 확정(정산 가능). */
+export function orderEscrow(orders: { amount_usd: number; stage: string; payment_verified_at?: string | null; cancelled_at: string | null; refunded_amount_usd: number }[]) {
+  return orders.reduce((s, o) => {
+    if (o.cancelled_at) return s;
+    const net = Math.max(0, Number(o.amount_usd) - Number(o.refunded_amount_usd || 0));
+    if (!o.payment_verified_at) return { ...s, awaiting: s.awaiting + net };
+    return o.stage === 'delivered' ? { ...s, released: s.released + net } : { ...s, pending: s.pending + net };
+  }, { awaiting: 0, pending: 0, released: 0 });
+}
 export const publicationUpdate = (active: boolean) => ({ status: active ? 'published' : 'draft', product_status: active ? 'PUBLISHED' : 'DRAFT' });

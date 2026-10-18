@@ -266,7 +266,7 @@ function useAdminOrders(filter: 'crypto' | 'disputes') {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['admin-orders', filter], retry: false, queryFn: async () => {
     let b = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id').order('created_at', { ascending: false });
-    b = filter === 'crypto' ? b.not('txid', 'is', null) : b.eq('dispute_open', true);
+    b = filter === 'crypto' ? b : b.eq('dispute_open', true);
     const { data, error } = await b; if (error) throw error;
     const orders = (data ?? []) as Order[];
     let msgs: Msg[] = [];
@@ -288,12 +288,12 @@ export function AdminCryptoOrders() {
   if (q.error) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자 계정으로 로그인하면 실제 TXID를 확인할 수 있습니다.")}</span></p>;
   const orders = q.data?.orders ?? [];
   if (!orders.length) return <div className="lux-empty"><ShieldCheck /><h2><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("수신된 실제 TXID가 없습니다.")}</span></h2><p><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("구매자가 TXID를 제출하면 여기에 실시간으로 표시됩니다.")}</span></p></div>;
-  return <div className="management-list">{orders.map(o => { const ex = explorerUrl(o.network, o.txid!); return <div className="management-row" key={o.id}>
-    <div className="min-w-0"><strong>{o.title}</strong><small data-no-translate>{o.order_no} · {o.seller_name} · {o.network ?? '—'}</small><small className="break-all" data-no-translate>TXID {o.txid}</small></div>
+  return <div className="management-list">{orders.map(o => { const ex = explorerUrl(o.network, o.txid ?? ''); return <div className="management-row" key={o.id}>
+    <div className="min-w-0"><strong>{o.title}</strong><small data-no-translate>{o.order_no} · {o.seller_name} · {o.network ?? '—'}</small><small className="break-all" data-no-translate>TXID {o.txid ?? tx('미제출')} · {tx(stageLabel(o.stage as EscrowStage))} · {new Date(o.created_at).toLocaleString()}</small></div>
     <strong>{dollars(Number(o.amount_usd))}</strong>
     <span className="record-status"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{o.payment_verified_at ? tx('입금 확인됨') : tx('검증 대기')}</span></span>
     <div className="record-actions">
-      <Button asChild variant="ghost" size="sm"><a href={ex.url} target="_blank" rel="noreferrer"><ExternalLink /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("{0}에서 확인", { 0: ex.name })}</span></a></Button>
+      {o.txid && <Button asChild variant="ghost" size="sm"><a href={ex.url} target="_blank" rel="noreferrer"><ExternalLink /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("{0}에서 확인", { 0: ex.name })}</span></a></Button>}
       {!o.payment_verified_at && <Button variant="goldOutline" size="sm" onClick={() => { if (confirm(`${ex.name}에서 금액과 수신 주소를 확인하셨나요? 결제 확인으로 처리합니다.`)) void supabase.from('orders').update({ payment_verified_at: new Date().toISOString() }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('결제 확인 처리되었습니다.')); }}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("결제 확인")}</span></Button>}
     </div></div>; })}</div>;
 }
@@ -311,4 +311,31 @@ export function AdminDisputeRooms() {
     <Thread msgs={(q.data?.msgs ?? []).filter(m => m.order_id === o.id)} />
     <Composer orderId={o.id} role="admin" />
   </article>)}</div>;
+}
+
+/** Admin: real order / deposit numbers (all orders, newest first). */
+function useOrderStats() {
+  const q = useAdminOrders('crypto');
+  const orders = (q.data?.orders ?? []).filter(o => o.stage !== undefined);
+  const sum = (l: Order[]) => l.reduce((a, o) => a + Number(o.amount_usd), 0);
+  const waiting = orders.filter(o => !o.payment_verified_at), held = orders.filter(o => o.payment_verified_at && o.stage !== 'delivered'), done = orders.filter(o => o.stage === 'delivered');
+  return { q, total: orders.length, waiting: waiting.length, waitingUsd: sum(waiting), heldUsd: sum(held), doneUsd: sum(done) };
+}
+function OrderStatGrid() {
+  const s = useOrderStats();
+  const usdFmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+  const items: [string, string, string][] = [
+    ['전체 주문', s.q.isLoading ? '…' : String(s.total), '실제 주문 · 실시간'],
+    ['입금 확인 대기', s.q.isLoading ? '…' : `${s.waiting}건`, usdFmt(s.waitingUsd)],
+    ['에스크로 보관', usdFmt(s.heldUsd), '입금 확인 완료 · 구매 확정 전'],
+    ['구매 확정 (정산 대상)', usdFmt(s.doneUsd), '수령 확인 완료'],
+  ];
+  return <div className="dashboard-stats" lang="ko" data-no-translate>{items.map(([l, v, n]) => <div className="stat-item" key={l}><span>{l}</span><strong>{v}</strong><small>{n}</small></div>)}</div>;
+}
+export function AdminOrderSummary() {
+  return <section className="mb-6"><div className="section-heading" lang="ko" data-no-translate><h2>주문 · 입금 현황</h2><span>구매자가 TXID를 제출하면 바로 반영됩니다</span></div><OrderStatGrid /></section>;
+}
+/** Admin "Orders" tab: all real orders with deposit verification. */
+export function AdminOrdersPanel() {
+  return <div className="mt-4"><OrderStatGrid /><div className="section-heading mt-6" lang="ko" data-no-translate><h2>전체 주문 · TXID 입금 확인</h2><span>최신순</span></div><AdminCryptoOrders /></div>;
 }

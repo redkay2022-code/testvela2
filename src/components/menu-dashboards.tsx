@@ -44,6 +44,7 @@ function AdminBlock() {
   const apps = useCount('menu-pending-apps', 'seller_applications', q => q.eq('status', 'pending'));
   const open = useCount('menu-open-orders', 'orders', q => q.is('cancelled_at', null).neq('stage', 'delivered'));
   const disputes = useCount('menu-open-disputes', 'orders', q => q.eq('dispute_open', true));
+  const payWait = useCount('menu-pay-wait', 'orders', q => q.is('cancelled_at', null).is('payment_verified_at', null));
   const t = traffic.data;
   return <section className="border-b border-border py-4" aria-label={tx("관리자 대시보드")}>
     <h2 className="mb-2 flex items-center gap-2 px-2 text-xs font-semibold text-primary"><ShieldCheck className="size-4"/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자 대시보드")}</span></h2>
@@ -52,6 +53,7 @@ function AdminBlock() {
       <Stat label="오늘 방문자" value={t ? t.today_visitors : dash}/>
       <Stat label="전체 회원" value={t ? t.members : dash} note={t ? tx("제재 중 {0}명", { 0: t.sanctioned }) : undefined}/>
       <Stat label="승인 대기 셀러" value={apps.data ?? dash} tone={apps.data ? 'alert' : undefined}/>
+      <Stat label="입금 확인 대기" value={payWait.data ?? dash} note="TXID 확인 필요" tone={payWait.data ? 'alert' : undefined}/>
       <Stat label="진행 중 주문" value={open.data ?? dash}/>
       <Stat label="분쟁 접수" value={disputes.data ?? dash} tone={disputes.data ? 'alert' : undefined}/>
     </div>
@@ -61,7 +63,7 @@ function AdminBlock() {
       <Shortcut icon={ClipboardList} badge={apps.data ?? 0} to="/admin" search={{ role: 'admin', section: 'applications' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매자 신청 승인")}</span></Shortcut>
       <Shortcut icon={Users} to="/admin" search={{ role: 'admin', section: 'members' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("회원 관리 · 정지/추방")}</span></Shortcut>
       <Shortcut icon={Package} to="/admin" search={{ role: 'admin', section: 'products' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("상품 관리")}</span></Shortcut>
-      <Shortcut icon={Truck} badge={disputes.data ?? 0} to="/admin" search={{ role: 'admin', section: 'orders' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문 · 분쟁 관리")}</span></Shortcut>
+      <Shortcut icon={Truck} badge={(disputes.data ?? 0) + (payWait.data ?? 0)} to="/admin" search={{ role: 'admin', section: 'orders' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문 · 분쟁 관리")}</span></Shortcut>
       <Shortcut icon={Trash2} to="/admin" search={{ role: 'admin', section: 'reset' }}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("데이터 초기화")}</span></Shortcut>
     </div>
   </section>;
@@ -83,6 +85,7 @@ function SellerBlock({ user }: { user: User }) {
       <Stat label="분쟁 · 교환" value={work.data ? disputes : dash} tone={disputes ? 'alert' : undefined}/>
       <Stat label="고객 문의" value={questions ?? dash} note="답변 대기 포함"/>
       <Stat label="등록 상품" value={products.data ?? dash}/>
+      <Stat label="입금 확인 중 (USD)" value={work.data ? formatMoney(work.data.escrow.awaiting, 'USD') : dash} note="관리자 TXID 확인 중" tone={work.data?.escrow.awaiting ? 'alert' : undefined}/>
       <Stat label="입금 대기 (USD)" value={work.data ? formatMoney(work.data.escrow.pending, 'USD') : dash} note="구매 확정까지 보관"/>
       <Stat label="입금 완료 (USD)" value={work.data ? formatMoney(work.data.escrow.released, 'USD') : dash} note="에스크로 해제 누적"/>
       <Stat label="지금 방문 중" value={t ? t.live : dash} note="내 스토어 · 최근 5분"/>

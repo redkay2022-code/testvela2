@@ -5,7 +5,7 @@ import { Bitcoin, Check, FileCheck, ShieldCheck, Store, TrendingUp, Users, Walle
 import { Button } from './ui/button';
 import { AdminApplications } from './seller-account';
 import { ReviewList } from './customer-reviews';
-import { AdminCryptoOrders, AdminDisputeRooms } from './live-orders';
+import { AdminCryptoOrders, AdminDisputeRooms, AdminOrderSummary, AdminOrdersPanel } from './live-orders';
 import { useMarketPreview } from './market-preview';
 import { marketSearch } from '@/lib/market';
 import { AdminLoyalty } from './loyalty';
@@ -40,7 +40,8 @@ export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
   if (top === 'reviews') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>리뷰 관리</h1><p>보류 · 삭제</p></div></div>{nav}<AdminReviews/></div>;
   if (top === 'reset') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>데이터 초기화</h1><p>테스트 회원 · 게시물 삭제</p></div></div>{nav}<AdminReset/></div>;
   if (top === 'loyalty') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>Loyalty / Points</h1><p>VELA Point 발행·사용·예산 관리</p></div></div>{nav}<AdminLoyalty/></div>;
-  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}{top === 'dashboard' && <><AdminMuxMigration/><div lang="ko" data-no-translate><TrafficSummary/></div><div className="section-heading"><h2>판매자 신청</h2><span>대기 중인 신청</span></div><AdminApplications/></>}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
+  if (top === 'orders') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>주문 · 입금 관리</h1><p>구매자 TXID 확인 · 에스크로 보관</p></div></div>{nav}<AdminOrdersPanel/></div>;
+  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}{top === 'dashboard' && <><AdminOrderSummary/><AdminMuxMigration/><div lang="ko" data-no-translate><TrafficSummary/></div><div className="section-heading"><h2>판매자 신청</h2><span>대기 중인 신청</span></div><AdminApplications/></>}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
   return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1></div></div>{nav}<LegacyAdmin posts={posts}/></div>;
 }
 
