@@ -42,9 +42,9 @@
 - Seller pages share trusted queries; studioTab limits scrolling. PullToRefresh invalidates active queries from top-only document/nested gestures. discoveryListings excludes sold stock only from discovery, retaining storefront history.
 
 - My VELA uses trusted roles and owner activity; buyer order links use validated orderId/orderView and the buyer board, never Seller Studio. Purchase cards show order seller identity and latest seller message; messages opens the existing order conversation, not general chat.
-- Seller post text is AI-translated on demand into posts.translations; a trigger resets it on edit.
+- Seller text uses cached translations reset on edit.
 
-- Payment verification is separate from escrow stage; triggers sync transactions/private notices and dashboards use role-scoped reads to preserve QC and prevent leaks.
+- Payment verification stays separate from escrow; triggers sync private notices/transactions and dashboards use role-scoped reads.
 - Isolate transaction samples in a shared provider, never live orders or financial metrics, to avoid production writes.
 
-- Store notices/introduction use dedicated owner-scoped storage and authenticated seller actions; storefront identity never authorizes writes. Seller orders are a read-only history, separate from the active QC/logistics board.
+- Store content uses owner-scoped seller actions, never display identity; order history stays separate from active QC/logistics.
