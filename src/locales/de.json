@@ -2690,5 +2690,19 @@
   "수령 확인 완료": "Empfang bestätigt",
   "주문 · 입금 현황": "Bestellungen · Zahlungsstatus",
   "구매자가 TXID를 제출하면 바로 반영됩니다": "Aktualisiert sich, sobald ein Käufer eine TXID einreicht",
-  "전체 주문 · TXID 입금 확인": "Alle Bestellungen · TXID-Prüfung"
+  "전체 주문 · TXID 입금 확인": "Alle Bestellungen · TXID-Prüfung",
+  "주문 내역": "Bestellverlauf",
+  "셀러 소개": "Verkäufervorstellung",
+  "공지 게시판": "Mitteilungen",
+  "공지 작성": "Mitteilung erstellen",
+  "공지·소개": "Mitteilungen & Info",
+  "공지 제목": "Titel",
+  "공지 내용": "Inhalt",
+  "공지 수정": "Mitteilung bearbeiten",
+  "공지 삭제": "Mitteilung löschen",
+  "공지를 삭제할까요?": "Diese Mitteilung löschen?",
+  "등록된 셀러 소개가 없습니다.": "Noch keine Verkäufervorstellung.",
+  "등록된 공지가 없습니다.": "Noch keine Mitteilungen.",
+  "스토어 내용을 불러오지 못했습니다.": "Store-Inhalte konnten nicht geladen werden.",
+  "취소된 주문": "Stornierte Bestellung"
 }

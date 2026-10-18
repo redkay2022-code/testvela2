@@ -2695,5 +2695,19 @@
   "수령 확인 완료": "Ontvangst bevestigd",
   "주문 · 입금 현황": "Bestellingen · stortingsstatus",
   "구매자가 TXID를 제출하면 바로 반영됩니다": "Wordt direct bijgewerkt zodra een koper een TXID indient",
-  "전체 주문 · TXID 입금 확인": "Alle bestellingen · TXID-controle"
+  "전체 주문 · TXID 입금 확인": "Alle bestellingen · TXID-controle",
+  "주문 내역": "Bestelgeschiedenis",
+  "셀러 소개": "Verkopersintroductie",
+  "공지 게시판": "Mededelingen",
+  "공지 작성": "Mededeling schrijven",
+  "공지·소개": "Mededelingen en info",
+  "공지 제목": "Titel",
+  "공지 내용": "Inhoud",
+  "공지 수정": "Mededeling bewerken",
+  "공지 삭제": "Mededeling verwijderen",
+  "공지를 삭제할까요?": "Deze mededeling verwijderen?",
+  "등록된 셀러 소개가 없습니다.": "Nog geen verkopersintroductie.",
+  "등록된 공지가 없습니다.": "Nog geen mededelingen.",
+  "스토어 내용을 불러오지 못했습니다.": "Winkelinhoud kon niet worden geladen.",
+  "취소된 주문": "Geannuleerde bestelling"
 }

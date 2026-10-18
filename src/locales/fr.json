@@ -2690,5 +2690,19 @@
   "수령 확인 완료": "Réception confirmée",
   "주문 · 입금 현황": "Commandes · état des dépôts",
   "구매자가 TXID를 제출하면 바로 반영됩니다": "Mis à jour dès qu'un acheteur soumet un TXID",
-  "전체 주문 · TXID 입금 확인": "Toutes les commandes · vérif. TXID"
+  "전체 주문 · TXID 입금 확인": "Toutes les commandes · vérif. TXID",
+  "주문 내역": "Historique des commandes",
+  "셀러 소개": "Présentation du vendeur",
+  "공지 게시판": "Annonces",
+  "공지 작성": "Créer une annonce",
+  "공지·소개": "Annonces et présentation",
+  "공지 제목": "Titre de l’annonce",
+  "공지 내용": "Contenu de l’annonce",
+  "공지 수정": "Modifier l’annonce",
+  "공지 삭제": "Supprimer l’annonce",
+  "공지를 삭제할까요?": "Supprimer cette annonce ?",
+  "등록된 셀러 소개가 없습니다.": "Aucune présentation du vendeur.",
+  "등록된 공지가 없습니다.": "Aucune annonce.",
+  "스토어 내용을 불러오지 못했습니다.": "Impossible de charger le contenu de la boutique.",
+  "취소된 주문": "Commande annulée"
 }
