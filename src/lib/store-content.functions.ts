@@ -1,10 +1,11 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
+import { storeIntroductionSchema } from './store-content';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 
 export const saveStoreContent = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.discriminatedUnion('kind', [
-    z.object({ kind: z.literal('introduction'), introduction: z.string().trim().max(3000) }),
+    z.object({ kind: z.literal('introduction'), introduction: storeIntroductionSchema }),
     z.object({ kind: z.literal('notice'), id: z.string().uuid().optional(), title: z.string().trim().min(1).max(120), body: z.string().trim().min(1).max(5000) }),
     z.object({ kind: z.literal('delete'), id: z.string().uuid() }),
   ]).parse(input))

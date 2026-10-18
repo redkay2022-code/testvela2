@@ -88,3 +88,5 @@
 - [x] Brand custom mode reopens the option list whether text is empty or typed; listed/custom switching retains translation protection.
 
 - [x] Add shared eleven-field watch specifications to upload, seller creation/edit and admin catalog; retain units/multiline content. Sixteen tests and build pass; browser input/custom selection and 390px single-column layout verified. No live product was created, so saved-product end-to-end readback remains unverified.
+
+- [ ] Move store introduction editing to seller profile (150 characters); notices editing to Store Manager; public storefront stays read-only.
