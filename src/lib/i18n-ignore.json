@@ -161,6 +161,7 @@
     "lib/market-upload.ts",
     "lib/bulk-job.ts",
     "lib/session-state.ts",
-    "lib/brand-names.ts"
+    "lib/brand-names.ts",
+    "lib/default-avatar.ts"
   ]
 }

@@ -1,4 +1,5 @@
 import { tx } from '@/lib/dom-translate';
+import { avatarKey, defaultAvatarUrl } from '@/lib/default-avatar';
 import { useCurrency } from './currency';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
@@ -25,7 +26,7 @@ import { ActiveTransactions } from './active-transactions';
 export function SellerStudio({ user }: { user: User }) {
   const { lang } = useCurrency();
   const search = marketSearch.parse(useRouterState({ select: s => s.location.search })), navigate = useNavigate();
-  const account = useMyAccount(user), isSeller = !!account.data?.roles.includes('seller'), avatar = useAvatarUrl(account.data?.profile?.avatar_url);
+  const account = useMyAccount(user), isSeller = !!account.data?.roles.includes('seller'), avatar0 = useAvatarUrl(account.data?.profile?.avatar_url), avatar = avatar0 ?? (account.data?.profile && !account.data.profile.avatar_url ? defaultAvatarUrl(avatarKey(user.id), account.data.profile.nickname) : null);
   const performance = useStudioReputation(isSeller ? user.id : null), workflows = useSellerWorkflows(user.id);
   const reputation = performance.data?.reputation, tier = reputation ? sellerTier(reputation) ?? 'standard' : 'standard', average = reputation ? ratingAverage(reputation) : null, alert = reputation ? ratingDowngradeAlert(reputation) : null;
   const [today, setToday] = useState(''); useEffect(() => setToday(new Date().toISOString().slice(0, 10)), []);

@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { avatarKey, defaultAvatarUrl } from '@/lib/default-avatar';
 import { ArrowRight, Check, Plus, Star, Store, UserRound } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getSellerAvatar } from '@/lib/market.functions';
@@ -15,7 +16,8 @@ import { TranslatableText } from './translatable-text';
 function DirectoryAvatar({ post }: { post: LuxuryPost }) {
   const storeId = post.source.store_id ?? undefined, userId = post.source.user_id ?? undefined;
   const avatar = useQuery({ queryKey: ['seller-header-avatar', storeId ?? userId ?? null], enabled: !post.sample && Boolean(storeId || userId), queryFn: () => getSellerAvatar({ data: { storeId, userId } }), staleTime: 300_000 });
-  if (avatar.data?.avatar) return <img src={avatar.data.avatar} width={48} height={48} alt={post.creator}/>;
+  const shown = avatar.data?.avatar ?? (avatar.isLoading ? null : defaultAvatarUrl(avatarKey(post.source.user_id ?? post.source.store_id ?? post.creator), post.creator));
+  if (shown) return <img src={shown} width={48} height={48} alt={post.creator} className="size-12 rounded-full object-cover"/>;
   return <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground" role="img" aria-label={post.creator}><UserRound size={22}/></span>;
 }
 

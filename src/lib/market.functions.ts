@@ -1,4 +1,5 @@
 import { createServerFn } from '@tanstack/react-start';
+import { avatarKey, defaultAvatarUrl } from '@/lib/default-avatar';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
@@ -132,7 +133,7 @@ export const getComments = createServerFn({ method: 'GET' })
       const path = profile ? commentAvatarPath(profile) : null;
       const isSeller = Boolean(postRow?.user_id && postRow.user_id === row.user_id);
       const seller = isSeller && postRow ? (postRow.store_id ? postRow.creator : postRow.user_id ?? postRow.creator) : null;
-      return { id: row.id, parent_id: row.parent_id, body: row.body, created_at: row.created_at, nickname: isSeller && postRow?.creator ? postRow.creator : commentNickname(profile), seller, avatar_url: path ? urls.get(path) ?? null : null };
+      return { id: row.id, parent_id: row.parent_id, body: row.body, created_at: row.created_at, nickname: isSeller && postRow?.creator ? postRow.creator : commentNickname(profile), seller, avatar_url: path ? urls.get(path) ?? null : null, avatar_key: avatarKey(row.user_id) };
     });
   });
 

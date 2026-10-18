@@ -1,4 +1,5 @@
 import { ProductDetailContent } from './product-detail-content';
+import { avatarKey, defaultAvatarUrl } from '@/lib/default-avatar';
 import { EscrowGuarantee } from './escrow';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -122,7 +123,7 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
 function ShortSellerIdentity({post}:{post:LuxuryPost}) {
  const preview=useMarketPreview(),identity=sellerIdentity(post),following=preview.isFollowing(identity);
  const sellerAvatar=useQuery({queryKey:['seller-header-avatar',post.source.store_id ?? post.source.user_id ?? null],enabled:!post.sample&&Boolean(post.source.store_id||post.source.user_id),queryFn:()=>getSellerAvatar({data:{storeId:post.source.store_id ?? undefined,userId:post.source.user_id ?? undefined}}),staleTime:300_000});
- return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><Avatar className="shorts-anonymous-avatar"><AvatarImage src={sellerAvatar.data?.avatar ?? undefined} alt={`${post.creator} 프로필 사진`} className="object-cover"/><AvatarFallback className="bg-transparent" aria-label="판매자 프로필"><UserRound/></AvatarFallback></Avatar><strong data-i18n-skip className="notranslate" translate="no">{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
+ return <div className="shorts-seller-identity"><Link to="/store" search={{seller:identity}} className="shorts-seller-link" data-no-translate><Avatar className="shorts-anonymous-avatar"><AvatarImage src={sellerAvatar.data?.avatar ?? (sellerAvatar.isLoading ? undefined : defaultAvatarUrl(avatarKey(post.source.user_id ?? post.source.store_id ?? post.creator), post.creator))} alt={`${post.creator} 프로필 사진`} className="object-cover"/><AvatarFallback className="bg-transparent" aria-label="판매자 프로필"><UserRound/></AvatarFallback></Avatar><strong data-i18n-skip className="notranslate" translate="no">{post.creator}</strong></Link><Button variant="goldOutline" className="shorts-follow-button" aria-label={following?'팔로우 취소':'팔로우'} aria-pressed={following} onClick={()=>preview.toggleSeller(identity)}>{following?<Check size={13}/>:<Plus size={13}/>} {following?'팔로잉':'팔로우'}</Button></div>;
 }
 function ShortSheet({kind,close,children}:{kind:'product'|'comments';close:()=>void;children:React.ReactNode}) {
  const reduced=useReducedMotion();

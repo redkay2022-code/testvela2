@@ -1,4 +1,5 @@
 import { useAdminPasswordGate } from './admin-password-gate';
+import { avatarKey, defaultAvatarUrl } from '@/lib/default-avatar';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -61,7 +62,8 @@ export function AdminToggle({ user, role }: { user: User | null; role: string })
 export function NicknameEditor({ user, unframed = false }: { user: User | null; unframed?: boolean }) {
   const { data } = useMyAccount(user); const qc = useQueryClient(); const save = useServerFn(updateNickname);
   const [value, setValue] = useState(''); const [msg, setMsg] = useState('');
-  const avatarUrl = useAvatarUrl(data?.profile?.avatar_url);
+  const avatarUrl0 = useAvatarUrl(data?.profile?.avatar_url);
+  const avatarUrl = avatarUrl0 ?? (user && data?.profile && !data.profile.avatar_url ? defaultAvatarUrl(avatarKey(user.id), data.profile.nickname) : null);
   useEffect(() => { if (data?.profile) setValue(data.profile.nickname); }, [data?.profile]);
   if (!data?.profile || !user) return null;
   return <form className={unframed ? 'py-4' : 'seller-flow-card'} onSubmit={async e => { e.preventDefault(); setMsg(''); try { await save({ data: { nickname: value } }); await qc.invalidateQueries({ queryKey: ['my-account'] }); void qc.invalidateQueries({ queryKey: ['posts'] }); void qc.invalidateQueries({ queryKey: ['my-listings'] }); setMsg('저장했습니다'); } catch (err) { setMsg(err instanceof Error ? err.message : 'Could not save'); } }}>
