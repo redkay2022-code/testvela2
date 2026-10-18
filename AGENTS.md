@@ -46,3 +46,5 @@
 
 - Payment verification is separate from escrow stage; triggers sync transactions/private notices and dashboards use role-scoped reads to preserve QC and prevent leaks.
 - Isolate transaction samples in a shared provider, never live orders or financial metrics, to avoid production writes.
+
+- Store notices/introduction use dedicated owner-scoped storage and authenticated seller actions; storefront identity never authorizes writes. Seller orders are a read-only history, separate from the active QC/logistics board.
