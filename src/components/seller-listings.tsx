@@ -182,7 +182,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
   const [dispatch, setDispatch] = useSessionState<string>(draftKey + 'dispatch', initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
   const [customDispatch, setCustomDispatch] = useSessionState(draftKey + 'customDispatch', initialDispatch.startsWith('custom:') ? initialDispatch.slice(7) : '');
-  const [insured, setInsured] = useSessionState(draftKey + 'ins', listing?.specs?.['has_insurance'] === true);
+  const [insured, setInsured] = useSessionState(draftKey + 'ins', String(listing?.specs?.['has_insurance']) === 'true');
   const [boxPrice, setBoxPrice] = useSessionState(draftKey + 'box', listing?.box_price != null ? String(listing.box_price) : '');
   const [specs, setSpecs] = useSessionState<Specs>(draftKey + 'specs', listing?.specs ?? {});
   const [sourceType, setSourceType] = useSessionState<SourceType>(draftKey + 'sourceType', () => {
