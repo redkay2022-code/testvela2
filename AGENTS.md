@@ -24,7 +24,7 @@
 - Buyer tiers are trusted, never inferred from client orders/metadata; default to Member.
 - Storefronts/reviews share canonical feed seller identity with slug-insensitive keys; never attribute sample reputation/reviews to another seller.
 - Build the public seller directory from visible feed listings grouped by stable seller identity; directory filters use validated URL search state and unknown live metrics remain unavailable.
-- Use insuredPurchase for mandatory delivery insurance and checkout totals; calculate on the seller item price, excluding the optional box, to keep displayed and submitted totals consistent.
+- Use insuredPurchase with the purchase insurance selection for detail/checkout totals; forward choices via validated search and never store buyer choices on listings.
 - Store item/box prices in USD; display via src/lib/currency formatMoney for consistent totals/fees.
 - Latest locale wins; seller cards/menus/notices use reactive Tx/tx with whole-sentence parameters. Native notranslate allows app translation; data-i18n-skip protects output/identities. Cache USD rates server-side.
 - Phone/password auth uses server-side peppered SHA-256; only a unique phone hash and synthetic email are stored, never raw numbers; no OAuth.
