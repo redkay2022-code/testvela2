@@ -2663,5 +2663,6 @@
   "라운지 영상 1개를 선택해 주세요.": "Unum videum Lounge elige.",
   "라운지는 셀러만 올릴 수 있어요.": "Solum venditores in Lounge publicare possunt.",
   "원래 소리 켜기": "Sonum originalem accende",
-  "원래 소리 켜짐": "Sonus originalis accensus"
+  "원래 소리 켜짐": "Sonus originalis accensus",
+  "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Onerare non potuit. Paulo post iterum conare."
 }

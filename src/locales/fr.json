@@ -2658,5 +2658,6 @@
   "라운지 영상 1개를 선택해 주세요.": "Veuillez choisir une vidéo pour le Lounge.",
   "라운지는 셀러만 올릴 수 있어요.": "Seuls les vendeurs peuvent publier dans le Lounge.",
   "원래 소리 켜기": "Activer le son d'origine",
-  "원래 소리 켜짐": "Son d'origine activé"
+  "원래 소리 켜짐": "Son d'origine activé",
+  "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Échec de l'envoi. Veuillez réessayer dans un instant."
 }

@@ -296,7 +296,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       releaseLeaveWarning();
       discardDraft();
       onSaved();
-    } catch (err) { if (uploaded.length) await removeMarketFiles(uploaded); setError(err instanceof Error ? err.message : '잠시 후 다시 시도해 주세요.'); }
+    } catch (err) { console.error('upload failed', err); if (uploaded.length) await removeMarketFiles(uploaded); setError(err instanceof Error && err.message ? err.message : '올리지 못했어요. 잠시 후 다시 시도해 주세요.'); requestAnimationFrame(() => document.querySelector('[data-upload-error]')?.scrollIntoView({ block: 'center', behavior: 'smooth' })); }
     finally { setPending(false); setConvertPct(null); }
   };
 
@@ -345,7 +345,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       </div>
     </div>
     </>}
-    {error && <p role="alert" className="mt-3 text-sm text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(error)}</span></p>}
+    {error && <p role="alert" data-upload-error className="mt-3 text-sm text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(error)}</span></p>}
     <div className="mt-4 grid grid-cols-2 gap-2"><Button variant="secondary" disabled={pending} onClick={() => void save('draft')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("임시 저장")}</span></Button><Button disabled={pending} onClick={() => void save('published')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{pending ? (convertPct !== null ? `영상 최적화 중… ${convertPct}%` : left > 0 ? `저장 중… ${left}초` : '마무리 중…') : tx('게시하기')}</span></Button></div>
   </div>;
 }

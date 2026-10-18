@@ -27,15 +27,20 @@ export async function readVideoDuration(file: File) {
   try {
     return await new Promise<number>((resolve, reject) => {
       const video = document.createElement('video');
+      // 휴대폰(특히 iPhone)에서는 정보 읽기 이벤트가 끝내 오지 않는 경우가 있어, 8초 뒤에는 길이 확인 없이 통과시킨다 (무한 대기 방지).
+      const timer = setTimeout(() => resolve(0), 8000);
+      const finish = <T,>(fn: (v: T) => void) => (v: T) => { clearTimeout(timer); fn(v); };
       video.preload = 'metadata';
       video.muted = true;
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
       video.onloadedmetadata = () => {
-        if (Number.isFinite(video.duration)) return resolve(video.duration);
+        if (Number.isFinite(video.duration)) return finish(resolve)(video.duration);
         // Browser-recorded (edited) videos report Infinity until seeked to the end.
-        video.ondurationchange = () => { if (Number.isFinite(video.duration)) resolve(video.duration); };
+        video.ondurationchange = () => { if (Number.isFinite(video.duration)) finish(resolve)(video.duration); };
         video.currentTime = 1e7;
       };
-      video.onerror = () => reject(new Error('영상 정보를 읽을 수 없습니다. MP4 또는 MOV 파일을 확인해 주세요.'));
+      video.onerror = () => finish(reject)(new Error('영상 정보를 읽을 수 없습니다. MP4 또는 MOV 파일을 확인해 주세요.'));
       video.src = url;
     });
   } finally {
