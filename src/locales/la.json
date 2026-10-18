@@ -2697,7 +2697,7 @@
   "구매자가 TXID를 제출하면 바로 반영됩니다": "Statim renovatur cum emptor TXID mittit",
   "전체 주문 · TXID 입금 확인": "Omnia mandata · TXID inspectio",
   "주문 내역": "Historia ordinum",
-  "셀러 소개": "De venditore",
+  "스토어 소개": "De taberna",
   "공지 게시판": "Nuntii",
   "공지 작성": "Nuntium scribere",
   "공지·소개": "Nuntii et descriptio",
@@ -2706,7 +2706,7 @@
   "공지 수정": "Nuntium emendare",
   "공지 삭제": "Nuntium delere",
   "공지를 삭제할까요?": "Hunc nuntium delere?",
-  "등록된 셀러 소개가 없습니다.": "Descriptio venditoris nondum adest.",
+  "등록된 스토어 소개가 없습니다.": "Descriptio tabernae nondum adest.",
   "등록된 공지가 없습니다.": "Nuntii nondum adsunt.",
   "스토어 내용을 불러오지 못했습니다.": "Contenta tabernae legi non potuerunt.",
   "취소된 주문": "Ordo revocatus"

@@ -1550,7 +1550,7 @@
   "구매자가 TXID를 제출하면 바로 반영됩니다": "Updates as soon as a buyer submits a TXID",
   "전체 주문 · TXID 입금 확인": "All orders · TXID deposit check",
   "주문 내역": "Order history",
-  "셀러 소개": "Seller introduction",
+  "스토어 소개": "Store introduction",
   "공지 게시판": "Notice board",
   "공지 작성": "Write notice",
   "공지·소개": "Notices & About",
@@ -1559,7 +1559,7 @@
   "공지 수정": "Edit notice",
   "공지 삭제": "Delete notice",
   "공지를 삭제할까요?": "Delete this notice?",
-  "등록된 셀러 소개가 없습니다.": "No seller introduction yet.",
+  "등록된 스토어 소개가 없습니다.": "No store introduction yet.",
   "등록된 공지가 없습니다.": "No notices yet.",
   "스토어 내용을 불러오지 못했습니다.": "Could not load store content.",
   "취소된 주문": "Cancelled order"
