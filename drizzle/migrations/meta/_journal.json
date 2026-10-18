@@ -288,6 +288,13 @@
       "when": 1792244037742,
       "tag": "0040_mux_migrate_existing",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1792311216438,
+      "tag": "0041_order_verification_sync",
+      "breakpoints": true
     }
   ]
 }

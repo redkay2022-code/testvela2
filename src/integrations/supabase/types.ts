@@ -534,6 +534,7 @@ export type Database = {
           tracking_status: Json
           txid: string | null
           updated_at: string
+          verification_status: string
         }
         Insert: {
           amount_usd?: number
@@ -568,6 +569,7 @@ export type Database = {
           tracking_status?: Json
           txid?: string | null
           updated_at?: string
+          verification_status?: string
         }
         Update: {
           amount_usd?: number
@@ -602,6 +604,7 @@ export type Database = {
           tracking_status?: Json
           txid?: string | null
           updated_at?: string
+          verification_status?: string
         }
         Relationships: []
       }
@@ -1337,6 +1340,14 @@ export type Database = {
       loyalty_expire_user: { Args: { _uid: string }; Returns: undefined }
       loyalty_my_summary: { Args: never; Returns: Json }
       loyalty_refresh_membership: { Args: { _uid: string }; Returns: string }
+      order_party_labels: {
+        Args: { _order_ids: string[] }
+        Returns: {
+          nickname: string
+          system_code: string
+          user_id: string
+        }[]
+      }
       seller_activity_summary: { Args: never; Returns: Json }
       seller_dashboard_stats: { Args: never; Returns: Json }
       store_is_visible: { Args: { _store_id: string }; Returns: boolean }

@@ -34,13 +34,13 @@ export function SellerApprovalRedirect({ user, applying }: { user: User | null; 
     if (previous.current.userId !== (user?.id ?? null)) previous.current = { userId: user?.id ?? null, seller: null };
     if (!user || !account) return;
     const key = `vela-seller-dashboard-opened:${user.id}`;
-    const opened = typeof window !== 'undefined' && window.localStorage.getItem(key) === '1';
+    let opened = false; try { opened = window.localStorage.getItem(key) === '1'; } catch { /* storage is optional */ }
     const accountRedirect = pathname === '/me' && accountPage(account) === '/seller';
     const redirect = accountRedirect || (!opened && shouldOpenSellerDashboard(account, previous.current.seller, pathname, applying));
     previous.current.seller = account.roles.includes('seller');
-    if (account.roles.includes('seller') && pathname === '/seller') window.localStorage.setItem(key, '1');
+    if (account.roles.includes('seller') && pathname === '/seller') { try { window.localStorage.setItem(key, '1'); } catch { /* storage is optional */ } }
     if (!redirect) return;
-    window.localStorage.setItem(key, '1');
+    { try { window.localStorage.setItem(key, '1'); } catch { /* storage is optional */ } }
     void qc.invalidateQueries({ queryKey: ['posts'] });
     void qc.invalidateQueries({ queryKey: ['stores'] });
     void navigate({ to: '/seller', search: accountRedirect ? { ...search, role: 'seller' } : { role: 'seller' }, replace: true });

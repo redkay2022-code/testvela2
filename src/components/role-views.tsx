@@ -17,6 +17,7 @@ import { MembershipCard } from './loyalty';
 import { MyActivity } from './my-activity';
 import { SellerStudio } from './seller-studio';
 import { LogoutItem } from './logout-item';
+import { ActiveTransactions } from './active-transactions';
 
 export function RoleSwitcher(){
  const location=useRouterState({select:s=>s.location}),search=marketSearch.parse(location.search),navigate=useNavigate();
@@ -35,7 +36,8 @@ export function Dashboard({kind,posts}:{kind:'admin'|'seller';posts:LuxuryPost[]
  const search=marketSearch.parse(useRouterState({select:s=>s.location.search}));
  const auth=useQuery({queryKey:['auth-user'],queryFn:async()=>(await supabase.auth.getUser()).data.user});
  const acct=useMyAccount(auth.data??null);
- if(kind==='admin')return search.role==='admin'?<AdminDashboard posts={posts}/>:<div className="dashboard-gate"><ShieldCheck/><p>관리자 계정으로 로그인해 주세요.</p></div>;
+ if(kind==='admin'&&(auth.isLoading||(auth.data&&acct.isLoading)))return <div className="lux-empty">계정을 확인하는 중…</div>;
+  if(kind==='admin')return auth.data&&acct.data?.roles.includes('admin')?<><AdminDashboard posts={posts}/><ActiveTransactions role="admin" userId={auth.data.id}/></>:<div className="dashboard-gate"><ShieldCheck/><p>관리자 계정으로 로그인해 주세요.</p></div>;
  if(auth.isLoading||(auth.data&&acct.isLoading))return <div className="lux-empty">계정을 확인하는 중…</div>;
  if(!auth.data||!acct.data?.roles.some(r=>r==='seller'||r==='admin'))return <div className="dashboard-gate"><ShieldCheck size={34}/><h1>셀러 스튜디오</h1><p>승인된 계정으로 로그인하면 이용할 수 있습니다.</p></div>;
  return <SellerStudio user={auth.data}/>;

@@ -18,6 +18,7 @@ import { getOrderTracking } from '@/lib/tracking.functions';
 import { EscrowTimeline } from './escrow';
 import { TranslatableText } from './translatable-text';
 import { ListPagination, usePagination } from './list-pagination';
+import { confirmOrderPayment } from '@/lib/order-verification.functions';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1;
 const BUCKET = 'qc-media';
@@ -47,7 +48,7 @@ export async function createLiveOrder(input: { post_id: string; title: string; i
 function useLive(userId: string | null) {
   const qc = useQueryClient();
   const q = useQuery({
-    queryKey: ['live-orders', userId], enabled: !!userId,
+    queryKey: ['live-orders', userId], enabled: !!userId, refetchInterval: 5000,
     queryFn: async () => {
       const { data: orders, error } = await supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id').order('created_at', { ascending: false });
       if (error) throw error;
@@ -245,6 +246,24 @@ export function OrderNotifier() {
     return () => data.subscription.unsubscribe();
   }, []);
   const q = useLive(uid);
+  const client = useQueryClient();
+  const notifications = useQuery({ queryKey: ['payment-notices', uid], enabled: !!uid, refetchInterval: 5000, queryFn: async () => {
+    if (!uid) return [];
+    const { data, error } = await supabase.from('notifications').select('id,title,body').eq('user_id', uid).eq('kind', 'payment_verified').is('read_at', null).order('created_at', { ascending: false }).limit(50);
+    if (error) throw error; return data ?? [];
+  } });
+  const seenNotices = useRef(new Set<string>());
+  useEffect(() => {
+    if (!uid) return;
+    for (const notice of notifications.data ?? []) {
+      const key = `vela-payment-notice:${uid}:${notice.id}`;
+      if (seenNotices.current.has(key)) continue;
+      seenNotices.current.add(key);
+      try { if (localStorage.getItem(key)) continue; localStorage.setItem(key, '1'); } catch { /* in-memory deduplication */ }
+      toast.success(notice.title, { description: notice.body, duration: 7000 });
+    }
+  }, [notifications.data, uid]);
+  useEffect(() => { prev.current = null; }, [uid]);
   const prev = useRef<Map<string, string> | null>(null);
   useEffect(() => {
     const orders = q.data?.orders; if (!orders) return;
@@ -254,11 +273,13 @@ export function OrderNotifier() {
     for (const o of orders) {
       const old = before.get(o.id); if (!old || old === next.get(o.id)) continue;
       const [os, op, od] = old.split('|');
-      if (op === '0' && o.payment_verified_at) toast.success(`결제 확인 완료 · ${o.order_no}`, { description: `${o.title} — 입금이 확인되어 에스크로에 보관됩니다.` });
+      if (op === '0' && o.payment_verified_at) {
+        for (const key of ['active-transactions', 'admin-orders', 'my-orders', 'seller-workflows', 'loyalty-summary', 'point-history', 'notifications', 'payment-notices']) void client.invalidateQueries({ queryKey: [key] });
+      }
       if (os !== o.stage && stageToast[o.stage]) { const [t, d] = stageToast[o.stage]!; toast.success(`${t} · ${o.order_no}`, { description: `${o.title} — ${d}${o.stage === 'shipped' && o.tracking_number ? ` (${o.courier} ${o.tracking_number})` : ''}` }); }
       if (od === '0' && o.dispute_open) toast.warning(`분쟁 접수 · ${o.order_no}`, { description: '관리자가 대화에 참여해 중재를 시작합니다.' });
     }
-  }, [q.data]);
+  }, [q.data, client]);
   return null;
 }
 
@@ -274,7 +295,7 @@ function useAdminOrders(filter: 'crypto' | 'disputes') {
     return { orders, msgs };
   } });
   useEffect(() => {
-    const ch = supabase.channel(`admin-orders-${filter}`);
+    const ch = supabase.channel(`admin-orders-${filter}-${crypto.randomUUID()}`);
     for (const table of ['orders', 'order_messages']) ch.on('postgres_changes', { event: '*', schema: 'public', table }, () => void qc.invalidateQueries({ queryKey: ['admin-orders', filter] }));
     ch.subscribe(); return () => { void supabase.removeChannel(ch); };
   }, [filter, qc]);
@@ -283,7 +304,17 @@ function useAdminOrders(filter: 'crypto' | 'disputes') {
 
 /** Admin: real submitted TXIDs with 1-click block-explorer verification. */
 export function AdminCryptoOrders() {
-  const q = useAdminOrders('crypto');
+  const q = useAdminOrders('crypto'), client = useQueryClient(), verify = useServerFn(confirmOrderPayment);
+  const [busy, setBusy] = useState<string | null>(null);
+  const confirmPayment = async (order: Order) => {
+    const explorer = explorerUrl(order.network, order.txid ?? '');
+    if (!window.confirm(`${explorer.name}에서 금액과 수신 주소를 확인하셨나요? 결제 확인으로 처리합니다.`)) return;
+    setBusy(order.id);
+    try {
+      await verify({ data: { orderId: order.id } });
+      await Promise.all(['live-orders','admin-orders','my-orders','seller-workflows','active-transactions','loyalty-summary','point-history','notifications','payment-notices'].map(key => client.invalidateQueries({ queryKey: [key] })));
+    } catch (error) { toast.error(error instanceof Error ? error.message : '입금 확인에 실패했습니다.'); } finally { setBusy(null); }
+  };
   if (q.isLoading) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문을 불러오는 중…")}</span></p>;
   if (q.error) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자 계정으로 로그인하면 실제 TXID를 확인할 수 있습니다.")}</span></p>;
   const orders = q.data?.orders ?? [];
@@ -294,7 +325,7 @@ export function AdminCryptoOrders() {
     <span className="record-status"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{o.payment_verified_at ? tx('입금 확인됨') : tx('검증 대기')}</span></span>
     <div className="record-actions">
       {o.txid && <Button asChild variant="ghost" size="sm"><a href={ex.url} target="_blank" rel="noreferrer"><ExternalLink /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("{0}에서 확인", { 0: ex.name })}</span></a></Button>}
-      {!o.payment_verified_at && <Button variant="goldOutline" size="sm" onClick={() => { if (confirm(`${ex.name}에서 금액과 수신 주소를 확인하셨나요? 결제 확인으로 처리합니다.`)) void supabase.from('orders').update({ payment_verified_at: new Date().toISOString() }).eq('id', o.id).then(r => r.error ? toast.error(r.error.message) : toast.success('결제 확인 처리되었습니다.')); }}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("결제 확인")}</span></Button>}
+      {!o.payment_verified_at && <Button variant="goldOutline" size="sm" disabled={busy !== null || !o.txid?.trim()} onClick={() => void confirmPayment(o)}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("입금 확인됨")}</span></Button>}
     </div></div>; })}</div>;
 }
 
