@@ -2673,5 +2673,10 @@
   "Insurance Fee: 10% of the base product price (excluding full set box price).": "Merces assecurationis: decima pars pretii basici (sine pretio capsae plenae).",
   "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "Assecuratum: venditor omnem culpam (100%) sustinet de iactura, damno vel teloneis in transitu (iterum mittetur aut pretium integrum reddetur).",
   "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "Non assecuratum: venditor NON respondet de ulla iactura, damno vel teloneis in transitu.",
-  "Calculated Insurance Fee: {0}": "Merces assecurationis computata: {0}"
+  "Calculated Insurance Fee: {0}": "Merces assecurationis computata: {0}",
+  "전체 길이를 5분 이하로 줄여 주세요.": "Summam longitudinem infra quinque minuta redige.",
+  "전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.": "Summa longitudo quinque minuta superat. Segmenta breviora fac.",
+  "영상은 5분 이내로만 올릴 수 있어요": "Video ad quinque minuta tantum",
+  "현재 길이는 {0}초입니다. 5분 이내로 편집해 주세요.": "Longitudo nunc {0} s. Ad quinque minuta aut minus redige.",
+  "앞 5분만 사용하기": "Primis quinque minutis tantum utere"
 }

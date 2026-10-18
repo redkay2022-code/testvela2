@@ -2668,5 +2668,10 @@
   "Insurance Fee: 10% of the base product price (excluding full set box price).": "Costo assicurazione: 10% del prezzo base del prodotto (escluso il prezzo della scatola full set).",
   "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "Assicurato: il venditore si assume il 100% della responsabilità per smarrimento, danni o problemi doganali durante la spedizione (rispedizione o rimborso completo garantiti).",
   "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "Non assicurato: il venditore NON è responsabile di smarrimenti, danni o problemi doganali durante il transito.",
-  "Calculated Insurance Fee: {0}": "Costo assicurazione calcolato: {0}"
+  "Calculated Insurance Fee: {0}": "Costo assicurazione calcolato: {0}",
+  "전체 길이를 5분 이하로 줄여 주세요.": "Riduci la durata totale a meno di 5 minuti.",
+  "전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.": "La durata totale supera i 5 minuti. Accorcia i clip.",
+  "영상은 5분 이내로만 올릴 수 있어요": "I video possono durare al massimo 5 minuti",
+  "현재 길이는 {0}초입니다. 5분 이내로 편집해 주세요.": "Durata attuale: {0} s. Modifica fino a un massimo di 5 minuti.",
+  "앞 5분만 사용하기": "Usa solo i primi 5 minuti"
 }

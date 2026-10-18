@@ -2673,5 +2673,10 @@
   "Insurance Fee: 10% of the base product price (excluding full set box price).": "رسوم التأمين: 10% من السعر الأساسي للمنتج (دون سعر العلبة الكاملة).",
   "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "مؤمَّن: يتحمل البائع المسؤولية الكاملة بنسبة 100% عن فقدان الشحنة أو تلفها أو مشكلات التخليص الجمركي (إعادة شحن أو استرداد كامل مضمون).",
   "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "غير مؤمَّن: البائع غير مسؤول عن أي فقدان أو تلف أو مشكلات جمركية أثناء النقل.",
-  "Calculated Insurance Fee: {0}": "رسوم التأمين المحسوبة: {0}"
+  "Calculated Insurance Fee: {0}": "رسوم التأمين المحسوبة: {0}",
+  "전체 길이를 5분 이하로 줄여 주세요.": "يرجى تقليل المدة الإجمالية إلى أقل من 5 دقائق.",
+  "전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.": "المدة الإجمالية تتجاوز 5 دقائق. يرجى تقصير المقاطع.",
+  "영상은 5분 이내로만 올릴 수 있어요": "يجب ألا يزيد الفيديو عن 5 دقائق",
+  "현재 길이는 {0}초입니다. 5분 이내로 편집해 주세요.": "المدة الحالية {0} ث. يرجى تعديلها إلى 5 دقائق أو أقل.",
+  "앞 5분만 사용하기": "استخدام أول 5 دقائق فقط"
 }

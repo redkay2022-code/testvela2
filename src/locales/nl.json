@@ -2673,5 +2673,10 @@
   "Insurance Fee: 10% of the base product price (excluding full set box price).": "Verzekeringskosten: 10% van de basisprijs van het product (exclusief full set doos).",
   "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "Verzekerd: de verkoper draagt 100% verantwoordelijkheid voor verlies, schade of douaneproblemen tijdens verzending (gegarandeerde herverzending of volledige terugbetaling).",
   "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "Niet verzekerd: de verkoper is NIET verantwoordelijk voor verlies, schade of douaneproblemen tijdens transport.",
-  "Calculated Insurance Fee: {0}": "Berekende verzekeringskosten: {0}"
+  "Calculated Insurance Fee: {0}": "Berekende verzekeringskosten: {0}",
+  "전체 길이를 5분 이하로 줄여 주세요.": "Verkort de totale lengte tot onder 5 minuten.",
+  "전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.": "De totale lengte is langer dan 5 minuten. Verkort de clips.",
+  "영상은 5분 이내로만 올릴 수 있어요": "Video’s mogen maximaal 5 minuten duren",
+  "현재 길이는 {0}초입니다. 5분 이내로 편집해 주세요.": "Huidige lengte: {0} s. Bewerk tot maximaal 5 minuten.",
+  "앞 5분만 사용하기": "Alleen de eerste 5 minuten gebruiken"
 }

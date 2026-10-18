@@ -2671,5 +2671,10 @@
   "Insurance Fee: 10% of the base product price (excluding full set box price).": "保险费：商品基础价格的10%（不含全套盒价格）。",
   "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "已投保：运输丢失、损坏或清关问题由卖家承担100%全部责任（保证补发或全额退款）。",
   "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "未投保：对运输途中的丢失、损坏或清关问题，卖家概不负责。",
-  "Calculated Insurance Fee: {0}": "计算得出的保险费：{0}"
+  "Calculated Insurance Fee: {0}": "计算得出的保险费：{0}",
+  "전체 길이를 5분 이하로 줄여 주세요.": "请将总时长缩短到5分钟以内。",
+  "전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.": "总时长超过5分钟，请缩短片段范围。",
+  "영상은 5분 이내로만 올릴 수 있어요": "视频时长不能超过5分钟",
+  "현재 길이는 {0}초입니다. 5분 이내로 편집해 주세요.": "当前时长为{0}秒，请编辑到5分钟以内。",
+  "앞 5분만 사용하기": "仅使用前5分钟"
 }
