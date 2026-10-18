@@ -4,7 +4,7 @@ import { currencies, currencyLabels, isCurrency, setActiveCurrency, type Currenc
 import { getUsdRates } from '@/lib/rates.functions';
 import { applyDomTranslation, loadDictionary } from '@/lib/dom-translate';
 import { setUsdRates } from '@/lib/currency';
-import { defaultCurrency, detectLocale, isLang, langLabels, langs, setActiveLang, t, type Lang } from '@/lib/i18n';
+import { defaultCurrency, isLang, langLabels, langs, setActiveLang, t, type Lang } from '@/lib/i18n';
 
 const CUR_KEY = 'vela-currency', LANG_KEY = 'vela-lang';
 type Ctx = { currency: Currency; lang: Lang; setCurrency: (c: Currency) => void; setLang: (l: Lang) => void };
@@ -18,10 +18,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const selection = useRef(0);
   useEffect(() => { void getUsdRates().then(r => { if (r) { setUsdRates(r.rates); setRatesAt(r.updated); } }).catch(() => {}); }, []);
   useEffect(() => {
-    const detected = detectLocale(Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.languages ?? [navigator.language]);
     const savedLang = localStorage.getItem(LANG_KEY), savedCur = localStorage.getItem(CUR_KEY);
     const nextLang = isLang(savedLang) ? savedLang : 'en'; // 처음 접속하면 영어가 기본
-    const nextCur = isCurrency(savedCur) ? savedCur : detected.currency;
+    const nextCur = isCurrency(savedCur) ? savedCur : defaultCurrency[nextLang]; // 통화는 선택한 언어와 맞춘다(시간대로 추측하지 않음)
     let alive = true;
     const request = selection.current;
     // The dictionary is loaded first, so the first paint in the chosen language never mixes in Korean source text.
@@ -33,9 +32,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const setLang = (l: Lang) => {
     const request = ++selection.current;
     localStorage.setItem(LANG_KEY, l);
-    const needsCurrency = !localStorage.getItem(CUR_KEY);
+    localStorage.removeItem(CUR_KEY); // 언어를 바꾸면 환율(통화)도 그 언어의 기본 통화로 맞춘다. 이후 직접 고르면 다시 저장된다.
     // Load the new dictionary before switching, so every label changes at once (no half-translated screen).
-    void loadDictionary(l).finally(() => { if (request !== selection.current) return; setL(l); setVer(v => v + 1); if (needsCurrency) setCur(defaultCurrency[l]); });
+    void loadDictionary(l).finally(() => { if (request !== selection.current) return; setL(l); setVer(v => v + 1); setCur(defaultCurrency[l]); });
   };
   setActiveCurrency(currency); setActiveLang(lang);
   // Re-key so every formatter and translated string re-renders in the chosen locale.
