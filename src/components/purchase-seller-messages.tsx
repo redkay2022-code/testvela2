@@ -26,7 +26,7 @@ export function PurchaseSellerMessages({ order, userId, product }: { order: { id
       <p className="min-w-0 break-words"><Tx>판매자</Tx> · <strong data-i18n-skip>{order.seller_name}</strong></p>
       {seller && <Button asChild size="sm" variant="ghost"><Link to="/store" search={{ seller, storeTab: 'products' }}><Store size={14}/><Tx>판매자 스토어</Tx></Link></Button>}
     </div>
-    {latest && <div className="my-3 border-l-2 border-primary pl-3"><p className="text-xs text-primary"><Tx>판매자에게 메시지</Tx></p><TranslatableText as="p" text={latest.body} className="mt-1 text-sm whitespace-pre-wrap break-words"/><time className="text-xs text-muted-foreground">{new Date(latest.created_at).toLocaleString()}</time></div>}
+    {latest && <div className="my-3 border-l-2 border-primary pl-3"><p className="text-xs text-primary"><Tx>메시지</Tx></p><TranslatableText as="p" text={latest.body} className="mt-1 text-sm whitespace-pre-wrap break-words"/><time className="text-xs text-muted-foreground">{new Date(latest.created_at).toLocaleString()}</time></div>}
     {messages.isError && <div role="alert" className="text-sm text-destructive"><Tx>주문 정보를 불러오지 못했습니다.</Tx><Button variant="ghost" size="sm" onClick={() => void messages.refetch()}><Tx>다시 시도</Tx></Button></div>}
     <Button asChild variant="goldOutline" className="mt-2 w-full"><Link to="/me" search={previous => ({ ...previous, customerTab: 'orders', panel: 'orders', orderId: order.id, orderView: 'messages' })} resetScroll={false}><MessageSquare size={16}/><Tx>판매자에게 메시지</Tx>{messages.data?.length ? ` (${messages.data.length})` : ''}</Link></Button>
   </section>;
