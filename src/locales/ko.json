@@ -1502,5 +1502,11 @@
   "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "올리지 못했어요. 잠시 후 다시 시도해 주세요.",
   "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.",
   "스토리 영상 1개를 선택해 주세요.": "스토리 영상 1개를 선택해 주세요.",
-  "스토리 영상은 5분 이내만 올릴 수 있어요.": "스토리 영상은 5분 이내만 올릴 수 있어요."
+  "스토리 영상은 5분 이내만 올릴 수 있어요.": "스토리 영상은 5분 이내만 올릴 수 있어요.",
+  "MP4·MOV·WEBM•5분•300MB": "MP4·MOV·WEBM•5분•300MB",
+  "Shipping & Customs Insurance": "배송·통관 보험",
+  "Insurance Fee: 10% of the base product price (excluding full set box price).": "보험료: 상품 기본 가격의 10% (풀셋 박스 금액 제외).",
+  "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "보험 가입: 배송 중 분실·파손 및 통관 문제에 대해 셀러가 100% 전적으로 책임집니다 (재발송 또는 전액 환불 보장).",
+  "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "보험 미가입: 배송 중 분실·파손 및 통관 문제에 대해 셀러는 책임지지 않습니다.",
+  "Calculated Insurance Fee: {0}": "계산된 보험료: {0}"
 }

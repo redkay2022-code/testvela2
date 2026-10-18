@@ -2667,5 +2667,11 @@
   "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "تعذّر الرفع. يرجى المحاولة بعد قليل.",
   "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "القصص تقبل الفيديو فقط. يرجى إزالة الصور.",
   "스토리 영상 1개를 선택해 주세요.": "يرجى اختيار فيديو قصة واحد.",
-  "스토리 영상은 5분 이내만 올릴 수 있어요.": "يجب ألا يزيد فيديو القصة عن 5 دقائق."
+  "스토리 영상은 5분 이내만 올릴 수 있어요.": "يجب ألا يزيد فيديو القصة عن 5 دقائق.",
+  "MP4·MOV·WEBM•5분•300MB": "MP4·MOV·WEBM•5 دقائق•300 ميغابايت",
+  "Shipping & Customs Insurance": "تأمين الشحن والجمارك",
+  "Insurance Fee: 10% of the base product price (excluding full set box price).": "رسوم التأمين: 10% من السعر الأساسي للمنتج (دون سعر العلبة الكاملة).",
+  "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "مؤمَّن: يتحمل البائع المسؤولية الكاملة بنسبة 100% عن فقدان الشحنة أو تلفها أو مشكلات التخليص الجمركي (إعادة شحن أو استرداد كامل مضمون).",
+  "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "غير مؤمَّن: البائع غير مسؤول عن أي فقدان أو تلف أو مشكلات جمركية أثناء النقل.",
+  "Calculated Insurance Fee: {0}": "رسوم التأمين المحسوبة: {0}"
 }

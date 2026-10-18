@@ -2667,5 +2667,11 @@
   "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Onerare non potuit. Paulo post iterum conare.",
   "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "Fabulae solum video accipiunt. Imagines remove.",
   "스토리 영상 1개를 선택해 주세요.": "Unum video fabulae elige.",
-  "스토리 영상은 5분 이내만 올릴 수 있어요.": "Video fabulae ad quinque minuta tantum."
+  "스토리 영상은 5분 이내만 올릴 수 있어요.": "Video fabulae ad quinque minuta tantum.",
+  "MP4·MOV·WEBM•5분•300MB": "MP4·MOV·WEBM•5 min•300MB",
+  "Shipping & Customs Insurance": "Assecuratio vecturae et teloneorum",
+  "Insurance Fee: 10% of the base product price (excluding full set box price).": "Merces assecurationis: decima pars pretii basici (sine pretio capsae plenae).",
+  "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "Assecuratum: venditor omnem culpam (100%) sustinet de iactura, damno vel teloneis in transitu (iterum mittetur aut pretium integrum reddetur).",
+  "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "Non assecuratum: venditor NON respondet de ulla iactura, damno vel teloneis in transitu.",
+  "Calculated Insurance Fee: {0}": "Merces assecurationis computata: {0}"
 }

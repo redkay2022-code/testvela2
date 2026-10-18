@@ -2667,5 +2667,11 @@
   "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Uploaden mislukt. Probeer het zo opnieuw.",
   "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "Stories accepteren alleen video. Verwijder de foto’s.",
   "스토리 영상 1개를 선택해 주세요.": "Selecteer één story-video.",
-  "스토리 영상은 5분 이내만 올릴 수 있어요.": "Story-video’s mogen maximaal 5 minuten duren."
+  "스토리 영상은 5분 이내만 올릴 수 있어요.": "Story-video’s mogen maximaal 5 minuten duren.",
+  "MP4·MOV·WEBM•5분•300MB": "MP4·MOV·WEBM•5 min•300 MB",
+  "Shipping & Customs Insurance": "Verzend- en douaneverzekering",
+  "Insurance Fee: 10% of the base product price (excluding full set box price).": "Verzekeringskosten: 10% van de basisprijs van het product (exclusief full set doos).",
+  "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "Verzekerd: de verkoper draagt 100% verantwoordelijkheid voor verlies, schade of douaneproblemen tijdens verzending (gegarandeerde herverzending of volledige terugbetaling).",
+  "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "Niet verzekerd: de verkoper is NIET verantwoordelijk voor verlies, schade of douaneproblemen tijdens transport.",
+  "Calculated Insurance Fee: {0}": "Berekende verzekeringskosten: {0}"
 }

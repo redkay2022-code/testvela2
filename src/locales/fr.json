@@ -2662,5 +2662,11 @@
   "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Échec de l'envoi. Veuillez réessayer dans un instant.",
   "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "Les stories n’acceptent que des vidéos. Retirez les photos.",
   "스토리 영상 1개를 선택해 주세요.": "Veuillez sélectionner une vidéo de story.",
-  "스토리 영상은 5분 이내만 올릴 수 있어요.": "Les vidéos de story durent 5 minutes maximum."
+  "스토리 영상은 5분 이내만 올릴 수 있어요.": "Les vidéos de story durent 5 minutes maximum.",
+  "MP4·MOV·WEBM•5분•300MB": "MP4·MOV·WEBM•5 min•300 Mo",
+  "Shipping & Customs Insurance": "Assurance expédition et douane",
+  "Insurance Fee: 10% of the base product price (excluding full set box price).": "Frais d'assurance : 10 % du prix de base du produit (hors prix du coffret complet).",
+  "Insured: Seller takes 100% full responsibility for shipping loss, damage, or customs clearance issues (guaranteed reshipment or full refund).": "Assuré : le vendeur assume 100 % de la responsabilité en cas de perte, de dommage ou de problème de dédouanement (réexpédition ou remboursement intégral garanti).",
+  "Uninsured: Seller is NOT responsible for any transit loss, damage, or customs issues.": "Non assuré : le vendeur n'est PAS responsable des pertes, dommages ou problèmes de douane pendant le transport.",
+  "Calculated Insurance Fee: {0}": "Frais d'assurance calculés : {0}"
 }
