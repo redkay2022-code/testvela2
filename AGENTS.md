@@ -43,3 +43,6 @@
 
 - Customer activity uses validated customerTab/orderId/orderView and authorized live orders/QC/messages; share owner likes and account-keyed local saves. Feed counters are owner state.
 - Seller post text is AI-translated on demand into posts.translations; a trigger resets it on edit.
+
+- Keep payment verification separate from escrow stage; database triggers synchronize transactions and private party notifications, and all dashboards share authenticated role-scoped transaction reads. This preserves QC transitions and prevents cross-account leaks.
+- Keep the transaction sample in its own shared provider, never in live orders or financial metrics; this allows role-view demonstrations without production writes.

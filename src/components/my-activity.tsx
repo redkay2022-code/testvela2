@@ -31,15 +31,16 @@ export function MyActivity({ user, posts }: { user: User | null; posts: LuxuryPo
     if(error) throw error; return data ?? [];
   }});
   const replies = useQuery({queryKey:['my-qna-replies',uid,qna.data?.map(c=>c.id).join()],enabled:Boolean(uid&&qna.data?.length),refetchInterval:15000,queryFn:async()=>{
+    if(!uid) return [];
     const ids=(qna.data??[]).map(c=>c.id);
-    const {data,error}=await supabase.from('comments').select('id,parent_id,created_at').in('parent_id',ids).neq('user_id',uid!);
+    const {data,error}=await supabase.from('comments').select('id,parent_id,created_at').in('parent_id',ids).neq('user_id',uid);
     if(error) throw error; return data ?? [];
   }});
   const seenKey=`vela-qna-seen-${uid ?? 'guest'}`, [seen,setSeen]=useState<string|null>(null);
-  useEffect(()=>{setSeen(localStorage.getItem(seenKey) ?? '1970-01-01');},[seenKey]);
+  useEffect(()=>{try{setSeen(localStorage.getItem(seenKey) ?? '1970-01-01');}catch{setSeen('1970-01-01');}},[seenKey]);
   const latestReply=(replies.data??[]).reduce((m,r)=>r.created_at>m?r.created_at:m,'');
   const unreadReplies=Boolean(seen&&latestReply&&latestReply>seen);
-  useEffect(()=>{if(tab==='qna'&&latestReply&&seen!==null&&latestReply>seen){localStorage.setItem(seenKey,latestReply);const t=setTimeout(()=>setSeen(latestReply),4000);return ()=>clearTimeout(t);}return undefined;},[tab,latestReply,seen,seenKey]);
+  useEffect(()=>{if(tab==='qna'&&latestReply&&seen!==null&&latestReply>seen){try{localStorage.setItem(seenKey,latestReply);}catch{/* browsing remains available */}const t=setTimeout(()=>setSeen(latestReply),4000);return ()=>clearTimeout(t);}return undefined;},[tab,latestReply,seen,seenKey]);
   const repliedTo=new Set((replies.data??[]).map(r=>r.parent_id));
   const saved=p.saved.flatMap(id=>{const post=posts.find(post=>post.id===id);return post?[post]:[];});
   const liked=posts.filter(post=>engagement.likedIds.has(post.id));
@@ -49,7 +50,7 @@ export function MyActivity({ user, posts }: { user: User | null; posts: LuxuryPo
   const openOrder=(id:string,view:'tracking'|'qc'|'specs'|'defect')=>void navigate({to:'/me',search:prev=>({...prev,panel:'orders',orderId:id,orderView:view}),resetScroll:false});
   const grid=(list:LuxuryPost[])=>list.length?<div className="customer-saved-grid">{list.map(post=><article key={post.id} className="customer-product">
     <div className="customer-product-media"><Link to={postMediaRoute(post)} params={{id:post.id}} aria-label={post.title}><img src={post.images[0]} alt={post.title} loading="lazy" decoding="async" className={post.outOfStock?'grayscale':''}/></Link>{post.outOfStock?<span className="lux-soldout">품절</span>:isImmediateDispatch(post)&&<span className="lux-ready-badge">바로 발송</span>}<Button variant="ghost" size="icon" className="customer-save-toggle" title="저장 해제" aria-label={`저장 해제 ${post.title}`} aria-pressed={p.saved.includes(post.id)} onClick={()=>p.toggleSaved(post.id)}><Star fill={p.saved.includes(post.id)?'currentColor':'none'}/></Button></div>
-    <div className="customer-product-copy"><Link to={postMediaRoute(post)} params={{id:post.id}}><h3>{post.title}</h3></Link>{post.price!==null&&<p className="text-primary font-semibold" data-no-translate>{formatMoney(post.price,'USD')} <span className="text-xs text-muted-foreground">≈ {post.price.toLocaleString('en-US')} USDT</span></p>}{post.price!==null?<Button asChild variant="gold" className="w-full mt-3" disabled={post.outOfStock}><Link to={post.outOfStock?'/post/$id':'/buy/$id'} params={{id:post.id}} aria-disabled={post.outOfStock}>{post.outOfStock?'품절':'구매하기'}<ArrowRight/></Link></Button>:<Button asChild variant="goldOutline" className="w-full mt-3"><Link to={postMediaRoute(post)} params={{id:post.id}}>게시물 보기<ArrowRight/></Link></Button>}</div>
+    <div className="customer-product-copy"><Link to={postMediaRoute(post)} params={{id:post.id}}><h3>{post.title}</h3></Link>{post.price!=null&&<p className="text-primary font-semibold" data-no-translate>{formatMoney(post.price,'USD')} <span className="text-xs text-muted-foreground">≈ {post.price.toLocaleString('en-US')} USDT</span></p>}{post.price!=null?<Button asChild variant="gold" className="w-full mt-3" disabled={post.outOfStock}><Link to={post.outOfStock?'/post/$id':'/buy/$id'} params={{id:post.id}} aria-disabled={post.outOfStock}>{post.outOfStock?'품절':'구매하기'}<ArrowRight/></Link></Button>:<Button asChild variant="goldOutline" className="w-full mt-3"><Link to={postMediaRoute(post)} params={{id:post.id}}>게시물 보기<ArrowRight/></Link></Button>}</div>
   </article>)}</div>:<div className="customer-empty"><Star size={30} className="text-primary"/><h3>{tab==='saved'?'아직 저장한 컬렉션이 없습니다.':'좋아요한 게시물이 없습니다.'}</h3><Button asChild variant="goldOutline"><Link to="/">상품 둘러보기<ArrowRight/></Link></Button></div>;
   return <section id="saved-collection" className="customer-activity" lang="ko" data-no-translate>
     <nav className="customer-tabs" aria-label="내 VELA 활동" role="tablist">{customerTabs.map(key=>{const Icon=icons[key];return <Button key={key} asChild variant="ghost" className={`relative ${tab===key?'active':''}`}><Link to="/me" search={prev=>({...prev,customerTab:key})} role="tab" aria-selected={tab===key} resetScroll={false}><Icon size={18}/><span>{labels[key]}</span><strong>{counts[key]}</strong>{key==='qna'&&unreadReplies&&<span aria-label="새 답변" className="absolute right-1 top-1 size-2.5 rounded-full bg-destructive"/>}</Link></Button>;})}</nav>

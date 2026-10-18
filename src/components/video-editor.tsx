@@ -30,7 +30,7 @@ const uid = () => crypto.randomUUID();
 const readDuration = (url: string) => new Promise<number>((res, rej) => { const v = document.createElement('video'); v.preload = 'metadata'; v.muted = true; v.onloadedmetadata = () => { if (Number.isFinite(v.duration)) return res(v.duration); v.ondurationchange = () => { if (Number.isFinite(v.duration)) res(v.duration); }; v.currentTime = 1e7; }; v.onerror = () => rej(new Error('영상을 읽을 수 없어요.')); v.src = url; });
 
 /** Full-screen seller video editor: trims/orders clips, crops 9:16, adds BGM/SFX, captions, text, filters and product tags, then exports one file. */
-export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicChange, maxSeconds }: { maxSeconds?: number; file: File; catalog: { id: string; title: string }[]; onDone: (r: { file: File; tags: VideoTag[] }) => void; onCancel: () => void; music?: SelectedMusic | null; onMusicChange?: (m: SelectedMusic | null) => void }) {
+export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicChange, maxSeconds }: { maxSeconds?: number | undefined; file: File; catalog: { id: string; title: string }[]; onDone: (r: { file: File; tags: VideoTag[] }) => void; onCancel: () => void; music?: SelectedMusic | null; onMusicChange?: (m: SelectedMusic | null) => void }) {
   const LIMIT = maxSeconds ?? MAX_VIDEO_SECONDS, long = LIMIT > MAX_VIDEO_SECONDS; // 스토리는 5분까지
   const [pickerOpen, setPickerOpen] = useState(false); const musicAudio = useRef<HTMLAudioElement | null>(null);
   const transcribe = useServerFn(transcribeVideoAudio);
