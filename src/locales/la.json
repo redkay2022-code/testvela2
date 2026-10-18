@@ -2678,5 +2678,6 @@
   "전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.": "Summa longitudo quinque minuta superat. Segmenta breviora fac.",
   "영상은 5분 이내로만 올릴 수 있어요": "Video ad quinque minuta tantum",
   "현재 길이는 {0}초입니다. 5분 이내로 편집해 주세요.": "Longitudo nunc {0} s. Ad quinque minuta aut minus redige.",
-  "앞 5분만 사용하기": "Primis quinque minutis tantum utere"
+  "앞 5분만 사용하기": "Primis quinque minutis tantum utere",
+  "사진 최대 {0}장 + MP4·MOV·WEBM•5분•300MB": "Usque ad {0} imagines + MP4·MOV·WEBM•5 min•300MB"
 }

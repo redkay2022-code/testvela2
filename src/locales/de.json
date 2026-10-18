@@ -2673,5 +2673,6 @@
   "전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.": "Die Gesamtlänge überschreitet 5 Minuten. Bitte kürze die Clips.",
   "영상은 5분 이내로만 올릴 수 있어요": "Videos dürfen höchstens 5 Minuten lang sein",
   "현재 길이는 {0}초입니다. 5분 이내로 편집해 주세요.": "Aktuelle Länge: {0} s. Bitte auf höchstens 5 Minuten kürzen.",
-  "앞 5분만 사용하기": "Nur die ersten 5 Minuten verwenden"
+  "앞 5분만 사용하기": "Nur die ersten 5 Minuten verwenden",
+  "사진 최대 {0}장 + MP4·MOV·WEBM•5분•300MB": "Bis zu {0} Fotos + MP4·MOV·WEBM•5 Min.•300 MB"
 }
