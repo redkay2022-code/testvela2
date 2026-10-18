@@ -19,10 +19,11 @@ import { EscrowTimeline } from './escrow';
 import { TranslatableText } from './translatable-text';
 import { ListPagination, usePagination } from './list-pagination';
 import { confirmOrderPayment } from '@/lib/order-verification.functions';
+import { isLogisticsOrder } from '@/lib/store-content';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1;
 const BUCKET = 'qc-media';
-type Order = { id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null };
+type Order = { id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null; cancelled_at: string | null };
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
 type Msg = { id: string; order_id: string; author_role: string; kind: string; body: string; areas: string[]; created_at: string };
 
@@ -50,7 +51,7 @@ function useLive(userId: string | null) {
   const q = useQuery({
     queryKey: ['live-orders', userId], enabled: !!userId, refetchInterval: 5000,
     queryFn: async () => {
-      const { data: orders, error } = await supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id').order('created_at', { ascending: false });
+      const { data: orders, error } = await supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id,cancelled_at').order('created_at', { ascending: false });
       if (error) throw error;
       const ids = (orders ?? []).map(o => o.id);
       const [m, msgs] = ids.length ? await Promise.all([
@@ -174,7 +175,7 @@ function ShipForm({ o }: { o: Order }) {
 }
 
 /** Persistent QC board: seller QC uploads, buyer approval / extra-photo requests, tracking. */
-export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
+export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'seller'; logistics?: boolean }) {
   const { lang } = useCurrency();
   const search=marketSearch.parse(useRouterState({select:s=>s.location.search}));
   const catalog=useQuery(postsQuery);
@@ -183,7 +184,7 @@ export function LiveOrderBoard({ as }: { as: 'buyer' | 'seller' }) {
   const [asking, setAsking] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [chat, setChat] = useState<string | null>(null);
-  const orders = !user ? [] : (q.data?.orders ?? []).filter(o => (as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin))) && (!search.orderId||o.id===search.orderId));
+  const orders = !user ? [] : (q.data?.orders ?? []).filter(o => (as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin))) && (!search.orderId||o.id===search.orderId) && (!logistics || Boolean(search.orderId) || isLogisticsOrder(o)));
   /* 셀러의 물류/배송 목록은 페이지 번호로 나누어 보여 준다(구매자 화면은 그대로). */
   const pager = usePagination(orders, as + (search.orderId ?? ''));
   if (!user) return null;
@@ -288,7 +289,7 @@ export function OrderNotifier() {
 function useAdminOrders(filter: 'crypto' | 'disputes') {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['admin-orders', filter], retry: false, queryFn: async () => {
-    let b = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id').order('created_at', { ascending: false });
+    let b = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id,cancelled_at').order('created_at', { ascending: false });
     b = filter === 'crypto' ? b : b.eq('dispute_open', true);
     const { data, error } = await b; if (error) throw error;
     const orders = (data ?? []) as Order[];
