@@ -2659,5 +2659,8 @@
   "라운지는 셀러만 올릴 수 있어요.": "Solo i venditori possono pubblicare nella Lounge.",
   "원래 소리 켜기": "Attiva l'audio originale",
   "원래 소리 켜짐": "Audio originale attivo",
-  "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Caricamento non riuscito. Riprova tra poco."
+  "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Caricamento non riuscito. Riprova tra poco.",
+  "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "Le storie accettano solo video. Rimuovi le foto.",
+  "스토리 영상 1개를 선택해 주세요.": "Seleziona un video per la storia.",
+  "스토리 영상은 5분 이내만 올릴 수 있어요.": "I video delle storie possono durare al massimo 5 minuti."
 }

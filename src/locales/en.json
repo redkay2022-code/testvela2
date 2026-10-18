@@ -1517,5 +1517,8 @@
   "라운지는 셀러만 올릴 수 있어요.": "Only sellers can post to the Lounge.",
   "원래 소리 켜기": "Turn on original sound",
   "원래 소리 켜짐": "Original sound on",
-  "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Couldn't upload. Please try again in a moment."
+  "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Couldn't upload. Please try again in a moment.",
+  "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "Stories accept video only. Please remove the photos.",
+  "스토리 영상 1개를 선택해 주세요.": "Please select one story video.",
+  "스토리 영상은 5분 이내만 올릴 수 있어요.": "Story videos can be up to 5 minutes long."
 }

@@ -27,7 +27,8 @@ export type LuxuryPost = {menuCategory?:string|undefined;storeFeatured?:boolean;
 export function luxuryPosts(posts:FeedPost[]):LuxuryPost[] {
  return posts.map(post => {
   const menuValue=post.specs&&typeof post.specs==='object'&&!Array.isArray(post.specs)?(post.specs as Record<string,unknown>)['menuCategory']:undefined;
-  const extra={menuCategory:typeof menuValue==='string'?menuValue:undefined,outOfStock:post.product_status==='OUT_OF_STOCK',featured:post.featured,storeSlug:post.store?.slug,storeFeatured:Boolean(post.store?.featured),verified:post.store?post.store.verification_status!=='UNVERIFIED':false};
+  const legacyLounge=post.category==='lounge'||(post.specs&&typeof post.specs==='object'&&!Array.isArray(post.specs)&&(post.specs as Record<string,unknown>)['lounge']===true);
+  const extra={menuCategory:legacyLounge?'스토리':typeof menuValue==='string'?menuValue:undefined,outOfStock:post.product_status==='OUT_OF_STOCK',featured:post.featured,storeSlug:post.store?.slug,storeFeatured:Boolean(post.store?.featured),verified:post.store?post.store.verification_status!=='UNVERIFIED':false};
   if(post.image_key==='seed'||(post.store_id&&post.image_key==='uploaded')){
    const v=post.video_url?(seedVideos[post.video_url] ?? [post.video_url,undefined] as const):undefined; const imgs=post.media_urls.map(u=>u.startsWith('seed:')?seedImage(u):u); const specs=(post.specs ?? {}) as Record<string,unknown>;
    return {...extra,id:post.id,source:post,sample:false,reputation:unknownReputation,title:post.title,creator:post.creator,description:post.description,images:imgs.length?imgs:[post.thumbnail_url||watch0],video:v?.[0] ?? null,videoFallback:v?.[1],short:Boolean(v),boxPrice:post.box_price ?? null,price:post.price,factory:typeof specs['factory']==='string'?specs['factory']:post.category,category:post.category,menuCategory:typeof specs['menuCategory']==='string'?specs['menuCategory']:undefined,views:'0',likes:post.base_likes};

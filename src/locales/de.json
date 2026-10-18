@@ -2659,5 +2659,8 @@
   "라운지는 셀러만 올릴 수 있어요.": "Nur Verkäufer können in der Lounge veröffentlichen.",
   "원래 소리 켜기": "Originalton einschalten",
   "원래 소리 켜짐": "Originalton an",
-  "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Upload fehlgeschlagen. Bitte versuche es gleich noch einmal."
+  "올리지 못했어요. 잠시 후 다시 시도해 주세요.": "Upload fehlgeschlagen. Bitte versuche es gleich noch einmal.",
+  "스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.": "Storys erlauben nur Videos. Bitte entferne die Fotos.",
+  "스토리 영상 1개를 선택해 주세요.": "Bitte wähle ein Story-Video aus.",
+  "스토리 영상은 5분 이내만 올릴 수 있어요.": "Story-Videos dürfen höchstens 5 Minuten lang sein."
 }

@@ -7,7 +7,7 @@ import { WatchSpecificationsForm } from './watch-specifications-form';
 import { cleanWatchSpecs } from '@/lib/watch-specifications';
 import { normalizeMenuCategory, postCategoryLabels, uploadCategoryLabels } from '@/lib/feed-categories';
 import { validateLoungeFiles } from './lounge';
-import { LOUNGE_CATEGORY, LOUNGE_MAX_BYTES, loungeTooLong } from '@/lib/lounge';
+import { LOUNGE_MAX_BYTES, loungeTooLong } from '@/lib/lounge';
 import { PostCategoryField } from './post-category-field';
 import { dispatchValue } from '@/lib/dispatch';
 import { useEffect, useRef, useState } from 'react';
@@ -175,7 +175,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const [category, setCategory] = useSessionState(draftKey + 'category', listing?.category === '악세사리' ? '악세사리' : '시계');
   const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '') ? String(normalizeMenuCategory(String(listing?.specs?.['menuCategory']))) : '');
   /* Story posts only have a title and text: no price, dispatch time, specification or factory fields. */
-  const lounge = menuCategory === '라운지', story = menuCategory === '스토리' || lounge;
+  const story = menuCategory === '스토리', lounge = story; /* 스토리는 영상 1개(5분·300MB) 규칙 */
   const [price, setPrice] = useSessionState(draftKey + 'price', listing?.price != null ? String(listing.price) : '');
   const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
   const [dispatch, setDispatch] = useSessionState<string>(draftKey + 'dispatch', initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
@@ -233,7 +233,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     if (newPhotos.length) setPhotos(current => [...current, ...newPhotos]);
     setError('');
     /* 길이(30초) 검사는 여기서 하지 않는다: 긴 영상은 편집기에서 잘라 쓰는 것이 정상 흐름이고, 길이는 저장할 때 확인한다. 여기서는 영상을 읽을 수 있는지만 본다. */
-    if (newVideo) readVideoDuration(newVideo.file).then(seconds => { if (lounge ? (loungeTooLong(seconds) || newVideo.file.size > LOUNGE_MAX_BYTES) : videoOverLimit(newVideo.file, seconds)) setError(lounge ? tx('라운지 영상은 5분 이내만 올릴 수 있어요.') : '영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.'); }).catch(err => {
+    if (newVideo) readVideoDuration(newVideo.file).then(seconds => { if (lounge ? (loungeTooLong(seconds) || newVideo.file.size > LOUNGE_MAX_BYTES) : videoOverLimit(newVideo.file, seconds)) setError(lounge ? tx('스토리 영상은 5분 이내만 올릴 수 있어요.') : '영상이 30초 또는 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.'); }).catch(err => {
       setError(err instanceof Error ? err.message : '미디어를 확인해 주세요.');
       previewUrls.drop(newVideo.preview);
       setVideo(cur => (cur?.preview === newVideo.preview ? null : cur)); setEditing(cur => (cur === newVideo.file ? null : cur));
@@ -244,8 +244,8 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
     if (!uploadCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
     const p = Number(price); if (!story && (!Number.isFinite(p) || p < 1)) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
-    if (lounge && !video) { setError(tx('라운지 영상 1개를 선택해 주세요.')); return; }
-    if (lounge && photos.length > 0) { setError(tx('라운지에는 영상만 올릴 수 있어요. 사진은 빼 주세요.')); return; }
+    if (lounge && !video) { setError(tx('스토리 영상 1개를 선택해 주세요.')); return; }
+    if (lounge && photos.length > 0) { setError(tx('스토리에는 영상만 올릴 수 있어요. 사진은 빼 주세요.')); return; }
     if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
     if (video?.file) { try { if (lounge) await validateLoungeFiles([video.file]); else await validateListingFiles([video.file]); } catch (err) { setError(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; } }
     if (!story && sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
@@ -280,10 +280,9 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       const cleanSpecs = story ? {} as Record<string, string> : cleanWatchSpecs(specs);
       if (!story) cleanSpecs['sourceType'] = sourceType;
       cleanSpecs['menuCategory'] = menuCategory;
-      if (lounge) (cleanSpecs as Record<string, unknown>)['lounge'] = true;
       if (card) cleanSpecs['cardImage'] = card;
       if (!story) { if (sourceType === 'custom') delete cleanSpecs['factory']; else cleanSpecs['factory'] = factory.trim().slice(0, 80); }
-      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category: lounge ? LOUNGE_CATEGORY : category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
+      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
         const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo && !isExternalVideo(listing.video_url) ? [listing.video_url] : [])]; if (removed.length) await (owner ? removeMarketMedia({ data: { paths: removed } }).catch(() => undefined) : supabase.storage.from('market-media').remove(removed));
