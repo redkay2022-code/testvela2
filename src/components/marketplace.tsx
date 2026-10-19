@@ -30,6 +30,7 @@ import { boxPriceOrDefault } from '@/lib/box-price';
 import { putMarketMedia, removeMarketFiles } from '@/lib/market-upload';
 import { PostCategoryField } from './post-category-field';
 import { uploadCategoryLabels } from '@/lib/feed-categories';
+import { isWatchStoryTag, watchStorySpecs } from '@/lib/watch-story';
 import { useMyAccount } from './seller-account';
 import { Tx } from './tx';
 import { validateLoungeFiles } from './lounge';
@@ -258,6 +259,7 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
   // 카테고리 선택 UI는 폼에서 제거됨: DB posts.category 컬럼은 기본값으로 유지 저장.
   const category = '커스텀제작';
   const [menuCategory,setMenuCategory] = useState('');
+  const [storySubcategory,setStorySubcategory] = useState('');
   const [specs,setSpecs] = useState<Record<string,string>>({waterResistance:'50m / 5 ATM'});
   const [product,setProduct] = useState(false);
   /* Story posts only have a title and text: no product, price or specification fields. */
@@ -297,6 +299,7 @@ export function UploadForm({user,requestAuth,onPosted}:{user:AuthUser|null;reque
     {const titleError=validatePostTitle(title);if(titleError){setError(titleError);return;}}
     if(!files.length) {setError('사진 또는 영상을 선택해 주세요.');return;}
     if(!uploadCategoryLabels.includes(menuCategory)) {setError('메뉴 카테고리를 선택해 주세요.');return;}
+    if(story && !isWatchStoryTag(storySubcategory)) {setError(t('selectStorySubcategory'));return;}
     if(sellProduct && sourceType === 'factory' && !factory) {setError('공장을 선택해 주세요.');return;}
     if(sellProduct && sourceType === 'other' && !factory.trim()) {setError('출처 / 공장을 직접 입력해 주세요.');return;}
     if(proxy && sellProduct && !proxy.seller) {setError(PROXY_NOT_SELLER_MESSAGE);return;}

@@ -35,7 +35,7 @@ import { usePostRatings, useSellerRatingMap, withLiveRatings } from '@/lib/studi
 import { SpecsTable } from './specs-table';
 import { filterImmediate, isImmediateDispatch } from '@/lib/dispatch';
 import { type BuyerTier } from '@/lib/reputation';
-import { FeedCategoryPicker } from './feed-category-picker';
+import { FeedCategoryPicker, StorySubcategoryTabs } from './feed-category-picker';
 import { Tx } from './tx';
 import { usePostTranslation } from './post-translation';
 import { matchesFeedCategory } from '@/lib/feed-categories';
@@ -155,10 +155,11 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
     <nav className="lux-header-tabs notranslate" translate="no" aria-label="Feed tabs">{[['following','팔로잉'],['discover','추천'],['reviews','리뷰']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,feedCategory:search.feedCategory,tab:tab as 'following'|'discover'|'reviews'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false} onClick={guardGuest}><Tx>{label}</Tx></Link></Button>)}</nav>
    <CurrencySelect/><Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{if(guest){guestSignup();return;}searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button>
   </div>
-   {cleanHome&&<FeedCategoryPicker catalog={all} selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{if(guest){guestSignup();return;}categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
+   {cleanHome&&<FeedCategoryPicker catalog={all} selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
  </>
  </header>}
   <main className={`lux-shell ${cleanHome&&!backOnlyHeader?'red-home-shell':''} ${mode==='admin'?'backoffice-shell':''}`} onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
+ {cleanHome&&(search.feedCategory==='story'||search.feedCategory?.startsWith('story:'))&&<div className="mb-4 border-b border-border pb-3"><StorySubcategoryTabs selected={search.feedCategory} onSelect={selectCategory}/></div>}
  {!help&&(mode==='explore'||mode==='market')&&<>
   {mode==='market'&&<div className="mt-6 flex flex-wrap items-center gap-3"><Button asChild variant={search.collection!=='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'watches'}}>시계 컬렉션</Link></Button><Button asChild variant={search.collection==='accessories'?'goldOutline':'ghost'}><Link to="/market" search={{role:search.role,collection:'accessories'}}>액세서리 컬렉션</Link></Button>{search.collection!=='accessories'&&<select className="form-input max-w-52" aria-label="시계 유형" value={search.watchType ?? 'all'} onChange={e=>update({watchType:marketSearch.shape.watchType.parse(e.target.value)})}>{watchTypes.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select>}</div>}
  {mode==='explore'&&<form className="lux-search" onSubmit={e=>{e.preventDefault();update({q:query || undefined});}}><Search size={18}/><input autoFocus aria-label="Search watches" placeholder="Search watches, factories, studios…" value={query} onChange={e=>setQuery(e.target.value)}/><Button variant="ghost" size="icon" type="submit" aria-label="Search"><ArrowRight/></Button></form>}

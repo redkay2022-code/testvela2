@@ -6,6 +6,8 @@ import { activeLang } from '@/lib/i18n';
 import { WatchSpecificationsForm } from './watch-specifications-form';
 import { cleanWatchSpecs } from '@/lib/watch-specifications';
 import { normalizeMenuCategory, postCategoryLabels, uploadCategoryLabels } from '@/lib/feed-categories';
+import { isWatchStoryTag, watchStorySpecs } from '@/lib/watch-story';
+import { t } from '@/lib/i18n';
 import { validateLoungeFiles } from './lounge';
 import { LOUNGE_MAX_BYTES, LOUNGE_MAX_SECONDS, loungeTooLong } from '@/lib/lounge';
 import { PostCategoryField } from './post-category-field';
@@ -176,6 +178,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const [description, setDescription] = useSessionState(draftKey + 'description', listing?.description ?? '');
   const [category, setCategory] = useSessionState(draftKey + 'category', listing?.category === '악세사리' ? '악세사리' : '시계');
   const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '') ? String(normalizeMenuCategory(String(listing?.specs?.['menuCategory']))) : '');
+  const [storySubcategory, setStorySubcategory] = useSessionState(draftKey + 'storySubcategory', isWatchStoryTag(listing?.specs?.['storySubcategory']) ? String(listing?.specs?.['storySubcategory']) : '');
   /* Story posts only have a title and text: no price, dispatch time, specification or factory fields. */
   const story = menuCategory === '스토리', lounge = story; /* 스토리는 영상 1개(5분·300MB) 규칙 */
   const [price, setPrice] = useSessionState(draftKey + 'price', listing?.price != null ? String(listing.price) : '');
@@ -245,6 +248,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const save = async (status: 'draft' | 'published') => {
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
     if (!uploadCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
+    if (story && !isWatchStoryTag(storySubcategory)) { setError(t('selectStorySubcategory')); return; }
     const p = Number(price); if (!story && (!Number.isFinite(p) || p < 1)) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
     if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
     if (video?.file) { try { if (lounge) await validateLoungeFiles([video.file]); else await validateListingFiles([video.file]); } catch (err) { setError(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; } }
@@ -280,6 +284,8 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       const cleanSpecs = story ? {} as Record<string, string> : cleanWatchSpecs(specs);
       if (!story) cleanSpecs['sourceType'] = sourceType;
       cleanSpecs['menuCategory'] = menuCategory;
+      Object.assign(cleanSpecs, watchStorySpecs(menuCategory, storySubcategory));
+      if (!story) delete cleanSpecs['storySubcategory'];
       if (card) cleanSpecs['cardImage'] = card;
       if (!story) { if (sourceType === 'custom') delete cleanSpecs['factory']; else cleanSpecs['factory'] = factory.trim().slice(0, 80); }
       const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
@@ -323,7 +329,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       </div></div>}
     </div>}
     <input ref={photoPicker} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label={tx("추가 사진 선택")} onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} />
-    <PostCategoryField value={menuCategory} onChange={setMenuCategory} />
+    <PostCategoryField value={menuCategory} onChange={setMenuCategory} subcategory={storySubcategory} onSubcategoryChange={setStorySubcategory} />
     <label htmlFor="l-title" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{story ? tx("제목") : tx("상품명")}</span></label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
     {!story && <><label htmlFor="l-cat" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("카테고리")}</span></label><select id="l-cat" className="form-input" value={category} onChange={e => setCategory(e.target.value)}><option value="시계"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("시계")}</span></option><option value="악세사리"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("악세사리")}</span></option></select>
     <WatchSpecificationsForm idPrefix="l-spec" value={specs} onChange={setSpecs} afterWater={<SourceFactorySelect id="l-source" sourceType={sourceType} factory={factory} onChange={(type, next) => { setSourceType(type); setFactory(next); }} />} /></>}
