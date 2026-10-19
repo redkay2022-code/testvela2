@@ -2741,5 +2741,9 @@
   "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급": "待发放 {0} P · 确认收货{1}天后到账",
   "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)": "本订单不会获得积分（已达发放上限或订单金额较小）。",
   "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.": "最高售价为 $3,500（约500万韩元），请降低价格。",
-  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "待发放积分将在确认收货{0}天后变为可用积分。积分自获得之日起超过有效期即失效，不可兑现或转让。"
+  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "待发放积分将在确认收货{0}天后变为可用积分。积分自获得之日起超过有效期即失效，不可兑现或转让。",
+  "Covered by Shipping & Customs Insurance ({0}% Fee)": "已投保配送与清关险（费用 {0}%）",
+  "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "运输途中发生丢失、损坏或被海关扣押时全额赔付，并保证免费补发或全额退款。",
+  "Without Insurance": "未投保",
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "如果不选择保险，平台和卖家对运输丢失或清关问题概不负责。"
 }

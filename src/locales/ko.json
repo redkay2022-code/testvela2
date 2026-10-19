@@ -1579,5 +1579,9 @@
   "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급": "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급",
   "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)": "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)",
   "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.": "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.",
-  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다."
+  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.",
+  "Covered by Shipping & Customs Insurance ({0}% Fee)": "배송·통관 보험 적용 중 ({0}% 수수료)",
+  "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "운송 중 분실·파손·세관 압수 시 전액 보장하며, 무료 재발송 또는 전액 환불을 보장합니다.",
+  "Without Insurance": "보험 미적용",
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "보험을 선택하지 않으면 배송 중 분실이나 통관 문제에 대해 플랫폼과 판매자는 책임지지 않습니다."
 }

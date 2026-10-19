@@ -2738,5 +2738,9 @@
   "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급": "{0} P ausstehend · Gutschrift {1} Tage nach Empfangsbestätigung",
   "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)": "Diese Bestellung erhält keine Punkte (Limit erreicht oder kleine Bestellung).",
   "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.": "Der Höchstverkaufspreis beträgt 3.500 $ (ca. 5 Mio. KRW). Bitte senke den Preis.",
-  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Ausstehende Punkte werden {0} Tage nach der Empfangsbestätigung nutzbar. Punkte verfallen nach Ablauf der Gültigkeit ab Gutschriftdatum und können weder ausgezahlt noch übertragen werden."
+  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Ausstehende Punkte werden {0} Tage nach der Empfangsbestätigung nutzbar. Punkte verfallen nach Ablauf der Gültigkeit ab Gutschriftdatum und können weder ausgezahlt noch übertragen werden.",
+  "Covered by Shipping & Customs Insurance ({0}% Fee)": "Durch Versand- & Zollversicherung abgedeckt ({0} % Gebühr)",
+  "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "Volle Deckung bei Verlust, Beschädigung oder Zollbeschlagnahme während des Transports, mit garantiertem kostenlosem Neuversand oder voller Erstattung.",
+  "Without Insurance": "Ohne Versicherung",
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Wenn die Versicherung abgelehnt wird, haften die Plattform und der Verkäufer nicht für Versandverluste oder Zollprobleme."
 }

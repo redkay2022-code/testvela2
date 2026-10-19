@@ -2743,5 +2743,9 @@
   "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급": "{0} P exspectantur · adduntur {1} diebus post receptionem confirmatam",
   "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)": "Hoc mandatum puncta non acquirit (terminus pervenit aut mandatum parvum).",
   "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.": "Summum pretium venditionis est $3,500 (circiter quinque miliones KRW). Pretium minue.",
-  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Puncta exspectantia {0} diebus post receptionem confirmatam utilia fiunt. Puncta post tempus validitatis a die acquisitionis exspirant nec in pecuniam converti aut transferri possunt."
+  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Puncta exspectantia {0} diebus post receptionem confirmatam utilia fiunt. Puncta post tempus validitatis a die acquisitionis exspirant nec in pecuniam converti aut transferri possunt.",
+  "Covered by Shipping & Customs Insurance ({0}% Fee)": "Assecuratione transportationis et telonii tectum ({0}% merces)",
+  "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "Plena tutela contra damnum, amissionem vel telonii captionem in itinere, cum gratuita iterata missione vel plena pecuniae restitutione certa.",
+  "Without Insurance": "Sine assecuratione",
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Si assecuratio recusatur, suggestus et venditor non tenentur de damnis transportationis vel de quaestionibus telonii."
 }

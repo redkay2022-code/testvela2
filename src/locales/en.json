@@ -1596,5 +1596,9 @@
   "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급": "{0} P pending · credited {1} days after delivery is confirmed",
   "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)": "This order does not earn points (earning limit reached or small order).",
   "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.": "The maximum selling price is $3,500 (about KRW 5 million). Please lower the price.",
-  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Pending Points become usable points {0} days after you confirm receipt. Points expire after their validity period from the earning date and cannot be cashed out or transferred."
+  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Pending Points become usable points {0} days after you confirm receipt. Points expire after their validity period from the earning date and cannot be cashed out or transferred.",
+  "Covered by Shipping & Customs Insurance ({0}% Fee)": "Covered by Shipping & Customs Insurance ({0}% Fee)",
+  "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.",
+  "Without Insurance": "Without Insurance",
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "The platform and seller are not liable for shipping losses or customs issues if insurance is declined."
 }

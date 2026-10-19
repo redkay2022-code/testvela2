@@ -2743,5 +2743,9 @@
   "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급": "{0} P in afwachting · bijgeschreven {1} dagen na bevestiging van ontvangst",
   "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)": "Deze bestelling levert geen punten op (limiet bereikt of kleine bestelling).",
   "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.": "De maximale verkoopprijs is $3.500 (ongeveer 5 miljoen KRW). Verlaag de prijs.",
-  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Punten in afwachting worden {0} dagen na bevestiging van ontvangst bruikbaar. Punten vervallen na de geldigheidsduur vanaf de datum van verdienen en kunnen niet worden uitbetaald of overgedragen."
+  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Punten in afwachting worden {0} dagen na bevestiging van ontvangst bruikbaar. Punten vervallen na de geldigheidsduur vanaf de datum van verdienen en kunnen niet worden uitbetaald of overgedragen.",
+  "Covered by Shipping & Customs Insurance ({0}% Fee)": "Gedekt door verzend- en douaneverzekering ({0}% kosten)",
+  "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "Volledige dekking bij verlies, beschadiging of inbeslagname door de douane tijdens het transport, met gegarandeerde gratis herverzending of volledige terugbetaling.",
+  "Without Insurance": "Zonder verzekering",
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Als de verzekering wordt geweigerd, zijn het platform en de verkoper niet aansprakelijk voor verlies tijdens verzending of douaneproblemen."
 }
