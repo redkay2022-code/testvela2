@@ -309,6 +309,13 @@
       "when": 1792398595478,
       "tag": "0043_create_test_seed_log",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792399296511,
+      "tag": "0044_restrict_loyalty_reads_to_members",
+      "breakpoints": true
     }
   ]
 }
