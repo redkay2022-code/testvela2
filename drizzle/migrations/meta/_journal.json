@@ -302,6 +302,13 @@
       "when": 1792314750620,
       "tag": "0042_seller_store_content",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1792398595478,
+      "tag": "0043_create_test_seed_log",
+      "breakpoints": true
     }
   ]
 }
