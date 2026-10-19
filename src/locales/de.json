@@ -2705,5 +2705,7 @@
   "등록된 공지가 없습니다.": "Noch keine Mitteilungen.",
   "스토어 내용을 불러오지 못했습니다.": "Store-Inhalte konnten nicht geladen werden.",
   "Confirm password": "Passwort bestätigen",
-  "Passwords do not match.": "Die Passwörter stimmen nicht überein."
+  "Passwords do not match.": "Die Passwörter stimmen nicht überein.",
+  "상품을 올려주세요": "Bitte lade dein Produkt hoch",
+  "제목을 입력해주세요": "Bitte Titel eingeben"
 }

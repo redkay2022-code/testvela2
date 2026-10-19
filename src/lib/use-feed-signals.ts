@@ -9,7 +9,8 @@ import type { FeedSignals } from './personal-feed';
 
 const EMPTY: ReadonlySet<string> = new Set();
 
-/** A fresh random seed every time: each page load, and each return from a product, reshuffles the Home order. */
+/** A new random order on every page load — but it is kept while the visitor browses, so Back from a product shows the same feed. */
+let kept: { seed: string; seen: SeenMap } | null = null;
 function newSeed(): string { return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
 
 /**
@@ -17,10 +18,10 @@ function newSeed(): string { return Math.random().toString(36).slice(2, 10) + Da
  * browser render (so the page hydrates identically), then the real signals right after.
  */
 export function useFeedSignals(userId: string | null, saved: readonly string[], followed: readonly string[]): { signals: FeedSignals; version: string; reshuffle: () => void } | null {
-  const [boot, setBoot] = useState<{ seed: string; seen: SeenMap } | null>(null);
-  useEffect(() => { setBoot({ seed: newSeed(), seen: loadSeen() }); }, []);
-  /** New random order + re-read of what the visitor has just opened (those products move down). */
-  const reshuffle = useCallback(() => setBoot({ seed: newSeed(), seen: loadSeen() }), []);
+  const [boot, setBoot] = useState<{ seed: string; seen: SeenMap } | null>(() => kept);
+  useEffect(() => { if (!kept) kept = { seed: newSeed(), seen: loadSeen() }; setBoot(kept); }, []);
+  /** Explicit "new random order" (not used when coming back from a product). */
+  const reshuffle = useCallback(() => { kept = { seed: newSeed(), seen: loadSeen() }; setBoot(kept); }, []);
   const popularityFn = useServerFn(getFeedPopularity);
   const popularity = useQuery({ queryKey: ['feed-popularity'], queryFn: () => popularityFn(), staleTime: 10 * 60_000, retry: false });
   const likes = useQuery({

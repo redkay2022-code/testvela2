@@ -5,7 +5,8 @@ import { Bitcoin, Check, FileCheck, ShieldCheck, Store, TrendingUp, Users, Walle
 import { Button } from './ui/button';
 import { AdminApplications } from './seller-account';
 import { ReviewList } from './customer-reviews';
-import { AdminCryptoOrders, AdminDisputeRooms, AdminOrderSummary, AdminOrdersPanel } from './live-orders';
+import { AdminCryptoOrders, AdminDisputeRooms, AdminOrderSummary } from './live-orders';
+import { AdminOrdersPanel } from './admin-orders';
 import { useMarketPreview } from './market-preview';
 import { marketSearch } from '@/lib/market';
 import { AdminLoyalty } from './loyalty';

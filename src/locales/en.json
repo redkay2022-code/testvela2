@@ -1563,5 +1563,7 @@
   "등록된 공지가 없습니다.": "No notices yet.",
   "스토어 내용을 불러오지 못했습니다.": "Could not load store content.",
   "Confirm password": "Confirm password",
-  "Passwords do not match.": "Passwords do not match."
+  "Passwords do not match.": "Passwords do not match.",
+  "상품을 올려주세요": "Please upload your product",
+  "제목을 입력해주세요": "Please enter a title"
 }

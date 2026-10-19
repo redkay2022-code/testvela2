@@ -23,7 +23,7 @@ import { isLogisticsOrder } from '@/lib/store-content';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1;
 const BUCKET = 'qc-media';
-type Order = { id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null; cancelled_at: string | null };
+export type Order = { shipping?: Record<string, string> | null; id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null; cancelled_at: string | null };
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
 type Msg = { id: string; order_id: string; author_role: string; kind: string; body: string; areas: string[]; created_at: string };
 
@@ -286,10 +286,10 @@ export function OrderNotifier() {
   return null;
 }
 
-function useAdminOrders(filter: 'crypto' | 'disputes') {
+export function useAdminOrders(filter: 'crypto' | 'disputes') {
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ['admin-orders', filter], retry: false, queryFn: async () => {
-    let b = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id,cancelled_at').order('created_at', { ascending: false });
+    let b = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id,cancelled_at,shipping').order('created_at', { ascending: false });
     b = filter === 'crypto' ? b : b.eq('dispute_open', true);
     const { data, error } = await b; if (error) throw error;
     const orders = (data ?? []) as Order[];
