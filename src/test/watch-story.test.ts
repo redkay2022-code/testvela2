@@ -17,6 +17,8 @@ describe('Story tags', () => {
     expect(() => watchStorySpecs('Story', 'Other')).toThrow();
     expect(watchStorySpecs('스토리', 'Repair & Care')).toEqual({ storySubcategory: 'Repair & Care' });
     expect(watchStorySpecs('시계', 'Repair & Care')).toEqual({});
+    expect(() => watchStorySpecs('Story', 'Watch Story')).toThrow();
+    expect(() => watchStorySpecs('Story', 'Daily Watch')).toThrow();
   });
   it('filters the saved tag rather than title keywords', () => {
     const post = { title: 'Daily Style', description: '', category: '시계', factory: '', sample: false, menuCategory: '스토리', source: { specs: watchStorySpecs('스토리', 'Make Process') } };
@@ -25,5 +27,10 @@ describe('Story tags', () => {
     expect(matchesFeedCategory(post, 'story')).toBe(true);
     expect(matchesFeedCategory({ ...post, source: { specs: {} } }, 'story:watch-story')).toBe(false);
     expect(matchesFeedCategory({ ...post, menuCategory: '시계' }, 'story:make-process')).toBe(false);
+  });
+  it('keeps existing Daily Watch posts discoverable as Daily Style', () => {
+    const post = { title: 'Bag styling', description: '', category: '가방', factory: '', sample: false, menuCategory: 'Watch Story', source: { specs: { storySubcategory: 'Daily Watch' } } };
+    expect(matchesFeedCategory(post, 'story:daily-style')).toBe(true);
+    expect(matchesFeedCategory(post, 'story:daily-watch')).toBe(true);
   });
 });
