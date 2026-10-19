@@ -12,7 +12,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { AlertTriangle, Camera, Check, ExternalLink, MapPin, MessageSquareText, RefreshCw, Send, ShieldCheck, Truck, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { cardImageOf, dollars } from '@/lib/luxury-market';
+import { cardImageOf, dollars, luxuryPosts } from '@/lib/luxury-market';
 import { getOrderThumbs } from '@/lib/order-thumbs.functions';
 import { qcAreas, stageLabel, type EscrowStage } from '@/lib/escrow';
 import { getOrderTracking } from '@/lib/tracking.functions';
@@ -224,7 +224,7 @@ export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'selle
       const round = media.reduce((r, m) => Math.max(r, m.round), 0);
       const stage = o.stage as EscrowStage;
       const isSeller = as === 'seller';
-      const product=catalog.data?.find(p=>p.id===o.post_id);
+      const product=luxuryPosts((catalog.data ?? []).filter(p=>p.id===o.post_id) as Parameters<typeof luxuryPosts>[0])[0];
       return <article className="escrow-order" key={o.id}>
         <div className="escrow-order-head"><OrderThumb srcs={[product ? cardImageOf(product) : null, product?.images?.[0], thumbs.data?.[o.post_id ?? ''], o.image_url]} /><div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
         <EscrowTimeline stage={stage} />
