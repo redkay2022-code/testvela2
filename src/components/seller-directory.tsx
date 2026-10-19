@@ -4,6 +4,7 @@ import { ArrowRight, Check, Plus, Star, Store, UserRound } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getSellerAvatar } from '@/lib/market.functions';
 import { supabase } from '@/integrations/supabase/client';
+import { compactCount, useSellerStats } from '@/lib/use-seller-stats';
 import { Button } from './ui/button';
 import { SellerBadge } from './reputation';
 import { useMarketPreview } from './market-preview';
@@ -26,6 +27,7 @@ export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost
   const preview = useMarketPreview();
   const sellers = directorySellers(posts).filter(seller => matchesStoreCategory(seller, category)).sort((a,b)=>Number(Boolean(b.post.storeFeatured))-Number(Boolean(a.post.storeFeatured)) || (category==='top'?(b.rating ?? 0)-(a.rating ?? 0):0));
   /* 스토어 카드의 소개글은 셀러가 프로필에 쓴 "스토어 소개"를 그대로 보여 준다(없으면 기존 문구). */
+  const stats = useSellerStats();
   const introIds = [...new Set(sellers.map(s => s.post.sample ? null : s.post.source.user_id).filter((x): x is string => Boolean(x)))].sort();
   const intros = useQuery({ queryKey: ['directory-intros', introIds.join(',')], enabled: introIds.length > 0, staleTime: 60_000, queryFn: async () => { const { data, error } = await supabase.from('seller_store_content').select('user_id,introduction').in('user_id', introIds); if (error) throw error; return new Map((data ?? []).map(r => [r.user_id, r.introduction])); } });
   return <section className="seller-directory">
@@ -37,7 +39,7 @@ export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost
         <div className="directory-identity" data-no-translate><DirectoryAvatar post={seller.post}/><div><h2>{seller.post.creator}</h2><SellerBadge reputation={seller.post.reputation}/></div></div>
         <TranslatableText as="p" className="directory-bio" text={(seller.post.sample ? '' : intros.data?.get(seller.post.source.user_id ?? '')?.trim()) || seller.bio} />
         
-        <div className="directory-metrics"><span><Star size={13}/><strong>{seller.rating?.toFixed(2) ?? '—'}</strong> Rating</span><span><strong>{seller.reviews ?? '—'}</strong> Reviews</span><span><strong>{seller.followers===null?'—':new Intl.NumberFormat('en',{notation:'compact'}).format(seller.followers+(following?1:0))}</strong> Followers</span></div>
+        <div className="directory-metrics"><span><Star size={13}/><strong>{seller.rating?.toFixed(2) ?? '—'}</strong> Rating</span><span><strong>{seller.reviews ?? '—'}</strong> Reviews</span><span><strong>{(()=>{const s=stats.data?.get(seller.id);return s?compactCount(s.followers+(following?1:0)):seller.followers===null?'—':compactCount(seller.followers+(following?1:0));})()}</strong> Followers</span><span><strong>{stats.data?.get(seller.id)?compactCount(stats.data.get(seller.id)!.likes):'—'}</strong> Likes</span><span><strong>{stats.data?.get(seller.id)?compactCount(stats.data.get(seller.id)!.saves):'—'}</strong> Saves</span></div>
         <div className="directory-previews" aria-label={`${seller.post.creator} item previews`}>{seller.items.slice(0,4).map(item=><Link key={item.id} to={postMediaRoute(item)} params={{id:item.id}} search={{role}} aria-label={`Preview ${item.title}`}><img src={cardImageOf(item)} width={160} height={160} alt={item.title} loading="lazy" decoding="async"/></Link>)}</div>
         <div className="directory-actions"><Button variant="goldOutline" aria-pressed={following} aria-label={`${following?'Unfollow':'Follow'} ${seller.post.creator}`} onClick={()=>preview.toggleSeller(seller.id)}>{following?<Check/>:<Plus/>}{following?'Following':'Follow'}</Button><Button asChild variant="gold"><Link to="/store" search={{role,seller:seller.id}}>Visit Store<ArrowRight/></Link></Button></div>
       </article>;
