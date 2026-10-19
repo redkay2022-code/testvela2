@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Application architecture
-- Share translation-protected BrandSelect and WatchSpecificationsForm across creation/edit forms; preserve spec JSON keys and units for consistent saved detail rendering.
+- Share guarded brand/spec forms and spec keys/units across create/edit for consistent details.
 - Validated TanStack search drives UI layers; Back unwinds one. No invented brand affiliations.
 - Public feed uses Query/server loaders; SSR needs no login.
 - Scope checkout CSS and selectors to the shared payment dialog.
@@ -23,7 +23,8 @@
 - Shared pure reputation functions/local SVG badges use trusted roles; editorial metrics stay sample-only and unknown live sellers stay unbadged.
 - Buyer tiers are trusted, never inferred from client orders/metadata; default to Member.
 - Storefronts/reviews share canonical feed seller identity with slug-insensitive keys; never attribute sample reputation/reviews to another seller.
-- Build the public seller directory from visible feed listings grouped by stable seller identity; directory filters use validated URL search state and unknown live metrics remain unavailable.
+- Public seller directory groups visible listings by stable seller identity; URL filters and no invented metrics.
+- Share Story tag validation across create/edit; store specs.storySubcategory and use URL feed IDs to reuse public filtering.
 - Use insuredPurchase with the purchase insurance selection for detail/checkout totals; forward choices via validated search and never store buyer choices on listings.
 - Store item/box prices in USD; display via src/lib/currency formatMoney for consistent totals/fees.
 - Latest locale wins; seller cards/menus/notices use reactive Tx/tx with whole-sentence parameters. Native notranslate allows app translation; data-i18n-skip protects output/identities. Cache USD rates server-side.

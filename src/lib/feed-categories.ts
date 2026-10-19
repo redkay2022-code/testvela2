@@ -1,5 +1,6 @@
 import {ALL_WATCH_BRANDS} from './watch-brands';
 import {brandNames} from './brand-names';
+import {storyFeedTag} from './watch-story';
 const brandSlug=(name:string)=>name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,' ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 /** Korean names for the brands shown in Korean in the home category row; every other brand uses its listing name. */
 const koreanBrandNames:Record<string,string>={rolex:'롤렉스',cartier:'까르띠에','audemars-piguet':'오데마 피게','patek-philippe':'파텍 필립','richard-mille':'리차드 밀',omega:'오메가',panerai:'파네라이',iwc:'IWC'};
@@ -35,7 +36,7 @@ export const postCategories:readonly (readonly [string,string])[]=(categoryGroup
 export const postCategoryLabels:readonly string[]=postCategories.map(item=>item[1]);
 /** Upload dropdown order: 파츠 right after 시계 (the top menu keeps its own order). */
 export const uploadCategoryLabels:readonly string[]=(()=>{const out:string[]=postCategoryLabels.filter(l=>l!=='파츠');const watch=out.indexOf('시계');out.splice(watch<0?out.length:watch+1,0,'파츠');return out;})();
-const baseCategoryLabel=(id:string)=>id.startsWith('b:')?id.slice(2):categoryGroups.flatMap(group=>group.items).find(item=>item[0]===id)?.[1] ?? id;
+const baseCategoryLabel=(id:string)=>storyFeedTag(id) ?? (id.startsWith('b:')?id.slice(2):categoryGroups.flatMap(group=>group.items).find(item=>item[0]===id)?.[1] ?? id);
 /** Feed ids are a category ("watches"), a brand ("rolex") or both joined with "~" ("watches~rolex" = Rolex within 시계). */
 export const splitFeedId=(id:string|undefined):{category:string;brand:string}=>{const i=(id ?? '').indexOf('~');return i<0?{category:id ?? '',brand:''}:{category:id!.slice(0,i),brand:id!.slice(i+1)};};
 export const categoryLabel=(id:string)=>{const {category,brand}=splitFeedId(id);return brand?`${baseCategoryLabel(category)} · ${baseCategoryLabel(brand)}`:baseCategoryLabel(id);};
@@ -60,6 +61,7 @@ export function postBrandId(post:FeedPostLike):string{
 }
 export function matchesFeedCategory(post:FeedPostLike,id:string|undefined):boolean{
  if(!id||id==='recommend')return true;
+ if(id.startsWith('story:')){const tag=storyFeedTag(id);const specs=post.source?.specs;return Boolean(tag&&matchesFeedCategory(post,'story')&&specs&&typeof specs==='object'&&'storySubcategory' in specs&&specs.storySubcategory===tag);}
  if(id.includes('~')){const {category,brand}=splitFeedId(id);return matchesFeedCategory(post,category)&&(brand.startsWith('b:')?postBrandId(post).toLowerCase()===brand.toLowerCase():postBrandId(post)===brand||matchesFeedCategory(post,brand));}
  if(id.startsWith('b:'))return postBrandId(post).toLowerCase()===id.toLowerCase();
  const own=postCategories.find(item=>item[0]===id),menu=normalizeMenuCategory(post.menuCategory);
