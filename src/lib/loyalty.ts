@@ -1,7 +1,9 @@
 /** Pure VELA Point maths. The database triggers enforce the same rules; this mirrors them for display. */
 export const DEFAULT_POINT_VALUE = 0.001;
-export const DEFAULT_MAX_REDEMPTION_PCT = 20;
-export const DEFAULT_EARN_RATES = { bronze: 0.01, silver: 0.015, gold: 0.02, platinum: 0.03 } as const;
+export const DEFAULT_MAX_REDEMPTION_PCT = 10;
+/** 수령 확정 후 포인트가 사용 가능해지기까지의 보류 기간(일). DB 함수 loyalty_release_user 와 같은 값. */
+export const POINT_HOLD_DAYS = 14;
+export const DEFAULT_EARN_RATES = { bronze: 0.01, silver: 0.0125, gold: 0.015, platinum: 0.02 } as const;
 
 export const pointsToUsd = (points: number, value = DEFAULT_POINT_VALUE) => Math.round(points * value * 100) / 100;
 export const formatPoints = (points: number) => `${new Intl.NumberFormat('en-US').format(Math.floor(points))} P`;

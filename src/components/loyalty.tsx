@@ -4,7 +4,9 @@ import { Check, Coins, Gift, Hourglass, ShieldCheck, TrendingUp, Wallet, AlertTr
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
-import { clampRedeem, daysUntil, earnPoints, formatPoints, formatPointsUsd, maxRedeemPoints, pointsToUsd } from '@/lib/loyalty';
+import { clampRedeem, daysUntil, earnPoints, formatPoints, formatPointsUsd, maxRedeemPoints, pointsToUsd, POINT_HOLD_DAYS } from '@/lib/loyalty';
+import { BASE_FEE_RATE, insuranceRateForTier } from '@/lib/insurance';
+import { tx } from '@/lib/dom-translate';
 
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n);
 const icons: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' };
@@ -31,6 +33,26 @@ export function useLoyaltySummary() {
   } });
   return { uid, ...q };
 }
+
+/** 구매자의 포인트 등급(최근 12개월 구매액 기준)에 맞는 보험 요율. 로그인 전이거나 정보가 없으면 기본 10%. */
+export function useInsuranceRate(): number {
+  const { data: s } = useLoyaltySummary(); const rules = useLoyaltyRules().data;
+  if (!s || !rules) return BASE_FEE_RATE;
+  const rates = Object.fromEntries(rules.tiers.map(t => [t.tier, Number(t.insurance_rate)]));
+  return insuranceRateForTier(s.tier, rates);
+}
+
+/** 이번 달 포인트 적립이 가능한지(월 예산·총 부채 상한). 함수가 없거나 실패하면 적립 가능으로 봅니다. */
+export function useEarnStatus() {
+  const uid = useUid();
+  return useQuery({ queryKey: ['loyalty-earn-status', uid], enabled: !!uid, staleTime: 60_000, retry: false, queryFn: async () => {
+    const call = supabase.rpc as unknown as (fn: string) => Promise<{ data: { can_earn: boolean; reason: string | null } | null; error: { message: string } | null }>;
+    const { data, error } = await call.call(supabase, 'loyalty_earn_status');
+    if (error || !data) return { can_earn: true, reason: null };
+    return data;
+  } });
+}
+const noEarnText = (reason?: string | null) => reason === 'monthly_budget' ? tx('이번 달 포인트 적립이 마감되어 있습니다.') : reason === 'liability' ? tx('현재 포인트 적립이 한도에 도달해 있습니다.') : tx('현재 포인트 적립이 일시 중지되어 있습니다.');
 
 export function MembershipCard({ onWallet }: { onWallet?: () => void }) {
   const summary=useLoyaltySummary(), rulesQuery=useLoyaltyRules();
@@ -68,7 +90,7 @@ export function VelaWallet() {
     <p className="text-sm text-muted-foreground">구매 → 포인트 적립 → 다음 구매에서 사용. VELA의 모든 스토어에서 함께 쓰는 포인트입니다.</p>
     <div className="dashboard-stats mt-4">{stats.map(([l, v, I]) => <div className="stat-item" key={l}><I size={18}/><span>{l}</span><strong data-no-translate>{formatPoints(v)}</strong><small data-no-translate>{usd(pointsToUsd(v, value))}</small></div>)}</div>
     {s.expiring_soon > 0 && <p className="mt-3 text-sm text-primary" data-no-translate>{formatPoints(s.expiring_soon)} expires in {days} days</p>}
-    <p className="mt-2 text-xs text-muted-foreground">Pending Points는 구매 확정(수령 확인) 후 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.</p>
+    <p className="mt-2 text-xs text-muted-foreground">{tx('Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.', { 0: String(POINT_HOLD_DAYS) })}</p>
     <div className="section-heading mt-6"><h2>Transaction History</h2></div>
     {!history.data?.length ? <p className="text-sm text-muted-foreground">아직 포인트 내역이 없습니다.</p> :
       <div className="management-list">{history.data.map(h => <div className="management-row" key={h.id}><div className="min-w-0"><strong>{typeLabel[h.type] ?? h.type}</strong><small data-no-translate>{new Date(h.created_at).toLocaleDateString()}{h.expires_at ? ` · ~${new Date(h.expires_at).toLocaleDateString()}` : ''}</small></div><strong className={h.amount > 0 ? 'text-primary' : ''} data-no-translate>{h.amount > 0 ? '+' : ''}{formatPoints(h.amount)}</strong><small data-no-translate>{formatPoints(h.balance_after)}</small></div>)}</div>}
@@ -77,24 +99,27 @@ export function VelaWallet() {
 
 /** Product page: points this purchase would earn at the buyer's current tier. */
 export function EarnHint({ price }: { price: number }) {
-  const { uid, data: s } = useLoyaltySummary(); const rules = useLoyaltyRules().data;
-  if (!rules || !rules.config?.points_enabled || !(price > 0)) return null;
+  const { uid, data: s } = useLoyaltySummary(); const rules = useLoyaltyRules().data; const status = useEarnStatus().data;
+  if (!rules || !(price > 0)) return null;
+  if (!rules.config?.points_enabled || status?.can_earn === false) return <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground" data-no-translate><AlertTriangle size={14}/>{noEarnText(status?.reason)} {tx('이번 구매는 포인트가 적립되지 않습니다.')}</p>;
   const value = Number(rules.config.point_value_usd), maxRate = Number(rules.config.max_earn_rate_pct) / 100;
   const rateFor = (tier?: string) => Math.min(Number(rules.tiers.find(t => t.tier === tier)?.earn_rate ?? 0), maxRate);
   const top = Math.max(...rules.tiers.map(t => Math.min(Number(t.earn_rate), maxRate)));
   const pts = uid && s ? earnPoints(price, rateFor(s.tier), value) : earnPoints(price, top, value);
-  return <p className="mt-2 flex items-center gap-1 text-xs text-primary"><Coins size={14}/>{uid && s ? <>You will earn <strong data-no-translate>{formatPoints(pts)}</strong> with this purchase</> : <>Earn up to <strong data-no-translate>{formatPoints(pts)}</strong></>}</p>;
+  if (pts <= 0) return <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground" data-no-translate><AlertTriangle size={14}/>{tx('이 상품은 금액이 작아 포인트가 적립되지 않습니다.')}</p>;
+  return <p className="mt-2 flex items-center gap-1 text-xs text-primary"><Coins size={14}/>{uid && s ? <>You will earn <strong data-no-translate>{formatPoints(pts)}</strong> with this purchase</> : <>Earn up to <strong data-no-translate>{formatPoints(pts)}</strong></>}<span className="text-muted-foreground"> · {tx('수령 확정 {0}일 후 적립', { 0: String(POINT_HOLD_DAYS) })}</span></p>;
 }
 
 /** Checkout: choose how many VELA Points to apply (max % of product subtotal). */
 export function CheckoutPoints({ product, points, onChange }: { product: number; points: number; onChange: (p: number) => void }) {
-  const { uid, data: s } = useLoyaltySummary(); const cfg = useLoyaltyRules().data?.config;
+  const { uid, data: s } = useLoyaltySummary(); const cfg = useLoyaltyRules().data?.config; const status = useEarnStatus().data;
   if (!uid || !s || !cfg) return null;
   const value = Number(cfg.point_value_usd), pct = Number(cfg.max_redemption_pct);
   const max = maxRedeemPoints(product, s.available, pct, value);
   return <section className="mt-5 rounded-md border border-border p-4" aria-label="VELA Points">
     <h3 className="text-sm font-semibold">VELA Points</h3>
     <p className="mt-1 text-xs text-muted-foreground">Available: <span data-no-translate>{formatPointsUsd(s.available, value)}</span></p>
+    {(!cfg.points_enabled || status?.can_earn === false) && <p className="mt-1 flex items-center gap-1 text-xs text-primary" data-no-translate><AlertTriangle size={14}/>{noEarnText(status?.reason)} {tx('이번 주문은 포인트가 적립되지 않습니다.')}</p>}
     {!cfg.points_enabled ? <p className="mt-2 text-xs text-muted-foreground">포인트 사용이 일시 중지되었습니다.</p> : <>
       <div className="mt-3 flex gap-2"><input className="form-input" inputMode="numeric" aria-label="Use points" value={points || ''} placeholder="0" onChange={e => onChange(clampRedeem(Number(e.target.value.replace(/\D/g, '')), product, s.available, pct, value))}/>
         <Button type="button" variant="goldOutline" disabled={!max} onClick={() => onChange(points === max ? 0 : max)}>{points === max && max ? 'Clear' : 'Use Points'}</Button></div>

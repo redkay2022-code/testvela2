@@ -14,7 +14,8 @@ import { Tx } from './tx';
 import { usePostTranslation, TranslationToggle } from './post-translation';
 import { EscrowGuarantee } from './escrow';
 import { insuredPurchase } from '@/lib/insurance';
-import { EarnHint } from './loyalty';
+import { EarnHint, useInsuranceRate } from './loyalty';
+import { exceedsPriceCap } from '@/lib/price-cap';
 import { InsuranceOption } from './insurance-option';
 import { ProductComments } from './product-comments';
 import { marketSearch } from '@/lib/market';
@@ -31,12 +32,14 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  const preview=useMarketPreview(),navigate=useNavigate(),router=useRouter();
  const search=useRouterState({select:s=>marketSearch.parse(s.location.search)});
  const pushed=useRef(false),[box,setBox]=useState(false),[insured,setInsured]=useState(false);
+ const insRate=useInsuranceRate(),insPct=+(insRate*100).toFixed(2);
  const pr=usePostRatings().data?.[post.id];
  const sellerAvg=ratingAverage(post.reputation),sellerCount=post.reputation.ratingCount;
  const sellerAvatar=useQuery({queryKey:['seller-header-avatar',post.source.store_id ?? post.source.user_id ?? null],enabled:!post.sample&&Boolean(post.source.store_id||post.source.user_id),queryFn:()=>getSellerAvatar({data:{storeId:post.source.store_id ?? undefined,userId:post.source.user_id ?? undefined}})});
  const tr=usePostTranslation(post.source,!post.sample,false);
  const verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
  const qna=search.detailTab==='qna',boxPrice=post.boxPrice ?? 0,story=post.menuCategory==='스토리';
+ const ownProduct=Boolean(user&&!post.sample&&post.source.user_id===user.id),overCap=post.price!==null&&exceedsPriceCap(post.price,box?boxPrice:0);
  const openQna=()=>{pushed.current=true;void navigate({to:'.',search:prev=>({...prev,detailTab:'qna'}),resetScroll:false});};
  const closeQna=()=>{if(pushed.current){pushed.current=false;router.history.back();}else void navigate({to:'.',search:prev=>({...prev,detailTab:undefined}),replace:true,resetScroll:false});};
  const share=async()=>{try{const url=new URL(`/post/${post.id}`,window.location.origin).href;if(navigator.share)await navigator.share({title:post.title,url});else{await navigator.clipboard.writeText(url);notify('상품 링크를 복사했습니다.');}}catch{/* Share dismissed */}};
@@ -47,14 +50,15 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  {shorts?<ShortsGallery key={post.id} images={post.images} title={post.title}/>:<ProductPhotos post={post} verified={verified}/>}
  <div className="lux-detail-copy"><div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">{post.price!==null&&<p className="lux-price min-w-0" data-no-translate>{dollars(post.price+(box?boxPrice:0))}</p>}<span className="text-xs text-muted-foreground"><Eye size={13} className="mr-1 inline"/>{post.views} views</span></div>
  {post.price!==null&&boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>{t('addBox')}</span><strong data-no-translate>+{dollars(boxPrice)}</strong></label>}
- {post.price!==null&&<InsuranceOption price={post.price} checked={insured} onChange={setInsured}/>}
- {post.price!==null&&<dl className="insurance-breakdown" aria-label="안전배송보험"><div><dt><ShieldCheck size={15} className="mr-1 inline"/>{t('deliveryInsurance')} (10%)</dt><dd data-no-translate>+{dollars(insuredPurchase(post.price,0,insured).insurance)}</dd></div><div className="insurance-total"><dt>{t('total')}</dt><dd data-no-translate>{dollars(insuredPurchase(post.price,box?boxPrice:0,insured).total)}</dd></div></dl>}
+ {post.price!==null&&<InsuranceOption price={post.price} checked={insured} onChange={setInsured} rate={insRate}/>}
+ {post.price!==null&&<dl className="insurance-breakdown" aria-label="안전배송보험"><div><dt><ShieldCheck size={15} className="mr-1 inline"/>{t('deliveryInsurance')} ({insPct}%)</dt><dd data-no-translate>+{dollars(insuredPurchase(post.price,0,insured,insRate).insurance)}</dd></div><div className="insurance-total"><dt>{t('total')}</dt><dd data-no-translate>{dollars(insuredPurchase(post.price,box?boxPrice:0,insured,insRate).total)}</dd></div></dl>}
  {post.price!==null&&<EarnHint price={post.price+(box?boxPrice:0)}/>}
+ {post.price!==null&&(ownProduct||overCap)&&<p role="alert" className="mt-2 text-xs text-destructive">{ownProduct?<Tx>내가 올린 상품은 구매할 수 없습니다.</Tx>:<Tx>판매 최고가($3,500)를 넘는 상품은 구매할 수 없습니다.</Tx>}</p>}
  {isImmediateDispatch(post)&&<span className="lux-ready-badge is-inline mt-4" data-no-translate><Tx>바로 발송 · Ready to Ship</Tx></span>}<h2 className="mt-4 text-xl font-semibold leading-relaxed notranslate" translate="no" data-no-translate data-i18n-skip>{post.sample?post.title:tr.title}</h2><p className="mt-1 text-xs text-muted-foreground">{pr?<><span className="text-primary">★ {pr.average.toFixed(1)}</span>{` · 구매자 리뷰 ${pr.count}개`}</>:<Tx>구매자 평점 없음</Tx>}</p>{(verified||post.sample)&&<div className="detail-tags">{verified&&<span>✓ VELA VERIFIED</span>}{post.sample&&<span>Studio sample</span>}</div>}<h3 className="mt-5 text-sm font-semibold"><Tx>제품 소개</Tx></h3><p className="mt-2 whitespace-pre-line break-words text-sm leading-7 text-muted-foreground notranslate" translate="no" data-no-translate data-i18n-skip>{post.sample?post.description:tr.description}</p><TranslationToggle t={tr}/>
  {!story&&<SpecsTable category={post.category} dispatch={post.source.dispatch_time} specs={post.sample?post.source.specs:tr.specs} fallback={post.sample?<dl className="lux-specs"><div><dt>Specification</dt><dd>1:1 studio specification</dd></div><div><dt>Case & bracelet</dt><dd>Stainless steel</dd></div><div><dt>Crystal</dt><dd>Sapphire</dd></div><div><dt>Movement</dt><dd>Automatic mechanical</dd></div></dl>:<p className="mt-5 text-sm text-muted-foreground">등록된 사양이 없습니다.</p>}/>}
  {!story&&<> <div className="mt-7 border-t border-border pt-5"><h3 className="text-sm font-medium">Studio notes</h3><p className="mt-2 text-xs leading-6 text-muted-foreground">{post.sample?'Sample product, pricing and verification. No brand affiliation or real inspection claim.':'Contact the studio to confirm specifications and availability.'}</p></div><EscrowGuarantee/><SellerRatings reputation={post.reputation}/></>}<ProductComments postId={post.id} user={user} requestAuth={requestAuth}/></div></>}
  </div>
- <footer className="product-shopping-actions"><Button variant="ghost" className="product-qna-button" aria-label="셀러에게 메시지" title="메시지" onClick={()=>notify('서비스 준비 중입니다.')}><MessageCircle size={20}/><span><Tx>메시지</Tx></span></Button><Button variant="ghost" className="product-qna-button" aria-label="상품 Q&A 열기" aria-pressed={qna} title="상품 Q&A" onClick={()=>qna?closeQna():openQna()}><MessageCircle size={20}/><span>Q&A</span></Button><Button variant="ghost" size="icon" aria-label="상품 저장" title="저장" aria-pressed={preview.saved.includes(post.id)} onClick={()=>preview.toggleSaved(post.id)}><Star fill={preview.saved.includes(post.id)?'currentColor':'none'}/></Button>{post.price!==null&&<><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('장바구니에 담았습니다.');}}><span data-i18n-skip className="notranslate" translate="no">{t('addCart')}</span></Button><Button variant="gold" onClick={()=>buy(box,insured)}><span data-i18n-skip className="notranslate" translate="no">{t('buyNow')}</span><ArrowRight size={14}/></Button></>}</footer>
+ <footer className="product-shopping-actions"><Button variant="ghost" className="product-qna-button" aria-label="셀러에게 메시지" title="메시지" onClick={()=>notify('서비스 준비 중입니다.')}><MessageCircle size={20}/><span><Tx>메시지</Tx></span></Button><Button variant="ghost" className="product-qna-button" aria-label="상품 Q&A 열기" aria-pressed={qna} title="상품 Q&A" onClick={()=>qna?closeQna():openQna()}><MessageCircle size={20}/><span>Q&A</span></Button><Button variant="ghost" size="icon" aria-label="상품 저장" title="저장" aria-pressed={preview.saved.includes(post.id)} onClick={()=>preview.toggleSaved(post.id)}><Star fill={preview.saved.includes(post.id)?'currentColor':'none'}/></Button>{post.price!==null&&<><Button variant="goldOutline" onClick={()=>{preview.addCart(post);notify('장바구니에 담았습니다.');}}><span data-i18n-skip className="notranslate" translate="no">{t('addCart')}</span></Button><Button variant="gold" disabled={ownProduct||overCap} onClick={()=>buy(box,insured)}><span data-i18n-skip className="notranslate" translate="no">{t('buyNow')}</span><ArrowRight size={14}/></Button></>}</footer>
  </>;
 }
 function ProductPhotos({post,verified}:{post:LuxuryPost;verified:boolean}) {

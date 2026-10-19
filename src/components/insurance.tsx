@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
+import { useLoyaltySummary } from './loyalty';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight, ShieldCheck } from 'lucide-react';
 import { t } from '@/lib/i18n';
@@ -10,13 +9,9 @@ import { insuredPurchase, insuranceFee, insuranceTiers, nextInsuranceTier, tierF
 type Role = 'buyer' | 'seller' | 'admin' | undefined;
 /** Sum of the buyer's admin-verified crypto orders (USD equivalent). */
 function useVerifiedSpend() {
-  const [uid, setUid] = useState<string | null>(null);
-  useEffect(() => { supabase.auth.getUser().then(({ data }) => setUid(data.user?.id ?? null)); const { data } = supabase.auth.onAuthStateChange((_e, s) => setUid(s?.user?.id ?? null)); return () => data.subscription.unsubscribe(); }, []);
-  const q = useQuery({ queryKey: ['verified-spend', uid], enabled: !!uid, staleTime: 30_000, queryFn: async () => {
-    const { data } = await supabase.from('orders').select('amount_usd').eq('buyer_id', uid!).not('payment_verified_at', 'is', null);
-    return (data ?? []).reduce((sum, o) => sum + Number(o.amount_usd ?? 0), 0);
-  } });
-  return q.data ?? 0;
+  // 포인트 멤버십과 같은 기준: 최근 12개월 상품금액 합계(취소·환불 제외). 등급이 두 곳에서 달라지지 않게 하나로 통일합니다.
+  const { data } = useLoyaltySummary();
+  return Number(data?.spend ?? 0);
 }
 const perkKeys = { bronze: 'perkBronze', silver: 'perkSilver', gold: 'perkGold', platinum: 'perkPlatinum' } as const;
 

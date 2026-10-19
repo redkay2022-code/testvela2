@@ -1,7 +1,7 @@
 import './vela-desktop.css';
 import { avatarKey, defaultAvatarUrl } from '@/lib/default-avatar';
 import { LazyVideo } from './lazy-video';
-import { createLiveOrder, LiveOrderBoard } from './live-orders';
+import { createLiveOrder, LiveOrderBoard, orderBlockReason } from './live-orders';
 import { normalizeShipping, shippingError, type ShippingInput } from '@/lib/shipping';
 import { emptyShipping, useSavedShipping } from '@/lib/use-saved-shipping';
 import { ShippingFields } from './shipping-fields';
@@ -47,7 +47,7 @@ import { t } from '@/lib/i18n';
 import { insuredPurchase } from '@/lib/insurance';
 import { InsuranceOption } from './insurance-option';
 import { cashPayment } from '@/lib/loyalty';
-import { CheckoutPoints, CheckoutSummary, VelaWallet } from './loyalty';
+import { CheckoutPoints, CheckoutSummary, VelaWallet, useInsuranceRate } from './loyalty';
 import { InsuranceBreakdown, InsuranceTeaser } from './insurance';
 import { ShoppingCollection } from './shopping-collection';
 import { sellerIdentity, sellerMatches } from '@/lib/seller-directory';
@@ -267,12 +267,13 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   const price=item.price ?? 0, boxPrice=item.boxPrice ?? 0;
   const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [deposit,setDeposit]=useState(false); const [points,setPoints]=useState(0); const [err,setErr]=useState('');
   const qc=useQueryClient();
-  const productUsd=price+(box?boxPrice:0), purchase=insuredPurchase(price,box?boxPrice:0,insured), cash=cashPayment(purchase.total,points);
- return <form className="checkout-form" onSubmit={e=>{e.preventDefault();const bad=shippingError(f);setErr(bad);if(!bad)setDeposit(true);}}>
+  const insRate=useInsuranceRate();
+  const productUsd=price+(box?boxPrice:0), purchase=insuredPurchase(price,box?boxPrice:0,insured,insRate), cash=cashPayment(purchase.total,points);
+ return <form className="checkout-form" onSubmit={async e=>{e.preventDefault();const bad=shippingError(f);setErr(bad);if(bad)return;const block=await orderBlockReason({seller_id:item.sample?null:item.source.user_id??null,product_usd:productUsd});if(block){setErr(block);return;}setDeposit(true);}}>
   <TrustBanner/>
   <div className="cart-line"><img src={item.images[0]} width={64} height={64} alt="" loading="lazy" decoding="async"/><div><p>{item.title}</p><p className="mt-2 text-primary">{dollars(price)}</p></div></div>
   {boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>{t('addBox')}</span><strong>+{dollars(boxPrice)}</strong></label>}
-  <InsuranceOption price={price} checked={insured} onChange={setInsured}/>
+  <InsuranceOption price={price} checked={insured} onChange={setInsured} rate={insRate}/>
   <div className="flex items-center justify-between gap-2"><h3 className="text-sm font-semibold">배송 정보 <span className="text-[11px] font-normal text-muted-foreground">· 모든 항목 필수</span></h3>{ship.saved&&<Button type="button" variant="ghost" size="sm" onClick={()=>ship.saved&&setF(ship.saved)}>저장된 배송지 불러오기</Button>}</div>
   <ShippingFields value={f} onChange={setF} idPrefix="checkout"/>
   <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="size-4 accent-primary" checked={remember} onChange={e=>setRemember(e.target.checked)}/>이 배송지를 내 페이지에 저장</label>

@@ -9,6 +9,7 @@ import { normalizeMenuCategory, postCategoryLabels } from '@/lib/feed-categories
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from '@/lib/listing-media';
 import { validatePostTitle } from '@/lib/post-title';
+import { exceedsPriceCap, MAX_PRODUCT_PRICE_USD, priceCapMessage } from '@/lib/price-cap';
 import { cleanWatchSpecs, numericSpecValue, watchSpecificationFields } from '@/lib/watch-specifications';
 import { knownWatchBrand } from '@/lib/watch-brands';
 import { DEFAULT_BOX_PRICE } from './box-price';
@@ -188,7 +189,8 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   const sell = normalizeSell(v.sell);
   if (sell === null) errors.push('마켓에 판매하기는 예 / 아니오 중 하나로 입력해 주세요. (비우면 예)');
   const price = Number(v.price.replace(/[$,\s]/g, ''));
-  if (sell !== false && (!Number.isFinite(price) || price < 1 || price > 100000000)) errors.push('판매 가격(USD)은 1 이상의 숫자로 입력해 주세요.');
+  if (sell !== false && (!Number.isFinite(price) || price < 1)) errors.push('판매 가격(USD)은 1 이상의 숫자로 입력해 주세요.');
+  else if (sell !== false && price > MAX_PRODUCT_PRICE_USD) errors.push(priceCapMessage());
   const category = productCategories.find(c => norm(c) === norm(v.category)) ?? (v.category ? undefined : '커스텀제작');
   if (!category) errors.push(`카테고리는 ${productCategories.join(' / ')} 중 하나여야 해요.`);
   const menuCategory = v.menuCategory.trim() ? postCategoryLabels.find(c => norm(c) === norm(normalizeMenuCategory(v.menuCategory) ?? '')) : '시계';
@@ -200,6 +202,7 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   if (sell !== false && (source === 'factory' || source === 'other') && !v.factory.trim()) errors.push('공장(출처)을 입력해 주세요.');
   const boxRaw = v.boxPrice.replace(/[$,\s]/g, ''); const box = boxRaw ? Number(boxRaw) : null;
   if (sell !== false && box !== null && (!Number.isFinite(box) || box < 0 || box > 100000000)) errors.push('박스 가격은 0 이상의 숫자로 입력해 주세요.');
+  if (sell !== false && Number.isFinite(price) && price <= MAX_PRODUCT_PRICE_USD && box !== null && Number.isFinite(box) && exceedsPriceCap(price, box)) errors.push(priceCapMessage());
   if (!item.video && item.photos.length === 0) errors.push('사진도 영상도 없는 묶음은 올릴 수 없어요.');
   if (item.video && item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 100MB까지 올릴 수 있어요.');
   if (item.photos.length > MAX_LISTING_PHOTOS) errors.push(`사진은 최대 ${MAX_LISTING_PHOTOS}장까지 올릴 수 있어요.`);

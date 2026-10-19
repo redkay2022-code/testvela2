@@ -27,8 +27,16 @@ export function insuranceFee(price: number, tier: InsuranceTier = 'bronze') {
 }
 export const won = (n: number) => `₩${new Intl.NumberFormat('ko-KR').format(Math.round(n))}`;
 
-/** Purchase insurance is based only on the seller item price, never the box. */
-export function insuredPurchase(price: number, box = 0, insured = true) {
-  const insurance = insured ? Math.round(price * BASE_FEE_RATE * 100) / 100 : 0;
+/** 보험료 요율: 포인트 멤버십 등급(최근 12개월 구매액 기준)과 같은 등급표를 씁니다. false로 바꾸면 모두 기본 10%. */
+export const APPLY_TIER_INSURANCE_RATE = true;
+export function insuranceRateForTier(tier: string | null | undefined, rates?: Record<string, number>): number {
+  if (!APPLY_TIER_INSURANCE_RATE || !tier) return BASE_FEE_RATE;
+  const r = rates?.[tier] ?? insuranceTiers.find(t => t.id === tier)?.rate;
+  return typeof r === 'number' && r >= 0 && r <= BASE_FEE_RATE ? r : BASE_FEE_RATE;
+}
+
+/** Purchase insurance is based only on the seller item price (before any point discount), never the box. */
+export function insuredPurchase(price: number, box = 0, insured = true, rate: number = BASE_FEE_RATE) {
+  const insurance = insured ? Math.round(price * rate * 100) / 100 : 0;
   return { insurance, total: Math.round((price + box + insurance) * 100) / 100 };
 }

@@ -2723,5 +2723,20 @@
   "QC 완료 & 승인 대기": "Contrôle qualité terminé, en attente d'approbation",
   "배송 준비 중": "Préparation de l'expédition",
   "Likes": "J'aime",
-  "Saves": "Enregistrés"
+  "Saves": "Enregistrés",
+  "Insurance Fee: {0}% of the base product price, based on your membership tier (excluding full set box price).": "Frais d'assurance : {0} % du prix de base selon votre niveau d'adhésion (hors prix du coffret complet).",
+  "내가 올린 상품은 구매할 수 없습니다.": "Vous ne pouvez pas acheter votre propre produit.",
+  "판매 최고가($3,500)를 넘는 상품은 구매할 수 없습니다.": "Les produits dépassant le prix maximum de 3 500 $ ne peuvent pas être achetés.",
+  "이번 달 포인트 적립이 마감되어 있습니다.": "L'attribution de points est terminée pour ce mois.",
+  "현재 포인트 적립이 한도에 도달해 있습니다.": "L'attribution de points a atteint sa limite.",
+  "현재 포인트 적립이 일시 중지되어 있습니다.": "L'attribution de points est temporairement suspendue.",
+  "이번 구매는 포인트가 적립되지 않습니다.": "Cet achat ne rapportera pas de points.",
+  "이번 주문은 포인트가 적립되지 않습니다.": "Cette commande ne rapportera pas de points.",
+  "이 상품은 금액이 작아 포인트가 적립되지 않습니다.": "Le prix de cet article est trop bas pour rapporter des points.",
+  "수령 확정 {0}일 후 적립": "Crédité {0} jours après la confirmation de réception",
+  "포인트 {0} P 적립 완료": "{0} P crédités",
+  "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급": "{0} P en attente · crédités {1} jours après la confirmation de réception",
+  "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)": "Cette commande ne rapporte pas de points (limite atteinte ou petite commande).",
+  "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.": "Le prix de vente maximum est de 3 500 $ (environ 5 millions de KRW). Veuillez baisser le prix.",
+  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Les points en attente deviennent utilisables {0} jours après la confirmation de réception. Les points expirent à la fin de leur durée de validité à compter de la date d'acquisition et ne peuvent être ni encaissés ni transférés."
 }

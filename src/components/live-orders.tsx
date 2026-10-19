@@ -12,7 +12,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { AlertTriangle, Camera, Check, ExternalLink, MapPin, MessageSquareText, RefreshCw, Send, ShieldCheck, Truck, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { cardImageOf, dollars } from '@/lib/luxury-market';
+import { cardImageOf, dollars, luxuryPosts } from '@/lib/luxury-market';
 import { getOrderThumbs } from '@/lib/order-thumbs.functions';
 import { qcAreas, stageLabel, type EscrowStage } from '@/lib/escrow';
 import { getOrderTracking } from '@/lib/tracking.functions';
@@ -21,6 +21,8 @@ import { TranslatableText } from './translatable-text';
 import { ListPagination, usePagination } from './list-pagination';
 import { confirmOrderPayment } from '@/lib/order-verification.functions';
 import { isLogisticsOrder } from '@/lib/store-content';
+import { MAX_PRODUCT_PRICE_USD, priceCapBuyMessage } from '@/lib/price-cap';
+import { POINT_HOLD_DAYS } from '@/lib/loyalty';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1, QC_MAX_PHOTOS = 14, QC_MAX_VIDEOS = 1, QC_MAX_VIDEO_SEC = 60;
 /** Reads a video's length in seconds from its metadata (NaN if it cannot be read). */
@@ -28,7 +30,7 @@ const videoSeconds = (f: File) => new Promise<number>(res => { const v = documen
 /** Product thumbnail with a placeholder when the image is missing or fails to load. */
 function OrderThumb({ srcs }: { srcs: (string | null | undefined)[] }) { const list = [...new Set(srcs.filter((x): x is string => Boolean(x)))]; const key = list.join('|'); const [idx, setIdx] = useState(0); useEffect(() => setIdx(0), [key]); const src = list[idx]; return src ? <img key={src} src={src} width={52} height={52} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="h-[52px] w-[52px] shrink-0 rounded-md object-cover" onError={() => setIdx(n => n + 1)} /> : <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-md bg-muted"><Camera className="text-primary" /></span>; }
 const BUCKET = 'qc-media';
-export type Order = { shipping?: Record<string, string> | null; id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null; cancelled_at: string | null };
+export type Order = { shipping?: Record<string, string> | null; id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null; cancelled_at: string | null; points_earn_base?: number; points_pending?: number; points_earned?: number; points_redeemed?: number };
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
 type Msg = { id: string; order_id: string; author_role: string; kind: string; body: string; areas: string[]; created_at: string };
 
@@ -42,10 +44,20 @@ export function explorerUrl(network: string | null, txid: string) {
 }
 const courierLink = (c: string | null, n: string) => `https://t.17track.net/en#nums=${encodeURIComponent(n)}`;
 
+/** 결제 전에 막아야 하는 주문인지 확인합니다: 본인 상품 구매, 판매 최고가 초과. DB 트리거도 같은 규칙으로 한 번 더 막습니다. */
+export async function orderBlockReason(input: { seller_id: string | null; product_usd: number }): Promise<string | null> {
+  const { data } = await supabase.auth.getUser();
+  if (data.user && input.seller_id && input.seller_id === data.user.id) return tx('내가 올린 상품은 구매할 수 없습니다.');
+  if (input.product_usd > MAX_PRODUCT_PRICE_USD) return priceCapBuyMessage();
+  return null;
+}
+
 /** Creates a persistent order for a signed-in buyer after TXID submission. */
 export async function createLiveOrder(input: { post_id: string; title: string; image_url?: string; amount_usd: number; product_amount_usd?: number; points_redeemed?: number; seller_id: string | null; seller_name: string; network: string; txid?: string; shipping: Record<string, string> }) {
   const { data } = await supabase.auth.getUser();
   if (!data.user) throw new Error('로그인이 필요합니다.');
+  const blocked = await orderBlockReason({ seller_id: input.seller_id, product_usd: input.product_amount_usd ?? input.amount_usd });
+  if (blocked) throw new Error(blocked);
   const { data: row, error } = await supabase.from('orders').insert({ ...input, txid: input.txid || null, buyer_id: data.user.id }).select('id').single();
   if (error) throw error;
   return row.id;
@@ -56,7 +68,7 @@ function useLive(userId: string | null, admin = false) {
   const q = useQuery({
     queryKey: ['live-orders', userId, admin], enabled: !!userId, refetchInterval: 5000,
     queryFn: async () => {
-      let ob = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id,cancelled_at').order('created_at', { ascending: false });
+      let ob = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id,cancelled_at,points_earn_base,points_pending,points_earned,points_redeemed').order('created_at', { ascending: false });
       if (!admin) ob = ob.or(`buyer_id.eq.${userId},seller_id.eq.${userId}`);
       const { data: orders, error } = await ob;
       if (error) throw error;
@@ -224,13 +236,13 @@ export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'selle
       const round = media.reduce((r, m) => Math.max(r, m.round), 0);
       const stage = o.stage as EscrowStage;
       const isSeller = as === 'seller';
-      const product=catalog.data?.find(p=>p.id===o.post_id);
+      const product=luxuryPosts((catalog.data ?? []).filter(p=>p.id===o.post_id) as Parameters<typeof luxuryPosts>[0])[0];
       return <article className="escrow-order" key={o.id}>
         <div className="escrow-order-head"><OrderThumb srcs={[product ? cardImageOf(product) : null, product?.images?.[0], thumbs.data?.[o.post_id ?? ''], o.image_url]} /><div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
         <EscrowTimeline stage={stage} />
         {search.orderView==='tracking'&&!o.tracking_number&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("송장번호가 아직 등록되지 않았습니다.")}</span></p>}
         {search.orderView==='qc'&&!media.length&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("출고 QC 사진·영상이 아직 등록되지 않았습니다.")}</span></p>}
-        {search.orderView==='specs'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold mb-3"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("보증 안내·제품 스펙")}</span></h3>{product?<SpecsTable specs={product.specs} fallback={<p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("등록된 상품 사양이 없습니다.")}</span></p>}/>:<p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("이 상품의 스펙 정보를 불러올 수 없습니다.")}</span></p>}<p className="text-xs text-muted-foreground my-3"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문에 연결된 상품 정보와 출고 QC 자료입니다. 별도로 발급된 보증서가 없으면 보증서가 제공되지 않습니다.")}</span></p><Button asChild variant="goldOutline"><Link to="/escrow-guide"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("VELA 구매 보호 안내")}</span></Link></Button></section>}
+        {search.orderView==='specs'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold mb-3"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("보증 안내·제품 스펙")}</span></h3>{product?<SpecsTable specs={product.source.specs} fallback={<p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("등록된 상품 사양이 없습니다.")}</span></p>}/>:<p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("이 상품의 스펙 정보를 불러올 수 없습니다.")}</span></p>}<p className="text-xs text-muted-foreground my-3"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문에 연결된 상품 정보와 출고 QC 자료입니다. 별도로 발급된 보증서가 없으면 보증서가 제공되지 않습니다.")}</span></p><Button asChild variant="goldOutline"><Link to="/escrow-guide"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("VELA 구매 보호 안내")}</span></Link></Button></section>}
         {search.orderView==='defect'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("초기 불량·교환 접수")}</span></h3><p className="my-2 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불량 증상과 교환 요청을 남기면 이 주문의 판매자에게 전달됩니다.")}</span></p><Thread msgs={msgs}/><Composer orderId={o.id} role={as}/></section>}
         {media.length > 0 && <><h4 className="escrow-sub"><Camera size={14} /> <span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 사진·영상 {0}개", { 0: media.length })}</span></h4><Gallery media={media} /></>}
         {isSeller && stage === 'placed' && <Button variant="gold" disabled={busyId === o.id} onClick={() => void setStage(o.id, 'preparing')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("제품 준비 시작")}</span></Button>}
@@ -244,6 +256,7 @@ export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'selle
         <TrackingPanel o={o} />
         {!isSeller && stage === 'shipped' && <Button variant="gold" className="w-full" onClick={() => void setStage(o.id, 'delivered')}><ShieldCheck /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("수령 확인 및 구매 확정")}</span></Button>}
         {!isSeller && stage === 'delivered' && <Button variant="gold" className="w-full" onClick={() => setReviewing(o.id)}><Star /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("리뷰 작성 및 셀러 평가")}</span></Button>}
+        {!isSeller && o.payment_verified_at && !o.cancelled_at && <p className="mt-2 text-xs text-muted-foreground" data-i18n-skip data-no-translate translate="no">{(o.points_earned ?? 0) > 0 ? tx('포인트 {0} P 적립 완료', { 0: new Intl.NumberFormat('en-US').format(o.points_earned ?? 0) }) : (o.points_pending ?? 0) > 0 ? tx('포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급', { 0: new Intl.NumberFormat('en-US').format(o.points_pending ?? 0), 1: String(POINT_HOLD_DAYS) }) : (o.points_earn_base ?? 0) === 0 ? tx('이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)') : ''}</p>}
         {!o.payment_verified_at && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자가 TXID 입금을 확인하는 중입니다.")}</span></p>}
         {o.dispute_open && <p className="mt-3 flex items-center gap-2 rounded-md border border-primary p-2 text-sm text-primary"><AlertTriangle size={15} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("분쟁 진행 중 · 관리자가 참여한 3자 분쟁방입니다. 에스크로 대금은 중재가 끝날 때까지 보류됩니다.")}</span></p>}
         <div className="escrow-actions mt-3">

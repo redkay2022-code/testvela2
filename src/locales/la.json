@@ -2728,5 +2728,20 @@
   "QC 완료 & 승인 대기": "QC peractum, approbatio exspectatur",
   "배송 준비 중": "Missio paratur",
   "Likes": "Amata",
-  "Saves": "Servata"
+  "Saves": "Servata",
+  "Insurance Fee: {0}% of the base product price, based on your membership tier (excluding full set box price).": "Merces assecurationis: {0}% pretii basici secundum gradum sodalitatis tuae (sine pretio capsae plenae).",
+  "내가 올린 상품은 구매할 수 없습니다.": "Productum tuum emere non potes.",
+  "판매 최고가($3,500)를 넘는 상품은 구매할 수 없습니다.": "Producta supra summum pretium $3,500 emi non possunt.",
+  "이번 달 포인트 적립이 마감되어 있습니다.": "Punctorum acquisitio huius mensis finita est.",
+  "현재 포인트 적립이 한도에 도달해 있습니다.": "Punctorum acquisitio ad terminum pervenit.",
+  "현재 포인트 적립이 일시 중지되어 있습니다.": "Punctorum acquisitio ad tempus suspensa est.",
+  "이번 구매는 포인트가 적립되지 않습니다.": "Hac emptione puncta non acquirentur.",
+  "이번 주문은 포인트가 적립되지 않습니다.": "Hoc mandato puncta non acquirentur.",
+  "이 상품은 금액이 작아 포인트가 적립되지 않습니다.": "Pretium huius rei nimis humile est ad puncta acquirenda.",
+  "수령 확정 {0}일 후 적립": "Adduntur {0} diebus post receptionem confirmatam",
+  "포인트 {0} P 적립 완료": "{0} P acquisita",
+  "포인트 {0} P 적립 예정 · 수령 확정 {1}일 후 지급": "{0} P exspectantur · adduntur {1} diebus post receptionem confirmatam",
+  "이 주문은 포인트가 적립되지 않습니다. (적립 한도 마감 또는 소액 주문)": "Hoc mandatum puncta non acquirit (terminus pervenit aut mandatum parvum).",
+  "판매 최고가는 $3,500(약 500만원)입니다. 가격을 낮춰 주세요.": "Summum pretium venditionis est $3,500 (circiter quinque miliones KRW). Pretium minue.",
+  "Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.": "Puncta exspectantia {0} diebus post receptionem confirmatam utilia fiunt. Puncta post tempus validitatis a die acquisitionis exspirant nec in pecuniam converti aut transferri possunt."
 }
