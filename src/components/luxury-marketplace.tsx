@@ -143,7 +143,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help}:{m
  const feedFilterResults=sortFeed(filterFeed(discoveryListings(all).filter(p=>!preview.hidden.includes(p.id)),search),search.fsort);
  const quickKeywords=[...new Set(all.filter(p=>!preview.hidden.includes(p.id)).flatMap(p=>{const specs=(p.source?.specs??{}) as Record<string,unknown>;return [postFactory(p),typeof specs['brand']==='string'?specs['brand']:''].filter(Boolean);} ))].slice(0,10);
   return <NotificationsContext.Provider value={notifications}>
-  <PullToRefresh disabled={Boolean(shortsId||search.auth||productSignup||search.menu||search.searchOpen||search.notice)} onError={setToast}/>
+  <PullToRefresh disabled={Boolean(shortsId||search.auth||productSignup||search.menu||search.searchOpen||search.notice)} onError={setToast} onRefresh={()=>{if(mode==='home'&&!postId&&(search.tab||'discover')==='discover')feedSignals?.reshuffle();}}/>
    <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
   {!backOnlyHeader&&!postId&&!shortsId&&<header className={`lux-header ${cleanHome?'red-home-header':''}`}>
   <>

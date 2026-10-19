@@ -4,10 +4,11 @@ import { LoaderCircle, ArrowDown } from 'lucide-react';
 import { refreshPullDistance, shouldRefreshPull } from '@/lib/pull-refresh';
 
 /** Handles both document scrolling and nested product/panel scroll containers. */
-export function PullToRefresh({ disabled = false, onError }: { disabled?: boolean; onError: (message: string) => void }) {
+export function PullToRefresh({ disabled = false, onError, onRefresh }: { disabled?: boolean; onError: (message: string) => void; onRefresh?: () => void }) {
   const client = useQueryClient();
   const [distance, setDistance] = useState(0), [refreshing, setRefreshing] = useState(false);
   const busy = useRef(false);
+  const refreshRef = useRef(onRefresh); refreshRef.current = onRefresh;
   useEffect(() => {
     if (disabled) return;
     let start: { x: number; y: number } | undefined, pull = 0;
@@ -43,6 +44,7 @@ export function PullToRefresh({ disabled = false, onError }: { disabled?: boolea
       reset();
       if (!trigger || busy.current) return;
       busy.current = true; setRefreshing(true);
+      try { refreshRef.current?.(); } catch { /* a failed reshuffle must not block the refresh */ }
       void client.invalidateQueries({ refetchType: 'active' }, { throwOnError: true })
         .catch(() => onError('새로고침하지 못했습니다. 잠시 후 다시 시도해 주세요.'))
         .finally(() => { busy.current = false; setRefreshing(false); });
