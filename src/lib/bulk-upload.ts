@@ -12,15 +12,18 @@ import { validatePostTitle } from '@/lib/post-title';
 import { cleanWatchSpecs, numericSpecValue, watchSpecificationFields } from '@/lib/watch-specifications';
 import { knownWatchBrand } from '@/lib/watch-brands';
 import { DEFAULT_BOX_PRICE } from './box-price';
+import { isWatchStory, isWatchStoryTag, watchStorySpecs } from './watch-story';
+import { t } from './i18n';
 
 export const MAX_BULK = 20;
-export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'glass', 'waterResistance', 'additionalDetails', 'description', 'menuCategory', 'sell'] as const;
+export const BULK_FIELDS = ['file', 'title', 'price', 'category', 'source', 'factory', 'dispatch', 'boxPrice', 'brand', 'model', 'material', 'movement', 'caseSize', 'thickness', 'weight', 'glass', 'waterResistance', 'additionalDetails', 'description', 'menuCategory', 'sell', 'storySubcategory'] as const;
 export type BulkField = (typeof BULK_FIELDS)[number];
 export type BulkValues = Record<BulkField, string>;
 export const emptyValues = (): BulkValues => Object.fromEntries(BULK_FIELDS.map(f => [f, ''])) as BulkValues;
 
 /** Header names accepted in the first row (Korean or English). Without a header row the column order above is used. */
 const HEADER_ALIASES: Record<BulkField, string[]> = {
+  storySubcategory: ['storysubcategory', 'subcategory', '세부분류', '세부 분류'],
   file: ['파일명', '파일', 'file', 'filename'], title: ['제목', '상품명', 'title', 'name'], price: ['가격', '판매가격', '판매 가격', 'price'],
   category: ['카테고리', 'category'], source: ['출처', '제조/출처구분', '제조 / 출처 구분', '제조출처구분', 'source'], factory: ['공장', '공장선택', '출처직접입력', '출처/공장', '출처 / 공장', 'factory'],
   dispatch: ['발송', '예상발송시간', '예상 발송 시간', '발송시기', '발송 시기', 'dispatch'], boxPrice: ['풀셋박스추가금액', '풀셋 박스 추가 금액', '박스가격', '박스 가격', '박스', 'boxprice', 'box'],
@@ -191,6 +194,7 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   const menuCategory = v.menuCategory.trim() ? postCategoryLabels.find(c => norm(c) === norm(normalizeMenuCategory(v.menuCategory) ?? '')) : '시계';
   if (!menuCategory) errors.push(`메뉴 카테고리는 ${postCategoryLabels.join(' / ')} 중 하나여야 해요.`);
   else if (!v.menuCategory.trim()) warnings.push('메뉴 카테고리가 비어 있어 “시계”로 저장돼요.');
+  if (menuCategory && isWatchStory(menuCategory) && !isWatchStoryTag(v.storySubcategory)) errors.push(t('selectStorySubcategory'));
   const source = v.source ? SOURCE_ALIASES[norm(v.source)] : (v.factory ? 'factory' : 'custom');
   if (sell !== false && !source) errors.push('제조 / 출처 구분은 커스텀 제작 / 공장 선택 / 기타 - 직접입력 중 하나여야 해요.');
   if (sell !== false && (source === 'factory' || source === 'other') && !v.factory.trim()) errors.push('공장(출처)을 입력해 주세요.');
@@ -207,6 +211,7 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   const spec = watchSpecs(v, errors, warnings);
   if (errors.length) return { errors, warnings, plan: null };
   const specs: Record<string, string> = { ...spec };
+  Object.assign(specs, watchStorySpecs(menuCategory, v.storySubcategory));
   specs['menuCategory'] = menuCategory; if (sell && source) { specs['sourceType'] = source; if (source !== 'custom') specs['factory'] = v.factory.trim().slice(0, 80); }
   return { errors, warnings, plan: { title: v.title.trim().slice(0, 100), description: v.description.trim().slice(0, 3000), category, sell, price: sell ? Math.round(price) : null, boxPrice: sell ? (box !== null && Number.isFinite(box) && box >= 0 ? Math.round(box) : DEFAULT_BOX_PRICE) : null, dispatch: sell ? dispatchValue(d.choice, d.custom) : null, specs } };
 }

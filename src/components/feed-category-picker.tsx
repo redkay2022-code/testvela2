@@ -8,6 +8,8 @@ import {Select,SelectContent,SelectGroup,SelectItem,SelectLabel,SelectSeparator,
 import {tx} from '@/lib/dom-translate';
 import {useCurrency} from './currency';
 import {Tx} from './tx';
+import {watchStoryOptions} from '@/lib/watch-story';
+import {t} from '@/lib/i18n';
 
 type Item=readonly [string,string];
 const viewItems:readonly Item[]=primaryCategories.filter(item=>viewCategoryIds.includes(item[0]));
@@ -25,7 +27,7 @@ export function FeedCategoryPicker({catalog,selected='recommend',open,onOpen,onC
 /** Brand name in the site language, followed by the Latin name when they differ: "롤렉스 (ROLEX)". */
 const brandText=(id:string,label:string,lang:string)=>{const name=brandDisplayName(id,lang,label),en=brandEnglishName(id);return en&&en!==name?`${name} (${en})`:name;};
 /** Chip text for a selection that is not one of the main categories: a brand, or "시계 · ROLEX" (category · brand) in the site language. */
-const selectionLabel=(id:string,lang:string)=>{const {category,brand}=splitFeedId(id);const brandName=(b:string)=>brandText(b,categoryLabel(b),lang);const cat=tx(categoryLabel(category));return brand?`${cat} · ${brandName(brand)}`:brandIds.has(id)||id.startsWith('b:')?brandName(id):tx(categoryLabel(id));};
+const selectionLabel=(id:string,lang:string)=>{const story=watchStoryOptions.find(option=>`story:${option[0]}`===id);if(story)return t(story[2]);const {category,brand}=splitFeedId(id);const brandName=(b:string)=>brandText(b,categoryLabel(b),lang);const cat=tx(categoryLabel(category));return brand?`${cat} · ${brandName(brand)}`:brandIds.has(id)||id.startsWith('b:')?brandName(id):tx(categoryLabel(id));};
 const allBrands:Item[]=[...brandMenu.popular,...brandMenu.accessories,...brandMenu.others];
 
 function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPostLike[];selected:string;onClose:()=>void;onSelect:(id:string,keepOpen?:boolean)=>void}){
@@ -51,6 +53,7 @@ function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPo
   </section>:<>
   <section className="pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>보기</Tx></h2>
    <div className="flex flex-wrap gap-2">{viewItems.map(([id,label])=><Button key={id} variant="ghost" translate="no" className={chipClass(selected===id)} aria-pressed={selected===id} onClick={()=>onSelect(id)}><Tx>{label}</Tx></Button>)}</div></section>
+   <section className="mt-5 border-t border-border pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground" data-i18n-skip>{t('story')}</h2><StorySubcategoryTabs selected={selected} onSelect={onSelect}/></section>
   <section className="mt-5 border-t border-border pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>상품 카테고리</Tx></h2>
    <div className="flex flex-wrap gap-2" role="tablist" aria-label={tx('상품 카테고리')}>{productCategoryItems.map(([id,label])=>{const active=tab===id;
     return <Button key={id} variant="ghost" translate="no" role="tab" aria-selected={active} className={chipClass(active)} onClick={()=>setTab(id)}><Tx>{label}</Tx></Button>;})}</div>
@@ -68,4 +71,12 @@ function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPo
   </section></>}
   {selected!=='recommend'&&<div className="mt-5 flex justify-end border-t border-border pt-3"><Button variant="ghost" className="h-8 text-xs text-muted-foreground" onClick={()=>onSelect('recommend')}><Tx>필터 초기화</Tx></Button></div>}
  </>;
+}
+
+export function StorySubcategoryTabs({selected,onSelect}:{selected:string;onSelect:(id:string)=>void}){
+ useCurrency();
+ return <nav className="notranslate flex flex-wrap gap-2" translate="no" data-no-swipe role="tablist" aria-label={t('storySubcategory')}>
+  <Button variant="ghost" role="tab" className={chipClass(selected==='story')} translate="no" data-i18n-skip aria-selected={selected==='story'} onClick={()=>onSelect('story')}>{tx('전체')}</Button>
+  {watchStoryOptions.map(([id,,key])=><Button key={id} variant="ghost" role="tab" className={chipClass(selected===`story:${id}`)} translate="no" data-i18n-skip aria-selected={selected===`story:${id}`} onClick={()=>onSelect(`story:${id}`)}>{t(key)}</Button>)}
+ </nav>;
 }
