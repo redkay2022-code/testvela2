@@ -21,7 +21,11 @@ import { ListPagination, usePagination } from './list-pagination';
 import { confirmOrderPayment } from '@/lib/order-verification.functions';
 import { isLogisticsOrder } from '@/lib/store-content';
 
-export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1;
+export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1, QC_MAX_PHOTOS = 14, QC_MAX_VIDEOS = 1, QC_MAX_VIDEO_SEC = 60;
+/** Reads a video's length in seconds from its metadata (NaN if it cannot be read). */
+const videoSeconds = (f: File) => new Promise<number>(res => { const v = document.createElement('video'), u = URL.createObjectURL(f); const done = (n: number) => { URL.revokeObjectURL(u); res(n); }; v.preload = 'metadata'; v.onloadedmetadata = () => done(v.duration); v.onerror = () => done(NaN); v.src = u; });
+/** Product thumbnail with a placeholder when the image is missing or fails to load. */
+function OrderThumb({ src }: { src?: string | null }) { const [bad, setBad] = useState(false); useEffect(() => setBad(false), [src]); return src && !bad ? <img src={src} width={52} height={52} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="h-[52px] w-[52px] shrink-0 rounded-md object-cover" onError={() => setBad(true)} /> : <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-md bg-muted"><Camera className="text-primary" /></span>; }
 const BUCKET = 'qc-media';
 export type Order = { shipping?: Record<string, string> | null; id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null; cancelled_at: string | null };
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
@@ -46,12 +50,14 @@ export async function createLiveOrder(input: { post_id: string; title: string; i
   return row.id;
 }
 
-function useLive(userId: string | null) {
+function useLive(userId: string | null, admin = false) {
   const qc = useQueryClient();
   const q = useQuery({
-    queryKey: ['live-orders', userId], enabled: !!userId, refetchInterval: 5000,
+    queryKey: ['live-orders', userId, admin], enabled: !!userId, refetchInterval: 5000,
     queryFn: async () => {
-      const { data: orders, error } = await supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id,cancelled_at').order('created_at', { ascending: false });
+      let ob = supabase.from('orders').select('id,order_no,buyer_id,seller_id,seller_name,title,image_url,amount_usd,stage,courier,tracking_number,created_at,network,txid,payment_verified_at,dispute_open,post_id,cancelled_at').order('created_at', { ascending: false });
+      if (!admin) ob = ob.or(`buyer_id.eq.${userId},seller_id.eq.${userId}`);
+      const { data: orders, error } = await ob;
       if (error) throw error;
       const ids = (orders ?? []).map(o => o.id);
       const [m, msgs] = ids.length ? await Promise.all([
@@ -130,7 +136,20 @@ function QcUploader({ o, round, supplement }: { o: Order; round: number; supplem
   const { lang } = useCurrency();
   const [files, setFiles] = useState<File[]>([]); const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
   const imgs = files.filter(f => f.type.startsWith('image/')).length, vids = files.filter(f => f.type.startsWith('video/')).length;
-  const ok = supplement ? files.length >= 1 : imgs >= QC_MIN_PHOTOS && vids >= QC_MIN_VIDEOS;
+  const ok = imgs <= QC_MAX_PHOTOS && vids <= QC_MAX_VIDEOS && (supplement ? files.length >= 1 : imgs >= QC_MIN_PHOTOS && vids >= QC_MIN_VIDEOS);
+  const add = async (list: File[]) => {
+    setErr(''); const next = [...files];
+    for (const f of list.filter(x => x.type.startsWith('image/') || x.type.startsWith('video/'))) {
+      if (f.type.startsWith('video/')) {
+        if (next.some(x => x.type.startsWith('video/'))) { setErr(tx("영상은 {0}개만 업로드할 수 있습니다.", { 0: QC_MAX_VIDEOS })); continue; }
+        const d = await videoSeconds(f);
+        if (!Number.isFinite(d)) { setErr(tx("영상 길이를 확인하지 못했습니다.")); continue; }
+        if (d > QC_MAX_VIDEO_SEC) { setErr(tx("영상은 {0}초 이내여야 합니다. (선택한 영상: {1}초)", { 0: QC_MAX_VIDEO_SEC, 1: Math.ceil(d) })); continue; }
+      } else if (next.filter(x => x.type.startsWith('image/')).length >= QC_MAX_PHOTOS) { setErr(tx("사진은 최대 {0}장까지 업로드할 수 있습니다.", { 0: QC_MAX_PHOTOS })); continue; }
+      next.push(f);
+    }
+    setFiles(next);
+  };
   const submit = async () => {
     setBusy(true); setErr('');
     try {
@@ -149,9 +168,9 @@ function QcUploader({ o, round, supplement }: { o: Order; round: number; supplem
       setFiles([]);
     } catch (e) { setErr(e instanceof Error ? e.message : '업로드 실패'); } finally { setBusy(false); }
   };
-  return <div className="qc-upload"><label className="qc-drop"><Upload size={18} /><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? tx('요청받은 추가 사진·영상 업로드') : tx("디테일 사진 {0}장 이상 + 영상 {1}개 이상 업로드", { 0: QC_MIN_PHOTOS, 1: QC_MIN_VIDEOS })}</span></span>
-    <input type="file" accept="image/*,video/*" multiple onChange={e => { const l = e.target.files; if (l) setFiles(prev => [...prev, ...[...l].filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))]); e.target.value = ''; }} /></label>
-    <p className={`qc-count ${ok ? 'ok' : ''}`}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("사진 {0}장 · 영상 {1}개", { 0: imgs, 1: vids })}</span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? '' : tx(" (필수: 사진 {0}+ / 영상 {1}+)", { 0: QC_MIN_PHOTOS, 1: QC_MIN_VIDEOS })}</span></p>
+  return <div className="qc-upload"><label className="qc-drop"><Upload size={18} /><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? tx('요청받은 추가 사진·영상 업로드') : tx("디테일 사진 {0}~{1}장 + 영상 {2}개(1분 이내) 업로드", { 0: QC_MIN_PHOTOS, 1: QC_MAX_PHOTOS, 2: QC_MAX_VIDEOS })}</span></span>
+    <input type="file" accept="image/*,video/*" multiple onChange={e => { const l = e.target.files ? [...e.target.files] : []; e.target.value = ''; if (l.length) void add(l); }} /></label>
+    <p className={`qc-count ${ok ? 'ok' : ''}`}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("사진 {0}장 · 영상 {1}개", { 0: imgs, 1: vids })}</span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? '' : tx(" (사진 {0}~{1}장 / 영상 {2}개)", { 0: QC_MIN_PHOTOS, 1: QC_MAX_PHOTOS, 2: QC_MAX_VIDEOS })}</span></p>
     {files.length > 0 && <ul className="text-xs text-muted-foreground">{files.map((f, i) => <li key={i} className="flex justify-between"><span>{f.name}</span><button type="button" aria-label={tx("{0} 삭제", { 0: f.name })} onClick={() => setFiles(p => p.filter((_, j) => j !== i))}><X size={12} /></button></li>)}</ul>}
     {err && <p className="text-xs text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(err)}</span></p>}
     <Button variant="gold" disabled={!ok || busy} onClick={() => void submit()}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{busy ? tx('업로드 중…') : supplement ? tx('추가 사진 보내기') : tx('QC 완료 & 구매자에게 전송')}</span></Button></div>;
@@ -180,15 +199,16 @@ export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'selle
   const search=marketSearch.parse(useRouterState({select:s=>s.location.search}));
   const catalog=useQuery(postsQuery);
   const { user, admin } = useUser();
-  const q = useLive(user?.id ?? null);
+  const q = useLive(user?.id ?? null, admin);
   const [asking, setAsking] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [chat, setChat] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const orders = !user ? [] : (q.data?.orders ?? []).filter(o => (as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin))) && (!search.orderId||o.id===search.orderId) && (!logistics || Boolean(search.orderId) || isLogisticsOrder(o)));
   /* 셀러의 물류/배송 목록은 페이지 번호로 나누어 보여 준다(구매자 화면은 그대로). */
   const pager = usePagination(orders, as + (search.orderId ?? ''));
   if (!user) return null;
-  const setStage = (id: string, stage: EscrowStage) => void supabase.from('orders').update({ stage }).eq('id', id);
+  const setStage = async (id: string, stage: EscrowStage) => { setBusyId(id); const r = await supabase.from('orders').update({ stage }).eq('id', id); setBusyId(null); if (r.error) toast.error(r.error.message); else void q.refetch(); };
   return <section className="escrow-board mb-6 notranslate" aria-label={tx("QC 게시판")} lang={lang} translate="no" data-no-translate>
     {reviewing && <ReviewModal orderId={reviewing} close={() => setReviewing(null)} requestAuth={() => setReviewing(null)} />}
     <div className="section-heading"><h2><MessageSquareText size={16} className="mr-1 inline" /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 게시판")}</span></h2><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("실시간 저장")}</span></span></div>
@@ -203,23 +223,23 @@ export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'selle
       const isSeller = as === 'seller';
       const product=catalog.data?.find(p=>p.id===o.post_id);
       return <article className="escrow-order" key={o.id}>
-        <div className="escrow-order-head">{o.image_url ? <img src={o.image_url} width={52} height={52} alt="" loading="lazy" decoding="async" /> : <Camera className="text-primary" />}<div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
+        <div className="escrow-order-head"><OrderThumb src={product?.images?.[0] || o.image_url} /><div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
         <EscrowTimeline stage={stage} />
         {search.orderView==='tracking'&&!o.tracking_number&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("송장번호가 아직 등록되지 않았습니다.")}</span></p>}
         {search.orderView==='qc'&&!media.length&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("출고 QC 사진·영상이 아직 등록되지 않았습니다.")}</span></p>}
         {search.orderView==='specs'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold mb-3"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("보증 안내·제품 스펙")}</span></h3>{product?<SpecsTable specs={product.specs} fallback={<p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("등록된 상품 사양이 없습니다.")}</span></p>}/>:<p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("이 상품의 스펙 정보를 불러올 수 없습니다.")}</span></p>}<p className="text-xs text-muted-foreground my-3"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문에 연결된 상품 정보와 출고 QC 자료입니다. 별도로 발급된 보증서가 없으면 보증서가 제공되지 않습니다.")}</span></p><Button asChild variant="goldOutline"><Link to="/escrow-guide"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("VELA 구매 보호 안내")}</span></Link></Button></section>}
         {search.orderView==='defect'&&<section className="py-4 border-y border-border"><h3 className="text-base font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("초기 불량·교환 접수")}</span></h3><p className="my-2 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불량 증상과 교환 요청을 남기면 이 주문의 판매자에게 전달됩니다.")}</span></p><Thread msgs={msgs}/><Composer orderId={o.id} role={as}/></section>}
         {media.length > 0 && <><h4 className="escrow-sub"><Camera size={14} /> <span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 사진·영상 {0}개", { 0: media.length })}</span></h4><Gallery media={media} /></>}
-        {isSeller && stage === 'placed' && <Button variant="gold" onClick={() => setStage(o.id, 'preparing')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("제품 준비 시작")}</span></Button>}
-        {isSeller && stage === 'preparing' && <Button variant="gold" onClick={() => setStage(o.id, 'qc')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 검수 시작")}</span></Button>}
+        {isSeller && stage === 'placed' && <Button variant="gold" disabled={busyId === o.id} onClick={() => void setStage(o.id, 'preparing')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("제품 준비 시작")}</span></Button>}
+        {isSeller && stage === 'preparing' && <Button variant="gold" disabled={busyId === o.id} onClick={() => void setStage(o.id, 'qc')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 검수 시작")}</span></Button>}
         {isSeller && stage === 'qc' && <QcUploader o={o} round={1} supplement={false} />}
         {isSeller && stage === 'qc_requested' && <QcUploader o={o} round={round + 1} supplement />}
         {isSeller && stage === 'qc_done' && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("구매자의 QC 확인을 기다리는 중입니다.")}</span></p>}
         {isSeller && stage === 'shipping_prep' && <ShipForm o={o} />}
         {!isSeller && stage === 'qc_requested' && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("셀러가 추가 사진을 준비 중입니다.")}</span></p>}
-        {!isSeller && stage === 'qc_done' && (asking === o.id ? <RequestForm o={o} close={() => setAsking(null)} /> : <div className="escrow-actions"><Button variant="gold" onClick={() => setStage(o.id, 'shipping_prep')}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 승인")}</span></Button><Button variant="goldOutline" onClick={() => setAsking(o.id)}><Camera /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("추가 사진 요청")}</span></Button></div>)}
+        {!isSeller && stage === 'qc_done' && (asking === o.id ? <RequestForm o={o} close={() => setAsking(null)} /> : <div className="escrow-actions"><Button variant="gold" disabled={busyId === o.id} onClick={() => void setStage(o.id, 'shipping_prep')}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("승인하기")}</span></Button><Button variant="goldOutline" onClick={() => setAsking(o.id)}><Camera /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("추가 사진 요청")}</span></Button></div>)}
         <TrackingPanel o={o} />
-        {!isSeller && stage === 'shipped' && <Button variant="gold" className="w-full" onClick={() => setStage(o.id, 'delivered')}><ShieldCheck /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("수령 확인 및 구매 확정")}</span></Button>}
+        {!isSeller && stage === 'shipped' && <Button variant="gold" className="w-full" onClick={() => void setStage(o.id, 'delivered')}><ShieldCheck /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("수령 확인 및 구매 확정")}</span></Button>}
         {!isSeller && stage === 'delivered' && <Button variant="gold" className="w-full" onClick={() => setReviewing(o.id)}><Star /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("리뷰 작성 및 셀러 평가")}</span></Button>}
         {!o.payment_verified_at && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자가 TXID 입금을 확인하는 중입니다.")}</span></p>}
         {o.dispute_open && <p className="mt-3 flex items-center gap-2 rounded-md border border-primary p-2 text-sm text-primary"><AlertTriangle size={15} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("분쟁 진행 중 · 관리자가 참여한 3자 분쟁방입니다. 에스크로 대금은 중재가 끝날 때까지 보류됩니다.")}</span></p>}
@@ -248,7 +268,7 @@ export function OrderNotifier() {
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setUid(s?.user.id ?? null));
     return () => data.subscription.unsubscribe();
   }, []);
-  const q = useLive(uid);
+  const q = useLive(uid, false);
   const client = useQueryClient();
   const notifications = useQuery({ queryKey: ['payment-notices', uid], enabled: !!uid, refetchInterval: 5000, queryFn: async () => {
     if (!uid) return [];

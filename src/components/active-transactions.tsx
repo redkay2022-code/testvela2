@@ -21,6 +21,6 @@ export function ActiveTransactions({ role, userId }: { role: 'buyer' | 'seller' 
   </article>;
   return <section className="my-6 notranslate" translate="no" data-no-translate aria-label="진행 중인 거래"><div className="section-heading"><h2><Tx>진행 중인 거래</Tx></h2><span>{query.data?.length ?? 0}<Tx>건</Tx></span></div>
     {query.isPending ? <p><Tx>주문을 불러오는 중…</Tx></p> : query.isError ? <div role="alert"><p><Tx>진행 중인 거래를 불러오지 못했습니다.</Tx></p><Button variant="ghost" onClick={() => void query.refetch()}><Tx>다시 시도</Tx></Button></div> : query.data?.length ? query.data.map(o => render(o)) : <p className="text-sm text-muted-foreground"><Tx>진행 중인 거래가 없습니다.</Tx></p>}
-    <details className="mt-4 border-t border-border pt-3" open><summary className="cursor-pointer text-xs text-muted-foreground"><Tx>샘플 거래 · 실제 주문과 별도</Tx></summary>{render({ ...sampleTransaction, payment_verified_at: sample.confirmed ? 'sample-confirmed' : null }, true)}</details>
+    {role === 'admin' && <details className="mt-4 border-t border-border pt-3" open><summary className="cursor-pointer text-xs text-muted-foreground"><Tx>샘플 거래 · 실제 주문과 별도</Tx></summary>{render({ ...sampleTransaction, payment_verified_at: sample.confirmed ? 'sample-confirmed' : null }, true)}</details>}
   </section>;
 }

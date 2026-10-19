@@ -2706,6 +2706,14 @@
   "스토어 내용을 불러오지 못했습니다.": "Impossible de charger le contenu de la boutique.",
   "Confirm password": "Confirmer le mot de passe",
   "Passwords do not match.": "Les mots de passe ne correspondent pas.",
+  "승인하기": "Approuver",
+  "영상은 {0}개만 업로드할 수 있습니다.": "Une seule vidéo ({0}) peut être envoyée.",
+  "영상 길이를 확인하지 못했습니다.": "Impossible de lire la durée de la vidéo.",
+  "영상은 {0}초 이내여야 합니다. (선택한 영상: {1}초)": "La vidéo doit durer {0} secondes maximum. (Sélection : {1} s)",
+  "사진은 최대 {0}장까지 업로드할 수 있습니다.": "Vous pouvez envoyer jusqu'à {0} photos.",
+  "디테일 사진 {0}~{1}장 + 영상 {2}개(1분 이내) 업로드": "Envoyez {0}–{1} photos de détail + {2} vidéo (moins d'1 minute)",
+  " (사진 {0}~{1}장 / 영상 {2}개)": " (photos {0}–{1} / vidéo {2})",
+  "(사진 {0}~{1}장 / 영상 {2}개)": "(photos {0}–{1} / vidéo {2})",
   "상품을 올려주세요": "Mettez votre produit en ligne",
   "제목을 입력해주세요": "Veuillez saisir un titre"
 }
