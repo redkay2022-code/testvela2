@@ -1413,6 +1413,15 @@ export type Database = {
       }
       seller_activity_summary: { Args: never; Returns: Json }
       seller_dashboard_stats: { Args: never; Returns: Json }
+      seller_public_stats: {
+        Args: never
+        Returns: {
+          followers: number
+          likes: number
+          saves: number
+          seller_key: string
+        }[]
+      }
       store_is_visible: { Args: { _store_id: string }; Returns: boolean }
     }
     Enums: {
