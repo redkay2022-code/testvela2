@@ -12,14 +12,14 @@ import type { SeenMap } from './seen-history';
  * Every knob is in WEIGHTS below. Nothing is hidden; products are only moved.
  */
 export const WEIGHTS = {
-  base: 0.35,       // keep the existing recommended order as the backbone
-  fresh: 0.30,      // uploads younger than 72 h, fading out
-  coldStart: 0.15,  // extra push for fresh uploads that few people have seen yet
-  popular: 0.15,    // views (14 days) and likes
+  base: 0.08,       // the recommended order only nudges: a refresh should look clearly different
+  fresh: 0.18,      // uploads younger than 72 h, fading out
+  coldStart: 0.10,  // extra push for fresh uploads that few people have seen yet
+  popular: 0.10,    // views (14 days) and likes
   follow: 0.30,     // seller the visitor follows
-  taste: 0.25,      // same category / factory / brand as products they liked, saved or lingered on
+  taste: 0.20,      // same category / factory / brand as products they liked, saved or lingered on
   seen: 0.45,       // already opened in the last 24 h (half that within 7 days)
-  jitter: 0.22,     // per-session shuffle so everyone does not see an identical order
+  jitter: 1.0,      // per-refresh shuffle: every page load shows a visibly different, random mix of uploads
   ownFresh: 0.60,   // a seller's own new upload stays near the top of their Home
   spreadWindow: 400, // spreading looks this far down the list for a different seller (hard rule: no seller twice within 2 cards)
 } as const;
