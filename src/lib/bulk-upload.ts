@@ -9,7 +9,7 @@ import { normalizeMenuCategory, postCategoryLabels } from '@/lib/feed-categories
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
 import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from '@/lib/listing-media';
 import { validatePostTitle } from '@/lib/post-title';
-import { exceedsPriceCap, MAX_PRODUCT_PRICE_USD, priceCapMessage } from '@/lib/price-cap';
+import { exceedsPriceCap, MAX_PRODUCT_PRICE_USD, PRICE_CAP_ENABLED, priceCapMessage } from '@/lib/price-cap';
 import { cleanWatchSpecs, numericSpecValue, watchSpecificationFields } from '@/lib/watch-specifications';
 import { knownWatchBrand } from '@/lib/watch-brands';
 import { DEFAULT_BOX_PRICE } from './box-price';
@@ -190,7 +190,7 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   if (sell === null) errors.push('마켓에 판매하기는 예 / 아니오 중 하나로 입력해 주세요. (비우면 예)');
   const price = Number(v.price.replace(/[$,\s]/g, ''));
   if (sell !== false && (!Number.isFinite(price) || price < 1)) errors.push('판매 가격(USD)은 1 이상의 숫자로 입력해 주세요.');
-  else if (sell !== false && price > MAX_PRODUCT_PRICE_USD) errors.push(priceCapMessage());
+  else if (PRICE_CAP_ENABLED && sell !== false && price > MAX_PRODUCT_PRICE_USD) errors.push(priceCapMessage());
   const category = productCategories.find(c => norm(c) === norm(v.category)) ?? (v.category ? undefined : '커스텀제작');
   if (!category) errors.push(`카테고리는 ${productCategories.join(' / ')} 중 하나여야 해요.`);
   const menuCategory = v.menuCategory.trim() ? postCategoryLabels.find(c => norm(c) === norm(normalizeMenuCategory(v.menuCategory) ?? '')) : '시계';

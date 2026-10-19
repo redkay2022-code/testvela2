@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { exceedsPriceCap, MAX_PRODUCT_PRICE_USD } from '@/lib/price-cap';
+import { exceedsPriceCap, MAX_PRODUCT_PRICE_USD, PRICE_CAP_ENABLED } from '@/lib/price-cap';
 import { insuranceRateForTier, insuredPurchase } from '@/lib/insurance';
 
-describe('판매 최고가', () => {
-  it('최고가는 $3,500', () => expect(MAX_PRODUCT_PRICE_USD).toBe(3500));
-  it('정확히 $3,500는 허용', () => expect(exceedsPriceCap(3500, 0)).toBe(false));
-  it('$3,500.01은 거절', () => expect(exceedsPriceCap(3500.01, 0)).toBe(true));
-  it('박스 금액도 합산', () => expect(exceedsPriceCap(3400, 150)).toBe(true));
+describe('판매 최고가(106차: 상한 없음)', () => {
+  it('제한 스위치는 꺼져 있음', () => expect(PRICE_CAP_ENABLED).toBe(false));
+  it('기준값은 $3,500로 보관', () => expect(MAX_PRODUCT_PRICE_USD).toBe(3500));
+  it('아주 비싼 상품도 거절하지 않음', () => expect(exceedsPriceCap(100000, 5000)).toBe(false));
 });
 
 describe('보험 등급 요율', () => {

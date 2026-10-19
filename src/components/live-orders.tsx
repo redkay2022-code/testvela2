@@ -21,7 +21,7 @@ import { TranslatableText } from './translatable-text';
 import { ListPagination, usePagination } from './list-pagination';
 import { confirmOrderPayment } from '@/lib/order-verification.functions';
 import { isLogisticsOrder } from '@/lib/store-content';
-import { MAX_PRODUCT_PRICE_USD, priceCapBuyMessage } from '@/lib/price-cap';
+import { MAX_PRODUCT_PRICE_USD, PRICE_CAP_ENABLED, priceCapBuyMessage } from '@/lib/price-cap';
 import { POINT_HOLD_DAYS } from '@/lib/loyalty';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1, QC_MAX_PHOTOS = 14, QC_MAX_VIDEOS = 1, QC_MAX_VIDEO_SEC = 60;
@@ -48,7 +48,7 @@ const courierLink = (c: string | null, n: string) => `https://t.17track.net/en#n
 export async function orderBlockReason(input: { seller_id: string | null; product_usd: number }): Promise<string | null> {
   const { data } = await supabase.auth.getUser();
   if (data.user && input.seller_id && input.seller_id === data.user.id) return tx('내가 올린 상품은 구매할 수 없습니다.');
-  if (input.product_usd > MAX_PRODUCT_PRICE_USD) return priceCapBuyMessage();
+  if (PRICE_CAP_ENABLED && input.product_usd > MAX_PRODUCT_PRICE_USD) return priceCapBuyMessage();
   return null;
 }
 
