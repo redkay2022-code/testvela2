@@ -6,6 +6,7 @@ import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { uploadListingVideo } from '@/lib/video-upload';
 import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { readVideoDuration, MAX_VIDEO_SECONDS } from '@/lib/listing-media';
+import { isWatchStory, isWatchStoryTag } from '@/lib/watch-story';
 import { activeLang } from '@/lib/i18n';
 import { applyRows, groupFiles, MAX_BULK, parseTable, validateItem, type BulkField, type BulkItem } from '@/lib/bulk-upload';
 
@@ -88,7 +89,7 @@ export const bulkJob = {
   },
   edit(id: string, field: BulkField, value: string) {
     if (snap.phase === 'running' || snap.phase === 'pausing') return;
-    emit({ items: snap.items.map(it => it.id === id ? { ...it, values: { ...it.values, [field]: value } } : it) });
+    emit({ items: snap.items.map(it => it.id === id ? { ...it, values: { ...it.values, [field]: value, ...(field === 'storySubcategory' && isWatchStory(it.values.menuCategory) && isWatchStoryTag(value) ? { title: value } : {}) } } : it) });
   },
   remove(id: string) {
     if (snap.phase === 'running' || snap.phase === 'pausing' || isDone(id)) return;
