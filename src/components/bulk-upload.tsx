@@ -9,7 +9,10 @@ import { postCategoryLabels } from '@/lib/feed-categories';
 import { BULK_FIELDS, MAX_BULK, PASTE_ORDER, readTextFile, validateItem, type BulkField } from '@/lib/bulk-upload';
 import { bulkJob, idleState as idle, useBulkJob } from '@/lib/bulk-job';
 import { useSessionState } from '@/lib/session-state';
-const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '판매 가격', category: '카테고리', source: '제조/출처 구분', factory: '공장', dispatch: '예상 발송 시간', boxPrice: '풀셋 박스 추가 금액', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경', thickness: '두께', weight: '무게', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '제품 소개', menuCategory: '메뉴 카테고리', sell: '마켓에 판매하기' };
+import { isWatchStory, watchStoryOptions } from '@/lib/watch-story';
+import { t } from '@/lib/i18n';
+import { useCurrency } from './currency';
+const FIELD_LABEL: Record<BulkField, string> = { file: '파일명', title: '제목', price: '판매 가격', category: '카테고리', source: '제조/출처 구분', factory: '공장', dispatch: '예상 발송 시간', boxPrice: '풀셋 박스 추가 금액', brand: '브랜드', model: '모델명', material: '케이스 소재', movement: '무브먼트', caseSize: '케이스 직경', thickness: '두께', weight: '무게', glass: '글라스', waterResistance: '방수', additionalDetails: '추가 내용', description: '제품 소개', menuCategory: '메뉴 카테고리', sell: '마켓에 판매하기', storySubcategory: '세부 분류' };
 const EDIT_FIELDS = BULK_FIELDS.filter(f => f !== 'file');
 
 /**
@@ -28,6 +31,7 @@ function CoverThumb({ file }: { file: File }) {
 }
 
 export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: User; existingTitles: string[]; onClose: () => void; onDone: () => void }) {
+  useCurrency();
   const job = useBulkJob();
   const { items, states, notes, phase } = job;
   const [paste, setPaste] = useSessionState('bulk-upload:paste', '');
@@ -88,6 +92,8 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
               ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => bulkJob.edit(it.id, f, e.target.value)} disabled={running}><option value="">카테고리 (기본: 커스텀제작)</option>{productCategories.map(cat => <option key={cat}>{cat}</option>)}</select>
               : f === 'menuCategory'
                 ? <select key={f} className="form-input notranslate" translate="no" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => bulkJob.edit(it.id, f, e.target.value)} disabled={running}><option value="">메뉴 카테고리 (비우면 시계)</option>{postCategoryLabels.map(cat => <option key={cat} translate="no" className="notranslate">{cat}</option>)}</select>
+                : f === 'storySubcategory'
+                  ? isWatchStory(it.values.menuCategory) ? <select key={f} className="form-input notranslate col-span-2" translate="no" data-i18n-skip required aria-required="true" aria-label={t('storySubcategory')} value={it.values[f]} onChange={e => bulkJob.edit(it.id, f, e.target.value)} disabled={running}><option value="" disabled translate="no" className="notranslate">{t('selectStorySubcategory')}</option>{watchStoryOptions.map(([,label,key])=><option key={label} value={label} translate="no" className="notranslate">{t(key)}</option>)}</select> : null
                 : f === 'sell'
                   ? <select key={f} className="form-input" aria-label={FIELD_LABEL[f]} value={it.values[f]} onChange={e => bulkJob.edit(it.id, f, e.target.value)} disabled={running}><option value="">마켓에 판매하기 (비우면 예)</option><option>예</option><option>아니오</option></select>
                   : f === 'source'
