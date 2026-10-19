@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { watchStoryOptions, watchStorySpecs } from '@/lib/watch-story';
 import { matchesFeedCategory } from '@/lib/feed-categories';
+import { emptyValues, validateItem } from '@/lib/bulk-upload';
 describe('Watch Story tags', () => {
+  it('requires and saves the same tag in bulk uploads', () => {
+    const item = { id: 'test', name: 'story.mp4', video: new File(['video'], 'story.mp4', { type: 'video/mp4' }), photos: [], values: { ...emptyValues(), title: 'Story test', menuCategory: '스토리', sell: '아니오' } };
+    expect(validateItem(item, new Set()).plan).toBeNull();
+    const tagged = { ...item, values: { ...item.values, storySubcategory: 'New Release Review' } };
+    expect(validateItem(tagged, new Set()).plan?.specs.storySubcategory).toBe('New Release Review');
+  });
   it('offers exactly the six requested tags', () => {
     expect(watchStoryOptions.map(option => option[1])).toEqual(['Watch Story', 'Make Process', 'Daily Watch', 'Repair & Care', 'Genuine vs Custom', 'New Release Review']);
   });
