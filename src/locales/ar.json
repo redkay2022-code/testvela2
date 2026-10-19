@@ -2747,5 +2747,10 @@
   "Covered by Shipping & Customs Insurance ({0}% Fee)": "مشمول بتأمين الشحن والجمارك (رسوم {0}%)",
   "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "تغطية كاملة للفقدان أو التلف أو مصادرة الجمارك أثناء النقل، مع ضمان إعادة الشحن مجانًا أو استرداد المبلغ بالكامل.",
   "Without Insurance": "بدون تأمين",
-  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "في حال رفض التأمين، لا تتحمل المنصة ولا البائع المسؤولية عن خسائر الشحن أو مشكلات الجمارك."
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "في حال رفض التأمين، لا تتحمل المنصة ولا البائع المسؤولية عن خسائر الشحن أو مشكلات الجمارك.",
+  "썸네일": "الصورة المصغرة",
+  "수정일": "تاريخ التعديل",
+  "작업": "الإجراءات",
+  "수정": "تعديل",
+  "Name · Seller · Brand · Reference · Store · Category": "الاسم · البائع · العلامة · المرجع · المتجر · الفئة"
 }

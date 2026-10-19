@@ -2742,5 +2742,10 @@
   "Covered by Shipping & Customs Insurance ({0}% Fee)": "Coperto da assicurazione spedizione e dogana (commissione {0}%)",
   "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "Copertura totale per smarrimento, danni o sequestro doganale durante il trasporto, con rispedizione gratuita garantita o rimborso completo.",
   "Without Insurance": "Senza assicurazione",
-  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Se l’assicurazione viene rifiutata, la piattaforma e il venditore non sono responsabili di perdite di spedizione o problemi doganali."
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Se l’assicurazione viene rifiutata, la piattaforma e il venditore non sono responsabili di perdite di spedizione o problemi doganali.",
+  "썸네일": "Miniatura",
+  "수정일": "Ultima modifica",
+  "작업": "Azioni",
+  "수정": "Modifica",
+  "Name · Seller · Brand · Reference · Store · Category": "Nome · Venditore · Marca · Riferimento · Negozio · Categoria"
 }

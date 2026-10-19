@@ -2747,5 +2747,10 @@
   "Covered by Shipping & Customs Insurance ({0}% Fee)": "Gedekt door verzend- en douaneverzekering ({0}% kosten)",
   "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "Volledige dekking bij verlies, beschadiging of inbeslagname door de douane tijdens het transport, met gegarandeerde gratis herverzending of volledige terugbetaling.",
   "Without Insurance": "Zonder verzekering",
-  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Als de verzekering wordt geweigerd, zijn het platform en de verkoper niet aansprakelijk voor verlies tijdens verzending of douaneproblemen."
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Als de verzekering wordt geweigerd, zijn het platform en de verkoper niet aansprakelijk voor verlies tijdens verzending of douaneproblemen.",
+  "썸네일": "Miniatuur",
+  "수정일": "Laatst gewijzigd",
+  "작업": "Acties",
+  "수정": "Bewerken",
+  "Name · Seller · Brand · Reference · Store · Category": "Naam · Verkoper · Merk · Referentie · Winkel · Categorie"
 }

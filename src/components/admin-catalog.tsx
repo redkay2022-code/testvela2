@@ -3,12 +3,13 @@ import { cleanWatchSpecs } from '@/lib/watch-specifications';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, Copy, Eye, ImagePlus, Pencil, Plus, Power, Star, Trash2, Upload } from 'lucide-react';
+import { Archive, Eye, ImagePlus, Pencil, Plus, Power, Star, Trash2, Upload } from 'lucide-react';
 import { Button } from './ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { uploadListingVideo } from '@/lib/video-upload';
 import { useAdminPasswordGate } from './admin-password-gate';
+import { isMuxStreamUrl, muxThumbnailUrl } from '@/lib/mux';
 import { useServerFn } from '@tanstack/react-start';
 import { adminDeletePost } from '@/lib/admin-members.functions';
 import type { Database } from '@/integrations/supabase/types';
@@ -26,7 +27,6 @@ type Img = { path: string; kind: ImageKind };
 export type CatalogSection = 'dashboard' | 'stores' | 'products' | 'categories' | 'inventory' | 'orders';
 
 const fmtDate = (v: string) => new Date(v).toLocaleDateString('ko-KR');
-const usd = (n: number | null) => (n == null ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n));
 const seedSrc = (token: string) => watchImages[Number(token.replace('seed:watch-', ''))] ?? watchImages[0] ?? '';
 
 function useCatalog() {
@@ -212,8 +212,21 @@ function ProductList({ stores, products }: { stores: StoreRow[]; products: PostR
   const refresh = useRefresh();
   const storeName = (id: string | null) => stores.find(s => s.id === id)?.store_name ?? '—';
   const media = useMediaUrls(products.map(p => p.media_urls[0] ?? ''));
+  // 올린 셀러: posts.user_id → profiles.nickname (관리자만 전체 조회 가능). 없으면 creator, 스토어 이름 순으로 대체합니다.
+  const ownerIds = useMemo(() => [...new Set(products.map(p => p.user_id).filter((v): v is string => Boolean(v)))].sort(), [products]);
+  const owners = useQuery({ queryKey: ['admin-owner-names', ownerIds.join(',')], enabled: ownerIds.length > 0, staleTime: 5 * 60_000, queryFn: async () => {
+    const out: Record<string, string> = {};
+    for (let i = 0; i < ownerIds.length; i += 50) {
+      const { data } = await supabase.from('profiles').select('user_id,nickname').in('user_id', ownerIds.slice(i, i + 50));
+      (data ?? []).forEach(r => { if (r.nickname) out[r.user_id] = r.nickname; });
+    }
+    return out;
+  } });
+  const sellerName = (p: PostRow) => (p.user_id && owners.data?.[p.user_id]) || p.creator || (p.store_id ? storeName(p.store_id) : '') || '—';
+  // 썸네일: 첫 사진 → 없으면 Mux 영상 썸네일
+  const thumbOf = (p: PostRow) => (p.media_urls[0] ? media(p.media_urls[0]) : isMuxStreamUrl(p.video_url) ? muxThumbnailUrl(p.video_url, 160) : '');
   const rows = products.filter(p => {
-    const hay = `${p.title} ${p.brand} ${p.model} ${p.reference} ${storeName(p.store_id)} ${p.category}`.toLowerCase();
+    const hay = `${p.title} ${p.brand} ${p.model} ${p.reference} ${sellerName(p)} ${storeName(p.store_id)} ${p.category}`.toLowerCase();
     return (!q || hay.includes(q.toLowerCase())) && (filter === 'all' || p.product_status === filter || (filter === 'DRAFT' && p.product_status === 'READY'));
   });
   const gate = useAdminPasswordGate();
@@ -228,48 +241,28 @@ function ProductList({ stores, products }: { stores: StoreRow[]; products: PostR
     try { await deletePost({ data: { postId: p.id, password } }); setMsg(`${p.title} 삭제됨`); await refresh(); }
     catch (err) { setMsg(err instanceof Error && err.message ? err.message : '삭제하지 못했습니다.'); }
   };
-  const setStatus = async (p: PostRow, s: ProductStatus) => {
-    if (s === 'PUBLISHED') {
-      const missing = publishBlockers({ title: p.title, storeId: p.store_id, category: p.category, price: p.price, stock: p.stock_qty, hasMainImage: p.media_urls.length > 0 });
-      if (missing.length) return setMsg(`게시하려면 필요: ${missing.join(', ')}`);
-    }
-    const { error } = await supabase.from('posts').update({ product_status: s }).eq('id', p.id);
-    setMsg(error ? '변경하지 못했습니다.' : `${p.title} → ${s}`); await refresh();
-  };
-  const duplicate = async (p: PostRow) => {
-    const { id: _id, created_at: _c, updated_at: _u, ...rest } = p;
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('posts').insert({ ...rest, user_id: p.user_id ?? user?.id ?? null, title: `${p.title} (copy)`, sku: p.sku ? `${p.sku}-COPY` : '', product_status: 'DRAFT', status: 'draft', featured: false, data_source: 'PRODUCTION' });
-    setMsg(error ? '복제하지 못했습니다.' : '초안으로 복제했습니다.'); await refresh();
-  };
   return <div className="catalog mt-4">{gate.dialog}
     <div className="section-heading"><h2>PRODUCT MANAGEMENT</h2><span>{rows.length} / {products.length}</span></div>
     <div className="catalog-toolbar">
-      <input aria-label="상품 검색" placeholder="Name · Brand · Reference · Store · Category" value={q} onChange={e => setQ(e.target.value)} />
+      <input aria-label="상품 검색" placeholder="Name · Seller · Brand · Reference · Store · Category" value={q} onChange={e => setQ(e.target.value)} />
       <select aria-label="상품 상태 필터" value={filter} onChange={e => setFilter(e.target.value)}>{statusFilters.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
       <Button asChild variant="gold" className="ml-auto"><Link to="/admin" search={{ role: 'admin', section: 'products', edit: 'new' }}><Plus />Add Product</Link></Button>
     </div>
     {msg && <p role="status" className="dashboard-message">{msg}</p>}
-    <div className="catalog-scroll"><table className="catalog-table"><thead><tr><th></th><th>Product</th><th>Brand</th><th>Store</th><th>Price</th><th>Stock</th><th>Status</th><th>Source</th><th>Updated</th><th>Actions</th></tr></thead><tbody>
-      {rows.map(p => <tr key={p.id}>
-        <td>{p.media_urls[0] ? <img src={media(p.media_urls[0])} alt="" /> : '—'}</td>
-        <td data-no-translate><strong>{p.title}</strong>{p.featured && <Star size={12} className="ml-1 inline text-primary" />}<br /><small className="text-muted-foreground">{p.reference || p.sku || p.id.slice(0, 8)}</small></td>
-        <td>{p.brand || '—'}</td><td data-no-translate>{storeName(p.store_id)}</td><td>{usd(p.price)}</td>
-        <td>{availableQty(p.stock_qty, p.reserved_qty)} / {p.stock_qty}</td>
-        <td><span className={`catalog-pill ${p.product_status === 'PUBLISHED' ? 'on' : p.product_status === 'OUT_OF_STOCK' ? 'warn' : ''}`}>{p.product_status}</span></td>
-        <td><span className="catalog-pill">{p.data_source}</span></td>
-        <td>{fmtDate(p.updated_at || p.created_at)}</td>
-        <td><div className="catalog-actions">
-          <Button asChild variant="ghost" size="sm"><Link to="/admin" search={{ role: 'admin', section: 'products', edit: p.id }}><Pencil />Edit</Link></Button>
-          <Button variant="ghost" size="sm" onClick={() => void duplicate(p)}><Copy />Duplicate</Button>
-          {p.product_status === 'PUBLISHED' || p.product_status === 'OUT_OF_STOCK'
-            ? <Button variant="ghost" size="sm" onClick={() => void setStatus(p, 'DRAFT')}>Unpublish</Button>
-            : <Button variant="goldOutline" size="sm" onClick={() => void setStatus(p, 'PUBLISHED')}>Publish</Button>}
-          {p.product_status !== 'ARCHIVED' && <Button variant="ghost" size="sm" onClick={() => void setStatus(p, 'ARCHIVED')}><Archive />Archive</Button>}
-          <Button variant="ghost" size="sm" onClick={() => void toggleFeatured(p)}><Star />{p.featured ? '추천 해제' : '추천'}</Button>
-          <Button variant="destructive" size="sm" onClick={() => void forceDelete(p)}><Trash2 />강제 삭제</Button>
-        </div></td>
-      </tr>)}
+    <div className="catalog-scroll"><table className="catalog-table"><thead><tr><th>썸네일</th><th>셀러</th><th>수정일</th><th>작업</th></tr></thead><tbody>
+      {rows.map(p => {
+        const thumb = thumbOf(p);
+        return <tr key={p.id}>
+          <td><div className="relative inline-block" title={p.title}>{thumb ? <img src={thumb} alt={p.title} loading="lazy" style={{ width: 56, height: 56 }} /> : <span className="flex items-center justify-center rounded-lg bg-muted text-muted-foreground" style={{ width: 56, height: 56 }}>—</span>}{p.featured && <Star size={14} className="absolute -right-1 -top-1 fill-current text-primary" aria-label="추천" />}</div></td>
+          <td data-no-translate>{sellerName(p)}</td>
+          <td className="whitespace-nowrap">{fmtDate(p.updated_at || p.created_at)}</td>
+          <td><div className="catalog-actions">
+            <Button asChild variant="ghost" size="sm"><Link to="/admin" search={{ role: 'admin', section: 'products', edit: p.id }}><Pencil />수정</Link></Button>
+            <Button variant="ghost" size="sm" onClick={() => void toggleFeatured(p)}><Star />{p.featured ? '추천 해제' : '추천'}</Button>
+            <Button variant="destructive" size="sm" onClick={() => void forceDelete(p)}><Trash2 />삭제</Button>
+          </div></td>
+        </tr>;
+      })}
     </tbody></table></div>
   </div>;
 }

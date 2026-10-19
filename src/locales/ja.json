@@ -2743,5 +2743,10 @@
   "Covered by Shipping & Customs Insurance ({0}% Fee)": "配送・通関保険が適用されます（手数料{0}%）",
   "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "輸送中の紛失・破損・税関での差し押さえを全額補償し、無料での再発送または全額返金を保証します。",
   "Without Insurance": "保険なし",
-  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "保険を選択しない場合、配送中の紛失や通関上の問題について、プラットフォームおよび販売者は責任を負いません。"
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "保険を選択しない場合、配送中の紛失や通関上の問題について、プラットフォームおよび販売者は責任を負いません。",
+  "썸네일": "サムネイル",
+  "수정일": "更新日",
+  "작업": "操作",
+  "수정": "編集",
+  "Name · Seller · Brand · Reference · Store · Category": "名前 · 販売者 · ブランド · リファレンス · ストア · カテゴリ"
 }

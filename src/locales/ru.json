@@ -2747,5 +2747,10 @@
   "Covered by Shipping & Customs Insurance ({0}% Fee)": "Действует страховка доставки и таможни (комиссия {0}%)",
   "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "Полное покрытие при утере, повреждении или изъятии таможней в пути с гарантированной бесплатной повторной отправкой или полным возвратом средств.",
   "Without Insurance": "Без страховки",
-  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Если от страховки отказаться, платформа и продавец не несут ответственности за потери при доставке и таможенные проблемы."
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Если от страховки отказаться, платформа и продавец не несут ответственности за потери при доставке и таможенные проблемы.",
+  "썸네일": "Миниатюра",
+  "수정일": "Изменено",
+  "작업": "Действия",
+  "수정": "Изменить",
+  "Name · Seller · Brand · Reference · Store · Category": "Название · Продавец · Бренд · Референс · Магазин · Категория"
 }

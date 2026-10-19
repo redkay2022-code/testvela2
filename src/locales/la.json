@@ -2747,5 +2747,10 @@
   "Covered by Shipping & Customs Insurance ({0}% Fee)": "Assecuratione transportationis et telonii tectum ({0}% merces)",
   "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "Plena tutela contra damnum, amissionem vel telonii captionem in itinere, cum gratuita iterata missione vel plena pecuniae restitutione certa.",
   "Without Insurance": "Sine assecuratione",
-  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Si assecuratio recusatur, suggestus et venditor non tenentur de damnis transportationis vel de quaestionibus telonii."
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "Si assecuratio recusatur, suggestus et venditor non tenentur de damnis transportationis vel de quaestionibus telonii.",
+  "썸네일": "Imago parva",
+  "수정일": "Ultima mutatio",
+  "작업": "Actiones",
+  "수정": "Muta",
+  "Name · Seller · Brand · Reference · Store · Category": "Nomen · Venditor · Marca · Referentia · Taberna · Categoria"
 }

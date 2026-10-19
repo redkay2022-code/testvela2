@@ -2745,5 +2745,10 @@
   "Covered by Shipping & Customs Insurance ({0}% Fee)": "已投保配送与清关险（费用 {0}%）",
   "Full coverage for loss, damage, or customs seizure during transit, with guaranteed free reshipment or a full refund.": "运输途中发生丢失、损坏或被海关扣押时全额赔付，并保证免费补发或全额退款。",
   "Without Insurance": "未投保",
-  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "如果不选择保险，平台和卖家对运输丢失或清关问题概不负责。"
+  "The platform and seller are not liable for shipping losses or customs issues if insurance is declined.": "如果不选择保险，平台和卖家对运输丢失或清关问题概不负责。",
+  "썸네일": "缩略图",
+  "수정일": "修改日期",
+  "작업": "操作",
+  "수정": "编辑",
+  "Name · Seller · Brand · Reference · Store · Category": "名称 · 卖家 · 品牌 · 型号 · 店铺 · 分类"
 }
