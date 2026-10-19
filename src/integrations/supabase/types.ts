@@ -1278,6 +1278,24 @@ export type Database = {
           },
         ]
       }
+      test_seed_log: {
+        Row: {
+          a: string | null
+          b: string | null
+          kind: string | null
+        }
+        Insert: {
+          a?: string | null
+          b?: string | null
+          kind?: string | null
+        }
+        Update: {
+          a?: string | null
+          b?: string | null
+          kind?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
