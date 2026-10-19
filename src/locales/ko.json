@@ -1556,5 +1556,11 @@
   " (사진 {0}~{1}장 / 영상 {2}개)": " (사진 {0}~{1}장 / 영상 {2}개)",
   "(사진 {0}~{1}장 / 영상 {2}개)": "(사진 {0}~{1}장 / 영상 {2}개)",
   "상품을 올려주세요": "상품을 올려주세요",
-  "제목을 입력해주세요": "제목을 입력해주세요"
+  "제목을 입력해주세요": "제목을 입력해주세요",
+  "Product Preparation in Progress": "Product Preparation in Progress",
+  "QC Complete & Awaiting Approval": "QC Complete & Awaiting Approval",
+  "Preparing for Shipment": "Preparing for Shipment",
+  "제품 준비 중": "제품 준비 중",
+  "QC 완료 & 승인 대기": "QC 완료 & 승인 대기",
+  "배송 준비 중": "배송 준비 중"
 }

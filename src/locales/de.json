@@ -2715,5 +2715,11 @@
   " (사진 {0}~{1}장 / 영상 {2}개)": " (Fotos {0}–{1} / Video {2})",
   "(사진 {0}~{1}장 / 영상 {2}개)": "(Fotos {0}–{1} / Video {2})",
   "상품을 올려주세요": "Bitte lade dein Produkt hoch",
-  "제목을 입력해주세요": "Bitte Titel eingeben"
+  "제목을 입력해주세요": "Bitte Titel eingeben",
+  "Product Preparation in Progress": "Produkt wird vorbereitet",
+  "QC Complete & Awaiting Approval": "QC abgeschlossen & wartet auf Freigabe",
+  "Preparing for Shipment": "Versand wird vorbereitet",
+  "제품 준비 중": "Produkt wird vorbereitet",
+  "QC 완료 & 승인 대기": "QC abgeschlossen & wartet auf Freigabe",
+  "배송 준비 중": "Versand wird vorbereitet"
 }

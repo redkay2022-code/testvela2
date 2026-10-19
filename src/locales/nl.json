@@ -2720,5 +2720,11 @@
   " (사진 {0}~{1}장 / 영상 {2}개)": " (foto's {0}–{1} / video {2})",
   "(사진 {0}~{1}장 / 영상 {2}개)": "(foto's {0}–{1} / video {2})",
   "상품을 올려주세요": "Upload je product",
-  "제목을 입력해주세요": "Voer een titel in"
+  "제목을 입력해주세요": "Voer een titel in",
+  "Product Preparation in Progress": "Product wordt voorbereid",
+  "QC Complete & Awaiting Approval": "QC voltooid, wacht op goedkeuring",
+  "Preparing for Shipment": "Verzending wordt voorbereid",
+  "제품 준비 중": "Product wordt voorbereid",
+  "QC 완료 & 승인 대기": "QC voltooid, wacht op goedkeuring",
+  "배송 준비 중": "Verzending wordt voorbereid"
 }

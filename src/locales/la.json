@@ -2720,5 +2720,11 @@
   " (사진 {0}~{1}장 / 영상 {2}개)": " (imagines {0}–{1} / video {2})",
   "(사진 {0}~{1}장 / 영상 {2}개)": "(imagines {0}–{1} / video {2})",
   "상품을 올려주세요": "Producte tuum imponere",
-  "제목을 입력해주세요": "Titulum inscribe"
+  "제목을 입력해주세요": "Titulum inscribe",
+  "Product Preparation in Progress": "Productum paratur",
+  "QC Complete & Awaiting Approval": "QC peractum, approbatio exspectatur",
+  "Preparing for Shipment": "Missio paratur",
+  "제품 준비 중": "Productum paratur",
+  "QC 완료 & 승인 대기": "QC peractum, approbatio exspectatur",
+  "배송 준비 중": "Missio paratur"
 }

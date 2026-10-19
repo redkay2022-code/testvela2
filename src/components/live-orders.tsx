@@ -12,7 +12,8 @@ import { useServerFn } from '@tanstack/react-start';
 import { AlertTriangle, Camera, Check, ExternalLink, MapPin, MessageSquareText, RefreshCw, Send, ShieldCheck, Truck, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { dollars } from '@/lib/luxury-market';
+import { cardImageOf, dollars } from '@/lib/luxury-market';
+import { getOrderThumbs } from '@/lib/order-thumbs.functions';
 import { qcAreas, stageLabel, type EscrowStage } from '@/lib/escrow';
 import { getOrderTracking } from '@/lib/tracking.functions';
 import { EscrowTimeline } from './escrow';
@@ -25,7 +26,7 @@ export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1, QC_MAX_PHOTOS = 14, QC_MAX_VI
 /** Reads a video's length in seconds from its metadata (NaN if it cannot be read). */
 const videoSeconds = (f: File) => new Promise<number>(res => { const v = document.createElement('video'), u = URL.createObjectURL(f); const done = (n: number) => { URL.revokeObjectURL(u); res(n); }; v.preload = 'metadata'; v.onloadedmetadata = () => done(v.duration); v.onerror = () => done(NaN); v.src = u; });
 /** Product thumbnail with a placeholder when the image is missing or fails to load. */
-function OrderThumb({ src }: { src?: string | null }) { const [bad, setBad] = useState(false); useEffect(() => setBad(false), [src]); return src && !bad ? <img src={src} width={52} height={52} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="h-[52px] w-[52px] shrink-0 rounded-md object-cover" onError={() => setBad(true)} /> : <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-md bg-muted"><Camera className="text-primary" /></span>; }
+function OrderThumb({ srcs }: { srcs: (string | null | undefined)[] }) { const list = [...new Set(srcs.filter((x): x is string => Boolean(x)))]; const key = list.join('|'); const [idx, setIdx] = useState(0); useEffect(() => setIdx(0), [key]); const src = list[idx]; return src ? <img key={src} src={src} width={52} height={52} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="h-[52px] w-[52px] shrink-0 rounded-md object-cover" onError={() => setIdx(n => n + 1)} /> : <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-md bg-muted"><Camera className="text-primary" /></span>; }
 const BUCKET = 'qc-media';
 export type Order = { shipping?: Record<string, string> | null; id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null; cancelled_at: string | null };
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
@@ -205,6 +206,8 @@ export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'selle
   const [chat, setChat] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const orders = !user ? [] : (q.data?.orders ?? []).filter(o => (as === 'buyer' ? o.buyer_id === user.id : (o.seller_id === user.id || (o.seller_id === null && admin))) && (!search.orderId||o.id===search.orderId) && (!logistics || Boolean(search.orderId) || isLogisticsOrder(o)));
+  const thumbIds = [...new Set(orders.map(o => o.post_id).filter((x): x is string => Boolean(x)))].sort(), thumbFn = useServerFn(getOrderThumbs);
+  const thumbs = useQuery({ queryKey: ['order-thumbs', thumbIds.join(',')], enabled: thumbIds.length > 0, staleTime: 30 * 60_000, retry: 1, queryFn: () => thumbFn({ data: { postIds: thumbIds } }) });
   /* 셀러의 물류/배송 목록은 페이지 번호로 나누어 보여 준다(구매자 화면은 그대로). */
   const pager = usePagination(orders, as + (search.orderId ?? ''));
   if (!user) return null;
@@ -223,7 +226,7 @@ export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'selle
       const isSeller = as === 'seller';
       const product=catalog.data?.find(p=>p.id===o.post_id);
       return <article className="escrow-order" key={o.id}>
-        <div className="escrow-order-head"><OrderThumb src={product?.images?.[0] || o.image_url} /><div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
+        <div className="escrow-order-head"><OrderThumb srcs={[product ? cardImageOf(product) : null, product?.images?.[0], thumbs.data?.[o.post_id ?? ''], o.image_url]} /><div><span className="lux-eyebrow" data-no-translate>{o.order_no}</span><strong>{o.title}</strong><small><span data-i18n-skip translate="no" className="notranslate">{tx(stageLabel(stage))}</span> · {o.seller_name}</small></div><div className="text-right"><strong>{dollars(Number(o.amount_usd))}</strong></div></div>
         <EscrowTimeline stage={stage} />
         {search.orderView==='tracking'&&!o.tracking_number&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("송장번호가 아직 등록되지 않았습니다.")}</span></p>}
         {search.orderView==='qc'&&!media.length&&<p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("출고 QC 사진·영상이 아직 등록되지 않았습니다.")}</span></p>}
