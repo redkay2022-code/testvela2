@@ -1,5 +1,5 @@
 # velamarket
-- [ ] Rename Story, update five tags and auto-fill titles across upload/edit/bulk; verify focused tests and UI.
+- [x] Rename Story, update five tags and auto-fill titles across upload/edit/bulk. 28 tests pass; actual upload UI verifies every English default title, mandatory/protected dropdown and Daily Style feed navigation with no page errors; build OK. No production posts changed.
 - [x] Add required Watch Story subcategory to upload/edit/bulk and specs persistence; public URL tabs, English/Korean toggle and 390px layout verified; 26 focused tests pass. Global i18n audit reports pre-existing missing labels plus false positives for the separate typed dictionary.
 - [ ] Verify authenticated Watch Story publish/edit and persisted feed readback. Blocker: requester has no matching auth account; seller preview sign-in required. No production posts changed.
 - [x] Remove insurance choices/metadata writes from seller creation/edit; optional buyer insurance forwarded to checkout and included only when selected at fixed 10% item price, box excluded. 21 tests pass; authenticated real RM07-01 detail/checkout selection readback and 390/707px no overflow verified; upload has no insurance checkbox. No payment or production order submitted. Build OK.
