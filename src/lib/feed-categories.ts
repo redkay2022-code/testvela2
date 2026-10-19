@@ -1,6 +1,6 @@
 import {ALL_WATCH_BRANDS} from './watch-brands';
 import {brandNames} from './brand-names';
-import {storyFeedTag} from './watch-story';
+import {storyFeedTag,normalizeStoryTag} from './watch-story';
 const brandSlug=(name:string)=>name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,' ').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 /** Korean names for the brands shown in Korean in the home category row; every other brand uses its listing name. */
 const koreanBrandNames:Record<string,string>={rolex:'롤렉스',cartier:'까르띠에','audemars-piguet':'오데마 피게','patek-philippe':'파텍 필립','richard-mille':'리차드 밀',omega:'오메가',panerai:'파네라이',iwc:'IWC'};
@@ -28,7 +28,7 @@ export const brandMenu={
  others:watchBrandItems.filter(item=>!popularBrandIds.includes(item[0])),
 };
 /** Menu-category labels saved before the 2026-10 cleanup, mapped to today's labels ("18K 금" was removed and now counts as 기타). */
-const legacyMenuLabels:Record<string,string>={'커스텀':'커스텀 제작','18K 금':'기타'};
+const legacyMenuLabels:Record<string,string>={'커스텀':'커스텀 제작','18K 금':'기타','Story':'스토리','Watch Story':'스토리'};
 export const normalizeMenuCategory=(label:string|undefined):string|undefined=>label===undefined?undefined:legacyMenuLabels[label.trim()] ?? label;
 export const primaryCategories=categoryGroups[0]?.items ?? [];
 /** Menu categories sellers choose from (stored in posts.specs.menuCategory, separate from the older 카테고리 field) (the "전체" entry is a filter only, never a post category). */
@@ -61,7 +61,7 @@ export function postBrandId(post:FeedPostLike):string{
 }
 export function matchesFeedCategory(post:FeedPostLike,id:string|undefined):boolean{
  if(!id||id==='recommend')return true;
- if(id.startsWith('story:')){const tag=storyFeedTag(id);const specs=post.source?.specs;return Boolean(tag&&matchesFeedCategory(post,'story')&&specs&&typeof specs==='object'&&'storySubcategory' in specs&&specs.storySubcategory===tag);}
+  if(id.startsWith('story:')){const tag=storyFeedTag(id);const specs=post.source?.specs;return Boolean(tag&&matchesFeedCategory(post,'story')&&specs&&typeof specs==='object'&&'storySubcategory' in specs&&normalizeStoryTag(specs.storySubcategory)===tag);}
  if(id.includes('~')){const {category,brand}=splitFeedId(id);return matchesFeedCategory(post,category)&&(brand.startsWith('b:')?postBrandId(post).toLowerCase()===brand.toLowerCase():postBrandId(post)===brand||matchesFeedCategory(post,brand));}
  if(id.startsWith('b:'))return postBrandId(post).toLowerCase()===id.toLowerCase();
  const own=postCategories.find(item=>item[0]===id),menu=normalizeMenuCategory(post.menuCategory);

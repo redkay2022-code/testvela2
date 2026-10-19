@@ -53,7 +53,7 @@ function PickerBody({catalog,selected,onClose,onSelect}:{catalog:readonly FeedPo
   </section>:<>
   <section className="pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>보기</Tx></h2>
    <div className="flex flex-wrap gap-2">{viewItems.map(([id,label])=><Button key={id} variant="ghost" translate="no" className={chipClass(selected===id)} aria-pressed={selected===id} onClick={()=>onSelect(id)}><Tx>{label}</Tx></Button>)}</div></section>
-   <section className="mt-5 border-t border-border pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground" data-i18n-skip>{t('watchStory')}</h2><StorySubcategoryTabs selected={selected} onSelect={onSelect}/></section>
+   <section className="mt-5 border-t border-border pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground" data-i18n-skip>{t('story')}</h2><StorySubcategoryTabs selected={selected} onSelect={onSelect}/></section>
   <section className="mt-5 border-t border-border pt-4"><h2 className="mb-2 text-xs font-semibold text-muted-foreground"><Tx>상품 카테고리</Tx></h2>
    <div className="flex flex-wrap gap-2" role="tablist" aria-label={tx('상품 카테고리')}>{productCategoryItems.map(([id,label])=>{const active=tab===id;
     return <Button key={id} variant="ghost" translate="no" role="tab" aria-selected={active} className={chipClass(active)} onClick={()=>setTab(id)}><Tx>{label}</Tx></Button>;})}</div>
