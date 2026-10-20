@@ -23,7 +23,7 @@
 - Shared pure reputation functions/local SVG badges use trusted roles; editorial metrics stay sample-only and unknown live sellers stay unbadged.
 - Buyer tiers are trusted, never inferred from client orders/metadata; default to Member.
 - Storefronts/reviews share canonical feed seller identity with slug-insensitive keys; never attribute sample reputation/reviews to another seller.
-- Public seller directory groups visible listings by stable seller identity; URL filters and no invented metrics.
+- Public seller directory uses stable identities, URL filters and stored RPC counts, never generated totals.
 - Share Story tag validation and selection-driven title filling across create/edit/bulk; store specs.storySubcategory and use URL feed IDs to reuse public filtering.
 - Use insuredPurchase with the purchase insurance selection for detail/checkout totals; forward choices via validated search and never store buyer choices on listings.
 - Store item/box prices in USD; display via src/lib/currency formatMoney for consistent totals/fees.
