@@ -1180,7 +1180,7 @@
   "{0}개 게시물": "{0} post",
   "{0}개 파일 선택됨": "{0} file selezionati",
   "{0}개의 발견": "{0} scoperte",
-  "{0}건": "{0} ordini",
+  "{0}건": "{0}",
   "{0}건 이상": "{0} ordini o più",
   "{0}까지": "Per {0}",
   "{0}에 상품 {1}개가 있어 삭제할 수 없습니다.": "Impossibile eliminare: {0} contiene {1} prodotti.",
@@ -2782,5 +2782,14 @@
   "문의가 없습니다.": "Nessuna richiesta.",
   "공지를 불러오지 못했습니다.": "Impossibile caricare gli avvisi.",
   "게시판 관리": "Gestione bacheche",
-  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Tutte le richieste e gli avvisi dei venditori · risposte dell'admin"
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Tutte le richieste e gli avvisi dei venditori · risposte dell'admin",
+  "진행 중인 거래": "Transazioni in corso",
+  "진행 중인 거래가 없습니다.": "Nessuna transazione in corso.",
+  "진행 중인 거래를 불러오지 못했습니다.": "Impossibile caricare le transazioni in corso.",
+  "다시 시도": "Riprova",
+  "입금 확인됨 · 에스크로 보관": "Pagamento confermato · in garanzia",
+  "TXID 검증 대기": "In attesa di verifica TXID",
+  "샘플 입금 확인됨": "Pagamento di esempio confermato",
+  "샘플 초기화": "Reimposta esempio",
+  "샘플 거래 · 실제 주문과 별도": "Transazione di esempio · separata dagli ordini reali"
 }

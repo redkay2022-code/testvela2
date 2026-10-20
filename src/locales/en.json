@@ -130,7 +130,7 @@
   "{0}개 게시물": "{0} posts",
   "{0}개 파일 선택됨": "{0} files selected",
   "{0}개의 발견": "{0} discoveries",
-  "{0}건": "{0} orders",
+  "{0}건": "{0}",
   "{0}건 이상": "{0} orders or more",
   "{0}까지": "To {0}",
   "{0}에 상품 {1}개가 있어 삭제할 수 없습니다.": "Can't delete: {0} has {1} products.",
@@ -1640,5 +1640,14 @@
   "문의가 없습니다.": "No inquiries.",
   "공지를 불러오지 못했습니다.": "Could not load notices.",
   "게시판 관리": "Board management",
-  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "All seller inquiries & notices · admin replies"
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "All seller inquiries & notices · admin replies",
+  "진행 중인 거래": "Active transactions",
+  "진행 중인 거래가 없습니다.": "No active transactions.",
+  "진행 중인 거래를 불러오지 못했습니다.": "Could not load active transactions.",
+  "다시 시도": "Try again",
+  "입금 확인됨 · 에스크로 보관": "Payment confirmed · held in escrow",
+  "TXID 검증 대기": "Awaiting TXID verification",
+  "샘플 입금 확인됨": "Sample payment confirmed",
+  "샘플 초기화": "Reset sample",
+  "샘플 거래 · 실제 주문과 별도": "Sample transaction · separate from real orders"
 }

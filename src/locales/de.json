@@ -1180,7 +1180,7 @@
   "{0}개 게시물": "{0} Beiträge",
   "{0}개 파일 선택됨": "{0} Dateien ausgewählt",
   "{0}개의 발견": "{0} Entdeckungen",
-  "{0}건": "{0} Bestellungen",
+  "{0}건": "{0}",
   "{0}건 이상": "{0} Bestellungen oder mehr",
   "{0}까지": "Bis {0}",
   "{0}에 상품 {1}개가 있어 삭제할 수 없습니다.": "Löschen nicht möglich: {0} enthält {1} Produkte.",
@@ -2782,5 +2782,14 @@
   "문의가 없습니다.": "Keine Anfragen.",
   "공지를 불러오지 못했습니다.": "Hinweise konnten nicht geladen werden.",
   "게시판 관리": "Boardverwaltung",
-  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Alle Verkäuferanfragen & Hinweise · Admin-Antworten"
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Alle Verkäuferanfragen & Hinweise · Admin-Antworten",
+  "진행 중인 거래": "Laufende Transaktionen",
+  "진행 중인 거래가 없습니다.": "Keine laufenden Transaktionen.",
+  "진행 중인 거래를 불러오지 못했습니다.": "Laufende Transaktionen konnten nicht geladen werden.",
+  "다시 시도": "Erneut versuchen",
+  "입금 확인됨 · 에스크로 보관": "Zahlung bestätigt · im Treuhandkonto",
+  "TXID 검증 대기": "TXID-Prüfung ausstehend",
+  "샘플 입금 확인됨": "Beispielzahlung bestätigt",
+  "샘플 초기화": "Beispiel zurücksetzen",
+  "샘플 거래 · 실제 주문과 별도": "Beispieltransaktion · getrennt von echten Bestellungen"
 }

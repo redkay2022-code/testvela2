@@ -1,0 +1,7 @@
+/* 120차: 셀러 이름·등급이 세로로 한 글자씩 꺾이던 문제 정리 */
+.store-profile .store-title{flex-wrap:wrap;align-items:flex-start;gap:10px}
+.store-profile .store-title h1{flex:1 1 100%;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:normal;line-height:1.25}
+.store-profile .store-title h1 .studio-badge-line{flex-wrap:wrap;gap:4px 10px;max-width:100%}
+.store-profile .store-title .reputation-badge>span,.studio-tier-table .reputation-badge>span{white-space:nowrap;overflow-wrap:normal;word-break:keep-all}
+.store-profile .store-actions{flex:1 1 100%;flex-wrap:wrap;justify-content:flex-start;gap:6px 8px}
+.studio-tier-table td:first-child,.studio-tier-table th:first-child{min-width:130px}

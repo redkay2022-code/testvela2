@@ -1180,7 +1180,7 @@
   "{0}개 게시물": "{0} publications",
   "{0}개 파일 선택됨": "{0} fichiers sélectionnés",
   "{0}개의 발견": "{0} découvertes",
-  "{0}건": "{0} commandes",
+  "{0}건": "{0}",
   "{0}건 이상": "{0} commandes ou plus",
   "{0}까지": "Pour {0}",
   "{0}에 상품 {1}개가 있어 삭제할 수 없습니다.": "Suppression impossible : {0} contient {1} produits.",
@@ -2782,5 +2782,14 @@
   "문의가 없습니다.": "Aucune demande.",
   "공지를 불러오지 못했습니다.": "Impossible de charger les annonces.",
   "게시판 관리": "Gestion des forums",
-  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Toutes les demandes et annonces des vendeurs · réponses de l'admin"
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Toutes les demandes et annonces des vendeurs · réponses de l'admin",
+  "진행 중인 거래": "Transactions en cours",
+  "진행 중인 거래가 없습니다.": "Aucune transaction en cours.",
+  "진행 중인 거래를 불러오지 못했습니다.": "Impossible de charger les transactions en cours.",
+  "다시 시도": "Réessayer",
+  "입금 확인됨 · 에스크로 보관": "Paiement confirmé · conservé sous séquestre",
+  "TXID 검증 대기": "Vérification du TXID en attente",
+  "샘플 입금 확인됨": "Paiement test confirmé",
+  "샘플 초기화": "Réinitialiser l'exemple",
+  "샘플 거래 · 실제 주문과 별도": "Transaction test · distincte des vraies commandes"
 }

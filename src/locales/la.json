@@ -1185,7 +1185,7 @@
   "{0}개 게시물": "{0} publicationes",
   "{0}개 파일 선택됨": "{0} fasciculi electi",
   "{0}개의 발견": "{0} inventa",
-  "{0}건": "{0} mandata",
+  "{0}건": "{0}",
   "{0}건 이상": "{0} mandata vel plura",
   "{0}까지": "Usque ad {0}",
   "{0}에 상품 {1}개가 있어 삭제할 수 없습니다.": "Dele non potest: {0} {1} merces habet.",
@@ -2787,5 +2787,14 @@
   "문의가 없습니다.": "Nullae quaestiones.",
   "공지를 불러오지 못했습니다.": "Nuntii onerari non potuerunt.",
   "게시판 관리": "Administratio tabularum",
-  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Omnes quaestiones et nuntii venditorum · responsa administratoris"
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Omnes quaestiones et nuntii venditorum · responsa administratoris",
+  "진행 중인 거래": "Transactiones in cursu",
+  "진행 중인 거래가 없습니다.": "Nullae transactiones in cursu.",
+  "진행 중인 거래를 불러오지 못했습니다.": "Transactiones in cursu onerari non potuerunt.",
+  "다시 시도": "Iterum conare",
+  "입금 확인됨 · 에스크로 보관": "Solutio confirmata · in deposito",
+  "TXID 검증 대기": "Verificatio TXID exspectatur",
+  "샘플 입금 확인됨": "Solutio exempli confirmata",
+  "샘플 초기화": "Exemplum reponere",
+  "샘플 거래 · 실제 주문과 별도": "Transactio exempli · a veris mandatis separata"
 }

@@ -1185,7 +1185,7 @@
   "{0}개 게시물": "{0} berichten",
   "{0}개 파일 선택됨": "{0} bestanden geselecteerd",
   "{0}개의 발견": "{0} ontdekkingen",
-  "{0}건": "{0} bestellingen",
+  "{0}건": "{0}",
   "{0}건 이상": "{0} bestellingen of meer",
   "{0}까지": "Tot {0}",
   "{0}에 상품 {1}개가 있어 삭제할 수 없습니다.": "Verwijderen niet mogelijk: {0} bevat {1} producten.",
@@ -2787,5 +2787,14 @@
   "문의가 없습니다.": "Geen vragen.",
   "공지를 불러오지 못했습니다.": "Mededelingen konden niet worden geladen.",
   "게시판 관리": "Bordbeheer",
-  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Alle verkoopvragen en mededelingen · beheerdersantwoorden"
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Alle verkoopvragen en mededelingen · beheerdersantwoorden",
+  "진행 중인 거래": "Lopende transacties",
+  "진행 중인 거래가 없습니다.": "Geen lopende transacties.",
+  "진행 중인 거래를 불러오지 못했습니다.": "Lopende transacties konden niet worden geladen.",
+  "다시 시도": "Opnieuw proberen",
+  "입금 확인됨 · 에스크로 보관": "Betaling bevestigd · in escrow",
+  "TXID 검증 대기": "Wacht op TXID-verificatie",
+  "샘플 입금 확인됨": "Voorbeeldbetaling bevestigd",
+  "샘플 초기화": "Voorbeeld resetten",
+  "샘플 거래 · 실제 주문과 별도": "Voorbeeldtransactie · los van echte bestellingen"
 }

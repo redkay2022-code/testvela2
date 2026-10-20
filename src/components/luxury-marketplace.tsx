@@ -1,4 +1,5 @@
 import './vela-desktop.css';
+import './store-header.css';
 import { avatarKey, defaultAvatarUrl } from '@/lib/default-avatar';
 import { LazyVideo } from './lazy-video';
 import { createLiveOrder, LiveOrderBoard, orderBlockReason } from './live-orders';
