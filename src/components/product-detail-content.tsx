@@ -21,7 +21,8 @@ import { ProductComments } from './product-comments';
 import { marketSearch } from '@/lib/market';
 import { dollars, type LuxuryPost } from '@/lib/luxury-market';
 import { sellerIdentity } from '@/lib/seller-directory';
-import { TEST_COUNTS_ENABLED, shownViews, testPostLikes, testPostSaves, testSellerStat } from '@/lib/test-counts';
+import { TEST_COUNTS_ENABLED, shownViews, testPostLikes, testPostSaves } from '@/lib/test-counts';
+import { useSellerStats } from '@/lib/use-seller-stats';
 import { t } from '@/lib/i18n';
 import { usePostRatings } from '@/lib/studio-tier';
 import { detailMedia } from '@/lib/post-media';
@@ -41,7 +42,7 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  const tr=usePostTranslation(post.source,!post.sample,false);
  const verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
  const qna=search.detailTab==='qna',boxPrice=post.boxPrice ?? 0,story=post.menuCategory==='스토리';
- const sellerBlocked=useSellerPurchaseBlock(user?.id);
+ const sellerBlocked=useSellerPurchaseBlock(user?.id),sellerStats=useSellerStats();
  const ownProduct=Boolean(user&&!post.sample&&post.source.user_id===user.id),overCap=post.price!==null&&exceedsPriceCap(post.price,box?boxPrice:0);
  const openQna=()=>{pushed.current=true;void navigate({to:'.',search:prev=>({...prev,detailTab:'qna'}),resetScroll:false});};
  const closeQna=()=>{if(pushed.current){pushed.current=false;router.history.back();}else void navigate({to:'.',search:prev=>({...prev,detailTab:undefined}),replace:true,resetScroll:false});};
@@ -51,7 +52,7 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  <div className={shorts?'shorts-sheet-body':'lux-detail-scroll'}>
  {qna?<div className="lux-detail-copy"><Button variant="ghost" size="sm" onClick={closeQna}><ArrowLeft size={16}/>제품 상세</Button><h2 className="mt-4 text-lg font-semibold notranslate" translate="no" data-i18n-skip>{post.sample?post.title:tr.title}</h2><ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} qna/></div>:<>
  {shorts?<ShortsGallery key={post.id} images={post.images} title={post.title}/>:<ProductPhotos post={post} verified={verified}/>}
- <div className="lux-detail-copy"><div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">{post.price!==null&&<p className="lux-price min-w-0" data-no-translate>{dollars(post.price+(box?boxPrice:0))}</p>}<span className="text-xs text-muted-foreground"><Eye size={13} className="mr-1 inline"/>{shownViews(post.id,post.views)} views</span></div>{TEST_COUNTS_ENABLED&&<p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground" data-no-translate translate="no"><span>Likes <strong>{testPostLikes(post.id)}</strong></span><span>Saves <strong>{testPostSaves(post.id)}</strong></span><span>Followers <strong>{testSellerStat(sellerIdentity(post)).followers}</strong></span></p>}
+ <div className="lux-detail-copy"><div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">{post.price!==null&&<p className="lux-price min-w-0" data-no-translate>{dollars(post.price+(box?boxPrice:0))}</p>}<span className="text-xs text-muted-foreground"><Eye size={13} className="mr-1 inline"/>{shownViews(post.id,post.views)} views</span></div>{TEST_COUNTS_ENABLED&&<p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground" data-no-translate translate="no"><span>Likes <strong>{testPostLikes(post.id)}</strong></span><span>Saves <strong>{testPostSaves(post.id)}</strong></span><span>Followers <strong>{sellerStats.data?.get(sellerIdentity(post))?.followers ?? '—'}</strong></span></p>}
  {post.price!==null&&boxPrice>0&&<label className="box-option"><input type="checkbox" checked={box} onChange={e=>setBox(e.target.checked)} className="size-4 accent-primary"/><span>{t('addBox')}</span><strong data-no-translate>+{dollars(boxPrice)}</strong></label>}
  {post.price!==null&&<InsuranceOption price={post.price} checked={insured} onChange={setInsured} rate={insRate}/>}
  {post.price!==null&&<dl className="insurance-breakdown" aria-label="안전배송보험"><div><dt><ShieldCheck size={15} className="mr-1 inline"/>{t('deliveryInsurance')} ({insPct}%)</dt><dd data-no-translate>+{dollars(insuredPurchase(post.price,0,insured,insRate).insurance)}</dd></div><div className="insurance-total"><dt>{t('total')}</dt><dd data-no-translate>{dollars(insuredPurchase(post.price,box?boxPrice:0,insured,insRate).total)}</dd></div></dl>}
