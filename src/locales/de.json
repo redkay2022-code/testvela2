@@ -2794,5 +2794,7 @@
   "샘플 거래 · 실제 주문과 별도": "Beispieltransaktion · getrennt von echten Bestellungen",
   "이전 영상": "Vorheriges Video",
   "다음 영상": "Nächstes Video",
-  "삭제했습니다.": "Gelöscht."
+  "삭제했습니다.": "Gelöscht.",
+  "문의 삭제": "Anfrage löschen",
+  "삭제하지 못했습니다. 다시 시도해 주세요.": "Löschen fehlgeschlagen. Bitte erneut versuchen."
 }

@@ -2794,5 +2794,7 @@
   "샘플 거래 · 실제 주문과 별도": "Transazione di esempio · separata dagli ordini reali",
   "이전 영상": "Video precedente",
   "다음 영상": "Video successivo",
-  "삭제했습니다.": "Eliminato."
+  "삭제했습니다.": "Eliminato.",
+  "문의 삭제": "Elimina richiesta",
+  "삭제하지 못했습니다. 다시 시도해 주세요.": "Impossibile eliminare. Riprova."
 }
