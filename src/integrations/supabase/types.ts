@@ -1400,9 +1400,12 @@ export type Database = {
         Returns: number
       }
       loyalty_admin_overview: { Args: never; Returns: Json }
+      loyalty_earn_status: { Args: never; Returns: Json }
       loyalty_expire_user: { Args: { _uid: string }; Returns: undefined }
       loyalty_my_summary: { Args: never; Returns: Json }
       loyalty_refresh_membership: { Args: { _uid: string }; Returns: string }
+      loyalty_release_user: { Args: { _uid: string }; Returns: number }
+      market_max_price_usd: { Args: never; Returns: number }
       order_party_labels: {
         Args: { _order_ids: string[] }
         Returns: {
