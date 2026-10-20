@@ -4,7 +4,7 @@ import { useServerFn } from '@tanstack/react-start';
 import { Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { saveStoreContent } from '@/lib/store-content.functions';
+import { saveStoreContent, adminSaveStoreIntro } from '@/lib/store-content.functions';
 import { canEditStoreContent, storeIntroductionSchema } from '@/lib/store-content';
 import { useMyAccount } from './seller-account';
 import { useCurrency } from './currency';
@@ -16,6 +16,8 @@ export function SellerStoreContent({ sellerId, mode = 'public' }: { sellerId: st
   const { lang } = useCurrency(), client = useQueryClient(), save = useServerFn(saveStoreContent);
   const auth = useQuery({ queryKey: ['auth-user'], queryFn: async () => (await supabase.auth.getUser()).data.user });
   const account = useMyAccount(auth.data ?? null);
+  const adminEdit = mode !== 'notices' && Boolean(sellerId) && (account.data?.roles ?? []).includes('admin');
+  const adminSave = useServerFn(adminSaveStoreIntro), [delArmed, setDelArmed] = useState(false);
   const editable = mode !== 'public' && canEditStoreContent(auth.data?.id, sellerId, account.data?.roles ?? []);
   const q = useQuery({ queryKey: ['seller-store-content', sellerId], queryFn: async () => {
     const [intro, notices] = await Promise.all([
@@ -25,19 +27,20 @@ export function SellerStoreContent({ sellerId, mode = 'public' }: { sellerId: st
     if (intro.error || notices.error) throw new Error('불러오지 못했습니다.');
     return { introduction: intro.data?.introduction ?? '', notices: notices.data ?? [] };
   } });
+  const introEditable = editable || adminEdit;
   const [editing, setEditing] = useState(false), [intro, setIntro] = useState(''), [notice, setNotice] = useState<{ id?: string; title: string; body: string } | null>(null), [busy, setBusy] = useState(false), [deleting, setDeleting] = useState<string | null>(null);
   async function commit(data: { kind: 'introduction'; introduction: string } | { kind: 'notice'; id?: string; title: string; body: string } | { kind: 'delete'; id: string }) {
     if (data.kind === 'introduction' && !storeIntroductionSchema.safeParse(data.introduction).success) return;
     setBusy(true);
-    try { await save({ data }); await client.invalidateQueries({ queryKey: ['seller-store-content', sellerId] }); setEditing(false); setNotice(null); setDeleting(null); toast.success('저장했습니다.'); }
+    try { if (data.kind === 'introduction' && adminEdit && !editable) await adminSave({ data: { sellerId, introduction: data.introduction } }); else await save({ data }); await client.invalidateQueries({ queryKey: ['seller-store-content', sellerId] }); setEditing(false); setNotice(null); setDeleting(null); toast.success('저장했습니다.'); }
     catch { toast.error('저장하지 못했습니다. 다시 시도해 주세요.'); }
     finally { setBusy(false); }
   }
   return <section className="my-6 min-w-0 space-y-6 notranslate" translate="no" data-no-translate>
     {q.isError && <p role="alert" className="text-destructive"><Tx>스토어 내용을 불러오지 못했습니다.</Tx></p>}
     {mode !== 'notices' && <div className="border-y border-border py-5">
-      <div className="mb-3 flex items-center justify-between gap-3"><h2 className="text-base font-semibold"><Tx>스토어 소개</Tx></h2>{editable && !editing && <Button variant="ghost" size="sm" onClick={() => { setIntro(q.data?.introduction ?? ''); setEditing(true); }}><Pencil size={14}/><Tx>편집</Tx></Button>}</div>
-      {editable && editing ? <form className="space-y-3" onSubmit={e => { e.preventDefault(); void commit({ kind: 'introduction', introduction: intro }); }}><textarea aria-label="스토어 소개" className="form-input min-h-32 w-full" maxLength={150} value={intro} onChange={e => setIntro(e.target.value)}/><p className="text-right text-xs text-muted-foreground" aria-live="polite">{intro.length}/150</p><div className="flex gap-2"><Button variant="gold" type="submit" disabled={busy || !storeIntroductionSchema.safeParse(intro).success}><Save size={14}/><Tx>저장</Tx></Button><Button variant="ghost" onClick={() => setEditing(false)}><Tx>취소</Tx></Button></div></form> : q.data?.introduction ? <TranslatableText as="p" className="whitespace-pre-wrap break-words text-sm text-muted-foreground" text={q.data.introduction}/> : <p className="text-sm text-muted-foreground"><Tx>{q.isLoading ? '불러오는 중…' : '등록된 스토어 소개가 없습니다.'}</Tx></p>}
+      <div className="mb-3 flex items-center justify-between gap-3"><h2 className="text-base font-semibold"><Tx>스토어 소개</Tx></h2>{introEditable && !editing && <div className="flex gap-1"><Button variant="ghost" size="sm" onClick={() => { setIntro(q.data?.introduction ?? ''); setEditing(true); }}><Pencil size={14}/><Tx>{q.data?.introduction ? '편집' : '작성'}</Tx></Button>{adminEdit && q.data?.introduction && <Button variant={delArmed ? 'destructive' : 'ghost'} size="sm" disabled={busy} onClick={() => { if (!delArmed) { setDelArmed(true); setTimeout(() => setDelArmed(false), 4000); return; } setDelArmed(false); void commit({ kind: 'introduction', introduction: '' }); }}><Trash2 size={14}/><Tx>{delArmed ? '정말 삭제' : '삭제'}</Tx></Button>}</div>}</div>
+      {introEditable && editing ? <form className="space-y-3" onSubmit={e => { e.preventDefault(); void commit({ kind: 'introduction', introduction: intro }); }}><textarea aria-label="스토어 소개" className="form-input min-h-32 w-full" maxLength={150} value={intro} onChange={e => setIntro(e.target.value)}/><p className="text-right text-xs text-muted-foreground" aria-live="polite">{intro.length}/150</p><div className="flex gap-2"><Button variant="gold" type="submit" disabled={busy || !storeIntroductionSchema.safeParse(intro).success}><Save size={14}/><Tx>저장</Tx></Button><Button variant="ghost" onClick={() => setEditing(false)}><Tx>취소</Tx></Button></div></form> : q.data?.introduction ? <TranslatableText as="p" className="whitespace-pre-wrap break-words text-sm text-muted-foreground" text={q.data.introduction}/> : <p className="text-sm text-muted-foreground"><Tx>{q.isLoading ? '불러오는 중…' : '등록된 스토어 소개가 없습니다.'}</Tx></p>}
     </div>}
     {mode !== 'introduction' && <div><div className="mb-3 flex items-center justify-between gap-3"><h2 className="text-base font-semibold"><Tx>공지 게시판</Tx></h2>{editable && !notice && <Button variant="goldOutline" size="sm" onClick={() => setNotice({ title: '', body: '' })}><Plus size={14}/><Tx>공지 작성</Tx></Button>}</div>
       {editable && notice && <form className="mb-5 space-y-3" onSubmit={e => { e.preventDefault(); void commit({ kind: 'notice', ...notice }); }}><input className="form-input w-full" aria-label="공지 제목" placeholder="공지 제목" required maxLength={120} value={notice.title} onChange={e => setNotice({ ...notice, title: e.target.value })}/><textarea className="form-input min-h-32 w-full" aria-label="공지 내용" placeholder="공지 내용" required maxLength={5000} value={notice.body} onChange={e => setNotice({ ...notice, body: e.target.value })}/><div className="flex gap-2"><Button type="submit" variant="gold" disabled={busy || !notice.title.trim() || !notice.body.trim()}><Save size={14}/><Tx>저장</Tx></Button><Button variant="ghost" onClick={() => setNotice(null)}><Tx>취소</Tx></Button></div></form>}
