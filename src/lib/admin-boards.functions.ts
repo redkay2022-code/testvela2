@@ -21,11 +21,11 @@ export type NoticeRow = { id: string; seller_id: string; seller_name: string; ti
 
 export const adminListQna = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ pendingOnly: z.boolean().optional() }).parse(d ?? {}))
+  .inputValidator((d: unknown) => z.object({ pendingOnly: z.boolean().optional(), kind: z.enum(['comment','qna']).default('qna') }).parse(d ?? {}))
   .handler(async ({ context, data }): Promise<QnaRow[]> => {
     await requireAdmin(context.supabase, context.userId);
     const db = await adminDb();
-    const { data: parents, error } = await db.from('comments').select('id,post_id,user_id,creator,body,created_at').is('parent_id', null).order('created_at', { ascending: false }).limit(200);
+    const { data: parents, error } = await db.from('comments').select('id,post_id,user_id,creator,body,created_at').eq('kind', data.kind).is('parent_id', null).order('created_at', { ascending: false }).limit(200);
     if (error) throw new Error('문의를 불러오지 못했습니다.');
     const ids: string[] = (parents ?? []).map((c: any) => c.id), postIds: string[] = [...new Set<string>((parents ?? []).map((c: any) => c.post_id))];
     const [replies, posts] = await Promise.all([
@@ -66,13 +66,13 @@ export const adminReplyAsSeller = createServerFn({ method: 'POST' })
   .handler(async ({ context, data }) => {
     await requireAdmin(context.supabase, context.userId);
     const db = await adminDb();
-    const { data: c } = await db.from('comments').select('id,post_id,parent_id').eq('id', data.commentId).maybeSingle();
+    const { data: c } = await db.from('comments').select('id,post_id,parent_id,kind').eq('id', data.commentId).maybeSingle();
     if (!c) throw new Error('문의를 찾을 수 없습니다.');
     const { data: p } = await db.from('posts').select('id,user_id,creator').eq('id', c.post_id).maybeSingle();
     if (!p?.user_id) throw new Error('이 상품은 셀러 계정이 없어 답변할 수 없습니다.');
     const { data: prof } = await db.from('profiles').select('nickname').eq('user_id', p.user_id).maybeSingle();
     const creator = String(prof?.nickname?.trim() || p.creator || 'VELA 셀러').slice(0, 40);
-    const { error } = await db.from('comments').insert({ post_id: c.post_id, user_id: p.user_id, creator, body: data.body, parent_id: c.parent_id ?? c.id });
+    const { error } = await db.from('comments').insert({ post_id: c.post_id, user_id: p.user_id, creator, body: data.body, parent_id: c.parent_id ?? c.id, kind: c.kind ?? 'qna' });
     if (error) throw new Error('답변을 저장하지 못했습니다.');
     return { ok: true };
   });

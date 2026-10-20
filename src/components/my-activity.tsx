@@ -47,7 +47,7 @@ export function MyActivity({ user, posts }: { user: User | null; posts: LuxuryPo
   };
   const qna = useQuery({queryKey:['my-qna',uid],enabled:Boolean(uid),queryFn:async()=>{
     if(!uid) return [];
-    const {data,error}=await supabase.from('comments').select('id,post_id,body,created_at').eq('user_id',uid).order('created_at',{ascending:false});
+    const {data,error}=await supabase.from('comments').select('id,post_id,body,created_at').eq('user_id',uid).eq('kind','qna').order('created_at',{ascending:false});
     if(error) throw error; return data ?? [];
   }});
   const replies = useQuery({queryKey:['my-qna-replies',uid,qna.data?.map(c=>c.id).join()],enabled:Boolean(uid&&qna.data?.length),refetchInterval:15000,queryFn:async()=>{

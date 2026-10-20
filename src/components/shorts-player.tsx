@@ -92,7 +92,7 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
  useEffect(()=>{setFailed(false);},[post.video]);
   const saved=preview.saved.includes(post.id),identity=sellerIdentity(post);
  const read=useServerFn(getComments);
-  const {data:comments}=useQuery({queryKey:['comments',post.id,user?.id ?? 'public'],queryFn:()=>read({data:{postId:post.id}}),enabled:active});
+  const {data:comments}=useQuery({queryKey:['comments',post.id,'comment',user?.id ?? 'public'],queryFn:()=>read({data:{postId:post.id,kind:'comment'}}),enabled:active});
  useEffect(()=>{const v=video.current;if(!v)return;
   if(!active){v.pause();/* Rewind only after the swipe has finished: rewinding at once made the old video jump to its first frame while still half on screen. */const t=window.setTimeout(()=>{try{v.currentTime=0;}catch{/* not seekable yet */}setReady(false);},500);return()=>window.clearTimeout(t);}
   const want=shortsSound;v.muted=!want;setSound(want);let cancelled=false;

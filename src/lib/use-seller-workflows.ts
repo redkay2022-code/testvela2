@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
 import { supabase } from '@/integrations/supabase/client';
 import { getSellerWorkflows } from './seller-workflows.functions';
-export type SellerActivity = { products: { id: string; title: string; likes: number; saves: number }[]; followers: { id: string; nickname: string; created_at: string }[]; comments: { id: string; post_id: string; title: string; creator: string; body: string; created_at: string }[] };
+export type SellerActivity = { products: { id: string; title: string; likes: number; saves: number }[]; followers: { id: string; nickname: string; created_at: string }[]; comments: { id: string; post_id: string; title: string; creator: string; body: string; created_at: string; kind?: 'comment' | 'qna' }[] };
 export function useSellerWorkflows(userId: string) {
   const read = useServerFn(getSellerWorkflows), client = useQueryClient();
   const query = useQuery({ queryKey: ['seller-workflows', userId], queryFn: () => read(), refetchInterval: 15000 });
