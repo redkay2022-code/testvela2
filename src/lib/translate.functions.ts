@@ -37,3 +37,18 @@ export const getPostTranslation = createServerFn({ method: 'POST' })
     await supabaseAdmin.from('posts').update({ translations: { ...all, [data.lang]: result } }).eq('id', post.id);
     return result;
   });
+
+/** Saved translations for many posts in one request (feed cards). A post with no saved translation yet comes back as null. */
+export const getStoredPostTranslations = createServerFn({ method: 'POST' })
+  .inputValidator((d) => z.object({ postIds: z.array(z.string().min(1).max(80)).min(1).max(60), lang: langEnum }).parse(d))
+  .handler(async ({ data }): Promise<Record<string, PostTranslation | null>> => {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: rows } = await supabaseAdmin.from('posts').select('id,source_lang,translations,status').in('id', data.postIds);
+    const out: Record<string, PostTranslation | null> = Object.fromEntries(data.postIds.map(id => [id, null]));
+    for (const post of rows ?? []) {
+      if (post.status !== 'published' || post.source_lang === data.lang) continue;
+      const all = (post.translations && typeof post.translations === 'object' ? post.translations : {}) as Record<string, PostTranslation>;
+      if (all[data.lang]) out[post.id] = all[data.lang]!;
+    }
+    return out;
+  });

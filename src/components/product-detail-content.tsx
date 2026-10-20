@@ -25,7 +25,7 @@ import { t } from '@/lib/i18n';
 import { usePostRatings } from '@/lib/studio-tier';
 import { detailMedia } from '@/lib/post-media';
 import { ratingAverage } from '@/lib/reputation';
-import { getSellerAvatar } from '@/lib/market.functions';
+import { loadSellerAvatar } from '@/lib/seller-avatar';
 import { useQuery } from '@tanstack/react-query';
 
 export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=false}:{post:LuxuryPost;user:User|null;requestAuth:()=>void;buy:(box:boolean,insured?:boolean)=>void;notify:(text:string)=>void;shorts?:boolean}) {
@@ -35,7 +35,7 @@ export function ProductDetailContent({post,user,requestAuth,buy,notify,shorts=fa
  const insRate=useInsuranceRate(),insPct=+(insRate*100).toFixed(2);
  const pr=usePostRatings().data?.[post.id];
  const sellerAvg=ratingAverage(post.reputation),sellerCount=post.reputation.ratingCount;
- const sellerAvatar=useQuery({queryKey:['seller-header-avatar',post.source.store_id ?? post.source.user_id ?? null],enabled:!post.sample&&Boolean(post.source.store_id||post.source.user_id),queryFn:()=>getSellerAvatar({data:{storeId:post.source.store_id ?? undefined,userId:post.source.user_id ?? undefined}})});
+ const sellerAvatar=useQuery({queryKey:['seller-header-avatar',post.source.store_id ?? post.source.user_id ?? null],enabled:!post.sample&&Boolean(post.source.store_id||post.source.user_id),queryFn:()=>loadSellerAvatar({data:{storeId:post.source.store_id ?? undefined,userId:post.source.user_id ?? undefined}})});
  const tr=usePostTranslation(post.source,!post.sample,false);
  const verified=preview.audits[post.id]?preview.audits[post.id]==='Approved':post.verified;
  const qna=search.detailTab==='qna',boxPrice=post.boxPrice ?? 0,story=post.menuCategory==='스토리';

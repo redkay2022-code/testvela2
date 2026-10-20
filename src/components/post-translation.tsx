@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Languages } from 'lucide-react';
 import { useCurrency } from './currency';
-import { getPostTranslation } from '@/lib/translate.functions';
+import { loadPostTranslation } from '@/lib/post-translation-batch';
 import { mergeSpecs } from '@/lib/post-translation';
 import type { Post } from '@/lib/market';
 import { Tx } from './tx';
@@ -16,7 +16,7 @@ export function usePostTranslation(post: Post, enabled = true, auto = true) {
   const [flip, setFlip] = useState(false);
   const wantTranslation = auto ? !flip : flip;
   const needs = enabled && Boolean(post.user_id) && post.source_lang !== lang;
-  const q = useQuery({ queryKey: ['post-translation', post.id, lang, post.updated_at], queryFn: () => getPostTranslation({ data: { postId: post.id, lang } }), enabled: needs && (auto || flip), staleTime: Infinity, retry: false });
+  const q = useQuery({ queryKey: ['post-translation', post.id, lang, post.updated_at], queryFn: () => loadPostTranslation(post.id, lang), enabled: needs && (auto || flip), staleTime: Infinity, retry: false });
   const tr = needs && wantTranslation ? q.data ?? null : null;
   return {
     title: tr?.title || post.title,

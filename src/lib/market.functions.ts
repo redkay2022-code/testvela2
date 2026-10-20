@@ -199,3 +199,33 @@ export const getSellerAvatar = createServerFn({ method: 'GET' })
     const { data: signed } = await supabaseAdmin.storage.from(bucket).createSignedUrls([path], 3600);
     return { avatar: signed?.[0]?.signedUrl ?? null };
   });
+
+/** Many seller avatars in one request (feed cards): same rules as getSellerAvatar — store photo first, then profile photo. */
+export const getSellerAvatars = createServerFn({ method: 'POST' })
+  .inputValidator((data: unknown) => z.object({ items: z.array(z.object({ storeId: z.string().uuid().optional(), userId: z.string().uuid().optional() })).min(1).max(60) }).parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const storeIds = [...new Set(data.items.map(i => i.storeId).filter((v): v is string => Boolean(v)))];
+    const userIds = [...new Set(data.items.map(i => i.userId).filter((v): v is string => Boolean(v)))];
+    const storeAvatar = new Map<string, string>();
+    const profileAvatar = new Map<string, string>();
+    await Promise.all([
+      (async () => { if (!storeIds.length) return; const { data: rows } = await supabaseAdmin.from('stores').select('id,avatar').in('id', storeIds); rows?.forEach(r => { if (r.avatar) storeAvatar.set(r.id, r.avatar); }); })(),
+      (async () => { if (!userIds.length) return; const { data: rows } = await supabaseAdmin.from('profiles').select('user_id,avatar_url').in('user_id', userIds); rows?.forEach(r => { if (r.avatar_url) profileAvatar.set(r.user_id, r.avatar_url); }); })(),
+    ]);
+    const safe = (p: string | null | undefined): p is string => Boolean(p && !p.includes('..') && !p.includes('://'));
+    const picked = data.items.map(i => {
+      const fromStore = i.storeId ? storeAvatar.get(i.storeId) : undefined;
+      if (fromStore) return { path: fromStore, bucket: 'market-media' as const };
+      const fromProfile = i.userId ? profileAvatar.get(i.userId) : undefined;
+      return { path: fromProfile ?? null, bucket: 'avatars' as const };
+    });
+    const urls = new Map<string, string>();
+    for (const bucket of ['market-media', 'avatars'] as const) {
+      const paths = [...new Set(picked.filter(p => p.bucket === bucket && safe(p.path)).map(p => p.path as string))];
+      if (!paths.length) continue;
+      const { data: signed } = await supabaseAdmin.storage.from(bucket).createSignedUrls(paths, 3600);
+      signed?.forEach(item => { if (item.path && item.signedUrl) urls.set(`${bucket}:${item.path}`, item.signedUrl); });
+    }
+    return picked.map(p => ({ avatar: safe(p.path) ? urls.get(`${p.bucket}:${p.path}`) ?? null : null }));
+  });
