@@ -704,7 +704,7 @@
   "셀러 스튜디오": "Seller Studio",
   "셀러 전용 페이지": "Seller-only page",
   "셀러 평가 (필수)": "Seller Rating (Required)",
-  "셀러가 QC 사진·영상을 보냈습니다. 확인해 주세요.": "The seller has sent QC photos/videos. Please check them.",
+  "셀러가 QC 사진·영상을 보냈습니다. 확인해 주세요.": "The seller sent QC photos/videos. Please review them.",
   "셀러가 추가 사진을 준비 중입니다.": "Seller is preparing additional photos.",
   "셀러샵": "Seller Shop",
   "셀러에게 메시지": "Message the seller",
@@ -1611,5 +1611,9 @@
   "디테일 사진·영상 업로드 (사진 최대 {0}장 · 영상 {1}개, 1분 이내)": "Upload detail photos & video (up to {0} photos · {1} video, max 1 min)",
   "추가 사진·영상을 1개 이상 선택해주세요.": "Please select at least one additional photo or video.",
   "(최대 사진 {0}장 / 영상 {1}개)": "(max {0} photos / {1} video)",
-  "셀러 계정은 상품을 구매할 수 없습니다.": "Seller accounts cannot purchase products."
+  "셀러 계정은 상품을 구매할 수 없습니다.": "Seller accounts cannot purchase products.",
+  "QC 도착": "QC arrived",
+  "QC 사진·영상이 도착했습니다": "QC photos/videos have arrived",
+  "셀러가 출고 QC를 보냈어요. 사진을 확인하고 승인하거나 추가 사진을 요청해 주세요.": "The seller sent the pre-shipment QC. Review the photos, then approve or request additional photos.",
+  "확인하기": "Review"
 }

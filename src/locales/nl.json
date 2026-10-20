@@ -1763,7 +1763,7 @@
   "셀러 스튜디오": "Verkopersstudio",
   "셀러 전용 페이지": "Pagina alleen voor verkopers",
   "셀러 평가 (필수)": "Verkoper beoordelen (verplicht)",
-  "셀러가 QC 사진·영상을 보냈습니다. 확인해 주세요.": "De verkoper heeft QC-foto's·video's gestuurd. Bekijk ze.",
+  "셀러가 QC 사진·영상을 보냈습니다. 확인해 주세요.": "De verkoper heeft QC-foto's/video's gestuurd. Bekijk ze alsjeblieft.",
   "셀러가 추가 사진을 준비 중입니다.": "De verkoper bereidt extra foto's voor.",
   "셀러샵": "Verkoperswinkel",
   "셀러에게 메시지": "Bericht aan verkoper",
@@ -2758,5 +2758,9 @@
   "디테일 사진·영상 업로드 (사진 최대 {0}장 · 영상 {1}개, 1분 이내)": "Upload detailfoto's en video (max. {0} foto's · {1} video, max. 1 min)",
   "추가 사진·영상을 1개 이상 선택해주세요.": "Selecteer minstens één extra foto of video.",
   "(최대 사진 {0}장 / 영상 {1}개)": "(max. {0} foto's / {1} video)",
-  "셀러 계정은 상품을 구매할 수 없습니다.": "Verkopersaccounts kunnen geen producten kopen."
+  "셀러 계정은 상품을 구매할 수 없습니다.": "Verkopersaccounts kunnen geen producten kopen.",
+  "QC 도착": "QC ontvangen",
+  "QC 사진·영상이 도착했습니다": "QC-foto's/video's zijn aangekomen",
+  "셀러가 출고 QC를 보냈어요. 사진을 확인하고 승인하거나 추가 사진을 요청해 주세요.": "De verkoper heeft de QC vóór verzending gestuurd. Bekijk de foto's en keur goed of vraag extra foto's aan.",
+  "확인하기": "Bekijken"
 }

@@ -1758,7 +1758,7 @@
   "셀러 스튜디오": "Verkäufer-Studio",
   "셀러 전용 페이지": "Seite nur für Verkäufer",
   "셀러 평가 (필수)": "Verkäuferbewertung (erforderlich)",
-  "셀러가 QC 사진·영상을 보냈습니다. 확인해 주세요.": "Der Verkäufer hat QC-Fotos·Videos gesendet. Bitte prüfen Sie diese.",
+  "셀러가 QC 사진·영상을 보냈습니다. 확인해 주세요.": "Der Verkäufer hat QC-Fotos/Videos gesendet. Bitte prüfen.",
   "셀러가 추가 사진을 준비 중입니다.": "Der Verkäufer bereitet weitere Fotos vor.",
   "셀러샵": "Verkäufer-Shop",
   "셀러에게 메시지": "Nachricht an Verkäufer",
@@ -2753,5 +2753,9 @@
   "디테일 사진·영상 업로드 (사진 최대 {0}장 · 영상 {1}개, 1분 이내)": "Detailfotos & Video hochladen (bis zu {0} Fotos · {1} Video, max. 1 Min.)",
   "추가 사진·영상을 1개 이상 선택해주세요.": "Bitte wähle mindestens ein zusätzliches Foto oder Video aus.",
   "(최대 사진 {0}장 / 영상 {1}개)": "(max. {0} Fotos / {1} Video)",
-  "셀러 계정은 상품을 구매할 수 없습니다.": "Verkäuferkonten können keine Produkte kaufen."
+  "셀러 계정은 상품을 구매할 수 없습니다.": "Verkäuferkonten können keine Produkte kaufen.",
+  "QC 도착": "QC eingetroffen",
+  "QC 사진·영상이 도착했습니다": "QC-Fotos/Videos sind eingetroffen",
+  "셀러가 출고 QC를 보냈어요. 사진을 확인하고 승인하거나 추가 사진을 요청해 주세요.": "Der Verkäufer hat die Versand-QC gesendet. Prüfe die Fotos und genehmige oder fordere weitere Fotos an.",
+  "확인하기": "Prüfen"
 }

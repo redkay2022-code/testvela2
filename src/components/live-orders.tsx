@@ -9,7 +9,7 @@ import { Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServerFn } from '@tanstack/react-start';
-import { AlertTriangle, Camera, Check, ExternalLink, MapPin, MessageSquareText, RefreshCw, Send, ShieldCheck, Truck, Upload, X } from 'lucide-react';
+import { AlertTriangle, Camera, Check, ChevronLeft, ChevronRight, ExternalLink, MapPin, MessageSquareText, RefreshCw, Send, ShieldCheck, Truck, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cardImageOf, dollars, luxuryPosts } from '@/lib/luxury-market';
@@ -112,8 +112,29 @@ function Gallery({ media }: { media: Media[] }) {
   const { lang } = useCurrency();
   const [open, setOpen] = useState<number | null>(null);
   const cur = open !== null ? media[open] : undefined;
+  const n = media.length, isOpen = open !== null, touchX = useRef<number | null>(null);
+  /* 슬라이드: 좌우 화살표 버튼, 키보드 ←/→, 터치 스와이프. 끝에서 계속 넘기면 처음/끝으로 이어진다. */
+  const go = (d: number) => setOpen(i => (i === null || n === 0 ? i : (i + d + n) % n));
+  useEffect(() => {
+    if (!isOpen) return;
+    const key = (e: KeyboardEvent) => { if (e.key === 'ArrowRight') go(1); else if (e.key === 'ArrowLeft') go(-1); else if (e.key === 'Escape') setOpen(null); };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [isOpen, n]);
+  useEffect(() => { /* 다음/이전 사진을 미리 받아 두어 넘길 때 바로 보이게 한다. */
+    if (open === null || n < 2) return;
+    for (const d of [1, -1]) { const m = media[(open + d + n) % n]; if (m && m.kind === 'image' && m.url) new Image().src = m.url; }
+  }, [open, n]);
   return <><div className="qc-grid">{media.map((m, i) => <button type="button" key={m.id} onClick={() => setOpen(i)} aria-label={tx("QC 파일 {0} 열기", { 0: i + 1 })}>{m.kind === 'video' ? <video src={m.url} muted playsInline preload="metadata" /> : <img src={m.url} alt={tx("QC 사진 {0}", { 0: i + 1 })} loading="lazy" decoding="async" />}<span>{i + 1}</span></button>)}</div>
-    {cur && <div className="qc-lightbox" role="dialog" aria-label={tx("QC 파일")}><Button variant="ghost" size="icon" aria-label={tx("닫기")} onClick={() => setOpen(null)}><X /></Button>{cur.kind === 'video' ? <video src={cur.url} controls autoPlay playsInline /> : <img src={cur.url} alt={tx("QC 사진")} />}<p>{open! + 1} / {media.length}</p></div>}</>;
+    {cur && <div className="qc-lightbox" role="dialog" aria-label={tx("QC 파일")}
+      onTouchStart={e => { touchX.current = (e.target as HTMLElement).tagName === 'VIDEO' ? null : e.touches[0]?.clientX ?? null; }}
+      onTouchEnd={e => { const s = touchX.current; touchX.current = null; const x = e.changedTouches[0]?.clientX; if (s === null || x === undefined) return; if (x - s > 50) go(-1); else if (s - x > 50) go(1); }}>
+      <Button variant="ghost" size="icon" aria-label={tx("닫기")} onClick={() => setOpen(null)}><X /></Button>
+      {cur.kind === 'video' ? <video key={cur.id} src={cur.url} controls autoPlay playsInline /> : <img key={cur.id} src={cur.url} alt={tx("QC 사진")} />}
+      {n > 1 && <div className="pointer-events-none absolute inset-x-2 top-1/2 flex -translate-y-1/2 justify-between">
+        <button type="button" className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-black/60 text-white" aria-label={tx("이전 사진")} onClick={() => go(-1)}><ChevronLeft /></button>
+        <button type="button" className="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-black/60 text-white" aria-label={tx("다음 사진")} onClick={() => go(1)}><ChevronRight /></button></div>}
+      <p>{open! + 1} / {media.length}</p></div>}</>;
 }
 
 function Thread({ msgs, sellerName }: { msgs: Msg[]; sellerName?: string }) {
