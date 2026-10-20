@@ -1,5 +1,5 @@
 # velamarket
-- [ ] Replace recorded test followers/likes/saves with 50–100 seller totals; connect displayed public counts and verify stored-data readback.
+- [x] Replace recorded test followers/likes/saves with 50–100 seller totals while preserving real activity; public directory/store show stored RPC values. All 25 sellers in range; VERIDIAN 94/93/92 matches database and both views, focused test passes, no page errors, build OK.
 - [x] Rename Story, update five tags and auto-fill titles across upload/edit/bulk. 28 tests pass; actual upload UI verifies every English default title, mandatory/protected dropdown and Daily Style feed navigation with no page errors; build OK. No production posts changed.
 - [x] Add required Watch Story subcategory to upload/edit/bulk and specs persistence; public URL tabs, English/Korean toggle and 390px layout verified; 26 focused tests pass. Global i18n audit reports pre-existing missing labels plus false positives for the separate typed dictionary.
 - [ ] Verify authenticated Watch Story publish/edit and persisted feed readback. Blocker: requester has no matching auth account; seller preview sign-in required. No production posts changed.
