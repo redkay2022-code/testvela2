@@ -6,6 +6,7 @@ import { activeLang, formatDate, isLang, langLabels, langs, t } from '@/lib/i18n
 import { useCurrency } from './currency';
 import { tx } from '@/lib/dom-translate';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { shownPostLikes } from '@/lib/test-counts';
 import { TurnstileWidget } from '@/components/turnstile-widget';
 import { PHONE_COUNTRIES, detectPhoneCountry, toE164, searchPhoneCountries } from '@/lib/phone-countries';
 const filterCountries = (q: string, lang = 'ko') => searchPhoneCountries(q, lang);
@@ -189,7 +190,7 @@ function PostCard({post,path,liked,onLike,search}:{post:Post;path:typeof paths[M
       {post.duration && <span className="video-label"><span className="text-[9px]">▷</span>{post.duration}</span>}
       {post.price !== null && <span className="product-label"><ShoppingBag size={11}/>마켓</span>}
     </Link>
-    <div className="post-info"><Link to={path} search={{...search,post:post.id}} resetScroll={false}><h2 className="post-title">{post.title}</h2></Link>{post.price !== null && <p className="post-price">{priceLabel(post.price)}</p>}<div className="creator-row"><span className="creator"><span className="creator-avatar creator-avatar-fallback" aria-hidden="true"><User size={13}/></span><span className="truncate">{post.creator}</span></span><Button variant="ghost" className={`like-button ${liked?'liked':''}`} onClick={onLike} aria-label={`${post.title} ${liked?'좋아요 취소':'좋아요'}`} aria-pressed={liked}><Heart/>{post.base_likes + (liked?1:0)}</Button></div></div>
+    <div className="post-info"><Link to={path} search={{...search,post:post.id}} resetScroll={false}><h2 className="post-title">{post.title}</h2></Link>{post.price !== null && <p className="post-price">{priceLabel(post.price)}</p>}<div className="creator-row"><span className="creator"><span className="creator-avatar creator-avatar-fallback" aria-hidden="true"><User size={13}/></span><span className="truncate">{post.creator}</span></span><Button variant="ghost" className={`like-button ${liked?'liked':''}`} onClick={onLike} aria-label={`${post.title} ${liked?'좋아요 취소':'좋아요'}`} aria-pressed={liked}><Heart/>{shownPostLikes(post.id, post.base_likes) + (liked?1:0)}</Button></div></div>
   </article>;
 }
 
@@ -209,7 +210,7 @@ function DetailDrawer({post,user,liked,onLike,onClose,requestAuth,notify}:{post:
           <ProductComments postId={post.id} user={user} requestAuth={requestAuth}/>
         </div>
       </div>
-      <div className="detail-bottom"><Button variant="ghost" className={`like-button ${liked?'liked':''}`} onClick={onLike} aria-label="상세 좋아요" aria-pressed={liked}><Heart/>{post.base_likes+(liked?1:0)}</Button>{post.price !== null ? <Button className="ml-auto" onClick={() => {if(!user) requestAuth();else {document.querySelector<HTMLInputElement>('input[aria-label="댓글 입력"]')?.focus();notify('댓글로 판매자에게 문의를 남겨주세요.');}}}><MessageCircle/>판매자에게 문의</Button> : <span className="ml-auto text-xs text-muted-foreground">좋아하는 순간을 함께 나눠요</span>}</div>
+      <div className="detail-bottom"><Button variant="ghost" className={`like-button ${liked?'liked':''}`} onClick={onLike} aria-label="상세 좋아요" aria-pressed={liked}><Heart/>{shownPostLikes(post.id, post.base_likes)+(liked?1:0)}</Button>{post.price !== null ? <Button className="ml-auto" onClick={() => {if(!user) requestAuth();else {document.querySelector<HTMLInputElement>('input[aria-label="댓글 입력"]')?.focus();notify('댓글로 판매자에게 문의를 남겨주세요.');}}}><MessageCircle/>판매자에게 문의</Button> : <span className="ml-auto text-xs text-muted-foreground">좋아하는 순간을 함께 나눠요</span>}</div>
     </motion.div></Dialog.Content>
   </Dialog.Portal></Dialog.Root>;
 }

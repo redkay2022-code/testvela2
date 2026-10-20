@@ -28,6 +28,7 @@ import { isMuxStreamUrl, muxThumbnailUrl } from '@/lib/mux';
 import { sellerIdentity } from '@/lib/seller-directory';
 import { useEngagement } from '@/lib/use-engagement';
 import { isHybridPost } from '@/lib/post-media';
+import { shownPostLikes } from '@/lib/test-counts';
 
 type Props = { posts:LuxuryPost[]; selectedId:string; sheet:'product'|'comments'|undefined; shortTab:'following'|'recommend'; onTab:(tab:'following'|'recommend')=>void; onSearch:()=>void; user:User|null; close:()=>void; closeSheet:()=>void; change:(id:string)=>void; openSheet:(sheet:'product'|'comments')=>void; requestAuth:()=>void; buy:(box?:boolean,insured?:boolean)=>void; notify:(text:string)=>void };
 export function ShortsPlayer({posts:allPosts,selectedId,sheet,shortTab,onTab,onSearch,user,close,closeSheet,change,openSheet,requestAuth,buy,notify}:Props) {
@@ -114,7 +115,7 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
  <footer className="shorts-bottom-bar">
  {active&&<ProductComments key={post.id} postId={post.id} user={user} requestAuth={requestAuth} composerOnly/>}
  <aside className="shorts-bottom-actions" aria-label="Shorts actions">
- <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="좋아요" title="좋아요" aria-pressed={liked} className={liked?'shorts-liked':''} onClick={()=>{if(!user){requestAuth();return;}engagement.toggleLike(post.id);}}><motion.span key={String(liked)} animate={{scale:liked?[1,1.25,1]:1}}><Heart fill={liked?'currentColor':'none'}/></motion.span></Button><span>{post.likes+(liked?1:0)}</span></div>
+ <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="좋아요" title="좋아요" aria-pressed={liked} className={liked?'shorts-liked':''} onClick={()=>{if(!user){requestAuth();return;}engagement.toggleLike(post.id);}}><motion.span key={String(liked)} animate={{scale:liked?[1,1.25,1]:1}}><Heart fill={liked?'currentColor':'none'}/></motion.span></Button><span>{shownPostLikes(post.id,post.likes)+(liked?1:0)}</span></div>
  <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="저장" title="저장" aria-pressed={saved} className={saved?'shorts-liked':''} onClick={()=>preview.toggleSaved(post.id)}><Star fill={saved?'currentColor':'none'}/></Button><span>{saved?1:0}</span></div>
  <div className="shorts-action"><Button variant="ghost" size="icon" aria-label="댓글" title="댓글" onClick={()=>openSheet('comments')}><MessageCircle/></Button><span>{comments?.length ?? '—'}</span></div>
  </aside>

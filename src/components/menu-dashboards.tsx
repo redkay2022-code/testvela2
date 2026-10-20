@@ -10,6 +10,7 @@ import { useMyAccount } from './seller-account';
 import { supabase } from '@/integrations/supabase/client';
 import { useSellerWorkflows } from '@/lib/use-seller-workflows';
 import { formatMoney } from '@/lib/currency';
+import { TEST_COUNTS_ENABLED, testSellerStat, useOwnSellerKey } from '@/lib/test-counts';
 
 /**
  * Hamburger-menu dashboards.
@@ -76,7 +77,8 @@ function SellerBlock({ user }: { user: User }) {
   const products = useQuery({ queryKey: ['menu-my-products', user.id], queryFn: async () => { const { count, error } = await supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id); if (error) throw new Error(error.message); return count ?? 0; } });
   const traffic = useQuery({ queryKey: ['menu-seller-traffic'], refetchInterval: 30_000, queryFn: async () => { const { data, error } = await rpc('seller_traffic_stats', { _days: 7 }); if (error) throw new Error(error.message); return data as SellerTraffic | null; } });
   const orders = work.data?.orders ?? [], todo = orders.filter(o => !o.cancelled_at && o.stage !== 'delivered').length, disputes = orders.filter(o => o.dispute_open && !o.cancelled_at).length;
-  const questions = work.activity?.comments.length, followers = work.activity?.followers.length;
+  const ownKey = useOwnSellerKey(user.id);
+  const questions = work.activity?.comments.length, followers = TEST_COUNTS_ENABLED ? testSellerStat(ownKey).followers : work.activity?.followers.length;
   const t = traffic.data;
   return <section className="border-b border-border py-4" aria-label={tx("셀러 대시보드")}>
     <h2 className="mb-2 flex items-center gap-2 px-2 text-xs font-semibold text-primary"><Store className="size-4"/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("셀러 대시보드")}</span></h2>

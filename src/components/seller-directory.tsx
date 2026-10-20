@@ -13,6 +13,7 @@ import { cardImageOf } from '@/lib/luxury-market';
 import type { LuxuryPost } from '@/lib/luxury-market';
 import { postMediaRoute } from '@/lib/post-media';
 import { TranslatableText } from './translatable-text';
+import { TEST_COUNTS_ENABLED } from '@/lib/test-counts';
 
 /** 셀러가 직접 등록한 프로필 사진(스토어 아바타 → 프로필 사진). 상품 사진은 절대 대신 쓰지 않는다. */
 function DirectoryAvatar({ post }: { post: LuxuryPost }) {
@@ -39,7 +40,7 @@ export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost
         <div className="directory-identity" data-no-translate><DirectoryAvatar post={seller.post}/><div><h2>{seller.post.creator}</h2><SellerBadge reputation={seller.post.reputation}/></div></div>
         <TranslatableText as="p" className="directory-bio" text={(seller.post.sample ? '' : intros.data?.get(seller.post.source.user_id ?? '')?.trim()) || seller.bio} />
         
-        <div className="directory-metrics"><span><Star size={13}/><strong>{seller.rating?.toFixed(2) ?? '—'}</strong> Rating</span><span><strong>{seller.reviews ?? '—'}</strong> Reviews</span><span><strong>{(()=>{const s=stats.data?.get(seller.id);return s?compactCount(s.followers+(following?1:0)):seller.followers===null?'—':compactCount(seller.followers+(following?1:0));})()}</strong> Followers</span><span><strong>{stats.data?.get(seller.id)?compactCount(stats.data.get(seller.id)!.likes):'—'}</strong> Likes</span><span><strong>{stats.data?.get(seller.id)?compactCount(stats.data.get(seller.id)!.saves):'—'}</strong> Saves</span></div>
+        <div className="directory-metrics"><span><Star size={13}/><strong>{seller.rating?.toFixed(2) ?? '—'}</strong> Rating</span><span><strong>{seller.reviews ?? '—'}</strong> Reviews</span><span><strong>{(()=>{const s=stats.data?.get(seller.id);return s?compactCount(s.followers+(TEST_COUNTS_ENABLED?0:following?1:0)):seller.followers===null?'—':compactCount(seller.followers+(TEST_COUNTS_ENABLED?0:following?1:0));})()}</strong> Followers</span><span><strong>{stats.data?.get(seller.id)?compactCount(stats.data.get(seller.id)!.likes):'—'}</strong> Likes</span><span><strong>{stats.data?.get(seller.id)?compactCount(stats.data.get(seller.id)!.saves):'—'}</strong> Saves</span></div>
         <div className="directory-previews" aria-label={`${seller.post.creator} item previews`}>{seller.items.slice(0,4).map(item=><Link key={item.id} to={postMediaRoute(item)} params={{id:item.id}} search={{role}} aria-label={`Preview ${item.title}`}><img src={cardImageOf(item)} width={160} height={160} alt={item.title} loading="lazy" decoding="async"/></Link>)}</div>
         <div className="directory-actions"><Button variant="goldOutline" aria-pressed={following} aria-label={`${following?'Unfollow':'Follow'} ${seller.post.creator}`} onClick={()=>preview.toggleSeller(seller.id)}>{following?<Check/>:<Plus/>}{following?'Following':'Follow'}</Button><Button asChild variant="gold"><Link to="/store" search={{role,seller:seller.id}}>Visit Store<ArrowRight/></Link></Button></div>
       </article>;
