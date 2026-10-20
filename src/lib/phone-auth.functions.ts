@@ -32,11 +32,31 @@ async function passwordSession(email: string, password: string) {
   return { access_token: data.session.access_token, refresh_token: data.session.refresh_token };
 }
 
-const creds = z.object({ phone: z.string().max(30), password: z.string().min(8).max(72) });
+const creds = z.object({ phone: z.string().max(30), password: z.string().min(8).max(72), captchaToken: z.string().min(1).max(4096) });
+
+// Cloudflare Turnstile: the token is single-use, so it is verified once, before any hashing or database work.
+export async function verifyTurnstile(token: string, fetchImpl: typeof fetch = fetch): Promise<void> {
+  const secret = process.env['TURNSTILE_SECRET_KEY'];
+  if (!secret) throw new Error('Sign-in is temporarily unavailable.');
+  let ok = false;
+  try {
+    const res = await fetchImpl('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ secret, response: token }).toString(),
+    });
+    const json = (await res.json()) as { success?: boolean };
+    ok = res.ok && json.success === true;
+  } catch {
+    throw new Error('Could not connect. Please try again.');
+  }
+  if (!ok) throw new Error('Verification failed. Please try again.');
+}
 
 export const signUpWithPhone = createServerFn({ method: 'POST' })
   .inputValidator(d => creds.extend({ nickname: z.string().trim().min(1).max(30) }).parse(d))
   .handler(async ({ data }) => {
+    await verifyTurnstile(data.captchaToken);
     const hash = await hashPhone(normalizePhone(data.phone));
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const { data: existing } = await supabaseAdmin.from('profiles').select('user_id').eq('phone_hash', hash).maybeSingle();
@@ -55,4 +75,7 @@ export const signUpWithPhone = createServerFn({ method: 'POST' })
 
 export const signInWithPhone = createServerFn({ method: 'POST' })
   .inputValidator(d => creds.parse(d))
-  .handler(async ({ data }) => passwordSession(authEmail(await hashPhone(normalizePhone(data.phone))), data.password));
+  .handler(async ({ data }) => {
+    await verifyTurnstile(data.captchaToken);
+    return passwordSession(authEmail(await hashPhone(normalizePhone(data.phone))), data.password);
+  });

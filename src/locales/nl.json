@@ -2752,5 +2752,7 @@
   "수정일": "Laatst gewijzigd",
   "작업": "Acties",
   "수정": "Bewerken",
-  "Name · Seller · Brand · Reference · Store · Category": "Naam · Verkoper · Merk · Referentie · Winkel · Categorie"
+  "Name · Seller · Brand · Reference · Store · Category": "Naam · Verkoper · Merk · Referentie · Winkel · Categorie",
+  "Please complete the verification.": "Voltooi de verificatie.",
+  "Verification failed. Please try again.": "Verificatie mislukt. Probeer het opnieuw."
 }

@@ -1605,5 +1605,7 @@
   "수정일": "Last updated",
   "작업": "Actions",
   "수정": "Edit",
-  "Name · Seller · Brand · Reference · Store · Category": "Name · Seller · Brand · Reference · Store · Category"
+  "Name · Seller · Brand · Reference · Store · Category": "Name · Seller · Brand · Reference · Store · Category",
+  "Please complete the verification.": "Please complete the verification.",
+  "Verification failed. Please try again.": "Verification failed. Please try again."
 }

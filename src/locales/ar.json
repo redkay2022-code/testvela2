@@ -2752,5 +2752,7 @@
   "수정일": "تاريخ التعديل",
   "작업": "الإجراءات",
   "수정": "تعديل",
-  "Name · Seller · Brand · Reference · Store · Category": "الاسم · البائع · العلامة · المرجع · المتجر · الفئة"
+  "Name · Seller · Brand · Reference · Store · Category": "الاسم · البائع · العلامة · المرجع · المتجر · الفئة",
+  "Please complete the verification.": "يرجى إكمال التحقق.",
+  "Verification failed. Please try again.": "فشل التحقق. يرجى المحاولة مرة أخرى."
 }

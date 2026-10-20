@@ -2750,5 +2750,7 @@
   "수정일": "修改日期",
   "작업": "操作",
   "수정": "编辑",
-  "Name · Seller · Brand · Reference · Store · Category": "名称 · 卖家 · 品牌 · 型号 · 店铺 · 分类"
+  "Name · Seller · Brand · Reference · Store · Category": "名称 · 卖家 · 品牌 · 型号 · 店铺 · 分类",
+  "Please complete the verification.": "请完成验证。",
+  "Verification failed. Please try again.": "验证失败，请重试。"
 }

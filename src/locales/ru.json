@@ -2752,5 +2752,7 @@
   "수정일": "Изменено",
   "작업": "Действия",
   "수정": "Изменить",
-  "Name · Seller · Brand · Reference · Store · Category": "Название · Продавец · Бренд · Референс · Магазин · Категория"
+  "Name · Seller · Brand · Reference · Store · Category": "Название · Продавец · Бренд · Референс · Магазин · Категория",
+  "Please complete the verification.": "Пожалуйста, пройдите проверку.",
+  "Verification failed. Please try again.": "Проверка не пройдена. Попробуйте ещё раз."
 }

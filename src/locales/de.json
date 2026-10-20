@@ -2747,5 +2747,7 @@
   "수정일": "Zuletzt geändert",
   "작업": "Aktionen",
   "수정": "Bearbeiten",
-  "Name · Seller · Brand · Reference · Store · Category": "Name · Verkäufer · Marke · Referenz · Store · Kategorie"
+  "Name · Seller · Brand · Reference · Store · Category": "Name · Verkäufer · Marke · Referenz · Store · Kategorie",
+  "Please complete the verification.": "Bitte schließe die Überprüfung ab.",
+  "Verification failed. Please try again.": "Überprüfung fehlgeschlagen. Bitte versuche es erneut."
 }

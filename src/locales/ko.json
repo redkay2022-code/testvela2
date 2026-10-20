@@ -1588,5 +1588,7 @@
   "수정일": "수정일",
   "작업": "작업",
   "수정": "수정",
-  "Name · Seller · Brand · Reference · Store · Category": "이름 · 셀러 · 브랜드 · 레퍼런스 · 스토어 · 카테고리"
+  "Name · Seller · Brand · Reference · Store · Category": "이름 · 셀러 · 브랜드 · 레퍼런스 · 스토어 · 카테고리",
+  "Please complete the verification.": "자동입력방지 확인을 완료해주세요.",
+  "Verification failed. Please try again.": "확인에 실패했어요. 다시 시도해주세요."
 }

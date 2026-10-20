@@ -2748,5 +2748,7 @@
   "수정일": "更新日",
   "작업": "操作",
   "수정": "編集",
-  "Name · Seller · Brand · Reference · Store · Category": "名前 · 販売者 · ブランド · リファレンス · ストア · カテゴリ"
+  "Name · Seller · Brand · Reference · Store · Category": "名前 · 販売者 · ブランド · リファレンス · ストア · カテゴリ",
+  "Please complete the verification.": "認証を完了してください。",
+  "Verification failed. Please try again.": "認証に失敗しました。もう一度お試しください。"
 }

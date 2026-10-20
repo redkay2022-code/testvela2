@@ -2752,5 +2752,7 @@
   "수정일": "Ultima mutatio",
   "작업": "Actiones",
   "수정": "Muta",
-  "Name · Seller · Brand · Reference · Store · Category": "Nomen · Venditor · Marca · Referentia · Taberna · Categoria"
+  "Name · Seller · Brand · Reference · Store · Category": "Nomen · Venditor · Marca · Referentia · Taberna · Categoria",
+  "Please complete the verification.": "Quaeso, probationem perfice.",
+  "Verification failed. Please try again.": "Probatio defecit. Iterum conare."
 }
