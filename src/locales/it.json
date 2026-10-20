@@ -2757,5 +2757,15 @@
   "QC 도착": "QC arrivato",
   "QC 사진·영상이 도착했습니다": "Le foto/i video QC sono arrivati",
   "셀러가 출고 QC를 보냈어요. 사진을 확인하고 승인하거나 추가 사진을 요청해 주세요.": "Il venditore ha inviato il QC pre-spedizione. Controlla le foto, poi approva o richiedi altre foto.",
-  "확인하기": "Controlla"
+  "확인하기": "Controlla",
+  "택배사 이름을 입력해 주세요.": "Inserisci il nome del corriere.",
+  "택배사 이름 직접 입력": "Inserisci il nome del corriere",
+  "출고 전 QC 사진·영상을 올려 구매자 승인을 받은 뒤 송장을 등록하세요": "Carica foto/video QC prima della spedizione, ottieni l'approvazione dell'acquirente, poi registra il numero di tracciamento.",
+  "제품": "Prodotti",
+  "팔로워": "Follower",
+  "스토어 링크 복사": "Copia link del negozio",
+  "스토어 링크를 복사했습니다.": "Link del negozio copiato.",
+  "링크 복사": "Copia link",
+  "VELA Seller Store": "VELA Seller Store",
+  "Browse this independent seller's collection on VELA.": "Browse this independent seller's collection on VELA."
 }

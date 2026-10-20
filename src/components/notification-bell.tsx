@@ -45,7 +45,8 @@ export function NotificationList({ notifications, onNavigate }: { notifications:
             <small className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleString()}</small>
             {welcome ? <div className="mt-3 space-y-3 text-sm"><p>{welcome.intro}</p>{welcome.rules.map(([h, b]) => <div key={h}><strong className="block text-foreground">{h}</strong><p className="text-muted-foreground">{b}</p></div>)}</div>
               : <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{n.body}</p>}
-            {n.cta_url && <Button asChild variant="gold" className="mt-4 w-full"><Link to={n.cta_url} onClick={onNavigate}>{welcome?.cta ?? n.cta_label}</Link></Button>}
+            {(n.kind === 'qc_approved' || n.kind === 'qc_requested') ? <Button asChild variant="destructive" className="mt-4 w-full"><Link to="/seller-store" search={{ sellerView: 'shipping' }} onClick={onNavigate}>{n.cta_label || '배송 준비'}</Link></Button>
+              : n.cta_url && <Button asChild variant="gold" className="mt-4 w-full"><Link to={n.cta_url} onClick={onNavigate}>{welcome?.cta ?? n.cta_label}</Link></Button>}
           </article>;
         })}</div>;
 }

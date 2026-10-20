@@ -2762,5 +2762,15 @@
   "QC 도착": "QC advenit",
   "QC 사진·영상이 도착했습니다": "Imagines/video QC advenerunt",
   "셀러가 출고 QC를 보냈어요. 사진을 확인하고 승인하거나 추가 사진을 요청해 주세요.": "Venditor QC ante missionem misit. Imagines inspice, deinde proba vel plures pete.",
-  "확인하기": "Inspicere"
+  "확인하기": "Inspicere",
+  "택배사 이름을 입력해 주세요.": "Nomen vectoris inscribe.",
+  "택배사 이름 직접 입력": "Nomen vectoris inscribe",
+  "출고 전 QC 사진·영상을 올려 구매자 승인을 받은 뒤 송장을 등록하세요": "Imagines/pellicula QC ante missionem impone, emptoris approbationem accipe, deinde numerum vestigii inscribe.",
+  "제품": "Producta",
+  "팔로워": "Sequaces",
+  "스토어 링크 복사": "Nexum tabernae exscribe",
+  "스토어 링크를 복사했습니다.": "Nexus tabernae exscriptus est.",
+  "링크 복사": "Nexum exscribe",
+  "VELA Seller Store": "VELA Seller Store",
+  "Browse this independent seller's collection on VELA.": "Browse this independent seller's collection on VELA."
 }
