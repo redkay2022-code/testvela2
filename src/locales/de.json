@@ -2767,5 +2767,20 @@
   "스토어 링크를 복사했습니다.": "Shop-Link kopiert.",
   "링크 복사": "Link kopieren",
   "VELA Seller Store": "VELA Seller Store",
-  "Browse this independent seller's collection on VELA.": "Browse this independent seller's collection on VELA."
+  "Browse this independent seller's collection on VELA.": "Browse this independent seller's collection on VELA.",
+  "{0} 이름으로 답변을 등록했습니다.": "Antwort als {0} veröffentlicht.",
+  "답변을 저장하지 못했습니다.": "Antwort konnte nicht gespeichert werden.",
+  "답변 완료": "Beantwortet",
+  "답변 대기": "Antwort ausstehend",
+  "{0} 이름으로 등록됩니다": "Wird als {0} veröffentlicht",
+  "관리자 답변": "Admin-Antwort",
+  "이름으로 답변": "Antworten als",
+  "답변 달기": "Antwort schreiben",
+  "리뷰 게시판 →": "Bewertungsbereich →",
+  "답변 대기만": "Nur ausstehende",
+  "관리자 답변은 해당 셀러 이름으로 등록됩니다.": "Admin-Antworten erscheinen unter dem Namen des Verkäufers.",
+  "문의가 없습니다.": "Keine Anfragen.",
+  "공지를 불러오지 못했습니다.": "Hinweise konnten nicht geladen werden.",
+  "게시판 관리": "Boardverwaltung",
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Alle Verkäuferanfragen & Hinweise · Admin-Antworten"
 }

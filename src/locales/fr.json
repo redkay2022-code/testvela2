@@ -2767,5 +2767,20 @@
   "스토어 링크를 복사했습니다.": "Lien de la boutique copié.",
   "링크 복사": "Copier le lien",
   "VELA Seller Store": "VELA Seller Store",
-  "Browse this independent seller's collection on VELA.": "Browse this independent seller's collection on VELA."
+  "Browse this independent seller's collection on VELA.": "Browse this independent seller's collection on VELA.",
+  "{0} 이름으로 답변을 등록했습니다.": "Réponse publiée au nom de {0}.",
+  "답변을 저장하지 못했습니다.": "Impossible d'enregistrer la réponse.",
+  "답변 완료": "Répondu",
+  "답변 대기": "En attente de réponse",
+  "{0} 이름으로 등록됩니다": "Sera publié au nom de {0}",
+  "관리자 답변": "Réponse de l'admin",
+  "이름으로 답변": "Répondre au nom de",
+  "답변 달기": "Écrire une réponse",
+  "리뷰 게시판 →": "Espace avis →",
+  "답변 대기만": "En attente seulement",
+  "관리자 답변은 해당 셀러 이름으로 등록됩니다.": "Les réponses de l'admin sont publiées au nom du vendeur.",
+  "문의가 없습니다.": "Aucune demande.",
+  "공지를 불러오지 못했습니다.": "Impossible de charger les annonces.",
+  "게시판 관리": "Gestion des forums",
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "Toutes les demandes et annonces des vendeurs · réponses de l'admin"
 }

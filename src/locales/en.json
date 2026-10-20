@@ -1625,5 +1625,20 @@
   "스토어 링크를 복사했습니다.": "Store link copied.",
   "링크 복사": "Copy link",
   "VELA Seller Store": "VELA Seller Store",
-  "Browse this independent seller's collection on VELA.": "Browse this independent seller's collection on VELA."
+  "Browse this independent seller's collection on VELA.": "Browse this independent seller's collection on VELA.",
+  "{0} 이름으로 답변을 등록했습니다.": "Reply posted as {0}.",
+  "답변을 저장하지 못했습니다.": "Could not save the reply.",
+  "답변 완료": "Answered",
+  "답변 대기": "Awaiting reply",
+  "{0} 이름으로 등록됩니다": "Will be posted as {0}",
+  "관리자 답변": "Admin reply",
+  "이름으로 답변": "Reply as",
+  "답변 달기": "Write a reply",
+  "리뷰 게시판 →": "Review board →",
+  "답변 대기만": "Awaiting only",
+  "관리자 답변은 해당 셀러 이름으로 등록됩니다.": "Admin replies are posted under the seller's name.",
+  "문의가 없습니다.": "No inquiries.",
+  "공지를 불러오지 못했습니다.": "Could not load notices.",
+  "게시판 관리": "Board management",
+  "전체 셀러 문의 · 공지 열람 / 관리자 답변": "All seller inquiries & notices · admin replies"
 }

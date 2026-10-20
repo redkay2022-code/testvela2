@@ -6,9 +6,13 @@ export const storeFilters = [['all','전체'],['watches','시계 전문'],['acce
 export type StoreCategory = typeof storeFilters[number][0];
 export const sellerIdentity = (post: LuxuryPost) => post.sample || post.source.store_id ? post.creator : post.source.user_id ?? post.creator;
 export const sellerKey = (value: string) => value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** 스토어 주소용 짧은 코드: 계정 ID면 앞 8자리, 이름이면 영문 소문자-하이픈(한글 등은 이름 그대로). */
+export const storeSlugOf = (post: LuxuryPost) => { const id = sellerIdentity(post); return UUID_RE.test(id) ? id.slice(0, 8).toLowerCase() : sellerKey(id) || id; };
 export const sellerMatches = (post: LuxuryPost, seller: string) => {
   const target = sellerKey(seller);
-  return [sellerIdentity(post), post.creator].some(value => value === seller || sellerKey(value) === target);
+  const short = /^[0-9a-f]{8}$/i.test(seller) ? seller.toLowerCase() : null;
+  return [sellerIdentity(post), post.creator].some(value => value === seller || sellerKey(value) === target || (short !== null && UUID_RE.test(value) && value.toLowerCase().startsWith(short)));
 };
 export type DirectorySeller = { id: string; post: LuxuryPost; items: LuxuryPost[]; rating: number | null; bio: string; reviews: number | null; followers: number | null };
 export function directorySellers(posts: LuxuryPost[]): DirectorySeller[] {
