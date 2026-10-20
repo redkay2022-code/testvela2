@@ -76,3 +76,27 @@ export const adminReplyAsSeller = createServerFn({ method: 'POST' })
     if (error) throw new Error('답변을 저장하지 못했습니다.');
     return { ok: true };
   });
+
+/** 문의 글 또는 답변을 삭제합니다(문의를 지우면 그 아래 답변도 함께 지워집니다). */
+export const adminDeleteComment = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ commentId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const db = await adminDb();
+    const { error } = await db.from('comments').delete().eq('id', data.commentId);
+    if (error) throw new Error('삭제하지 못했습니다.');
+    return { ok: true };
+  });
+
+/** 셀러 공지를 삭제합니다. */
+export const adminDeleteNotice = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ noticeId: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    await requireAdmin(context.supabase, context.userId);
+    const db = await adminDb();
+    const { error } = await db.from('seller_store_notices').delete().eq('id', data.noticeId);
+    if (error) throw new Error('삭제하지 못했습니다.');
+    return { ok: true };
+  });
