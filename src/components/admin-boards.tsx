@@ -44,6 +44,7 @@ export function AdminBoards() {
   const search = marketSearch.parse(useRouterState({ select: s => s.location.search }));
   const focusId = search.boardItem;
   const [tab, setTab] = useState<'qna' | 'notices'>(search.boardTab ?? 'qna'), [pending, setPending] = useState(false);
+  useEffect(() => { if (search.boardTab) setTab(search.boardTab); }, [search.boardTab, search.boardItem]);
   const client = useQueryClient(), listQna = useServerFn(adminListQna), listNotices = useServerFn(adminListNotices), delNotice = useServerFn(adminDeleteNotice);
   const qna = useQuery({ queryKey: ['admin-qna', pending], enabled: tab === 'qna', queryFn: () => listQna({ data: { pendingOnly: pending } }), refetchInterval: 30_000 });
   const notices = useQuery({ queryKey: ['admin-notices'], enabled: tab === 'notices', queryFn: () => listNotices(), refetchInterval: 60_000 });

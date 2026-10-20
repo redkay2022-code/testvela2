@@ -36,6 +36,14 @@ export function useNotifications(user: User | null) {
 
 export const NotificationsContext = createContext<ReturnType<typeof useNotifications> | null>(null);
 export const useSharedNotifications = () => useContext(NotificationsContext);
+/** 알림의 주소("/admin?section=boards&boardItem=…")를 경로와 검색값으로 나눠 라우터에 넘긴다(물음표가 경로 글자로 취급되어 화면이 초기화되는 문제 방지). */
+function ctaTarget(url: string): { to: never; search?: never } {
+  try {
+    const u = new URL(url, 'https://vela.invalid');
+    const search = Object.fromEntries(u.searchParams.entries());
+    return (Object.keys(search).length ? { to: u.pathname, search } : { to: u.pathname }) as { to: never; search?: never };
+  } catch { return { to: url } as { to: never }; }
+}
 export function NotificationList({ notifications, onNavigate }: { notifications: ReturnType<typeof useNotifications>; onNavigate?: () => void }) {
   const lang = activeLang() === 'ko' ? 'ko' : 'en';
   return <div>{notifications.data.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">새 알림이 없습니다.</p> : notifications.data.map(n => {
@@ -46,7 +54,7 @@ export function NotificationList({ notifications, onNavigate }: { notifications:
             {welcome ? <div className="mt-3 space-y-3 text-sm"><p>{welcome.intro}</p>{welcome.rules.map(([h, b]) => <div key={h}><strong className="block text-foreground">{h}</strong><p className="text-muted-foreground">{b}</p></div>)}</div>
               : <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{n.body}</p>}
             {(n.kind === 'qc_approved' || n.kind === 'qc_requested') ? <Button asChild variant="destructive" className="mt-4 w-full"><Link to="/seller-store" search={{ sellerView: 'shipping' }} onClick={onNavigate}>{n.cta_label || '배송 준비'}</Link></Button>
-              : n.cta_url && <Button asChild variant="gold" className="mt-4 w-full"><Link to={n.cta_url} onClick={onNavigate}>{welcome?.cta ?? n.cta_label}</Link></Button>}
+              : n.cta_url && <Button asChild variant="gold" className="mt-4 w-full"><Link {...ctaTarget(n.cta_url)} onClick={onNavigate}>{welcome?.cta ?? n.cta_label}</Link></Button>}
           </article>;
         })}</div>;
 }
