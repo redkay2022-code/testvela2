@@ -30,6 +30,11 @@ const videoSeconds = (f: File) => new Promise<number>(res => { const v = documen
 /** Product thumbnail with a placeholder when the image is missing or fails to load. */
 function OrderThumb({ srcs }: { srcs: (string | null | undefined)[] }) { const list = [...new Set(srcs.filter((x): x is string => Boolean(x)))]; const key = list.join('|'); const [idx, setIdx] = useState(0); useEffect(() => setIdx(0), [key]); const src = list[idx]; return src ? <img key={src} src={src} width={52} height={52} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="h-[52px] w-[52px] shrink-0 rounded-md object-cover" onError={() => setIdx(n => n + 1)} /> : <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-md bg-muted"><Camera className="text-primary" /></span>; }
 const BUCKET = 'qc-media';
+const extOf = (f: File) => (f.name.split('.').pop() || '').toLowerCase();
+/* 일부 폰은 파일 형식(type)을 비워 보내므로 확장자로도 사진/영상을 구분한다. */
+const isVideoFile = (f: File) => f.type.startsWith('video/') || ['mp4', 'mov', 'm4v', 'webm', '3gp'].includes(extOf(f));
+const isImageFile = (f: File) => f.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'].includes(extOf(f));
+const QC_VIDEO_UNREADABLE_MAX_MB = 150;
 export type Order = { shipping?: Record<string, string> | null; id: string; order_no: string; buyer_id: string; seller_id: string | null; seller_name: string; title: string; image_url: string | null; amount_usd: number; stage: string; courier: string | null; tracking_number: string | null; created_at: string; network: string | null; txid: string | null; payment_verified_at: string | null; dispute_open: boolean; post_id: string | null; cancelled_at: string | null; points_earn_base?: number; points_pending?: number; points_earned?: number; points_redeemed?: number };
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
 type Msg = { id: string; order_id: string; author_role: string; kind: string; body: string; areas: string[]; created_at: string };
@@ -145,20 +150,24 @@ function TrackingPanel({ o }: { o: Order }) {
     </small></div>;
 }
 
-function QcUploader({ o, round, supplement }: { o: Order; round: number; supplement: boolean }) {
+function QcUploader({ o, round, supplement, have }: { o: Order; round: number; supplement: boolean; have: { imgs: number; vids: number } }) {
   const { lang } = useCurrency();
   const [files, setFiles] = useState<File[]>([]); const [busy, setBusy] = useState(false); const [err, setErr] = useState('');
-  const imgs = files.filter(f => f.type.startsWith('image/')).length, vids = files.filter(f => f.type.startsWith('video/')).length;
-  const ok = imgs <= QC_MAX_PHOTOS && vids <= QC_MAX_VIDEOS && (supplement ? files.length >= 1 : imgs >= QC_MIN_PHOTOS && vids >= QC_MIN_VIDEOS);
+  const imgs = files.filter(isImageFile).length, vids = files.filter(isVideoFile).length;
+  /* 이미 서버에 올라간 파일(중간에 끊겼던 업로드)도 함께 센다. */
+  const totImgs = have.imgs + imgs, totVids = have.vids + vids;
+  /* 111차: 사진·영상 개수와 상관없이 완료할 수 있다(최대 개수만 제한). 추가 사진 요청 단계는 파일 1개 이상. */
+  const ok = totImgs <= QC_MAX_PHOTOS && totVids <= QC_MAX_VIDEOS && (!supplement || files.length >= 1);
   const add = async (list: File[]) => {
     setErr(''); const next = [...files];
-    for (const f of list.filter(x => x.type.startsWith('image/') || x.type.startsWith('video/'))) {
-      if (f.type.startsWith('video/')) {
-        if (next.some(x => x.type.startsWith('video/'))) { setErr(tx("영상은 {0}개만 업로드할 수 있습니다.", { 0: QC_MAX_VIDEOS })); continue; }
+    for (const f of list.filter(x => isImageFile(x) || isVideoFile(x))) {
+      if (isVideoFile(f)) {
+        if (have.vids + next.filter(isVideoFile).length >= QC_MAX_VIDEOS) { setErr(tx("영상은 {0}개만 업로드할 수 있습니다.", { 0: QC_MAX_VIDEOS })); continue; }
         const d = await videoSeconds(f);
-        if (!Number.isFinite(d)) { setErr(tx("영상 길이를 확인하지 못했습니다.")); continue; }
-        if (d > QC_MAX_VIDEO_SEC) { setErr(tx("영상은 {0}초 이내여야 합니다. (선택한 영상: {1}초)", { 0: QC_MAX_VIDEO_SEC, 1: Math.ceil(d) })); continue; }
-      } else if (next.filter(x => x.type.startsWith('image/')).length >= QC_MAX_PHOTOS) { setErr(tx("사진은 최대 {0}장까지 업로드할 수 있습니다.", { 0: QC_MAX_PHOTOS })); continue; }
+        /* 길이를 읽지 못하는 영상(일부 폰 코덱)은 막지 않고 용량으로만 제한한다. */
+        if (!Number.isFinite(d) && f.size > QC_VIDEO_UNREADABLE_MAX_MB * 1024 * 1024) { setErr(tx("영상 길이를 확인하지 못했습니다.")); continue; }
+        if (Number.isFinite(d) && d > QC_MAX_VIDEO_SEC) { setErr(tx("영상은 {0}초 이내여야 합니다. (선택한 영상: {1}초)", { 0: QC_MAX_VIDEO_SEC, 1: Math.ceil(d) })); continue; }
+      } else if (have.imgs + next.filter(isImageFile).length >= QC_MAX_PHOTOS) { setErr(tx("사진은 최대 {0}장까지 업로드할 수 있습니다.", { 0: QC_MAX_PHOTOS })); continue; }
       next.push(f);
     }
     setFiles(next);
@@ -167,26 +176,29 @@ function QcUploader({ o, round, supplement }: { o: Order; round: number; supplem
     setBusy(true); setErr('');
     try {
       const { data } = await supabase.auth.getUser(); const uid = data.user!.id;
-      for (const f of files) {
+      for (const f of [...files]) {
         const ext = (f.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
         const path = `${o.id}/${crypto.randomUUID()}.${ext}`;
-        const up = await supabase.storage.from(BUCKET).upload(path, f, { contentType: f.type });
+        const isVid = isVideoFile(f);
+        const up = await supabase.storage.from(BUCKET).upload(path, f, { contentType: f.type || (isVid ? 'video/mp4' : 'image/jpeg') });
         if (up.error) throw up.error;
-        const ins = await supabase.from('order_qc_media').insert({ order_id: o.id, uploader_id: uid, path, kind: f.type.startsWith('video/') ? 'video' : 'image', round });
+        const ins = await supabase.from('order_qc_media').insert({ order_id: o.id, uploader_id: uid, path, kind: isVid ? 'video' : 'image', round });
         if (ins.error) throw ins.error;
+        setFiles(p => p.filter(x => x !== f)); /* 올라간 파일은 목록에서 빼서, 재시도해도 중복 업로드되지 않게 한다. */
       }
-      await supabase.from('order_messages').insert({ order_id: o.id, author_id: uid, author_role: 'seller', kind: 'qc', body: `${supplement ? '추가' : 'QC'} 사진 ${imgs}장 · 영상 ${vids}개 업로드` });
+      if (imgs + vids > 0) await supabase.from('order_messages').insert({ order_id: o.id, author_id: uid, author_role: 'seller', kind: 'qc', body: `${supplement ? '추가' : 'QC'} 사진 ${imgs}장 · 영상 ${vids}개 업로드` });
       const st = await supabase.from('orders').update({ stage: 'qc_done' }).eq('id', o.id);
       if (st.error) throw st.error;
       setFiles([]);
-    } catch (e) { setErr(e instanceof Error ? e.message : '업로드 실패'); } finally { setBusy(false); }
+    } catch (e) { const m = e instanceof Error ? e.message : ''; setErr(m || '업로드 실패'); } finally { setBusy(false); }
   };
-  return <div className="qc-upload"><label className="qc-drop"><Upload size={18} /><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? tx('요청받은 추가 사진·영상 업로드') : tx("디테일 사진 {0}~{1}장 + 영상 {2}개(1분 이내) 업로드", { 0: QC_MIN_PHOTOS, 1: QC_MAX_PHOTOS, 2: QC_MAX_VIDEOS })}</span></span>
+  return <div className="qc-upload"><label className="qc-drop"><Upload size={18} /><span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? tx('요청받은 추가 사진·영상 업로드') : tx("디테일 사진·영상 업로드 (사진 최대 {0}장 · 영상 {1}개, 1분 이내)", { 0: QC_MAX_PHOTOS, 1: QC_MAX_VIDEOS })}</span></span>
     <input type="file" accept="image/*,video/*" multiple onChange={e => { const l = e.target.files ? [...e.target.files] : []; e.target.value = ''; if (l.length) void add(l); }} /></label>
-    <p className={`qc-count ${ok ? 'ok' : ''}`}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("사진 {0}장 · 영상 {1}개", { 0: imgs, 1: vids })}</span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? '' : tx(" (사진 {0}~{1}장 / 영상 {2}개)", { 0: QC_MIN_PHOTOS, 1: QC_MAX_PHOTOS, 2: QC_MAX_VIDEOS })}</span></p>
+    <p className={`qc-count ${ok ? 'ok' : ''}`}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("사진 {0}장 · 영상 {1}개", { 0: totImgs, 1: totVids })}</span><span data-i18n-skip data-no-translate translate="no" className="notranslate">{supplement ? '' : ' ' + tx("(최대 사진 {0}장 / 영상 {1}개)", { 0: QC_MAX_PHOTOS, 1: QC_MAX_VIDEOS })}</span></p>
     {files.length > 0 && <ul className="text-xs text-muted-foreground">{files.map((f, i) => <li key={i} className="flex justify-between"><span>{f.name}</span><button type="button" aria-label={tx("{0} 삭제", { 0: f.name })} onClick={() => setFiles(p => p.filter((_, j) => j !== i))}><X size={12} /></button></li>)}</ul>}
+    {supplement && files.length === 0 && !busy && <p role="status" className="text-xs text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("추가 사진·영상을 1개 이상 선택해주세요.")}</span></p>}
     {err && <p className="text-xs text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(err)}</span></p>}
-    <Button variant="gold" disabled={!ok || busy} onClick={() => void submit()}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{busy ? tx('업로드 중…') : supplement ? tx('추가 사진 보내기') : tx('QC 완료 & 구매자에게 전송')}</span></Button></div>;
+    <Button variant="gold" className="disabled:opacity-40 disabled:grayscale" disabled={!ok || busy} onClick={() => void submit()}><Check /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{busy ? tx('업로드 중…') : supplement ? tx('추가 사진 보내기') : tx('QC 완료 & 구매자에게 전송')}</span></Button></div>;
 }
 
 function RequestForm({ o, close }: { o: Order; close: () => void }) {
@@ -247,8 +259,8 @@ export function LiveOrderBoard({ as, logistics = false }: { as: 'buyer' | 'selle
         {media.length > 0 && <><h4 className="escrow-sub"><Camera size={14} /> <span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 사진·영상 {0}개", { 0: media.length })}</span></h4><Gallery media={media} /></>}
         {isSeller && stage === 'placed' && <Button variant="gold" disabled={busyId === o.id} onClick={() => void setStage(o.id, 'preparing')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("제품 준비 시작")}</span></Button>}
         {isSeller && stage === 'preparing' && <Button variant="gold" disabled={busyId === o.id} onClick={() => void setStage(o.id, 'qc')}><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("QC 검수 시작")}</span></Button>}
-        {isSeller && stage === 'qc' && <QcUploader o={o} round={1} supplement={false} />}
-        {isSeller && stage === 'qc_requested' && <QcUploader o={o} round={round + 1} supplement />}
+        {isSeller && stage === 'qc' && <QcUploader o={o} round={1} supplement={false} have={{ imgs: media.filter(m => m.round === 1 && m.kind === 'image').length, vids: media.filter(m => m.round === 1 && m.kind === 'video').length }} />}
+        {isSeller && stage === 'qc_requested' && <QcUploader o={o} round={round + 1} supplement have={{ imgs: 0, vids: 0 }} />}
         {isSeller && stage === 'qc_done' && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("구매자의 QC 확인을 기다리는 중입니다.")}</span></p>}
         {isSeller && stage === 'shipping_prep' && <ShipForm o={o} />}
         {!isSeller && stage === 'qc_requested' && <p className="escrow-wait"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("셀러가 추가 사진을 준비 중입니다.")}</span></p>}

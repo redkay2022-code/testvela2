@@ -1607,5 +1607,8 @@
   "수정": "Edit",
   "Name · Seller · Brand · Reference · Store · Category": "Name · Seller · Brand · Reference · Store · Category",
   "Please complete the verification.": "Please complete the verification.",
-  "Verification failed. Please try again.": "Verification failed. Please try again."
+  "Verification failed. Please try again.": "Verification failed. Please try again.",
+  "디테일 사진·영상 업로드 (사진 최대 {0}장 · 영상 {1}개, 1분 이내)": "Upload detail photos & video (up to {0} photos · {1} video, max 1 min)",
+  "추가 사진·영상을 1개 이상 선택해주세요.": "Please select at least one additional photo or video.",
+  "(최대 사진 {0}장 / 영상 {1}개)": "(max {0} photos / {1} video)"
 }

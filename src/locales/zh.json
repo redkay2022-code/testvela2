@@ -2752,5 +2752,8 @@
   "수정": "编辑",
   "Name · Seller · Brand · Reference · Store · Category": "名称 · 卖家 · 品牌 · 型号 · 店铺 · 分类",
   "Please complete the verification.": "请完成验证。",
-  "Verification failed. Please try again.": "验证失败，请重试。"
+  "Verification failed. Please try again.": "验证失败，请重试。",
+  "디테일 사진·영상 업로드 (사진 최대 {0}장 · 영상 {1}개, 1분 이내)": "上传细节照片和视频（最多{0}张照片·{1}个视频，1分钟内）",
+  "추가 사진·영상을 1개 이상 선택해주세요.": "请至少选择一张补充照片或视频。",
+  "(최대 사진 {0}장 / 영상 {1}개)": "（最多 {0}张照片 / {1}个视频）"
 }
