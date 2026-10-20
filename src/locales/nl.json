@@ -2757,5 +2757,6 @@
   "Verification failed. Please try again.": "Verificatie mislukt. Probeer het opnieuw.",
   "디테일 사진·영상 업로드 (사진 최대 {0}장 · 영상 {1}개, 1분 이내)": "Upload detailfoto's en video (max. {0} foto's · {1} video, max. 1 min)",
   "추가 사진·영상을 1개 이상 선택해주세요.": "Selecteer minstens één extra foto of video.",
-  "(최대 사진 {0}장 / 영상 {1}개)": "(max. {0} foto's / {1} video)"
+  "(최대 사진 {0}장 / 영상 {1}개)": "(max. {0} foto's / {1} video)",
+  "셀러 계정은 상품을 구매할 수 없습니다.": "Verkopersaccounts kunnen geen producten kopen."
 }

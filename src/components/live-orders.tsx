@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { cardImageOf, dollars, luxuryPosts } from '@/lib/luxury-market';
 import { getOrderThumbs } from '@/lib/order-thumbs.functions';
+import { isSellerBuyerBlocked } from '@/lib/seller-role';
 import { qcAreas, stageLabel, type EscrowStage } from '@/lib/escrow';
 import { getOrderTracking } from '@/lib/tracking.functions';
 import { EscrowTimeline } from './escrow';
@@ -49,10 +50,11 @@ export function explorerUrl(network: string | null, txid: string) {
 }
 const courierLink = (c: string | null, n: string) => `https://t.17track.net/en#nums=${encodeURIComponent(n)}`;
 
-/** 결제 전에 막아야 하는 주문인지 확인합니다: 본인 상품 구매, 판매 최고가 초과. DB 트리거도 같은 규칙으로 한 번 더 막습니다. */
+/** 결제 전에 막아야 하는 주문인지 확인합니다: 본인 상품 구매, 셀러 계정의 구매, 판매 최고가 초과. DB 트리거도 같은 규칙으로 한 번 더 막습니다. */
 export async function orderBlockReason(input: { seller_id: string | null; product_usd: number }): Promise<string | null> {
   const { data } = await supabase.auth.getUser();
   if (data.user && input.seller_id && input.seller_id === data.user.id) return tx('내가 올린 상품은 구매할 수 없습니다.');
+  if (data.user && await isSellerBuyerBlocked(data.user.id)) return tx('셀러 계정은 상품을 구매할 수 없습니다.');
   if (PRICE_CAP_ENABLED && input.product_usd > MAX_PRODUCT_PRICE_USD) return priceCapBuyMessage();
   return null;
 }

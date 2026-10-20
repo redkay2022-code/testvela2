@@ -2752,5 +2752,6 @@
   "Verification failed. Please try again.": "Überprüfung fehlgeschlagen. Bitte versuche es erneut.",
   "디테일 사진·영상 업로드 (사진 최대 {0}장 · 영상 {1}개, 1분 이내)": "Detailfotos & Video hochladen (bis zu {0} Fotos · {1} Video, max. 1 Min.)",
   "추가 사진·영상을 1개 이상 선택해주세요.": "Bitte wähle mindestens ein zusätzliches Foto oder Video aus.",
-  "(최대 사진 {0}장 / 영상 {1}개)": "(max. {0} Fotos / {1} Video)"
+  "(최대 사진 {0}장 / 영상 {1}개)": "(max. {0} Fotos / {1} Video)",
+  "셀러 계정은 상품을 구매할 수 없습니다.": "Verkäuferkonten können keine Produkte kaufen."
 }
