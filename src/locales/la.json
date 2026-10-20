@@ -2803,5 +2803,7 @@
   "문의 삭제": "Quaestionem dele",
   "삭제하지 못했습니다. 다시 시도해 주세요.": "Delere non potuit. Iterum conare.",
   "댓글 게시판": "Tabula commentationum",
-  "접수된 댓글이 없습니다.": "Nulla commentaria adhuc."
+  "접수된 댓글이 없습니다.": "Nulla commentaria adhuc.",
+  "답글 도착": "Responsum acceptum",
+  "작성한 댓글이 없습니다.": "Nulla commentaria scripsisti."
 }

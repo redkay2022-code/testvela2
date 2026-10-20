@@ -1656,5 +1656,7 @@
   "문의 삭제": "Delete inquiry",
   "삭제하지 못했습니다. 다시 시도해 주세요.": "Couldn't delete. Please try again.",
   "댓글 게시판": "Comments board",
-  "접수된 댓글이 없습니다.": "No comments yet."
+  "접수된 댓글이 없습니다.": "No comments yet.",
+  "답글 도착": "Reply received",
+  "작성한 댓글이 없습니다.": "You haven't written any comments."
 }
