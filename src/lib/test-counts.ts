@@ -20,8 +20,17 @@ export const testSellerStat = (key: string): TestSellerStat => { const k = selle
 /** 게시물 한 개의 좋아요/저장 */
 export const testPostLikes = (postId: string) => testRange(`pl|${postId}`);
 export const testPostSaves = (postId: string) => testRange(`ps|${postId}`);
+/** 게시물 조회수: 500~1000 (양끝 포함) */
+export const testPostViews = (postId: string) => 500 + (hash(`pv|${postId}`) % 501);
+/** 셀러 계정 전체 조회수: 500~1000 */
+export const testSellerViews = (key: string) => 500 + (hash(`sv|${sellerKey(key) || key}`) % 501);
+/** 화면에 보여 줄 조회수 (테스트 모드가 꺼져 있으면 실제 값 그대로) */
+export const shownViews = (postId: string, real: string | number) => (TEST_COUNTS_ENABLED ? String(testPostViews(postId)) : String(real));
 /** 화면에 보여 줄 게시물 좋아요 수 (테스트 모드가 꺼져 있으면 실제 값 그대로) */
 export const shownPostLikes = (postId: string, real: number) => (TEST_COUNTS_ENABLED ? testPostLikes(postId) : real);
+
+/** 테스트 모드에서는 내가 누르는 좋아요/저장이 숫자를 바꾸지 않는다(모든 계정에서 같은 숫자를 확인하기 위해). */
+export const likeAdj = (on: boolean) => (TEST_COUNTS_ENABLED ? 0 : on ? 1 : 0);
 
 /** 내 셀러 계정의 키 (공개 스토어/셀러 목록과 같은 규칙: 스토어 상품이면 이름, 아니면 사용자 ID) */
 export function useOwnSellerKey(userId: string): string {
