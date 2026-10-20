@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
+import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,7 +20,9 @@ export function useNotifications(user: User | null) {
   } });
   useEffect(() => {
     if (!user) return;
-    const ch = supabase.channel(`notifications-${user.id}-${Math.random().toString(36).slice(2)}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
+    const ch = supabase.channel(`notifications-${user.id}-${Math.random().toString(36).slice(2)}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, payload => {
+      /* 새 알림이 오면 화면에 바로 알려준다(빨간 표시는 읽지 않은 알림 수로 자동 갱신). */
+      if (payload.eventType === 'INSERT') { const n = payload.new as { title?: string; kind?: string }; if (n?.title && n.kind !== SELLER_WELCOME_KIND) toast(n.title); }
       void qc.invalidateQueries({ queryKey: ['notifications', user.id] });
       void qc.invalidateQueries({ queryKey: ['my-account', user.id] });
     }).subscribe();

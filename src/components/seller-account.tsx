@@ -37,6 +37,8 @@ export function SellerApprovalRedirect({ user, applying }: { user: User | null; 
     const key = `vela-seller-dashboard-opened:${user.id}`;
     let opened = false; try { opened = window.localStorage.getItem(key) === '1'; } catch { /* storage is optional */ }
     const accountRedirect = pathname === '/me' && accountPage(account) === '/seller';
+    /* 최고관리자가 '나'(/me)를 열면 관리자 백오피스로 보낸다(장바구니 등 panel 화면은 그대로 둔다). */
+    if (pathname === '/me' && accountPage(account) === '/admin' && !(search as { panel?: string }).panel) { void navigate({ to: '/admin', search: { role: 'admin' }, replace: true }); return; }
     const redirect = accountRedirect || (!opened && shouldOpenSellerDashboard(account, previous.current.seller, pathname, applying));
     previous.current.seller = account.roles.includes('seller');
     if (account.roles.includes('seller') && pathname === '/seller') { try { window.localStorage.setItem(key, '1'); } catch { /* storage is optional */ } }
