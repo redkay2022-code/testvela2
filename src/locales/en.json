@@ -1649,5 +1649,7 @@
   "TXID 검증 대기": "Awaiting TXID verification",
   "샘플 입금 확인됨": "Sample payment confirmed",
   "샘플 초기화": "Reset sample",
-  "샘플 거래 · 실제 주문과 별도": "Sample transaction · separate from real orders"
+  "샘플 거래 · 실제 주문과 별도": "Sample transaction · separate from real orders",
+  "이전 영상": "Previous video",
+  "다음 영상": "Next video"
 }
