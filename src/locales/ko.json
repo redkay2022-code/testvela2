@@ -1719,5 +1719,16 @@
   "Open my studio": "내 스튜디오 열기",
   "Back to my page": "내 페이지로 돌아가기",
   "Become a Vela seller · Seller application": "Vela 셀러 되기 · 셀러 신청",
-  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "VELA 셀러 계정을 신청하세요. 비즈니스 정보를 알려주시고 베이직, 프로 또는 엔터프라이즈 요금제를 선택하세요."
+  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "VELA 셀러 계정을 신청하세요. 비즈니스 정보를 알려주시고 베이직, 프로 또는 엔터프라이즈 요금제를 선택하세요.",
+  "Change plan": "요금제 변경",
+  "Your plan": "내 요금제",
+  "Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.": "요금제는 언제든 바꿀 수 있어요. 베이직과 프로는 바로 바뀌고, 엔터프라이즈는 담당 팀이 심사해요.",
+  "Current plan": "현재 요금제",
+  "Enterprise review requested. We will contact you once it is decided.": "엔터프라이즈 심사를 요청했어요. 결정되면 연락드릴게요.",
+  "Plan could not be changed.": "요금제를 변경하지 못했어요.",
+  "Request Enterprise Review": "엔터프라이즈 심사 요청",
+  "Select a plan": "요금제를 선택하세요",
+  "Switch to this plan": "이 요금제로 변경",
+  "Your plan has been changed.": "요금제가 변경되었어요.",
+  "You are already on this plan.": "이미 이 요금제를 이용 중이에요."
 }

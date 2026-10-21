@@ -1032,6 +1032,9 @@ export type Database = {
       }
       seller_applications: {
         Row: {
+          plan_changed_at: string | null
+          promo_ends_at: string | null
+          requested_plan: string | null
           avg_price_range: string
           business_role: string
           country: string
@@ -1056,6 +1059,9 @@ export type Database = {
           wechat_phone: string | null
         }
         Insert: {
+          plan_changed_at?: string | null
+          promo_ends_at?: string | null
+          requested_plan?: string | null
           avg_price_range?: string
           business_role?: string
           country?: string
@@ -1080,6 +1086,9 @@ export type Database = {
           wechat_phone?: string | null
         }
         Update: {
+          plan_changed_at?: string | null
+          promo_ends_at?: string | null
+          requested_plan?: string | null
           avg_price_range?: string
           business_role?: string
           country?: string

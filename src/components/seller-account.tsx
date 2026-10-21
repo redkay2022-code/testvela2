@@ -8,7 +8,7 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { Check, ShieldCheck, UserRound, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
-import { decideSellerApplication, getMyAccount, listSellerApplications, setSellerTierOverride, updateNickname } from '@/lib/seller-accounts.functions';
+import { decidePlanChange, decideSellerApplication, getMyAccount, listSellerApplications, setSellerTierOverride, updateNickname } from '@/lib/seller-accounts.functions';
 import { automatedTier, sellerTiers, studioNames, type SellerTier } from '@/lib/reputation';
 import { liveReputation } from '@/lib/studio-metrics';
 import { StudioTierBadge } from './reputation';
@@ -103,7 +103,7 @@ export function SellerOnboarding() {
 const statusLabel: Record<string, string> = { pending: '검토 대기', approved: '승인됨', rejected: '거절됨' };
 
 export function AdminApplications() {
-  const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication), setTier = useServerFn(setSellerTierOverride);
+  const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication), decidePlan = useServerFn(decidePlanChange), setTier = useServerFn(setSellerTierOverride);
   const { data, error, isLoading } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false, refetchInterval: 30000 });
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const gate = useAdminPasswordGate();
@@ -120,11 +120,12 @@ export function AdminApplications() {
     try { await decide({ data: { id, approve, ...(password ? { password } : {}) } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); setMsg(`${name} · ${approve ? '승인 완료 — 판매자 권한이 부여되었습니다.' : '거절 처리 — 판매자 권한이 해제되었습니다.'}`); }
     catch (e) { setMsg(e instanceof Error ? e.message : '처리하지 못했습니다.'); } finally { setBusy(null); }
   };
+  const planAct = async (id: string, approve: boolean) => { setBusy(id); setMsg(''); try { await decidePlan({ data: { id, approve } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); } catch (e) { setMsg(e instanceof Error ? e.message : '처리하지 못했습니다.'); } finally { setBusy(null); } };
   return <div>{gate.dialog}
     <div className="flex flex-wrap gap-2 py-3">{([['pending', '대기'], ['approved', '승인'], ['rejected', '거절'], ['all', '전체']] as const).map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? 'goldOutline' : 'ghost'} onClick={() => setFilter(k)}>{l} {k === 'all' ? rows.length : count(k)}</Button>)}</div>
     {msg && <p role="status" className="mb-2 text-sm text-primary">{msg}</p>}
     {!shown.length ? <p className="text-sm text-muted-foreground">{filter === 'pending' ? '검토 대기 중인 신청이 없습니다.' : '해당하는 신청이 없습니다.'}</p> :
-    <div className="management-list">{shown.map(a => { const name = a.nickname ?? 'Member'; return <div className="management-row" key={a.id}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small>{a.plan && a.country && <small data-no-translate className="block">{a.plan} · {a.country} · {a.business_role} · {a.avg_price_range} · {(a.main_categories ?? []).join('/')} · {(a.sales_channels ?? []).join('/')} · {`courier:${a.has_contracted_courier ? 'yes' : 'no'}`}{a.main_sales_items ? ` · ${a.main_sales_items}` : ''}</small>}</div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
+    <div className="management-list">{shown.map(a => { const name = a.nickname ?? 'Member'; return <div className="management-row" key={a.id}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small>{a.plan && a.country && <small data-no-translate className="block">{a.plan} · {a.country} · {a.business_role} · {a.avg_price_range} · {(a.main_categories ?? []).join('/')} · {(a.sales_channels ?? []).join('/')} · {`courier:${a.has_contracted_courier ? 'yes' : 'no'}`}{a.main_sales_items ? ` · ${a.main_sales_items}` : ''}</small>}{a.requested_plan && <span className="mt-1 flex flex-wrap items-center gap-2 text-xs" data-no-translate>{['plan request:', a.requested_plan].join(' ')}<Button size="sm" variant="goldOutline" disabled={busy === a.id} onClick={() => void planAct(a.id, true)}>{['approve', a.requested_plan].join(' ')}</Button><Button size="sm" variant="ghost" disabled={busy === a.id} onClick={() => void planAct(a.id, false)}>{['decline', a.requested_plan].join(' ')}</Button></span>}</div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
       <div className="record-actions">
         {a.status !== 'approved' && <Button variant="goldOutline" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, true, name)}><Check/>승인</Button>}
         {a.status !== 'rejected' && <Button variant="ghost" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, false, name)}><X/>{a.status === 'approved' ? '권한 해제' : '거절'}</Button>}

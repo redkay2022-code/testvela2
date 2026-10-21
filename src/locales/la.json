@@ -2874,5 +2874,16 @@
   "Open my studio": "Officinam meam aperi",
   "Back to my page": "Ad paginam meam redi",
   "Become a Vela seller · Seller application": "Fiat venditor Vela · Petitio venditoris",
-  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "Rationem venditoris VELA pete: de negotio tuo narra et consilium Basic, Pro vel Enterprise elige."
+  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "Rationem venditoris VELA pete: de negotio tuo narra et consilium Basic, Pro vel Enterprise elige.",
+  "Change plan": "Consilium muta",
+  "Your plan": "Consilium tuum",
+  "Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.": "Consilium quovis tempore mutare potes. Basicum et Pro statim mutantur; Enterprise a turma nostra recensetur.",
+  "Current plan": "Consilium praesens",
+  "Enterprise review requested. We will contact you once it is decided.": "Recensio Enterprise petita est. Te certiorem faciemus cum decretum erit.",
+  "Plan could not be changed.": "Consilium mutari non potuit.",
+  "Request Enterprise Review": "Recensionem Enterprise pete",
+  "Select a plan": "Consilium elige",
+  "Switch to this plan": "Ad hoc consilium muta",
+  "Your plan has been changed.": "Consilium tuum mutatum est.",
+  "You are already on this plan.": "Hoc consilio iam uteris."
 }

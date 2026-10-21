@@ -2874,5 +2874,16 @@
   "Open my studio": "Открыть мою студию",
   "Back to my page": "Вернуться на мою страницу",
   "Become a Vela seller · Seller application": "Станьте продавцом Vela · Заявка продавца",
-  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "Подайте заявку на аккаунт продавца VELA: расскажите о бизнесе и выберите тариф Basic, Pro или Enterprise."
+  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "Подайте заявку на аккаунт продавца VELA: расскажите о бизнесе и выберите тариф Basic, Pro или Enterprise.",
+  "Change plan": "Сменить тариф",
+  "Your plan": "Ваш тариф",
+  "Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.": "Тариф можно сменить в любое время. Basic и Pro переключаются сразу, Enterprise проверяет наша команда.",
+  "Current plan": "Текущий тариф",
+  "Enterprise review requested. We will contact you once it is decided.": "Проверка Enterprise запрошена. Мы свяжемся с вами, когда решение будет принято.",
+  "Plan could not be changed.": "Не удалось сменить тариф.",
+  "Request Enterprise Review": "Запросить проверку Enterprise",
+  "Select a plan": "Выберите тариф",
+  "Switch to this plan": "Перейти на этот тариф",
+  "Your plan has been changed.": "Ваш тариф изменён.",
+  "You are already on this plan.": "Вы уже на этом тарифе."
 }

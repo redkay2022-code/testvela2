@@ -7,9 +7,9 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { tx } from '@/lib/dom-translate';
-import { submitSellerApplicationForm } from '@/lib/seller-accounts.functions';
+import { changeSellerPlan, submitSellerApplicationForm } from '@/lib/seller-accounts.functions';
 import {
-  CATEGORY_OPTIONS, CHANNEL_OPTIONS, COMMISSION_RATE, COUNTRY_CODES, PLANS, PRICE_RANGE_OPTIONS, ROLE_OPTIONS,
+  CATEGORY_OPTIONS, CHANNEL_OPTIONS, COMMISSION_RATE, COUNTRY_CODES, PLANS, PLAN_IDS, PRICE_RANGE_OPTIONS, ROLE_OPTIONS,
   flagOf, sellerApplicationSchema, type PlanId,
 } from '@/lib/seller-plans';
 import { useCurrency } from './currency';
@@ -80,49 +80,33 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   return <li><span className="apply-plan-label"><T>{label}</T></span><span className="apply-plan-value">{children}</span></li>;
 }
 
-function PlanCards({ busy, onSelect }: { busy: PlanId | null; onSelect: (plan: PlanId) => void }) {
+const PLAN_NAMES: Record<PlanId, string> = { basic: 'Basic', pro: 'Pro Seller', enterprise: 'Enterprise Partner' };
+const PLAN_TAGS: Record<PlanId, string> = { basic: 'Free Plan', pro: 'Recommended · Launch special', enterprise: 'Review required' };
+const planOption = (id: PlanId, current?: PlanId | null) => `${tx(PLAN_NAMES[id])} · ${id === 'basic' ? PLANS.basic.monthlyFee : tx('{0} / month', { 0: PLANS[id].monthlyFee })}${current === id ? ` · ${tx('Current plan')}` : ''}`;
+
+/** Plan dropdown + the card of the chosen plan (monthly fee, commission, listing and story limits) + its button. */
+function PlanSection({ value, onChange, current, change, busy, onSelect }: { value: PlanId; onChange: (p: PlanId) => void; current?: PlanId | null; change?: boolean; busy: PlanId | null; onSelect: (plan: PlanId) => void }) {
   const limit = (n: number | null, text: string) => n === null ? <T>Unlimited</T> : <NT text={text} tokens={[n]} />;
-  const pick = (plan: PlanId, label: string, variant: 'gold' | 'goldOutline') => <Button type="button" variant={variant} className="apply-plan-button" disabled={busy !== null} aria-busy={busy === plan} onClick={() => onSelect(plan)}>{busy === plan ? <T>Submitting…</T> : <T>{label}</T>}</Button>;
-  return <div className="apply-plans">
-    <article className="apply-plan" aria-labelledby="plan-basic">
-      <header><h3 id="plan-basic"><T>Basic</T></h3><span className="apply-plan-tag"><T>Free Plan</T></span></header>
-      <p className="apply-plan-price"><N>{PLANS.basic.monthlyFee}</N><small><T>per month</T></small></p>
+  const p = PLANS[value];
+  const same = !!change && current === value;
+  const label = same ? 'Current plan' : change ? (value === 'enterprise' ? 'Request Enterprise Review' : 'Switch to this plan') : value === 'basic' ? 'Select Free Plan' : value === 'pro' ? 'Select Pro Plan' : 'Apply for Enterprise Review';
+  return <div className="apply-plan-picker">
+    <label className="form-label" htmlFor="apply-plan"><T>Select a plan</T></label>
+    <select id="apply-plan" className="form-input notranslate" translate="no" data-no-translate value={value} onChange={e => onChange(e.target.value as PlanId)} disabled={busy !== null}>
+      {PLAN_IDS.map(id => <option key={id} value={id} data-i18n-skip translate="no" className="notranslate">{planOption(id, change ? current : null)}</option>)}
+    </select>
+    <article className={`apply-plan ${value === 'pro' ? 'apply-plan-featured' : ''}`} aria-live="polite">
+      {value === 'pro' && <span className="apply-plan-badge"><T>Most Popular</T></span>}
+      <header><h3><T>{PLAN_NAMES[value]}</T></h3><span className="apply-plan-tag"><T>{PLAN_TAGS[value]}</T></span></header>
+      <p className="apply-plan-price"><N>{p.monthlyFee}</N><small><T>per month</T></small></p>
+      {value === 'pro' && <p className="apply-plan-note"><NT text="Special 3-Month Launch Offer, normally {0}" tokens={[PLANS.pro.regularFee]} /></p>}
       <ul>
-        <Row label="Monthly fee"><N>{PLANS.basic.monthlyFee}</N></Row>
+        <Row label="Monthly fee">{value === 'basic' ? <N>{p.monthlyFee}</N> : <NT text="{0} / month" tokens={[p.monthlyFee]} />}</Row>
         <Row label="Commission fee"><NT text="{0} per sale" tokens={[COMMISSION_RATE]} /></Row>
-        <Row label="Product listing limit">{limit(PLANS.basic.listingLimit, 'Max {0} products')}</Row>
-        <Row label="Story content limit">{limit(PLANS.basic.storyLimit, '{0} posts / month')}</Row>
-        <Row label="Store URL"><T>Standard profile link</T></Row>
+        <Row label="Product listing limit">{limit(p.listingLimit, 'Max {0} products')}</Row>
+        <Row label="Story content limit">{limit(p.storyLimit, '{0} posts / month')}</Row>
       </ul>
-      {pick('basic', 'Select Free Plan', 'goldOutline')}
-    </article>
-
-    <article className="apply-plan apply-plan-featured" aria-labelledby="plan-pro">
-      <span className="apply-plan-badge"><T>Most Popular</T></span>
-      <header><h3 id="plan-pro"><T>Pro Seller</T></h3><span className="apply-plan-tag"><T>Recommended · Launch special</T></span></header>
-      <p className="apply-plan-price"><N>{PLANS.pro.monthlyFee}</N><small><T>per month</T></small></p>
-      <p className="apply-plan-note"><NT text="Special 3-Month Launch Offer, normally {0}" tokens={[PLANS.pro.regularFee]} /></p>
-      <ul>
-        <Row label="Monthly fee"><NT text="{0} / month" tokens={[PLANS.pro.monthlyFee]} /></Row>
-        <Row label="Commission fee"><NT text="{0} per sale" tokens={[COMMISSION_RATE]} /></Row>
-        <Row label="Product listing limit">{limit(PLANS.pro.listingLimit, 'Max {0} products')}</Row>
-        <Row label="Story content limit">{limit(PLANS.pro.storyLimit, '{0} posts / month')}</Row>
-        <Row label="Dedicated Store URL"><T>Dedicated sub-path URL</T> <NT text="(e.g., {0})" tokens={[PLANS.pro.urlExample]} /></Row>
-      </ul>
-      {pick('pro', 'Select Pro Plan', 'gold')}
-    </article>
-
-    <article className="apply-plan" aria-labelledby="plan-enterprise">
-      <header><h3 id="plan-enterprise"><T>Enterprise Partner</T></h3><span className="apply-plan-tag"><T>Review required</T></span></header>
-      <p className="apply-plan-price"><N>{PLANS.enterprise.monthlyFee}</N><small><T>per month</T></small></p>
-      <ul>
-        <Row label="Monthly fee"><NT text="{0} / month" tokens={[PLANS.enterprise.monthlyFee]} /></Row>
-        <Row label="Commission fee"><NT text="{0} per sale" tokens={[COMMISSION_RATE]} /></Row>
-        <Row label="Product listing limit">{limit(PLANS.enterprise.listingLimit, 'Max {0} products')}</Row>
-        <Row label="Story content limit">{limit(PLANS.enterprise.storyLimit, '{0} posts / month')}</Row>
-        <Row label="Custom Domain Support"><T>Full custom domain integration</T> <NT text="(e.g., {0})" tokens={[PLANS.enterprise.urlExample]} /></Row>
-      </ul>
-      {pick('enterprise', 'Apply for Enterprise Review', 'goldOutline')}
+      <Button type="button" variant={value === 'pro' ? 'gold' : 'goldOutline'} className="apply-plan-button" disabled={busy !== null || same} aria-busy={busy === value} onClick={() => onSelect(value)}>{busy === value ? <T>Submitting…</T> : <T>{label}</T>}</Button>
     </article>
   </div>;
 }
@@ -148,6 +132,11 @@ export function SellerApplyPage() {
   const [courier, setCourier] = useState<'yes' | 'no' | ''>('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState<PlanId | null>(null);
+  const [plan, setPlan] = useState<PlanId>('pro'); // the recommended plan is preselected
+  const [changeTo, setChangeTo] = useState<PlanId | null>(null); // plan chosen in the dropdown by an approved seller (null = keep the current one)
+  const [detail, setDetail] = useState(''); // technical reason of a failed save (code), shown small under the message
+  const [info, setInfo] = useState('');
+  const change = useServerFn(changeSellerPlan);
   const [done, setDone] = useState(false);
   const errRef = useRef<HTMLParagraphElement>(null);
 
@@ -160,7 +149,7 @@ export function SellerApplyPage() {
     }
   }, [country]);
 
-  const showError = (message: string) => { setErr(message); requestAnimationFrame(() => errRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })); };
+  const showError = (message: string, why = '') => { setErr(message); setDetail(why); requestAnimationFrame(() => errRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })); };
 
   const choose = async (plan: PlanId) => {
     const missing: string[] = [];
@@ -174,13 +163,26 @@ export function SellerApplyPage() {
     if (missing.length) return showError(tx('Please complete: {0}', { 0: missing.join(', ') }));
     const parsed = sellerApplicationSchema.safeParse({ country, mainCategories: categories, mainSalesItems: items, avgPriceRange: price, salesChannels: channels, businessRole: role, hasCourier: courier === 'yes', plan });
     if (!parsed.success) return showError(tx('Please check your answers and try again.'));
-    setBusy(plan); setErr('');
+    setBusy(plan); setErr(''); setDetail('');
     try {
-      await submit({ data: parsed.data });
+      const r = await submit({ data: parsed.data });
+      if (!r.ok) { showError(tx('Application could not be submitted.'), `${r.code} · ${r.detail}`); return; }
       await qc.invalidateQueries({ queryKey: ['my-account'] });
       setDone(true);
       window.scrollTo({ top: 0 });
     } catch (e) { showError(e instanceof Error ? e.message : tx('Something went wrong')); }
+    finally { setBusy(null); }
+  };
+
+  /* An approved seller switches plan: Basic / Pro right away (no payment), Enterprise goes to the team for review. */
+  const switchPlan = async (target: PlanId) => {
+    setBusy(target); setErr(''); setDetail(''); setInfo('');
+    try {
+      const r = await change({ data: { plan: target } });
+      if (!r.ok) { showError(tx('Plan could not be changed.'), `${r.code} · ${r.detail}`); return; }
+      await qc.invalidateQueries({ queryKey: ['my-account'] });
+      setInfo(r.requested ? tx('Enterprise review requested. We will contact you once it is decided.') : tx('Your plan has been changed.'));
+    } catch (e) { showError(e instanceof Error ? tx(e.message) : tx('Something went wrong')); }
     finally { setBusy(null); }
   };
 
@@ -191,8 +193,20 @@ export function SellerApplyPage() {
   if (!user) return <section className="apply-page"><div className="seller-flow-card text-center"><span className="lux-eyebrow">SELLER APPLICATION</span>
     <p className="mt-4 text-sm text-muted-foreground"><T>Sign in to apply for a seller account.</T></p>
     <Button variant="gold" className="mt-4" onClick={requestAuth}><T>Sign in</T></Button></div></section>;
+  if (!done && app?.status === 'approved') {
+    const current = (app.plan ?? 'basic') as PlanId, requested = app.requested_plan as PlanId | null;
+    return <section className="apply-page" aria-labelledby="plan-title">
+      <span className="lux-eyebrow">SELLER APPLICATION</span>
+      <h1 id="plan-title" className="apply-title"><T>Your plan</T></h1>
+      <p className="apply-lead"><T>Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.</T></p>
+      {(requested || info) && <p className="mt-3 text-sm text-primary" role="status">{info || tx('Enterprise review requested. We will contact you once it is decided.')}</p>}
+      {err && <p ref={errRef} role="alert" className="apply-error">{err}{detail && <small className="mt-1 block opacity-80" data-no-translate>{detail}</small>}</p>}
+      <PlanSection value={changeTo ?? current} onChange={setChangeTo} current={current} change busy={busy} onSelect={target => void switchPlan(target)} />
+      <Button asChild variant="ghost" className="mt-4"><Link to="/seller"><T>Open my studio</T></Link></Button>
+    </section>;
+  }
   if (done || (app && app.status !== 'rejected')) {
-    const approved = !done && app?.status === 'approved';
+    const approved = false;
     return <section className="apply-page"><div className="seller-flow-card text-center">
       <ShieldCheck className="mx-auto text-primary" size={34} aria-hidden="true" />
       <h1 className="mt-3 text-lg font-semibold"><T>{approved ? 'Approved — welcome to Vela' : done ? 'Application submitted' : 'Pending admin review'}</T></h1>
@@ -242,8 +256,8 @@ export function SellerApplyPage() {
 
       <h2 className="apply-step mt-10"><span>2</span><T>Choose your plan</T></h2>
       <p className="apply-lead"><NT text="One simple commission: {0} per sale on every plan." tokens={[COMMISSION_RATE]} /></p>
-      {err && <p ref={errRef} role="alert" className="apply-error">{err}</p>}
-      <PlanCards busy={busy} onSelect={plan => void choose(plan)} />
+      {err && <p ref={errRef} role="alert" className="apply-error">{err}{detail && <small className="mt-1 block opacity-80" data-no-translate>{detail}</small>}</p>}
+      <PlanSection value={plan} onChange={setPlan} busy={busy} onSelect={p => void choose(p)} />
       <p className="apply-foot"><Check size={14} aria-hidden="true" /><T>Your plan is confirmed after the team approves your application.</T></p>
     </form>
   </section>;

@@ -36,3 +36,7 @@
   .apply-plan-featured{order:-1}
   .apply-title{font-size:22px}
 }
+
+.apply-plan-picker{margin-top:8px}
+.apply-plan-picker .apply-plan{margin-top:18px;max-width:520px}
+.apply-error small{font-size:11px;word-break:break-word}

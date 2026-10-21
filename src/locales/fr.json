@@ -2869,5 +2869,16 @@
   "Open my studio": "Ouvrir mon studio",
   "Back to my page": "Retour à ma page",
   "Become a Vela seller · Seller application": "Devenez vendeur Vela · Candidature vendeur",
-  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "Demandez un compte vendeur VELA : présentez votre activité et choisissez la formule Basic, Pro ou Enterprise."
+  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "Demandez un compte vendeur VELA : présentez votre activité et choisissez la formule Basic, Pro ou Enterprise.",
+  "Change plan": "Changer de formule",
+  "Your plan": "Votre formule",
+  "Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.": "Vous pouvez changer de formule à tout moment. Basique et Pro changent immédiatement ; Enterprise est examiné par notre équipe.",
+  "Current plan": "Formule actuelle",
+  "Enterprise review requested. We will contact you once it is decided.": "Examen Enterprise demandé. Nous vous contacterons dès qu’une décision sera prise.",
+  "Plan could not be changed.": "Impossible de changer de formule.",
+  "Request Enterprise Review": "Demander l’examen Enterprise",
+  "Select a plan": "Sélectionnez une formule",
+  "Switch to this plan": "Passer à cette formule",
+  "Your plan has been changed.": "Votre formule a été modifiée.",
+  "You are already on this plan.": "Vous utilisez déjà cette formule."
 }

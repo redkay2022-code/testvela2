@@ -2871,5 +2871,16 @@
   "Open my studio": "マイスタジオを開く",
   "Back to my page": "マイページに戻る",
   "Become a Vela seller · Seller application": "Velaセラーになる · セラー申請",
-  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "VELAセラーアカウントを申請：ビジネス情報を入力し、ベーシック・プロ・エンタープライズのプランを選択してください。"
+  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "VELAセラーアカウントを申請：ビジネス情報を入力し、ベーシック・プロ・エンタープライズのプランを選択してください。",
+  "Change plan": "プランを変更",
+  "Your plan": "ご利用中のプラン",
+  "Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.": "プランはいつでも変更できます。ベーシックとプロはすぐに切り替わり、エンタープライズはチームが審査します。",
+  "Current plan": "現在のプラン",
+  "Enterprise review requested. We will contact you once it is decided.": "エンタープライズ審査を申請しました。決定次第ご連絡します。",
+  "Plan could not be changed.": "プランを変更できませんでした。",
+  "Request Enterprise Review": "エンタープライズ審査をリクエスト",
+  "Select a plan": "プランを選択",
+  "Switch to this plan": "このプランに変更",
+  "Your plan has been changed.": "プランを変更しました。",
+  "You are already on this plan.": "すでにこのプランをご利用中です。"
 }

@@ -2873,5 +2873,16 @@
   "Open my studio": "打开我的工作室",
   "Back to my page": "返回我的页面",
   "Become a Vela seller · Seller application": "成为 Vela 卖家 · 卖家申请",
-  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "申请 VELA 卖家账户：介绍您的业务，并选择基础版、专业版或企业版方案。"
+  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "申请 VELA 卖家账户：介绍您的业务，并选择基础版、专业版或企业版方案。",
+  "Change plan": "更改方案",
+  "Your plan": "您的方案",
+  "Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.": "您可随时更改方案。基础版和专业版立即生效，企业版需团队审核。",
+  "Current plan": "当前方案",
+  "Enterprise review requested. We will contact you once it is decided.": "已申请企业版审核，结果确定后我们会联系您。",
+  "Plan could not be changed.": "无法更改方案。",
+  "Request Enterprise Review": "申请企业版审核",
+  "Select a plan": "请选择方案",
+  "Switch to this plan": "切换到此方案",
+  "Your plan has been changed.": "您的方案已更改。",
+  "You are already on this plan.": "您已在使用此方案。"
 }

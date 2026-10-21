@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COMMISSION_RATE, COUNTRY_CODES, PLANS, flagOf, listingLimitOf, sellerApplicationSchema } from '@/lib/seller-plans';
+import { COMMISSION_RATE, COUNTRY_CODES, INSTANT_PLANS, PLANS, flagOf, listingLimitOf, planChangeSchema, sellerApplicationSchema } from '@/lib/seller-plans';
 
 const valid = { country: 'KR', mainCategories: ['watches'], mainSalesItems: 'Rolex, custom straps', avgPriceRange: 'under_500', salesChannels: ['instagram'], businessRole: 'creator_customizer', hasCourier: true, plan: 'basic' };
 
@@ -41,5 +41,16 @@ describe('country list', () => {
     expect(new Set(COUNTRY_CODES).size).toBe(COUNTRY_CODES.length);
     expect(COUNTRY_CODES.every(c => /^[A-Z]{2}$/.test(c))).toBe(true);
     expect(flagOf('kr')).toBe('🇰🇷');
+  });
+});
+
+describe('plan change', () => {
+  it('basic and pro switch right away, enterprise needs a review; unknown plans are rejected', () => {
+    expect([...INSTANT_PLANS]).toEqual(['basic', 'pro']);
+    expect(planChangeSchema.safeParse({ plan: 'enterprise' }).success).toBe(true);
+    expect(planChangeSchema.safeParse({ plan: 'gold' }).success).toBe(false);
+  });
+  it('plan cards carry no store URL text any more', () => {
+    for (const p of Object.values(PLANS)) expect('urlExample' in p).toBe(false);
   });
 });

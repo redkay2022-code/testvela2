@@ -2874,5 +2874,16 @@
   "Open my studio": "فتح الاستوديو الخاص بي",
   "Back to my page": "العودة إلى صفحتي",
   "Become a Vela seller · Seller application": "كن بائعًا في Vela · طلب البائع",
-  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "قدّم طلب حساب بائع في VELA: أخبرنا عن نشاطك واختر خطة Basic أو Pro أو Enterprise."
+  "Apply for a VELA seller account: tell us about your business and choose the Basic, Pro or Enterprise plan.": "قدّم طلب حساب بائع في VELA: أخبرنا عن نشاطك واختر خطة Basic أو Pro أو Enterprise.",
+  "Change plan": "تغيير الخطة",
+  "Your plan": "خطتك",
+  "Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.": "يمكنك تغيير خطتك في أي وقت. تتغير الأساسية والاحترافية فورًا، وتخضع خطة المؤسسات لمراجعة فريقنا.",
+  "Current plan": "الخطة الحالية",
+  "Enterprise review requested. We will contact you once it is decided.": "تم طلب مراجعة خطة المؤسسات. سنتواصل معك فور اتخاذ القرار.",
+  "Plan could not be changed.": "تعذّر تغيير الخطة.",
+  "Request Enterprise Review": "طلب مراجعة المؤسسات",
+  "Select a plan": "اختر خطة",
+  "Switch to this plan": "التبديل إلى هذه الخطة",
+  "Your plan has been changed.": "تم تغيير خطتك.",
+  "You are already on this plan.": "أنت تستخدم هذه الخطة بالفعل."
 }
