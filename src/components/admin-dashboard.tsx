@@ -15,6 +15,7 @@ import { AdminReset } from './admin-reset';
 import { AdminProxy, hasProxyEditInProgress, PROXY_TAB_LABEL, PROXY_TAB_NOTE } from './admin-proxy';
 import { AdminReviews } from './admin-reviews';
 import { AdminBoards } from './admin-boards';
+import { LogoutItem } from './logout-item';
 import { AdminAnalytics, ANALYTICS_TAB_LABEL, ANALYTICS_SUBTITLE } from './admin-analytics';
 import { AdminCatalog, type CatalogSection } from './admin-catalog';
 import { AdminMuxMigration } from './admin-mux-migration';
@@ -36,7 +37,7 @@ const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', c
 export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
   const search = marketSearch.parse(useRouterState({ select: s => s.location.search }));
   const top = !search.section ? (hasProxyEditInProgress() ? 'proxy' : 'dashboard') : legacyKeys.includes(search.section) ? 'settings' : search.section;
-  const nav = <nav className="dashboard-tabs flex-wrap" aria-label="관리자 메뉴">{mainTabs.map(([key, label]) => <Button asChild variant="ghost" key={key} className={top === key ? 'active' : ''}><Link to="/admin" search={{ role: 'admin', section: key === 'settings' ? 'crypto' : key }} resetScroll={false}>{label}</Link></Button>)}</nav>;
+  const nav = <nav className="dashboard-tabs flex-wrap" aria-label="관리자 메뉴">{mainTabs.map(([key, label]) => <Button asChild variant="ghost" key={key} className={top === key ? 'active' : ''}><Link to="/admin" search={{ role: 'admin', section: key === 'settings' ? 'crypto' : key }} resetScroll={false}>{label}</Link></Button>)}<LogoutItem/></nav>;
   if (top === 'applications') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>판매자 신청</h1><p>시스템 ID · 닉네임만 확인</p></div></div>{nav}<AdminApplications/></div>;
   if (top === 'members') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>회원 관리</h1><p>접속 현황 · 정지 / 추방</p></div></div>{nav}<AdminMembers/></div>;
   if (top === 'proxy') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>{PROXY_TAB_LABEL}</h1><p>{PROXY_TAB_NOTE}</p></div></div>{nav}<AdminProxy/></div>;
