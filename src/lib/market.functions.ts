@@ -6,6 +6,9 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import type { Database } from '@/integrations/supabase/types';
 import { commentAvatarPath, commentNickname } from './comment-profiles';
 import { isExternalVideo, isMuxPending, isMuxStreamUrl, muxThumbnailUrl } from './mux';
+import { SharedFeedCache, SignedUrlMemo } from './feed-cache';
+
+const signedMemo = new SignedUrlMemo();
 
 function publicClient(bearer?: string | null) {
   const url = process.env['SUPABASE_URL'];
@@ -42,15 +45,18 @@ async function loadPosts(token: string | null) {
     const paths = [...new Set(uploaded.flatMap(p => [...p.media_urls,...(p.video_url && !isExternalVideo(p.video_url) ? [p.video_url]:[]),...(p.thumbnail_url && !isMuxStreamUrl(p.video_url) ? [p.thumbnail_url]:[]),...(cardPath(p) ? [cardPath(p) as string]:[])].filter(path => permitted(p,path) && !path.startsWith('seed:'))))];
     // Sign in small batches: one oversized request used to fail the whole feed once many posts were published.
     // A batch that fails only drops its own media (the post still renders without it) instead of breaking the page.
+    // Links signed in the last 5 hours are reused (they stay valid for 6); only new or expired paths are signed again.
     const urls = new Map<string,string>();
-    const batches:string[][] = []; for(let i=0;i<paths.length;i+=100) batches.push(paths.slice(i,i+100));
+    const todo = signedMemo.missing(paths);
+    const batches:string[][] = []; for(let i=0;i<todo.length;i+=100) batches.push(todo.slice(i,i+100));
     await Promise.all(batches.map(async batch => {
       try {
         const {data:signed,error:signError} = await supabaseAdmin.storage.from('market-media').createSignedUrls(batch,21600);
         if(signError) { console.error('feed media signing failed', signError.message); return; }
-        signed?.forEach(s => { if(s.path && s.signedUrl) urls.set(s.path,s.signedUrl); });
+        signed?.forEach(s => { if(s.path && s.signedUrl) signedMemo.set(s.path,s.signedUrl); });
       } catch(e) { console.error('feed media signing failed', e); }
     }));
+    for(const path of paths) { const url = signedMemo.get(path); if(url) urls.set(path,url); }
     for(const post of uploaded) {
       const sign = (path:string) => path.startsWith('seed:') ? path : urls.get(path) || '';
       post.media_urls = post.media_urls.filter(path => permitted(post,path)).map(sign).filter(Boolean);
@@ -75,20 +81,16 @@ async function loadPosts(token: string | null) {
 }
 
 /**
- * Visitors who are not signed in all get the same public feed, so it is built once and shared for 30 seconds
+ * Visitors who are not signed in all get the same public feed, so it is built once and shared for 2 minutes
  * (signed photo/video links stay valid for 6 hours). Many visitors at once, or a quick refresh, no longer each
  * repeat the database read and the link signing. Signed-in callers are never cached: sellers must see their own drafts.
  */
-const PUBLIC_FEED_MS = 30_000;
-let publicFeed: { at: number; data: Awaited<ReturnType<typeof loadPosts>> } | null = null;
-let publicFeedLoading: Promise<Awaited<ReturnType<typeof loadPosts>>> | null = null;
+const publicFeed = new SharedFeedCache<Awaited<ReturnType<typeof loadPosts>>>(120_000);
 
 export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
   const token = await callerToken();
   if (token) return loadPosts(token);
-  if (publicFeed && Date.now() - publicFeed.at < PUBLIC_FEED_MS) return publicFeed.data;
-  publicFeedLoading ??= loadPosts(null).then(data => { publicFeed = { at: Date.now(), data }; return data; }).finally(() => { publicFeedLoading = null; });
-  return publicFeedLoading;
+  return publicFeed.get(() => loadPosts(null));
 });
 
 export const getStores = createServerFn({ method: 'GET' }).handler(async () => {
