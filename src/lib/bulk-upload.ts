@@ -7,7 +7,7 @@
 import { productCategories } from '@/lib/catalog';
 import { normalizeMenuCategory, postCategoryLabels } from '@/lib/feed-categories';
 import { DISPATCH_OPTIONS, dispatchValue } from '@/lib/dispatch';
-import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from '@/lib/listing-media';
+import { isListingPhoto, isListingVideo, MAX_LISTING_PHOTOS, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES, MAX_VIDEO_SECONDS } from '@/lib/listing-media';
 import { validatePostTitle } from '@/lib/post-title';
 import { exceedsPriceCap, MAX_PRODUCT_PRICE_USD, PRICE_CAP_ENABLED, priceCapMessage } from '@/lib/price-cap';
 import { cleanWatchSpecs, numericSpecValue, watchSpecificationFields } from '@/lib/watch-specifications';
@@ -81,7 +81,7 @@ const stem = (name: string) => name.replace(MEDIA_EXT, '');
 const norm = (s: string) => s.normalize('NFC').trim().toLowerCase();
 
 /** One product: a video product (video + photos) or a photo-only product (video = null). `name` is what the table's "파일명" refers to. */
-export type BulkItem = { id: string; name: string; video: File | null; photos: File[]; values: BulkValues };
+export type BulkItem = { id: string; name: string; video: File | null; photos: File[]; values: BulkValues; /** true once the seller changed this product's photos / video by hand (they are then never regrouped by file name) */ custom?: boolean };
 
 /** "<product>-3.jpg" / "<product>_3.jpg" -> { prefix: "<product>", n: 3 }. Names without a trailing number count as number 0 of their own product. */
 export function photoParts(file: File): { prefix: string; n: number } {
@@ -183,10 +183,17 @@ function watchSpecs(v: BulkValues, errors: string[], warnings: string[]): Record
 export type BulkPlan = { title: string; description: string; category: string; sell: boolean; price: number | null; boxPrice: number | null; dispatch: string | null; specs: Record<string, string> };
 
 /** Returns every problem of one product (empty array = ready) plus the cleaned data to save. */
-export function validateItem(item: BulkItem, existingTitles: Set<string>): { errors: string[]; warnings: string[]; plan: BulkPlan | null } {
-  const v = item.values, errors: string[] = [], warnings: string[] = [];
+/** videoSeconds: length of the product's video when it is already known (undefined / 0 = not read yet, checked again at upload). */
+export function validateItem(item: BulkItem, existingTitles: Set<string>, relaxed = false, videoSeconds?: number): { errors: string[]; warnings: string[]; plan: BulkPlan | null } {
+  /* relaxed (photo + video only upload): title and price may stay empty; they are filled in later from the product edit screen. */
+  const base = item.values, errors: string[] = [], warnings: string[] = [];
+  const fallbackTitle = stem(item.name).trim(); 
+  const v: BulkValues = relaxed && !base.title.trim() ? { ...base, title: [...fallbackTitle].length >= 2 ? fallbackTitle : '제목 없음' } : base;
+  if (relaxed && !base.title.trim()) warnings.push(`제목이 비어 있어 “${v.title}”(으)로 저장돼요. 올린 뒤 편집에서 바꿀 수 있어요.`);
   const titleError = validatePostTitle(v.title); if (titleError) errors.push(titleError);
-  const sell = normalizeSell(v.sell);
+  let sell = normalizeSell(v.sell);
+  const noPrice = relaxed && !v.price.trim();
+  if (noPrice && sell) { sell = false; warnings.push('가격이 비어 있어 가격 없이 저장돼요. 올린 뒤 편집에서 가격을 넣으면 판매할 수 있어요.'); }
   if (sell === null) errors.push('마켓에 판매하기는 예 / 아니오 중 하나로 입력해 주세요. (비우면 예)');
   const price = Number(v.price.replace(/[$,\s]/g, ''));
   if (sell !== false && (!Number.isFinite(price) || price < 1)) errors.push('판매 가격(USD)은 1 이상의 숫자로 입력해 주세요.');
@@ -199,13 +206,14 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>): { err
   if (menuCategory && isWatchStory(menuCategory) && !isWatchStoryTag(v.storySubcategory)) errors.push(t('selectStorySubcategory'));
   const source = v.source ? SOURCE_ALIASES[norm(v.source)] : (v.factory ? 'factory' : 'custom');
   if (sell !== false && !source) errors.push('제조 / 출처 구분은 커스텀 제작 / 공장 선택 / 기타 - 직접입력 중 하나여야 해요.');
-  if (sell !== false && (source === 'factory' || source === 'other') && !v.factory.trim()) errors.push('공장(출처)을 입력해 주세요.');
+  if (!relaxed && sell !== false && (source === 'factory' || source === 'other') && !v.factory.trim()) errors.push('공장(출처)을 입력해 주세요.');
   const boxRaw = v.boxPrice.replace(/[$,\s]/g, ''); const box = boxRaw ? Number(boxRaw) : null;
   if (sell !== false && box !== null && (!Number.isFinite(box) || box < 0 || box > 100000000)) errors.push('박스 가격은 0 이상의 숫자로 입력해 주세요.');
   if (sell !== false && Number.isFinite(price) && price <= MAX_PRODUCT_PRICE_USD && box !== null && Number.isFinite(box) && exceedsPriceCap(price, box)) errors.push(priceCapMessage());
   if (!item.video && item.photos.length === 0) errors.push('사진도 영상도 없는 묶음은 올릴 수 없어요.');
-  if (item.video && item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 100MB까지 올릴 수 있어요.');
-  if (item.photos.length > MAX_LISTING_PHOTOS) errors.push(`사진은 최대 ${MAX_LISTING_PHOTOS}장까지 올릴 수 있어요.`);
+  if (item.video && item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 100MB까지 올릴 수 있어요. “영상 길이 수정”으로 줄여 주세요.');
+  if (item.video && videoSeconds && videoSeconds > MAX_VIDEO_SECONDS + 0.05) errors.push(`영상은 최대 ${MAX_VIDEO_SECONDS}초까지 올릴 수 있어요. (지금 ${Math.ceil(videoSeconds)}초) “영상 길이 수정”으로 줄여 주세요.`);
+  if (item.photos.length > MAX_LISTING_PHOTOS) errors.push(`사진은 최대 ${MAX_LISTING_PHOTOS}장까지 올릴 수 있어요. (지금 ${item.photos.length}장) 사진을 빼 주세요.`);
   if (item.photos.some(p => p.size > MAX_PHOTO_BYTES)) errors.push('사진은 장당 최대 10MB까지 올릴 수 있어요.');
   if (v.title.trim().length > 100) warnings.push('제목이 100자를 넘어 잘립니다.');
   if (existingTitles.has(norm(v.title))) warnings.push('같은 제목의 상품이 이미 있어요.');

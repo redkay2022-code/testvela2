@@ -8,6 +8,7 @@ import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { readVideoDuration, MAX_VIDEO_SECONDS } from '@/lib/listing-media';
 import { isWatchStory, isWatchStoryTag } from '@/lib/watch-story';
 import { activeLang } from '@/lib/i18n';
+import { isListingPhoto, isListingVideo } from '@/lib/listing-media';
 import { applyRows, groupFiles, MAX_BULK, parseTable, validateItem, type BulkField, type BulkItem } from '@/lib/bulk-upload';
 
 /**
@@ -18,11 +19,13 @@ import { applyRows, groupFiles, MAX_BULK, parseTable, validateItem, type BulkFie
  */
 export type ItemState = { status: 'idle' | 'working' | 'done' | 'error'; pct: number; step: string; error: string };
 export type Phase = 'idle' | 'running' | 'pausing' | 'paused';
-export type JobSnapshot = { items: BulkItem[]; states: Record<string, ItemState>; notes: string[]; phase: Phase; publish: boolean };
-type Context = { user: User; titles: Set<string>; onDone: () => void };
+/** durations: seconds of each picked video, keyed by videoKey(file); filled in the background after a video is picked. */
+export type JobSnapshot = { items: BulkItem[]; states: Record<string, ItemState>; notes: string[]; phase: Phase; publish: boolean; durations: Record<string, number> };
+/** relaxed = photo + video only upload: title / price may stay empty (filled in later from the edit screen). */
+type Context = { user: User; titles: Set<string>; onDone: () => void; relaxed?: boolean };
 
 export const idleState: ItemState = { status: 'idle', pct: 0, step: '', error: '' };
-const emptySnapshot = (): JobSnapshot => ({ items: [], states: {}, notes: [], phase: 'idle', publish: false });
+const emptySnapshot = (): JobSnapshot => ({ items: [], states: {}, notes: [], phase: 'idle', publish: false, durations: {} });
 
 let snap: JobSnapshot = emptySnapshot();
 let picked: File[] = [];
@@ -34,7 +37,30 @@ const listeners = new Set<() => void>();
 const emit = (patch: Partial<JobSnapshot>) => { snap = { ...snap, ...patch }; syncGuard(); listeners.forEach(l => l()); };
 const setItemState = (id: string, patch: Partial<ItemState>) => emit({ states: { ...snap.states, [id]: { ...(snap.states[id] ?? idleState), ...patch } } });
 const isDone = (id: string) => snap.states[id]?.status === 'done';
+function editMedia(id: string, change: (item: BulkItem) => BulkItem) {
+  if (snap.phase === 'running' || snap.phase === 'pausing' || isDone(id)) return;
+  const old = snap.items.find(i => i.id === id); if (!old) return;
+  const next = { ...change(old), custom: true };
+  const before = [old.video, ...old.photos].filter((f): f is File => !!f), after = [next.video, ...next.photos].filter((f): f is File => !!f);
+  // picked 는 '선택한 파일 전체' 목록이라, 이 상품에서 빠진 파일은 목록에서도 뺀다(다른 상품과 묶이지 않게).
+  picked = [...picked.filter(f => !before.includes(f) || after.includes(f)), ...after.filter(f => !picked.includes(f))];
+  emit({ items: snap.items.map(i => i.id === id ? next : i) });
+  readDurations();
+}
 const fileKey = (f: File) => `${f.webkitRelativePath || f.name}|${f.size}|${f.lastModified}`;
+export const videoKey = fileKey;
+/** Seconds of a video once it has been read (undefined = not known yet). */
+export const secondsOf = (item: BulkItem, durations: Record<string, number> = snap.durations): number | undefined => (item.video ? durations[fileKey(item.video)] : undefined);
+const reading = new Set<string>();
+/** Reads the length of every picked video once, in the background, so the list can warn about videos over 30 seconds. */
+function readDurations() {
+  for (const it of snap.items) {
+    const v = it.video; if (!v) continue;
+    const key = fileKey(v); if (key in snap.durations || reading.has(key)) continue;
+    reading.add(key);
+    void readVideoDuration(v).catch(() => 0).then(seconds => { reading.delete(key); if (typeof window !== 'undefined') emit({ durations: { ...snap.durations, [key]: seconds } }); });
+  }
+}
 
 /** 올리는 중이거나 아직 못 올린 상품이 남아 있으면, 새로고침·탭 닫기 때 경고한다. */
 const onUnload = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; };
@@ -60,14 +86,14 @@ export const bulkJob = {
     picked = [...picked, ...fresh];
     // 이미 올라간 상품은 그대로 두고, 나머지 파일만 다시 묶는다. 이미 정한 순서와 입력한 내용은 유지한다.
     const doneItems = snap.items.filter(i => isDone(i.id));
-    const doneFiles = new Set(doneItems.flatMap(i => [i.video, ...i.photos]).filter((f): f is File => !!f));
+    const doneFiles = new Set(snap.items.filter(i => isDone(i.id) || i.custom).flatMap(i => [i.video, ...i.photos]).filter((f): f is File => !!f));
     const g = groupFiles(picked.filter(f => !doneFiles.has(f)));
     const sig = (it: BulkItem) => `${it.name}|${it.video?.size ?? 'photos'}`;
     const grouped = new Map(g.items.map(n => [sig(n), n]));
     const used = new Set<string>();
     const merged: BulkItem[] = [];
     for (const it of snap.items) {
-      if (isDone(it.id)) { merged.push(it); continue; }
+      if (isDone(it.id) || it.custom) { merged.push(it); continue; }
       const n = grouped.get(sig(it)); if (!n) continue;
       used.add(sig(it)); merged.push({ ...n, id: it.id, values: it.values });
     }
@@ -80,6 +106,7 @@ export const bulkJob = {
     const extra = g.extraVideos.length + g.extraPhotoProducts.length + Math.max(0, overflow);
     if (extra) msg.push(`상품은 영상·사진 묶음을 합쳐 ${MAX_BULK}개까지만 올릴 수 있어요. ${extra}개는 제외했어요.`);
     emit({ items, notes: msg });
+    readDurations();
   },
   applyTable(text: string) {
     const rows = parseTable(text);
@@ -98,6 +125,11 @@ export const bulkJob = {
     const states = Object.fromEntries(Object.entries(snap.states).filter(([key]) => key !== id));
     emit({ items: snap.items.filter(i => i.id !== id), states });
   },
+  /** 상품 하나의 사진·영상을 직접 고친다(빼기·순서 바꾸기·추가·영상 바꾸기). 고친 상품은 파일 이름으로 다시 묶이지 않는다. */
+  removePhoto(id: string, index: number) { editMedia(id, it => ({ ...it, photos: it.photos.filter((_, i) => i !== index) })); },
+  movePhoto(id: string, index: number, delta: -1 | 1) { editMedia(id, it => { const to = index + delta; if (to < 0 || to >= it.photos.length) return it; const photos = [...it.photos]; [photos[index], photos[to]] = [photos[to]!, photos[index]!]; return { ...it, photos }; }); },
+  addPhotos(id: string, list: File[]) { const add = list.filter(isListingPhoto); if (add.length) editMedia(id, it => ({ ...it, photos: [...it.photos, ...add.filter(f => !it.photos.some(p => fileKey(p) === fileKey(f)))] })); },
+  setVideo(id: string, file: File | null) { if (file && !isListingVideo(file)) return; editMedia(id, it => ({ ...it, video: file })); },
   start(publish: boolean) { if (snap.phase === 'running' || snap.phase === 'pausing') return; emit({ publish }); void run(); },
   pause() { if (snap.phase !== 'running') return; pauseRequested = true; emit({ phase: 'pausing' }); },
   reset() { if (snap.phase === 'running' || snap.phase === 'pausing') return; picked = []; pauseRequested = false; snap = emptySnapshot(); syncGuard(); listeners.forEach(l => l()); },
@@ -112,7 +144,7 @@ async function run() {
   pauseRequested = false;
   emit({ phase: 'running' });
   const attempted = new Set<string>();
-  const nextItem = () => snap.items.find(i => !attempted.has(i.id) && !isDone(i.id) && ctx && validateItem(i, ctx.titles).plan);
+  const nextItem = () => snap.items.find(i => !attempted.has(i.id) && !isDone(i.id) && ctx && validateItem(i, ctx.titles, ctx.relaxed, secondsOf(i)).plan);
   try {
     // 상품을 하나씩 순서대로 올린다: 휴대폰 메모리를 아끼고, 한 상품이 실패해도 나머지는 계속된다.
     for (;;) {
@@ -131,7 +163,7 @@ async function run() {
 
 async function uploadOne(item: BulkItem, publish: boolean) {
   const c = ctx; if (!c) return;
-  const plan = validateItem(item, c.titles).plan; if (!plan) return;
+  const plan = validateItem(item, c.titles, c.relaxed, secondsOf(item)).plan; if (!plan) return;
   const userId = c.user.id;
   const uploaded: string[] = [];
   try {
