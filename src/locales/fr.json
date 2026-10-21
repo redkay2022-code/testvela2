@@ -2905,5 +2905,6 @@
   "The plan starts after our team confirms your payment.": "Le forfait démarre une fois le paiement confirmé par notre équipe.",
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "Paiement envoyé. Notre équipe le confirmera sous peu. D'ici là, votre forfait actuel reste actif.",
   "Payment could not be submitted.": "Le paiement n'a pas pu être envoyé.",
-  "Your plan change is waiting for our team to confirm the payment.": "Le changement de forfait attend la confirmation du paiement par notre équipe."
+  "Your plan change is waiting for our team to confirm the payment.": "Le changement de forfait attend la confirmation du paiement par notre équipe.",
+  "No active transactions.": "Aucune transaction en cours."
 }

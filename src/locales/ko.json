@@ -1754,5 +1754,6 @@
   "The plan starts after our team confirms your payment.": "요금제는 팀이 결제를 확인한 뒤에 시작돼요.",
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "결제가 접수되었어요. 곧 팀이 확인해 드릴게요. 그때까지 현재 요금제는 그대로 유지돼요.",
   "Payment could not be submitted.": "결제를 접수하지 못했어요.",
-  "Your plan change is waiting for our team to confirm the payment.": "요금제 변경은 팀이 결제를 확인하는 대로 적용돼요."
+  "Your plan change is waiting for our team to confirm the payment.": "요금제 변경은 팀이 결제를 확인하는 대로 적용돼요.",
+  "No active transactions.": "진행 중인 거래가 없습니다."
 }

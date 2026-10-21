@@ -2910,5 +2910,6 @@
   "The plan starts after our team confirms your payment.": "تبدأ الخطة بعد أن يؤكد فريقنا عملية الدفع.",
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "تم إرسال الدفع. سيؤكده فريقنا قريبًا. تبقى خطتك الحالية نشطة حتى ذلك الحين.",
   "Payment could not be submitted.": "تعذّر إرسال الدفع.",
-  "Your plan change is waiting for our team to confirm the payment.": "تغيير الخطة بانتظار تأكيد فريقنا للدفع."
+  "Your plan change is waiting for our team to confirm the payment.": "تغيير الخطة بانتظار تأكيد فريقنا للدفع.",
+  "No active transactions.": "لا توجد معاملات جارية."
 }

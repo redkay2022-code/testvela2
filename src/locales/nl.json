@@ -2910,5 +2910,6 @@
   "The plan starts after our team confirms your payment.": "Het abonnement start nadat ons team de betaling heeft bevestigd.",
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "Betaling ingediend. Ons team bevestigt deze binnenkort. Tot die tijd blijft je huidige abonnement actief.",
   "Payment could not be submitted.": "De betaling kon niet worden ingediend.",
-  "Your plan change is waiting for our team to confirm the payment.": "De wijziging van je abonnement wacht op bevestiging van de betaling door ons team."
+  "Your plan change is waiting for our team to confirm the payment.": "De wijziging van je abonnement wacht op bevestiging van de betaling door ons team.",
+  "No active transactions.": "Geen lopende transacties."
 }

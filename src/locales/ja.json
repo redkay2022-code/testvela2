@@ -2907,5 +2907,6 @@
   "The plan starts after our team confirms your payment.": "プランは、チームが支払いを確認した後に開始されます。",
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "お支払いを受け付けました。まもなくチームが確認します。それまで現在のプランはそのまま利用できます。",
   "Payment could not be submitted.": "お支払いを送信できませんでした。",
-  "Your plan change is waiting for our team to confirm the payment.": "プランの変更は、チームが支払いを確認次第、反映されます。"
+  "Your plan change is waiting for our team to confirm the payment.": "プランの変更は、チームが支払いを確認次第、反映されます。",
+  "No active transactions.": "進行中の取引はありません。"
 }

@@ -2905,5 +2905,6 @@
   "The plan starts after our team confirms your payment.": "Der Tarif startet, sobald unser Team die Zahlung bestätigt hat.",
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "Zahlung eingereicht. Unser Team bestätigt sie in Kürze. Bis dahin bleibt Ihr aktueller Tarif aktiv.",
   "Payment could not be submitted.": "Die Zahlung konnte nicht eingereicht werden.",
-  "Your plan change is waiting for our team to confirm the payment.": "Die Tarifänderung wartet auf die Zahlungsbestätigung durch unser Team."
+  "Your plan change is waiting for our team to confirm the payment.": "Die Tarifänderung wartet auf die Zahlungsbestätigung durch unser Team.",
+  "No active transactions.": "Keine laufenden Transaktionen."
 }

@@ -2910,5 +2910,6 @@
   "The plan starts after our team confirms your payment.": "Тариф начнёт действовать после подтверждения оплаты нашей командой.",
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "Платёж отправлен. Наша команда скоро его подтвердит. До тех пор ваш текущий тариф остаётся активным.",
   "Payment could not be submitted.": "Не удалось отправить платёж.",
-  "Your plan change is waiting for our team to confirm the payment.": "Смена тарифа ожидает подтверждения оплаты нашей командой."
+  "Your plan change is waiting for our team to confirm the payment.": "Смена тарифа ожидает подтверждения оплаты нашей командой.",
+  "No active transactions.": "Активных сделок нет."
 }
