@@ -6,6 +6,7 @@ import { loadSellerAvatar } from '@/lib/seller-avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { compactCount, useSellerStats } from '@/lib/use-seller-stats';
 import { Button } from './ui/button';
+import { Tx } from './tx';
 import { SellerBadge } from './reputation';
 import { useMarketPreview } from './market-preview';
 import { directorySellers, matchesStoreCategory, storeFilters, type StoreCategory } from '@/lib/seller-directory';
@@ -26,14 +27,14 @@ function DirectoryAvatar({ post }: { post: LuxuryPost }) {
 
 export function SellerDirectory({posts, category='all', role}: {posts:LuxuryPost[]; category?:StoreCategory|undefined; role?:'buyer'|'seller'|'admin'|undefined}) {
   const preview = useMarketPreview();
-  const sellers = directorySellers(posts).filter(seller => matchesStoreCategory(seller, category)).sort((a,b)=>Number(Boolean(b.post.storeFeatured))-Number(Boolean(a.post.storeFeatured)) || (category==='top'?(b.rating ?? 0)-(a.rating ?? 0):0));
+  const sellers = directorySellers(posts).filter(seller => matchesStoreCategory(seller, category)).sort((a,b)=>Number(Boolean(b.post.storeFeatured))-Number(Boolean(a.post.storeFeatured)));
   /* 스토어 카드의 소개글은 셀러가 프로필에 쓴 "스토어 소개"를 그대로 보여 준다(없으면 기존 문구). */
   const stats = useSellerStats();
   const introIds = [...new Set(sellers.map(s => s.post.sample ? null : s.post.source.user_id).filter((x): x is string => Boolean(x)))].sort();
   const intros = useQuery({ queryKey: ['directory-intros', introIds.join(',')], enabled: introIds.length > 0, staleTime: 60_000, queryFn: async () => { const { data, error } = await supabase.from('seller_store_content').select('user_id,introduction').in('user_id', introIds); if (error) throw error; return new Map((data ?? []).map(r => [r.user_id, r.introduction])); } });
   return <section className="seller-directory">
     <div className="section-heading"><h1>셀러 스토어</h1><span>{sellers.length} studios</span></div>
-    <nav className="directory-filters" aria-label="Seller categories">{storeFilters.map(([id,label])=><Button asChild variant="ghost" className={`lux-chip ${category===id?'active':''}`} key={id}><Link to="/store" search={{role,storeCategory:id}} resetScroll={false} aria-current={category===id?'page':undefined}>{label}</Link></Button>)}</nav>
+    <nav className="directory-filters" aria-label="Seller categories">{storeFilters.map(([id,label])=><Button asChild variant="ghost" className={`lux-chip ${category===id?'active':''}`} key={id}><Link to="/store" search={{role,storeCategory:id}} resetScroll={false} aria-current={category===id?'page':undefined}><Tx>{label}</Tx></Link></Button>)}</nav>
     <div className="directory-grid">{sellers.map(seller=>{
       const following = preview.isFollowing(seller.id);
       return <article className="directory-card" key={seller.id}>

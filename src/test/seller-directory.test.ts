@@ -13,14 +13,16 @@ describe('seller directory',()=>{
  it('does not invent ratings, reviews or followers for live sellers',()=>{
   const seller=directorySellers([post])[0];expect(seller).toMatchObject({rating:null,reviews:null,followers:null});
  });
- it('matches listing-backed specialties and trusted top ratings',()=>{
+ it('matches listing-backed categories using the same rules as the main page',()=>{
   const seller=directorySellers([post])[0];if(!seller)throw new Error('Missing seller');
-  expect(matchesStoreCategory(seller,'watches')).toBe(true);expect(matchesStoreCategory(seller,'accessories')).toBe(false);expect(matchesStoreCategory(seller,'top')).toBe(false);
-  expect(matchesStoreCategory({...seller,post:{...post,reputation:studioReputation},rating:4.9},'top')).toBe(true);
-  const gold=directorySellers([{...post,title:'18K 골드 반지',category:'주얼리'}])[0];if(!gold)throw new Error('Missing seller');
-  expect(matchesStoreCategory(gold,'solid-gold')).toBe(true);expect(matchesStoreCategory(gold,'accessories')).toBe(true);
+  expect(matchesStoreCategory(seller,'all')).toBe(true);
+  expect(matchesStoreCategory(seller,'watches')).toBe(true);expect(matchesStoreCategory(seller,'accessories')).toBe(false);
+  const parts=directorySellers([{...post,menuCategory:'파츠'}])[0];if(!parts)throw new Error('Missing seller');
+  expect(matchesStoreCategory(parts,'parts')).toBe(true);expect(matchesStoreCategory(parts,'bags')).toBe(false);
+  expect(matchesStoreCategory(seller,'unknown-old-link')).toBe(true);
  });
- it('has all six filters and keeps selection in validated URL state',()=>{
-  expect(storeFilters).toHaveLength(6);expect(marketSearch.parse({storeCategory:'custom',role:'buyer',panel:'cart'})).toMatchObject({storeCategory:'custom',role:'buyer',panel:'cart'});
+ it('uses the main page category row and keeps selection in validated URL state',()=>{
+  expect(storeFilters.map(f=>f[1])).toEqual(['전체','시계','악세사리','가방','의류','파츠','커스텀 제작','기타']);
+  expect(marketSearch.parse({storeCategory:'custom',role:'buyer',panel:'cart'})).toMatchObject({storeCategory:'custom',role:'buyer',panel:'cart'});
  });
 });
