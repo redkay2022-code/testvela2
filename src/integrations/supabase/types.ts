@@ -1032,6 +1032,14 @@ export type Database = {
       }
       seller_applications: {
         Row: {
+          avg_price_range: string
+          business_role: string
+          country: string
+          has_contracted_courier: boolean | null
+          main_categories: string[]
+          main_sales_items: string
+          plan: string
+          sales_channels: string[]
           bio: string
           created_at: string
           id: string
@@ -1048,6 +1056,14 @@ export type Database = {
           wechat_phone: string | null
         }
         Insert: {
+          avg_price_range?: string
+          business_role?: string
+          country?: string
+          has_contracted_courier?: boolean | null
+          main_categories?: string[]
+          main_sales_items?: string
+          plan?: string
+          sales_channels?: string[]
           bio?: string
           created_at?: string
           id?: string
@@ -1064,6 +1080,14 @@ export type Database = {
           wechat_phone?: string | null
         }
         Update: {
+          avg_price_range?: string
+          business_role?: string
+          country?: string
+          has_contracted_courier?: boolean | null
+          main_categories?: string[]
+          main_sales_items?: string
+          plan?: string
+          sales_channels?: string[]
           bio?: string
           created_at?: string
           id?: string

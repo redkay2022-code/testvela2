@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
+import { sellerApplicationSchema } from './seller-plans';
 
 /** Signed-in user's roles, anonymous profile and seller application. */
 export const getMyAccount = createServerFn({ method: 'GET' })
@@ -54,6 +55,27 @@ export const submitSellerApplication = createServerFn({ method: 'POST' })
     return { ok: true };
   });
 
+/** Application form + chosen plan. Every answer is stored on the seller_applications row for the admin review. */
+export const submitSellerApplicationForm = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(d => sellerApplicationSchema.parse(d))
+  .handler(async ({ context, data }) => {
+    const { data: profile } = await context.supabase.from('profiles').select('system_code, nickname').eq('user_id', context.userId).maybeSingle();
+    if (!profile) throw new Error('Your account profile is missing.');
+    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+    const { data: existing } = await supabaseAdmin.from('seller_applications').select('status').eq('user_id', context.userId).maybeSingle();
+    if (existing?.status === 'approved') throw new Error('Your seller account is already approved.');
+    const { error } = await supabaseAdmin.from('seller_applications').upsert({
+      user_id: context.userId, system_code: profile.system_code, nickname: profile.nickname, studio_name: profile.nickname,
+      region: data.country, bio: '', wechat_id: '', wechat_nickname: '', wechat_avatar: null, wechat_phone: null,
+      country: data.country, main_categories: data.mainCategories, main_sales_items: data.mainSalesItems, avg_price_range: data.avgPriceRange,
+      sales_channels: data.salesChannels, business_role: data.businessRole, has_contracted_courier: data.hasCourier, plan: data.plan,
+      status: 'pending', reviewed_at: null,
+    }, { onConflict: 'user_id' });
+    if (error) throw new Error('Application could not be submitted.');
+    return { ok: true };
+  });
+
 async function assertAdmin(supabase: any, userId: string) {
   const { data } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' });
   if (!data) throw new Error('Forbidden');
@@ -73,7 +95,7 @@ export const listSellerApplications = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { data, error } = await context.supabase.from('seller_applications').select('id, user_id, system_code, nickname, status, created_at').order('created_at', { ascending: false });
+    const { data, error } = await context.supabase.from('seller_applications').select('id, user_id, system_code, nickname, status, created_at, country, main_categories, main_sales_items, avg_price_range, sales_channels, business_role, has_contracted_courier, plan').order('created_at', { ascending: false });
     if (error) throw new Error('Could not load applications.');
     const ids = data.map(a => a.user_id);
     const [orders, overrides, reviews] = ids.length ? await Promise.all([

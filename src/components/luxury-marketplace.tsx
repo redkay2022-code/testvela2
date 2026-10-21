@@ -80,7 +80,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help,sto
  const {data}=useSuspenseQuery(postsQuery); const ratingMap=useSellerRatingMap(); const allRaw=withLiveRatings(luxuryPosts(data),ratingMap.data),all=allRaw; const preview=useMarketPreview();
  const location=useRouterState({select:s=>s.location}); const slugPost=storeSlug?all.find(p=>sellerMatches(p,storeSlug)):undefined; const search=storeSlug?{...marketSearch.parse(location.search),seller:slugPost?sellerIdentity(slugPost):storeSlug}:marketSearch.parse(location.search);
  const helpPath=help==='escrow'?'/escrow-guide':help==='support'?'/support':help==='privacy'?'/privacy':undefined;
- const navigate=useNavigate(),router=useRouter(); const base=location.pathname==='/seller-store'?'/seller-store':location.pathname==='/seller-messages'?'/seller-messages':mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
+ const navigate=useNavigate(),router=useRouter(); const base=location.pathname==='/seller/apply'?'/seller/apply':location.pathname==='/seller-store'?'/seller-store':location.pathname==='/seller-messages'?'/seller-messages':mode==='store'?'/store':mode==='seller'?'/seller':mode==='admin'?'/admin':paths[mode];
   const sheetPushed=useRef(false),searchPushed=useRef(false),categoriesPushed=useRef(false);
  const [query,setQuery]=useState(search.q || ''),[toast,setToast]=useState(''),[user,setUser]=useState<AuthUser|null>(null),[newest,setNewest]=useState(false);
  const [authReady,setAuthReady]=useState(false);

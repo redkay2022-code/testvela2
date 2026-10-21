@@ -123,7 +123,10 @@
     "직접입력 (Custom Input)",
     "feed data",
     "long task (page froze)",
-    "1200px 0px"
+    "1200px 0px",
+    "Instagram",
+    "TikTok",
+    "Reddit"
   ],
   "patterns": [
     "^[A-Z0-9]{2,4} Factory( \\([A-Z0-9]+\\))?$",
