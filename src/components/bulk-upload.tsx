@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { CheckCircle2, Loader2, Pause, Play, TriangleAlert, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,19 +31,51 @@ function CoverThumb({ file }: { file: File }) {
   return url ? <img src={url} alt="대표 이미지" className="size-10 shrink-0 rounded object-cover" /> : null;
 }
 
+const isVideoFile = (f: File) => /\.(mp4|mov)$/i.test(f.name) && !f.name.startsWith('.');
+const isPhotoFile = (f: File) => /\.(jpe?g|png|webp)$/i.test(f.name) && !f.name.startsWith('.');
+const stemOf = (name: string) => name.replace(/\.[^.]+$/, '');
+type Common = { price: string; menuCategory: string; storySubcategory: string; source: string; factory: string; dispatch: string };
+const NO_COMMON: Common = { price: '', menuCategory: '', storySubcategory: '', source: '', factory: '', dispatch: '' };
+
 export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: User; existingTitles: string[]; onClose: () => void; onDone: () => void }) {
   useCurrency();
   const job = useBulkJob();
   const { items, states, notes, phase } = job;
   const [paste, setPaste] = useSessionState('bulk-upload:paste', '');
   const [open, setOpen] = useSessionState<string | null>('bulk-upload:open', null);
+  const [mode, setMode] = useSessionState<'mixed' | 'video'>('bulk-upload:mode', 'mixed');
+  const videoOnly = mode === 'video';
+  const [common, setCommon] = useState<Common>(NO_COMMON), [skipNote, setSkipNote] = useState('');
+  const autoTitled = useRef(new Set<string>());
   const titles = useMemo(() => new Set(existingTitles.map(t => t.normalize('NFC').trim().toLowerCase())), [existingTitles]);
   const checks = useMemo(() => Object.fromEntries(items.map(it => [it.id, validateItem(it, titles)])), [items, titles]);
   useEffect(() => { bulkJob.setContext({ user, titles, onDone }); });
 
   const running = phase === 'running' || phase === 'pausing';
   const paused = phase === 'paused';
-  const addFiles = (list: FileList | null) => { if (list?.length) bulkJob.addFiles(Array.from(list)); };
+  const addFiles = (list: FileList | null) => {
+    if (!list?.length) return;
+    const files = Array.from(list);
+    if (!videoOnly) { setSkipNote(''); bulkJob.addFiles(files); return; }
+    const videos = files.filter(isVideoFile), photos = files.filter(isPhotoFile).length;
+    setSkipNote(photos ? `영상만 올리는 탭이라 사진 ${photos}장은 제외했어요. 사진도 함께 올리려면 “사진 + 영상” 탭을 이용해 주세요.` : '');
+    if (videos.length) bulkJob.addFiles(videos);
+  };
+  /* 영상만 탭: 제목이 비어 있으면 영상 파일 이름으로 채워 둔다(한 번만, 이후 직접 고쳐도 그대로 유지) */
+  useEffect(() => {
+    if (!videoOnly) return;
+    for (const it of items) {
+      if (autoTitled.current.has(it.id) || states[it.id]?.status === 'done') continue;
+      autoTitled.current.add(it.id);
+      if (!it.values.title.trim() && it.video) bulkJob.edit(it.id, 'title', stemOf(it.name).slice(0, 100));
+    }
+  }, [videoOnly, items, states]);
+  const applyCommon = () => {
+    const keys = (Object.keys(common) as (keyof Common)[]).filter(k => common[k].trim());
+    for (const it of items) { if (states[it.id]?.status === 'done') continue; for (const k of keys) bulkJob.edit(it.id, k, common[k]); }
+  };
+  const commonCount = items.filter(i => states[i.id]?.status !== 'done').length;
+  const hasCommon = (Object.values(common) as string[]).some(v => v.trim());
   const ready = items.filter(i => checks[i.id]?.plan && states[i.id]?.status !== 'done').length;
   const doneCount = items.filter(i => states[i.id]?.status === 'done').length;
   const blocked = items.filter(i => !checks[i.id]?.plan).length;
@@ -52,18 +84,32 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
   const clearAll = () => { if (pending > 0 && !window.confirm('선택한 파일과 입력한 내용을 모두 비울까요?')) return; bulkJob.reset(); setPaste(''); setOpen(null); };
 
   return <section className="seller-flow-card mt-4" aria-label="일괄 업로드">
-    <div className="flex items-center justify-between gap-3"><h3 className="text-base font-semibold">일괄 업로드 (영상 1개 또는 사진 묶음 1개 = 상품 1개, 최대 {MAX_BULK}개)</h3><Button variant="ghost" size="icon" aria-label="닫기" onClick={close} disabled={running}><X /></Button></div>
-    <ol className="mt-3 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
+    <div className="flex items-center justify-between gap-3"><h3 className="text-base font-semibold">{videoOnly ? `영상만 일괄 업로드 (영상 1개 = 상품 1개, 최대 ${MAX_BULK}개)` : `일괄 업로드 (영상 1개 또는 사진 묶음 1개 = 상품 1개, 최대 ${MAX_BULK}개)`}</h3><Button variant="ghost" size="icon" aria-label="닫기" onClick={close} disabled={running}><X /></Button></div>
+    <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="일괄 업로드 종류"><Button type="button" role="tab" aria-selected={!videoOnly} size="sm" variant={!videoOnly ? 'goldOutline' : 'ghost'} disabled={running} onClick={() => setMode('mixed')}>사진 + 영상</Button><Button type="button" role="tab" aria-selected={videoOnly} size="sm" variant={videoOnly ? 'goldOutline' : 'ghost'} disabled={running} onClick={() => setMode('video')}>영상만</Button></div>
+    {videoOnly ? <ol className="mt-3 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
+      <li>영상(mp4, mov)만 한꺼번에 선택해요. 영상 1개가 상품 1개가 되고, 제목은 영상 파일 이름으로 자동 입력돼요. (사진은 올라가지 않아요)</li>
+      <li>아래 “공통 입력”에 가격·카테고리 등을 적고 “모두에게 적용”을 눌러요. 상품마다 다른 내용은 목록에서 눌러 고치거나, 엑셀 표를 붙여넣어도 돼요.</li>
+      <li>줄마다 문제가 없는지 확인하고 “임시저장으로 올리기” 또는 “바로 공개하며 올리기”를 눌러요. 올리는 중 일시정지도 할 수 있어요.</li>
+    </ol> : <ol className="mt-3 list-decimal space-y-1 pl-5 text-xs text-muted-foreground">
       <li>영상과 사진을 한꺼번에 선택해요. 사진 이름은 “상품이름-1.jpg”, “상품이름-2.jpg”처럼 맞춰요. 같은 이름의 영상이 있으면 그 영상 상품에 묶이고, 영상이 없으면 사진만으로 된 상품이 돼요. 첫 번째 사진(-1)이 대표 이미지예요.</li>
       <li>엑셀/구글 시트의 표를 복사해 아래 칸에 붙여넣어요. 열 순서: {PASTE_ORDER.map(f => FIELD_LABEL[f]).join(' · ')} (첫 줄에 머리글을 넣으면 순서가 달라도 돼요)</li>
       <li>줄마다 문제가 없는지 확인하고 “업로드 시작”을 눌러요.</li>
       <li>올리는 중에 “일시정지”를 누르면 지금 올리는 상품까지 마친 뒤 멈춰요. 멈춘 동안 남은 상품을 고치고 “이어서 올리기”를 누르면 돼요. 다른 페이지에 갔다가 돌아와도 진행 상황이 그대로 보여요. 새로고침하거나 탭을 닫으면 선택한 파일이 사라져요.</li>
-    </ol>
+    </ol>}
     <div className="mt-3 flex min-h-20 flex-wrap items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-muted p-3 text-sm" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (!running) addFiles(e.dataTransfer.files); }}>
-      <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2"><Upload size={18} />파일 선택 (여러 개)<input className="sr-only" type="file" multiple accept="video/mp4,video/quicktime,.mov,image/jpeg,image/png,image/webp" aria-label="영상과 사진 선택" disabled={running} onChange={e => { addFiles(e.target.files); e.target.value = ''; }} /></label>
+      <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2"><Upload size={18} />{videoOnly ? '영상 선택 (여러 개)' : '파일 선택 (여러 개)'}<input className="sr-only" type="file" multiple accept={videoOnly ? "video/mp4,video/quicktime,.mov" : "video/mp4,video/quicktime,.mov,image/jpeg,image/png,image/webp"} aria-label={videoOnly ? "영상 선택" : "영상과 사진 선택"} disabled={running} onChange={e => { addFiles(e.target.files); e.target.value = ''; }} /></label>
       <label className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2"><Upload size={18} />폴더 통째로 선택<input className="sr-only" type="file" multiple {...({ webkitdirectory: '', directory: '' } as Record<string, string>)} aria-label="폴더 선택" disabled={running} onChange={e => { addFiles(e.target.files); e.target.value = ''; }} /></label>
       <span className="w-full text-center text-xs text-muted-foreground">파일을 여기로 끌어다 놓아도 돼요</span>
     </div>
+    {videoOnly && skipNote && <p className="mt-2 text-xs text-muted-foreground" role="status">{skipNote}</p>}
+    {videoOnly && items.length > 0 && <div className="mt-3 rounded-lg border border-border p-3"><p className="mb-2 text-sm font-medium">공통 입력 (비워 둔 칸은 적용하지 않아요)</p><div className="grid grid-cols-2 gap-2">
+      <input className="form-input" inputMode="decimal" aria-label="판매 가격" placeholder="판매 가격 (USD)" value={common.price} onChange={e => setCommon({ ...common, price: e.target.value })} disabled={running} />
+      <select className="form-input notranslate" translate="no" aria-label="메뉴 카테고리" value={common.menuCategory} onChange={e => setCommon({ ...common, menuCategory: e.target.value, storySubcategory: '' })} disabled={running}><option value="">메뉴 카테고리 (비우면 시계)</option>{postCategoryLabels.map(cat => <option key={cat} value={cat} translate="no" data-i18n-skip className="notranslate">{isWatchStory(cat) ? t('story') : tx(cat)}</option>)}</select>
+      {isWatchStory(common.menuCategory) && <select className="form-input notranslate col-span-2" translate="no" data-i18n-skip aria-label={t('storySubcategory')} value={common.storySubcategory} onChange={e => setCommon({ ...common, storySubcategory: e.target.value })} disabled={running}><option value="" disabled translate="no" className="notranslate">{t('selectStorySubcategory')}</option>{watchStoryOptions.map(([, label, key]) => <option key={label} value={label} translate="no" className="notranslate">{t(key)}</option>)}</select>}
+      <select className="form-input" aria-label="제조 / 출처 구분" value={common.source} onChange={e => setCommon({ ...common, source: e.target.value })} disabled={running}><option value="">제조 / 출처 구분 (비우면 커스텀 제작)</option><option>커스텀 제작</option><option>공장 선택</option><option>기타 - 직접입력</option></select>
+      <input list="bulk-factory-list" className="form-input" aria-label="공장" placeholder="공장 (공장 선택일 때)" value={common.factory} onChange={e => setCommon({ ...common, factory: e.target.value })} disabled={running} />
+      <input list="bulk-dispatch-list" className="form-input col-span-2" aria-label="예상 발송 시간" placeholder="예상 발송 시간" value={common.dispatch} onChange={e => setCommon({ ...common, dispatch: e.target.value })} disabled={running} />
+    </div><Button size="sm" variant="goldOutline" className="mt-2" disabled={!hasCommon || !commonCount || running} onClick={applyCommon}>모두에게 적용 ({commonCount}개)</Button></div>}
     <textarea className="form-input mt-3 min-h-24 font-mono text-xs" placeholder="엑셀에서 복사한 표를 여기에 붙여넣기" value={paste} onChange={e => setPaste(e.target.value)} disabled={running} />
     <div className="mt-2 flex flex-wrap items-center gap-2">
       <Button size="sm" variant="goldOutline" disabled={!paste.trim() || !items.length || running} onClick={() => { bulkJob.applyTable(paste); setPaste(''); }}>표 적용</Button>
