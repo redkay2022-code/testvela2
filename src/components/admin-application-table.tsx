@@ -32,24 +32,32 @@ export function ApplicationTable({ a, busy, onPlan }: { a: ApplicationDetails; b
     ['주력 판매 품목', a.main_sales_items?.trim() || '—'],
     ['택배사 계약', a.has_contracted_courier === null || a.has_contracted_courier === undefined ? '—' : a.has_contracted_courier ? '있음' : '없음'],
   ];
-  return <div className="col-span-full mt-2 w-full" style={{ gridColumn: '1 / -1' }} data-i18n-skip data-no-translate translate="no">
-    <table className="w-full border-collapse text-sm">
-      <tbody>
-        {rows.map(([label, value]) => <tr key={label}>
-          <th scope="row" className="w-28 border border-border bg-muted/40 px-3 py-2 text-left align-top font-medium text-muted-foreground sm:w-40">{label}</th>
-          <td className="border border-border px-3 py-2 align-top break-words">{value}</td>
-        </tr>)}
-        {a.requested_plan && <tr>
-          <th scope="row" className="w-28 border border-primary bg-muted/40 px-3 py-2 text-left align-top font-medium text-primary sm:w-40">요금제 변경 요청</th>
-          <td className="border border-primary px-3 py-2 align-top">
-            <span className="mr-3 font-medium">{PLAN_NAMES[a.plan ?? 'basic'] ?? a.plan} → {PLAN_NAMES[a.requested_plan] ?? a.requested_plan}</span>
-            <span className="inline-flex flex-wrap gap-2">
-              <Button size="sm" variant="goldOutline" disabled={busy} onClick={() => onPlan(a.id, true)}>변경 승인</Button>
-              <Button size="sm" variant="ghost" disabled={busy} onClick={() => onPlan(a.id, false)}>변경 거절</Button>
-            </span>
-          </td>
-        </tr>}
-      </tbody>
-    </table>
+  const head = 'whitespace-nowrap border border-border bg-muted/40 px-3 py-2 text-left text-xs font-medium text-muted-foreground';
+  const cell = 'border border-border px-3 py-2 align-top text-sm';
+  return <div className="col-span-full mt-3 w-full" style={{ gridColumn: '1 / -1' }} data-i18n-skip data-no-translate translate="no">
+    <div className="w-full overflow-x-auto">
+      <table className="w-full min-w-[760px] border-collapse">
+        <thead><tr>{rows.map(([label]) => <th key={label} scope="col" className={head}>{label}</th>)}</tr></thead>
+        <tbody><tr>{rows.map(([label, value]) => <td key={label} className={cell + ' break-words'}>{value}</td>)}</tr></tbody>
+      </table>
+    </div>
+    {a.requested_plan && <div className="mt-2 flex flex-wrap items-center gap-3 rounded-md border border-primary px-3 py-2 text-sm">
+      <strong className="text-primary">요금제 변경 요청</strong>
+      <span>{PLAN_NAMES[a.plan ?? 'basic'] ?? a.plan} → {PLAN_NAMES[a.requested_plan] ?? a.requested_plan}</span>
+      <span className="inline-flex flex-wrap gap-2">
+        <Button size="sm" variant="goldOutline" disabled={busy} onClick={() => onPlan(a.id, true)}>변경 승인</Button>
+        <Button size="sm" variant="ghost" disabled={busy} onClick={() => onPlan(a.id, false)}>변경 거절</Button>
+      </span>
+    </div>}
   </div>;
+}
+
+/** Admin-only: one dropdown with every applicant of the current filter; the detail table shows the chosen one. */
+export function ApplicantPicker({ options, value, onChange }: { options: { id: string; label: string }[]; value: string; onChange: (id: string) => void }) {
+  return <label className="mb-3 block" data-i18n-skip data-no-translate translate="no">
+    <span className="mb-1 block text-xs text-muted-foreground">신청자 선택 ({options.length}명)</span>
+    <select aria-label="신청자 선택" className="min-h-11 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" value={value} onChange={e => onChange(e.target.value)}>
+      {options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+    </select>
+  </label>;
 }

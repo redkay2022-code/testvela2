@@ -8,7 +8,7 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { Check, ShieldCheck, UserRound, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
-import { ApplicationTable } from '@/components/admin-application-table';
+import { ApplicantPicker, ApplicationTable } from '@/components/admin-application-table';
 import { decidePlanChange, decideSellerApplication, getMyAccount, listSellerApplications, setSellerTierOverride, updateNickname } from '@/lib/seller-accounts.functions';
 import { automatedTier, sellerTiers, studioNames, type SellerTier } from '@/lib/reputation';
 import { liveReputation } from '@/lib/studio-metrics';
@@ -108,12 +108,13 @@ export function AdminApplications() {
   const { data, error, isLoading } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false, refetchInterval: 30000 });
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const gate = useAdminPasswordGate();
-  const [busy, setBusy] = useState<string | null>(null); const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState<string | null>(null); const [msg, setMsg] = useState(''); const [pickedId, setPickedId] = useState('');
   if (isLoading) return <p className="text-sm text-muted-foreground">판매자 신청을 불러오는 중…</p>;
   if (error) return <p className="text-sm text-muted-foreground">실제 신청은 관리자 계정으로 로그인한 후 확인할 수 있습니다.</p>;
   const rows = data ?? [];
   const count = (s: string) => rows.filter(a => a.status === s).length;
   const shown = filter === 'all' ? rows : rows.filter(a => a.status === filter);
+  const picked = shown.find(a => a.id === pickedId) ?? shown[0];
   const act = async (id: string, approve: boolean, name: string) => {
     let password: string | undefined;
     if (!approve) { const pw = await gate.ask(`${name} 님의 판매자 권한을 거절/해제합니다.`); if (!pw) return; password = pw; }
@@ -125,8 +126,9 @@ export function AdminApplications() {
   return <div>{gate.dialog}
     <div className="flex flex-wrap gap-2 py-3">{([['pending', '대기'], ['approved', '승인'], ['rejected', '거절'], ['all', '전체']] as const).map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? 'goldOutline' : 'ghost'} onClick={() => setFilter(k)}>{l} {k === 'all' ? rows.length : count(k)}</Button>)}</div>
     {msg && <p role="status" className="mb-2 text-sm text-primary">{msg}</p>}
-    {!shown.length ? <p className="text-sm text-muted-foreground">{filter === 'pending' ? '검토 대기 중인 신청이 없습니다.' : '해당하는 신청이 없습니다.'}</p> :
-    <div className="management-list">{shown.map(a => { const name = a.nickname ?? 'Member'; return <div className="management-row" key={a.id}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small></div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
+    {!shown.length ? <p className="text-sm text-muted-foreground">{filter === 'pending' ? '검토 대기 중인 신청이 없습니다.' : '해당하는 신청이 없습니다.'}</p> : <>
+    <ApplicantPicker value={picked?.id ?? ''} onChange={setPickedId} options={shown.map(a => ({ id: a.id, label: `${a.nickname ?? 'Member'} · #${a.system_code ?? '—'} · ${new Date(a.created_at).toLocaleDateString('ko-KR')} · ${statusLabel[a.status] ?? a.status}` }))} />
+    <div className="management-list">{[picked].map(a => { const name = a.nickname ?? 'Member'; return <div className="management-row" key={a.id}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small></div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
       <div className="record-actions">
         {a.status !== 'approved' && <Button variant="goldOutline" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, true, name)}><Check/>승인</Button>}
         {a.status !== 'rejected' && <Button variant="ghost" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, false, name)}><X/>{a.status === 'approved' ? '권한 해제' : '거절'}</Button>}
@@ -136,6 +138,6 @@ export function AdminApplications() {
         <div className="flex flex-wrap items-center gap-2"><StudioTierBadge tier={cur}/><span className="text-muted-foreground">자동 등급: {studioNames[auto]}{a.override ? ' · 수동 지정 적용 중' : ''}</span></div>
         <div className="grid grid-cols-2 gap-1 sm:grid-cols-4"><span>가상화폐 매출 <strong>${Math.round(m.volumeUsd).toLocaleString('en-US')}</strong></span><span>완료 주문 <strong>{m.completedSales}</strong></span><span>평점 <strong>★ {a.rating.average === null ? '—' : a.rating.average.toFixed(2)} ({a.rating.count})</strong></span><span>분쟁 <strong>{m.disputes}/{m.totalOrders} ({m.disputeRate.toFixed(1)}%)</strong></span></div>
         <label className="flex items-center gap-2">수동 등급 지정<select aria-label="수동 등급 지정" className="rounded-md border border-border bg-background px-2 py-1" value={a.override ?? ''} disabled={busy === a.id} onChange={async e => { const v = (e.target.value || null) as SellerTier | null; setBusy(a.id); try { await setTier({ data: { sellerId: a.user_id, tier: v } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); setMsg(`${name} · ${v ? studioNames[v] + '(으)로 수동 지정했습니다.' : '자동 등급으로 되돌렸습니다.'}`); } catch (er) { setMsg(er instanceof Error ? er.message : '등급을 변경하지 못했습니다.'); } finally { setBusy(null); } }}><option value="">자동 (기준에 따라)</option>{sellerTiers.map(t => <option key={t} value={t}>{studioNames[t]}</option>)}</select></label>
-      </div>; })()}</div>; })}</div>}
+      </div>; })()}</div>; })}</div></>}
   </div>;
 }
