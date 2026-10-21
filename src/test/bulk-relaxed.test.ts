@@ -41,4 +41,19 @@ describe('photo + video only upload (relaxed validation)', () => {
     expect(many.errors.some(e => e.includes('9장'))).toBe(true);
     expect(validateItem(item({ photos: Array.from({ length: 9 }, (_, i) => photo(`p-${i}.jpg`)) }), new Set(), true).plan === null).toBe(false);
   });
+  it('is ready with a video only, photos only, or both, with no warnings', () => {
+    const video = new File([new Uint8Array(10)], 'clip.mp4', { type: 'video/mp4' });
+    for (const it2 of [item({ video, photos: [] }), item({ video: null }), item({ video })]) {
+      const r = validateItem(it2, new Set(), true, 20);
+      expect(r.errors).toEqual([]);
+      expect(r.warnings).toEqual([]);
+      expect(r.plan === null).toBe(false);
+    }
+  });
+  it('ignores file sizes in the photo + video only upload (only photo count and video length block)', () => {
+    const big = new File([new Uint8Array(10)], 'big.mp4', { type: 'video/mp4' });
+    Object.defineProperty(big, 'size', { value: 300 * 1024 * 1024 });
+    expect(validateItem(item({ video: big }), new Set(), true, 25).plan === null).toBe(false);
+    expect(validateItem(item({ video: big }), new Set(), false, 25).plan).toBeNull(); // normal table upload keeps the 100MB rule
+  });
 });

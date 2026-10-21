@@ -211,20 +211,21 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>, relaxe
   if (sell !== false && box !== null && (!Number.isFinite(box) || box < 0 || box > 100000000)) errors.push('박스 가격은 0 이상의 숫자로 입력해 주세요.');
   if (sell !== false && Number.isFinite(price) && price <= MAX_PRODUCT_PRICE_USD && box !== null && Number.isFinite(box) && exceedsPriceCap(price, box)) errors.push(priceCapMessage());
   if (!item.video && item.photos.length === 0) errors.push('사진도 영상도 없는 묶음은 올릴 수 없어요.');
-  if (item.video && item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 100MB까지 올릴 수 있어요. “영상 길이 수정”으로 줄여 주세요.');
+  /* relaxed (photo + video only upload): only the photo count and the video length can block a product; file sizes are handled at upload time (photos are compressed, videos go to Mux). */
+  if (!relaxed && item.video && item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 100MB까지 올릴 수 있어요. “영상 길이 수정”으로 줄여 주세요.');
   if (item.video && videoSeconds && videoSeconds > MAX_VIDEO_SECONDS + 0.05) errors.push(`영상은 최대 ${MAX_VIDEO_SECONDS}초까지 올릴 수 있어요. (지금 ${Math.ceil(videoSeconds)}초) “영상 길이 수정”으로 줄여 주세요.`);
   if (item.photos.length > MAX_LISTING_PHOTOS) errors.push(`사진은 최대 ${MAX_LISTING_PHOTOS}장까지 올릴 수 있어요. (지금 ${item.photos.length}장) 사진을 빼 주세요.`);
-  if (item.photos.some(p => p.size > MAX_PHOTO_BYTES)) errors.push('사진은 장당 최대 10MB까지 올릴 수 있어요.');
+  if (!relaxed && item.photos.some(p => p.size > MAX_PHOTO_BYTES)) errors.push('사진은 장당 최대 10MB까지 올릴 수 있어요.');
   if (v.title.trim().length > 100) warnings.push('제목이 100자를 넘어 잘립니다.');
   if (existingTitles.has(norm(v.title))) warnings.push('같은 제목의 상품이 이미 있어요.');
-  if (errors.length || sell === null || (sell && !source) || !category || !menuCategory) return { errors, warnings, plan: null };
+  if (errors.length || sell === null || (sell && !source) || !category || !menuCategory) return { errors, warnings: relaxed ? [] : warnings, plan: null };
   const d = normalizeDispatch(v.dispatch);
   const spec = watchSpecs(v, errors, warnings);
-  if (errors.length) return { errors, warnings, plan: null };
+  if (errors.length) return { errors, warnings: relaxed ? [] : warnings, plan: null };
   const specs: Record<string, string> = { ...spec };
   Object.assign(specs, watchStorySpecs(menuCategory, v.storySubcategory));
   specs['menuCategory'] = menuCategory; if (sell && source) { specs['sourceType'] = source; if (source !== 'custom') specs['factory'] = v.factory.trim().slice(0, 80); }
-  return { errors, warnings, plan: { title: v.title.trim().slice(0, 100), description: v.description.trim().slice(0, 3000), category, sell, price: sell ? Math.round(price) : null, boxPrice: sell ? (box !== null && Number.isFinite(box) && box >= 0 ? Math.round(box) : DEFAULT_BOX_PRICE) : null, dispatch: sell ? dispatchValue(d.choice, d.custom) : null, specs } };
+  return { errors, warnings: relaxed ? [] : warnings, plan: { title: v.title.trim().slice(0, 100), description: v.description.trim().slice(0, 3000), category, sell, price: sell ? Math.round(price) : null, boxPrice: sell ? (box !== null && Number.isFinite(box) && box >= 0 ? Math.round(box) : DEFAULT_BOX_PRICE) : null, dispatch: sell ? dispatchValue(d.choice, d.custom) : null, specs } };
 }
 
 /** Decodes a CSV file: UTF-8 first, then EUC-KR (Excel on Korean Windows/Mac often saves CSV that way). */
