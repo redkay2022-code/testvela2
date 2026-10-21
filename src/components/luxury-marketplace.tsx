@@ -43,6 +43,7 @@ import { usePostTranslation } from './post-translation';
 import { matchesFeedCategory } from '@/lib/feed-categories';
 import { SellerDirectory } from './seller-directory';
 import { SellerStoreContent } from './seller-store-content';
+import { LogoutItem } from './logout-item';
 import { CurrencySelect } from './currency';
 import { NotificationInbox, NotificationsContext, useNotifications } from './notification-bell';
 import { t } from '@/lib/i18n';
@@ -149,13 +150,13 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help,sto
   return <NotificationsContext.Provider value={notifications}>
   <PullToRefresh disabled={Boolean(shortsId||search.auth||productSignup||search.menu||search.searchOpen||search.notice)} onError={setToast} onRefresh={()=>{if(mode==='home'&&!postId&&(search.tab||'discover')==='discover')feedSignals?.reshuffle();}}/>
    <SellerApprovalRedirect user={user} applying={search.panel==='apply'}/>
-  {!backOnlyHeader&&!postId&&!shortsId&&<header className={`lux-header ${cleanHome?'red-home-header':''}`}>
+  {!backOnlyHeader&&!postId&&!shortsId&&<header className={`lux-header ${cleanHome?'red-home-header':''} ${mode==='admin'?'admin-header':''}`}>
   <>
   <div className="lux-header-inner">
   <Button variant="ghost" size="icon" className="relative" aria-label={notifications.unread?`메뉴 열기 · 읽지 않은 알림 ${notifications.unread}개`:'메뉴 열기'} onClick={()=>{if(guest){guestSignup();return;}update({menu:true});}}><Menu/>{notifications.unread>0&&<span aria-hidden="true" className="absolute right-0 top-1 size-2 rounded-full bg-destructive"/>}</Button>
     <Link to="/" search={{role:search.role}} className="lux-brand" aria-label="VELA home">VELA</Link>
     <nav className="lux-header-tabs notranslate" translate="no" aria-label="Feed tabs">{[['following','팔로잉'],['discover','추천'],['reviews','리뷰']].map(([tab,label])=><Button asChild variant="ghost" key={tab} className={`lux-tab ${(search.tab || 'discover')===tab?'active':''}`}><Link to="/" search={{role:search.role,feedCategory:search.feedCategory,tab:tab as 'following'|'discover'|'reviews'}} aria-current={(search.tab || 'discover')===tab?'page':undefined} resetScroll={false} onClick={guardGuest}><Tx>{label}</Tx></Link></Button>)}</nav>
-   <CurrencySelect/><Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{if(guest){guestSignup();return;}searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button>
+   {mode==='admin'?<div className="admin-header-end"><LogoutItem compact/><CurrencySelect/></div>:<CurrencySelect/>}<Button variant="ghost" size="icon" className="h-10 w-8" aria-label="Open search" onClick={()=>{if(guest){guestSignup();return;}searchPushed.current=true;update({searchOpen:true});}}><Search className="size-5"/></Button>
   </div>
    {cleanHome&&<FeedCategoryPicker catalog={all} selected={search.feedCategory} open={Boolean(search.categoriesOpen)} onOpen={()=>{categoriesPushed.current=true;update({categoriesOpen:true});}} onClose={closeCategories} onSelect={selectCategory}/>}
  </>
