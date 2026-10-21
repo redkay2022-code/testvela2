@@ -34,8 +34,11 @@ async function callerToken() {
 }
 
 async function loadPosts(token: string | null) {
-  const { data, error } = await publicClient(token).from('posts').select('*, store:stores(id,slug,store_name,verification_status,featured)').order('created_at', { ascending: false }).order('id');
+  // Every column except `translations`: saved machine translations (up to 10 languages per post) are never read from the
+  // feed (cards fetch their own language through post-translation-batch), but used to be sent for every post.
+  const { data: feedRows, error } = await publicClient(token).from('posts').select('base_likes,box_price,brand,category,created_at,creator,currency,data_source,description,dispatch_time,duration,featured,id,image_key,low_stock_threshold,media_urls,model,music_artist,music_audio_url,music_license_url,music_title,music_track_id,price,product_status,reference,reserved_qty,sku,source_lang,specs,status,stock_qty,store_id,subcategory,thumbnail_url,title,updated_at,user_id,video_tags,video_url, store:stores(id,slug,store_name,verification_status,featured)').order('created_at', { ascending: false }).order('id');
   if (error) throw new Error('피드를 불러오지 못했습니다.');
+  const data = feedRows.map(row => ({ ...row, translations: {} as Database['public']['Tables']['posts']['Row']['translations'] }));
   const uploaded = data.filter(p => p.image_key === 'uploaded' || p.image_key === 'seed');
   if (uploaded.length) {
     // Only paths referenced by publicly readable posts can be signed here; bundled seed tokens pass through.
