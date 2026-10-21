@@ -18,6 +18,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { MarketPreviewProvider } from '@/components/market-preview';
 import { Toaster } from '@/components/ui/sonner';
+import { usePageTracker } from '@/lib/page-tracker';
 import { OrderNotifier } from '@/components/live-orders';
 import { TransactionSampleProvider } from '@/components/transaction-sample';
 
@@ -133,6 +134,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  usePageTracker();
 
   return (
     <QueryClientProvider client={queryClient}>
