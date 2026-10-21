@@ -465,7 +465,9 @@
 .seller-header-name svg {color:var(--primary);flex-shrink:0;}
 .seller-header-rating {display:flex;align-items:center;gap:3px;font-size:10px;color:var(--primary);white-space:nowrap;}
 .seller-header-avatar {box-sizing:border-box;flex:0 0 38px;width:38px;min-width:38px;max-width:38px;height:38px;min-height:38px;max-height:38px;aspect-ratio:1/1;border-radius:50%;overflow:hidden;padding:0;}
-.seller-header-avatar img {display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.seller-header-avatar img {display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:center;}
+/* Every profile photo is cropped from its centre, the same way the photo was framed when it was first uploaded. */
+img[class*="avatar"],[class*="avatar"]>img {object-fit:cover;object-position:center;}
 @media(max-width:480px){.seller-header-avatar {flex-basis:34px;width:34px;min-width:34px;max-width:34px;height:34px;min-height:34px;max-height:34px;}}
 .seller-store-cta {flex-shrink:0;font-size:11px;gap:4px;white-space:nowrap;}
 @media(max-width:480px) {.shorts-sheet-seller {flex-wrap:wrap;row-gap:8px;padding:10px 14px;}.shorts-sheet-seller .seller-header-info {order:1;flex:1 1 160px;}.shorts-sheet-seller .seller-share-button {order:2;}.shorts-sheet-seller .seller-follow-button {order:3;flex:1 1 120px;justify-content:center;}.shorts-sheet-seller .seller-store-cta {order:4;flex:1 1 160px;justify-content:center;}}
