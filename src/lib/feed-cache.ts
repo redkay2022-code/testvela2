@@ -59,3 +59,29 @@ export class SharedFeedCache<T> {
 
   clear() { this.value = null; this.loading = null; }
 }
+
+/**
+ * The public feed is built from the database plus thousands of signed media links, which takes several seconds on a
+ * server that has just started. The finished feed is therefore also saved in one database row that every server reads
+ * (one quick query) instead of rebuilding. A visitor only waits for a rebuild when the saved copy is older than `ttlMs`;
+ * if the rebuild fails an older saved copy (up to `staleOkMs`) is served instead of an error.
+ */
+export async function loadWithSnapshot<T>(o: {
+  read: () => Promise<{ at: number; data: T } | null>;
+  build: () => Promise<T>;
+  write: (data: T) => Promise<void>;
+  ttlMs: number; staleOkMs: number; writeWaitMs?: number; now?: Clock;
+}): Promise<T> {
+  const now = o.now ?? Date.now;
+  const snap = await o.read().catch(() => null);
+  if (snap && now() - snap.at < o.ttlMs) return snap.data;
+  try {
+    const data = await o.build();
+    // Saving is best effort and bounded, so a slow or missing table never makes the visitor wait long or fail.
+    await Promise.race([o.write(data).catch(() => undefined), new Promise<void>(r => setTimeout(r, o.writeWaitMs ?? 4000))]);
+    return data;
+  } catch (error) {
+    if (snap && now() - snap.at < o.staleOkMs) return snap.data;
+    throw error;
+  }
+}

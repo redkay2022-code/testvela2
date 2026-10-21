@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
 import type { Database } from '@/integrations/supabase/types';
 import { commentAvatarPath, commentNickname } from './comment-profiles';
 import { isExternalVideo, isMuxPending, isMuxStreamUrl, muxThumbnailUrl } from './mux';
-import { SharedFeedCache, SignedUrlMemo } from './feed-cache';
+import { SharedFeedCache, SignedUrlMemo, loadWithSnapshot } from './feed-cache';
 
 const signedMemo = new SignedUrlMemo();
 
@@ -88,12 +88,26 @@ async function loadPosts(token: string | null) {
  * (signed photo/video links stay valid for 6 hours). Many visitors at once, or a quick refresh, no longer each
  * repeat the database read and the link signing. Signed-in callers are never cached: sellers must see their own drafts.
  */
-const publicFeed = new SharedFeedCache<Awaited<ReturnType<typeof loadPosts>>>(120_000);
+type FeedRows = Awaited<ReturnType<typeof loadPosts>>;
+const publicFeed = new SharedFeedCache<FeedRows>(120_000);
+
+/** The shared saved copy of the public feed (table public_feed_snapshot, server access only). Missing table = no snapshot. */
+type SnapshotTable = { from: (t: string) => { select: (c: string) => { eq: (c: string, v: number) => { maybeSingle: () => Promise<{ data: { data: unknown; built_at: string } | null; error: unknown }> } }; upsert: (row: Record<string, unknown>) => Promise<{ error: unknown }> } };
+async function snapshotDb() { const { supabaseAdmin } = await import('@/integrations/supabase/client.server'); return supabaseAdmin as unknown as SnapshotTable; }
+async function readFeedSnapshot() {
+  const { data, error } = await (await snapshotDb()).from('public_feed_snapshot').select('data,built_at').eq('id', 1).maybeSingle();
+  if (error || !data || !Array.isArray(data.data)) return null;
+  return { at: Date.parse(data.built_at), data: data.data as FeedRows };
+}
+async function writeFeedSnapshot(rows: FeedRows) {
+  const { error } = await (await snapshotDb()).from('public_feed_snapshot').upsert({ id: 1, data: rows, built_at: new Date().toISOString() });
+  if (error) console.error('feed snapshot save failed');
+}
 
 export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
   const token = await callerToken();
   if (token) return loadPosts(token);
-  return publicFeed.get(() => loadPosts(null));
+  return publicFeed.get(() => loadWithSnapshot<FeedRows>({ read: readFeedSnapshot, build: () => loadPosts(null), write: writeFeedSnapshot, ttlMs: 10 * 60_000, staleOkMs: 60 * 60_000 }));
 });
 
 export const getStores = createServerFn({ method: 'GET' }).handler(async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SharedFeedCache, SignedUrlMemo } from '@/lib/feed-cache';
+import { SharedFeedCache, SignedUrlMemo, loadWithSnapshot } from '@/lib/feed-cache';
 
 describe('signed link memo', () => {
   it('reuses links signed within 5 hours and signs again afterwards', () => {
@@ -43,5 +43,31 @@ describe('shared public feed', () => {
     void cache.get(() => new Promise<string>(() => {}));
     t = 26_000;
     expect(await cache.get(async () => `second-${++n}`)).toBe('second-1');
+  });
+});
+
+describe('saved feed copy', () => {
+  const snap = (at: number) => async () => ({ at, data: 'saved' });
+  it('uses a recent saved copy without rebuilding', async () => {
+    let built = 0;
+    const out = await loadWithSnapshot({ read: snap(1000), build: async () => { built++; return 'new'; }, write: async () => {}, ttlMs: 600_000, staleOkMs: 3_600_000, now: () => 2000 });
+    expect([out, built]).toEqual(['saved', 0]);
+  });
+  it('rebuilds and saves when the copy is old or missing', async () => {
+    let saved = '';
+    const old = await loadWithSnapshot({ read: snap(0), build: async () => 'new', write: async d => { saved = d; }, ttlMs: 1000, staleOkMs: 9999, now: () => 5000 });
+    expect([old, saved]).toEqual(['new', 'new']);
+    const none = await loadWithSnapshot<string>({ read: async () => null, build: async () => 'fresh', write: async () => {}, ttlMs: 1000, staleOkMs: 9999 });
+    expect(none).toBe('fresh');
+  });
+  it('still works when the table is missing or saving fails', async () => {
+    const out = await loadWithSnapshot<string>({ read: async () => { throw new Error('no table'); }, build: async () => 'live', write: async () => { throw new Error('no table'); }, ttlMs: 1000, staleOkMs: 9999 });
+    expect(out).toBe('live');
+  });
+  it('serves an older saved copy if the rebuild fails, but not an ancient one', async () => {
+    const fail = async () => { throw new Error('db down'); };
+    const out = await loadWithSnapshot({ read: snap(0), build: fail, write: async () => {}, ttlMs: 1000, staleOkMs: 10_000, now: () => 5000 });
+    expect(out).toBe('saved');
+    await expect(loadWithSnapshot({ read: snap(0), build: fail, write: async () => {}, ttlMs: 1000, staleOkMs: 10_000, now: () => 20_000 })).rejects.toThrow('db down');
   });
 });
