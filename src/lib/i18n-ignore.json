@@ -126,7 +126,8 @@
     "1200px 0px",
     "Instagram",
     "TikTok",
-    "Reddit"
+    "Reddit",
+    "결제를 확인했어요. 요금제와 이용 기간이 적용되었습니다."
   ],
   "patterns": [
     "^[A-Z0-9]{2,4} Factory( \\([A-Z0-9]+\\))?$",

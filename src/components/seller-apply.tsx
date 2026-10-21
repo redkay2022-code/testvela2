@@ -7,31 +7,16 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { tx } from '@/lib/dom-translate';
-import { changeSellerPlan, submitSellerApplicationForm } from '@/lib/seller-accounts.functions';
+import { submitSellerApplicationForm } from '@/lib/seller-accounts.functions';
 import {
-  CATEGORY_OPTIONS, CHANNEL_OPTIONS, COMMISSION_RATE, COUNTRY_CODES, PLANS, PLAN_IDS, PRICE_RANGE_OPTIONS, ROLE_OPTIONS,
-  flagOf, sellerApplicationSchema, type PlanId,
+  CATEGORY_OPTIONS, CHANNEL_OPTIONS, COMMISSION_RATE, COUNTRY_CODES, PLANS, PLAN_IDS, PRICE_RANGE_OPTIONS, ROLE_OPTIONS, YEARLY_DISCOUNT_LABEL,
+  flagOf, formatUsd, needsPayment, paidPrice, sellerApplicationSchema, type BillingPeriod, type PlanId,
 } from '@/lib/seller-plans';
+import { frozen, N, NT, T } from './apply-text';
 import { useCurrency } from './currency';
+import { BillingToggle, useSwitchPlan } from './plan-switch';
 import { useMyAccount } from './seller-account';
 import './seller-apply.css';
-
-/* Translated UI text. The wrapper is marked so the DOM translator never re-translates what the dictionary already produced. */
-const frozen = { 'data-i18n-skip': true, 'data-no-translate': true, translate: 'no' as const };
-function T({ children }: { children: string }) {
-  useCurrency();
-  return <span {...frozen} className="notranslate">{tx(children)}</span>;
-}
-/** Numbers, limits, the fee rate and URLs: never translated, in any language. */
-function N({ children }: { children: ReactNode }) {
-  return <span translate="no" className="notranslate" data-no-translate>{children}</span>;
-}
-/** A translated sentence whose {0}, {1} placeholders become untranslated <N> values. */
-function NT({ text, tokens }: { text: string; tokens: ReactNode[] }) {
-  useCurrency();
-  const parts = tx(text).split(/(\{\d\})/);
-  return <span {...frozen} className="notranslate">{parts.map((part, i) => { const m = /^\{(\d)\}$/.exec(part); return m ? <N key={i}>{tokens[Number(m[1])]}</N> : part; })}</span>;
-}
 
 function useLocaleTag() {
   const { lang } = useCurrency();
@@ -82,14 +67,15 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 const PLAN_NAMES: Record<PlanId, string> = { basic: 'Basic', pro: 'Pro Seller', enterprise: 'Enterprise Partner' };
 const PLAN_TAGS: Record<PlanId, string> = { basic: 'Free Plan', pro: 'Recommended · Launch special', enterprise: 'Review required' };
-const planOption = (id: PlanId, current?: PlanId | null) => `${tx(PLAN_NAMES[id])} · ${id === 'basic' ? PLANS.basic.monthlyFee : tx('{0} / month', { 0: PLANS[id].monthlyFee })}${current === id ? ` · ${tx('Current plan')}` : ''}`;
+const planOption = (id: PlanId, current?: PlanId | null) => `${tx(PLAN_NAMES[id])} · ${id === 'basic' ? PLANS.basic.monthlyFee : id === 'pro' ? tx('First month free') : tx('{0} / month', { 0: formatUsd(paidPrice(id, 'monthly')?.total ?? 0) })}${current === id ? ` · ${tx('Current plan')}` : ''}`;
 
-/** Plan dropdown + the card of the chosen plan (monthly fee, commission, listing and story limits) + its button. */
-function PlanSection({ value, onChange, current, change, busy, onSelect }: { value: PlanId; onChange: (p: PlanId) => void; current?: PlanId | null; change?: boolean; busy: PlanId | null; onSelect: (plan: PlanId) => void }) {
+/** Plan dropdown + the card of the chosen plan (price, commission, listing and story limits) + monthly / yearly choice for paid plans + its button. */
+function PlanSection({ value, onChange, current, change, busy, onSelect, billing, onBilling, promoUsed }: { promoUsed: boolean; value: PlanId; onChange: (p: PlanId) => void; current?: PlanId | null; change?: boolean; busy: PlanId | null; onSelect: (plan: PlanId) => void; billing: BillingPeriod; onBilling: (b: BillingPeriod) => void }) {
   const limit = (n: number | null, text: string) => n === null ? <T>Unlimited</T> : <NT text={text} tokens={[n]} />;
   const p = PLANS[value];
+  const price = paidPrice(value, billing), yearly = !!price && price.unit === 'year';
   const same = !!change && current === value;
-  const label = same ? 'Current plan' : change ? (value === 'enterprise' ? 'Request Enterprise Review' : 'Switch to this plan') : value === 'basic' ? 'Select Free Plan' : value === 'pro' ? 'Select Pro Plan' : 'Apply for Enterprise Review';
+  const label = same ? 'Current plan' : change ? (needsPayment(value, promoUsed) ? 'Continue to payment' : 'Switch to this plan') : value === 'basic' ? 'Select Free Plan' : value === 'pro' ? 'Select Pro Plan' : 'Apply for Enterprise Review';
   return <div className="apply-plan-picker">
     <label className="form-label" htmlFor="apply-plan"><T>Select a plan</T></label>
     <select id="apply-plan" className="form-input notranslate" translate="no" data-no-translate value={value} onChange={e => onChange(e.target.value as PlanId)} disabled={busy !== null}>
@@ -98,10 +84,16 @@ function PlanSection({ value, onChange, current, change, busy, onSelect }: { val
     <article className={`apply-plan ${value === 'pro' ? 'apply-plan-featured' : ''}`} aria-live="polite">
       {value === 'pro' && <span className="apply-plan-badge"><T>Most Popular</T></span>}
       <header><h3><T>{PLAN_NAMES[value]}</T></h3><span className="apply-plan-tag"><T>{PLAN_TAGS[value]}</T></span></header>
-      <p className="apply-plan-price"><N>{p.monthlyFee}</N><small><T>per month</T></small></p>
-      {value === 'pro' && <p className="apply-plan-note"><NT text="Special 3-Month Launch Offer, normally {0}" tokens={[PLANS.pro.regularFee]} /></p>}
+      {price && <BillingToggle billing={billing} onBilling={onBilling} disabled={busy !== null} />}
+      <p className="apply-plan-price">
+        {value === 'basic' && <><N>{p.monthlyFee}</N><small><T>per month</T></small></>}
+        {value === 'pro' && <><N>$0</N><small><T>for the first month</T></small></>}
+        {value === 'enterprise' && price && <><N>{formatUsd(price.total)}</N><small><T>{yearly ? 'per year' : 'per month'}</T></small></>}
+      </p>
+      {value === 'pro' && price && <p className="apply-plan-note">{yearly ? <NT text="Launch offer: 1 month free, then {0} / year" tokens={[formatUsd(price.total)]} /> : <NT text="Launch offer: 1 month free, regular price {0} / month" tokens={[formatUsd(price.monthly)]} />}</p>}
+      {value === 'enterprise' && yearly && <p className="apply-plan-note"><NT text="{0} off compared with monthly billing" tokens={[YEARLY_DISCOUNT_LABEL]} /></p>}
       <ul>
-        <Row label="Monthly fee">{value === 'basic' ? <N>{p.monthlyFee}</N> : <NT text="{0} / month" tokens={[p.monthlyFee]} />}</Row>
+        {price ? <Row label={yearly ? 'Yearly fee' : 'Monthly fee'}>{yearly ? <NT text="{0} / year" tokens={[formatUsd(price.total)]} /> : <NT text="{0} / month" tokens={[formatUsd(price.monthly)]} />}</Row> : <Row label="Monthly fee"><N>{p.monthlyFee}</N></Row>}
         <Row label="Commission fee"><NT text="{0} per sale" tokens={[COMMISSION_RATE]} /></Row>
         <Row label="Product listing limit">{limit(p.listingLimit, 'Max {0} products')}</Row>
         <Row label="Story content limit">{limit(p.storyLimit, '{0} posts / month')}</Row>
@@ -136,7 +128,7 @@ export function SellerApplyPage() {
   const [changeTo, setChangeTo] = useState<PlanId | null>(null); // plan chosen in the dropdown by an approved seller (null = keep the current one)
   const [detail, setDetail] = useState(''); // technical reason of a failed save (code), shown small under the message
   const [info, setInfo] = useState('');
-  const change = useServerFn(changeSellerPlan);
+  const [billing, setBilling] = useState<BillingPeriod>('monthly');
   const [done, setDone] = useState(false);
   const errRef = useRef<HTMLParagraphElement>(null);
 
@@ -161,7 +153,7 @@ export function SellerApplyPage() {
     if (!role) missing.push(tx('Business role'));
     if (!courier) missing.push(tx('Contracted courier partner'));
     if (missing.length) return showError(tx('Please complete: {0}', { 0: missing.join(', ') }));
-    const parsed = sellerApplicationSchema.safeParse({ country, mainCategories: categories, mainSalesItems: items, avgPriceRange: price, salesChannels: channels, businessRole: role, hasCourier: courier === 'yes', plan });
+    const parsed = sellerApplicationSchema.safeParse({ country, mainCategories: categories, mainSalesItems: items, avgPriceRange: price, salesChannels: channels, businessRole: role, hasCourier: courier === 'yes', plan, billingPeriod: billing });
     if (!parsed.success) return showError(tx('Please check your answers and try again.'));
     setBusy(plan); setErr(''); setDetail('');
     try {
@@ -174,17 +166,13 @@ export function SellerApplyPage() {
     finally { setBusy(null); }
   };
 
-  /* An approved seller switches plan: Basic / Pro right away (no payment), Enterprise goes to the team for review. */
-  const switchPlan = async (target: PlanId) => {
-    setBusy(target); setErr(''); setDetail(''); setInfo('');
-    try {
-      const r = await change({ data: { plan: target } });
-      if (!r.ok) { showError(tx('Plan could not be changed.'), `${r.code} · ${r.detail}`); return; }
-      await qc.invalidateQueries({ queryKey: ['my-account'] });
-      setInfo(r.requested ? tx('Enterprise review requested. We will contact you once it is decided.') : tx('Your plan has been changed.'));
-    } catch (e) { showError(e instanceof Error ? tx(e.message) : tx('Something went wrong')); }
-    finally { setBusy(null); }
-  };
+  /* An approved seller switches plan: Basic / Pro right away, Enterprise goes to the team for review. A downgrade past the product limit asks which products stay active. */
+  const sw = useSwitchPlan({
+    promoUsed: !!account.data?.application?.promo_ends_at,
+    onDone: r => { setInfo(r.paid ? tx('Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.') : tx('Your plan has been changed.')); setChangeTo(null); },
+    onError: (message, why) => showError(message, why),
+  });
+  const switchPlan = (target: PlanId) => { setErr(''); setDetail(''); setInfo(''); sw.run(target, billing); };
 
   const requestAuth = () => void nav({ to: '.', search: (p: any) => ({ ...p, auth: true }) });
   const app = account.data?.application;
@@ -199,9 +187,10 @@ export function SellerApplyPage() {
       <span className="lux-eyebrow">SELLER APPLICATION</span>
       <h1 id="plan-title" className="apply-title"><T>Your plan</T></h1>
       <p className="apply-lead"><T>Change your plan anytime. Basic and Pro switch right away; Enterprise is reviewed by our team.</T></p>
-      {(requested || info) && <p className="mt-3 text-sm text-primary" role="status">{info || tx('Enterprise review requested. We will contact you once it is decided.')}</p>}
+      {(requested || info) && <p className="mt-3 text-sm text-primary" role="status">{info || tx('Your plan change is waiting for our team to confirm the payment.')}</p>}
       {err && <p ref={errRef} role="alert" className="apply-error">{err}{detail && <small className="mt-1 block opacity-80" data-no-translate>{detail}</small>}</p>}
-      <PlanSection value={changeTo ?? current} onChange={setChangeTo} current={current} change busy={busy} onSelect={target => void switchPlan(target)} />
+      <PlanSection value={changeTo ?? current} onChange={setChangeTo} current={current} change busy={sw.busy} onSelect={switchPlan} billing={billing} onBilling={setBilling} promoUsed={!!app.promo_ends_at} />
+      {sw.dialog}
       <Button asChild variant="ghost" className="mt-4"><Link to="/seller"><T>Open my studio</T></Link></Button>
     </section>;
   }
@@ -257,7 +246,7 @@ export function SellerApplyPage() {
       <h2 className="apply-step mt-10"><span>2</span><T>Choose your plan</T></h2>
       <p className="apply-lead"><NT text="One simple commission: {0} per sale on every plan." tokens={[COMMISSION_RATE]} /></p>
       {err && <p ref={errRef} role="alert" className="apply-error">{err}{detail && <small className="mt-1 block opacity-80" data-no-translate>{detail}</small>}</p>}
-      <PlanSection value={plan} onChange={setPlan} busy={busy} onSelect={p => void choose(p)} />
+      <PlanSection value={plan} onChange={setPlan} busy={busy} onSelect={p => void choose(p)} billing={billing} onBilling={setBilling} promoUsed={false} />
       <p className="apply-foot"><Check size={14} aria-hidden="true" /><T>Your plan is confirmed after the team approves your application.</T></p>
     </form>
   </section>;

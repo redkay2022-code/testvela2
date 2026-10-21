@@ -6,6 +6,10 @@ export const COMMISSION_RATE = '9.8%';
 export const PLAN_IDS = ['basic', 'pro', 'enterprise'] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
+/** Paid plans can be billed monthly, or yearly (12 months at once with a discount). */
+export const BILLING_PERIODS = ['monthly', 'yearly'] as const;
+export type BillingPeriod = (typeof BILLING_PERIODS)[number];
+
 /** `listingLimit` / `storyLimit`: null = unlimited. */
 export const PLANS: Record<PlanId, {
   monthlyFee: string; regularFee?: string; listingLimit: number | null; storyLimit: number | null;
@@ -65,6 +69,7 @@ export const sellerApplicationSchema = z.object({
   businessRole: z.enum(ids(ROLE_OPTIONS)),
   hasCourier: z.boolean(),
   plan: z.enum(PLAN_IDS),
+  billingPeriod: z.enum(BILLING_PERIODS).default('monthly'),
 });
 export type SellerApplicationInput = z.infer<typeof sellerApplicationSchema>;
 
@@ -73,8 +78,68 @@ export const COUNTRY_CODES = ('AF AL DZ AS AD AO AI AG AR AM AW AU AT AZ BS BH B
 
 export const flagOf = (code: string) => String.fromCodePoint(...[...code.toUpperCase()].map(c => 127397 + c.charCodeAt(0)));
 
-/** Months of the Pro launch offer ($0 / month). */
-export const PRO_PROMO_MONTHS = 3;
+/** Months of the Pro launch offer ($0 for the first month, then the regular price). */
+export const PRO_PROMO_MONTHS = 1;
 /** Plans a seller can switch to right away; Enterprise needs a review by the team first. */
 export const INSTANT_PLANS: readonly PlanId[] = ['basic', 'pro'];
-export const planChangeSchema = z.object({ plan: z.enum(PLAN_IDS) });
+
+export const YEARLY_DISCOUNT_PERCENT = 10;
+export const YEARLY_DISCOUNT_LABEL = `${YEARLY_DISCOUNT_PERCENT}%`;
+/** Regular monthly price in USD of the plans that are paid. */
+export const REGULAR_MONTHLY_USD: Partial<Record<PlanId, number>> = { pro: 49, enterprise: 199 };
+
+const cents = (n: number) => Math.round(n * 100) / 100;
+export const formatUsd = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(n) ? 0 : 2, maximumFractionDigits: 2 })}`;
+/** Price of a paid plan: the monthly price, or 12 months minus the yearly discount (with its monthly equivalent). */
+export function paidPrice(plan: PlanId, period: BillingPeriod): { monthly: number; total: number; perMonth: number; unit: 'month' | 'year' } | null {
+  const monthly = REGULAR_MONTHLY_USD[plan];
+  if (!monthly) return null;
+  if (period === 'monthly') return { monthly, total: monthly, perMonth: monthly, unit: 'month' };
+  const total = cents(monthly * 12 * (100 - YEARLY_DISCOUNT_PERCENT) / 100);
+  return { monthly, total, perMonth: cents(total / 12), unit: 'year' };
+}
+
+/** Pro seller whose free launch period is over and who has not paid or chosen yet (payment_status is set once a payment was submitted). */
+export function promoEnded(app: { plan?: string | null; promo_ends_at?: string | null; payment_status?: string | null } | null | undefined, now = Date.now()) {
+  if (!app || app.plan !== 'pro' || !app.promo_ends_at) return false;
+  if (app.payment_status === 'pending' || app.payment_status === 'paid') return false;
+  const ends = Date.parse(app.promo_ends_at);
+  return Number.isFinite(ends) && ends <= now;
+}
+
+/** True when the seller has to choose / pay: the free Pro month is over, or an approved Enterprise plan has no payment yet. A pending plan request or a submitted payment waits for the team. */
+export function paymentDue(app: { plan?: string | null; promo_ends_at?: string | null; payment_status?: string | null; requested_plan?: string | null } | null | undefined, now = Date.now()) {
+  if (!app || app.requested_plan) return false;
+  if (app.payment_status === 'pending' || app.payment_status === 'paid') return false;
+  return app.plan === 'enterprise' || promoEnded(app, now);
+}
+
+/** Plans that need a payment when they start (Pro only after its free month was used). */
+export const needsPayment = (plan: PlanId, promoUsed: boolean) => plan === 'enterprise' || (plan === 'pro' && promoUsed);
+
+/** USDT networks of the shared payment window (same ids as the product checkout). */
+export const PAYMENT_NETWORKS = ['USDT-TRC20', 'USDT-ERC20', 'USDT-POLYGON', 'USDT-BEP20'] as const;
+
+/** A move to a plan with a lower product limit: which published products have to be deactivated.
+ *  ok = nothing to do · need_keep = the seller must choose · invalid = the choice is wrong · drop = ids to deactivate. */
+export function planDowngrade(productIds: string[], limit: number, keepIds?: string[]): { kind: 'ok' } | { kind: 'need_keep' } | { kind: 'invalid' } | { kind: 'drop'; drop: string[] } {
+  if (!Number.isFinite(limit) || productIds.length <= limit) return { kind: 'ok' };
+  if (!keepIds) return { kind: 'need_keep' };
+  const own = new Set(productIds), keep = new Set(keepIds);
+  if (keep.size > limit || [...keep].some(id => !own.has(id))) return { kind: 'invalid' };
+  return { kind: 'drop', drop: productIds.filter(id => !keep.has(id)) };
+}
+
+export const planChangeSchema = z.object({
+  plan: z.enum(PLAN_IDS),
+  billingPeriod: z.enum(BILLING_PERIODS).default('monthly'),
+  /** On a downgrade: the products that stay active (the rest are deactivated). */
+  keepIds: z.array(z.string().uuid()).max(2000).optional(),
+});
+/** A plan payment made in the shared USDT payment window: plan, billing period, network and the (optional) transaction id. */
+export const planPaymentSchema = z.object({
+  plan: z.enum(['pro', 'enterprise']),
+  billingPeriod: z.enum(BILLING_PERIODS),
+  network: z.enum(PAYMENT_NETWORKS),
+  txid: z.string().trim().max(120).regex(/^((0x)?[A-Za-z0-9]{20,100})?$/),
+});

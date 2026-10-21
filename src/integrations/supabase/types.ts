@@ -1034,6 +1034,13 @@ export type Database = {
         Row: {
           plan_changed_at: string | null
           promo_ends_at: string | null
+          billing_period: string | null
+          payment_status: string | null
+          payment_txid: string | null
+          payment_network: string | null
+          payment_amount_usd: number | null
+          payment_submitted_at: string | null
+          paid_until: string | null
           requested_plan: string | null
           avg_price_range: string
           business_role: string
@@ -1061,6 +1068,13 @@ export type Database = {
         Insert: {
           plan_changed_at?: string | null
           promo_ends_at?: string | null
+          billing_period?: string | null
+          payment_status?: string | null
+          payment_txid?: string | null
+          payment_network?: string | null
+          payment_amount_usd?: number | null
+          payment_submitted_at?: string | null
+          paid_until?: string | null
           requested_plan?: string | null
           avg_price_range?: string
           business_role?: string
@@ -1088,6 +1102,13 @@ export type Database = {
         Update: {
           plan_changed_at?: string | null
           promo_ends_at?: string | null
+          billing_period?: string | null
+          payment_status?: string | null
+          payment_txid?: string | null
+          payment_network?: string | null
+          payment_amount_usd?: number | null
+          payment_submitted_at?: string | null
+          paid_until?: string | null
           requested_plan?: string | null
           avg_price_range?: string
           business_role?: string

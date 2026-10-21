@@ -9,7 +9,7 @@ import { Check, ShieldCheck, UserRound, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { ApplicantPicker, ApplicationTable } from '@/components/admin-application-table';
-import { decidePlanChange, decideSellerApplication, getMyAccount, listSellerApplications, setSellerTierOverride, updateNickname } from '@/lib/seller-accounts.functions';
+import { confirmPlanPayment, decidePlanChange, decideSellerApplication, getMyAccount, listSellerApplications, setSellerTierOverride, updateNickname } from '@/lib/seller-accounts.functions';
 import { automatedTier, sellerTiers, studioNames, type SellerTier } from '@/lib/reputation';
 import { liveReputation } from '@/lib/studio-metrics';
 import { StudioTierBadge } from './reputation';
@@ -104,7 +104,7 @@ export function SellerOnboarding() {
 const statusLabel: Record<string, string> = { pending: '검토 대기', approved: '승인됨', rejected: '거절됨' };
 
 export function AdminApplications() {
-  const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication), decidePlan = useServerFn(decidePlanChange), setTier = useServerFn(setSellerTierOverride);
+  const qc = useQueryClient(); const list = useServerFn(listSellerApplications), decide = useServerFn(decideSellerApplication), decidePlan = useServerFn(decidePlanChange), confirmPay = useServerFn(confirmPlanPayment), setTier = useServerFn(setSellerTierOverride);
   const { data, error, isLoading } = useQuery({ queryKey: ['seller-applications'], queryFn: () => list(), retry: false, refetchInterval: 30000 });
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending');
   const gate = useAdminPasswordGate();
@@ -123,17 +123,18 @@ export function AdminApplications() {
     catch (e) { setMsg(e instanceof Error ? e.message : '처리하지 못했습니다.'); } finally { setBusy(null); }
   };
   const planAct = async (id: string, approve: boolean) => { setBusy(id); setMsg(''); try { await decidePlan({ data: { id, approve } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); } catch (e) { setMsg(e instanceof Error ? e.message : '처리하지 못했습니다.'); } finally { setBusy(null); } };
+  const payAct = async (id: string) => { setBusy(id); setMsg(''); try { await confirmPay({ data: { id } }); await qc.invalidateQueries({ queryKey: ['seller-applications'] }); setMsg('결제를 확인했어요. 요금제와 이용 기간이 적용되었습니다.'); } catch (e) { setMsg(e instanceof Error ? e.message : '처리하지 못했습니다.'); } finally { setBusy(null); } };
   return <div>{gate.dialog}
     <div className="flex flex-wrap gap-2 py-3">{([['pending', '대기'], ['approved', '승인'], ['rejected', '거절'], ['all', '전체']] as const).map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? 'goldOutline' : 'ghost'} onClick={() => setFilter(k)}>{l} {k === 'all' ? rows.length : count(k)}</Button>)}</div>
     {msg && <p role="status" className="mb-2 text-sm text-primary">{msg}</p>}
     {!shown.length ? <p className="text-sm text-muted-foreground">{filter === 'pending' ? '검토 대기 중인 신청이 없습니다.' : '해당하는 신청이 없습니다.'}</p> : <>
     <ApplicantPicker value={picked?.id ?? ''} onChange={setPickedId} options={shown.map(a => ({ id: a.id, label: `${a.nickname ?? 'Member'} · #${a.system_code ?? '—'} · ${new Date(a.created_at).toLocaleDateString('ko-KR')} · ${statusLabel[a.status] ?? a.status}` }))} />
-    <div className="management-list">{[picked].map(a => { const name = a.nickname ?? 'Member'; return <div className="management-row" key={a.id}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small></div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
+    <div className="management-list">{[picked].map(a => { const name = a.nickname ?? 'Member'; return <div key={a.id} className="border-b border-border pb-5"><div className="management-row" style={{ borderBottom: 0 }}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small></div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
       <div className="record-actions">
         {a.status !== 'approved' && <Button variant="goldOutline" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, true, name)}><Check/>승인</Button>}
         {a.status !== 'rejected' && <Button variant="ghost" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, false, name)}><X/>{a.status === 'approved' ? '권한 해제' : '거절'}</Button>}
-      </div>
-      <ApplicationTable a={a} busy={busy === a.id} onPlan={(id, approve) => void planAct(id, approve)} />
+      </div></div>
+      <ApplicationTable a={a} busy={busy === a.id} onPlan={(id, approve) => void planAct(id, approve)} onConfirmPayment={id => void payAct(id)} />
       {a.status === 'approved' && (() => { const m = a.metrics, auto = automatedTier(liveReputation(m, null, a.rating)) ?? 'standard', cur = a.override ?? auto; return <div className="col-span-full mt-2 grid w-full gap-2 rounded-md border border-border p-3 text-xs" style={{ gridColumn: '1 / -1' }}>
         <div className="flex flex-wrap items-center gap-2"><StudioTierBadge tier={cur}/><span className="text-muted-foreground">자동 등급: {studioNames[auto]}{a.override ? ' · 수동 지정 적용 중' : ''}</span></div>
         <div className="grid grid-cols-2 gap-1 sm:grid-cols-4"><span>가상화폐 매출 <strong>${Math.round(m.volumeUsd).toLocaleString('en-US')}</strong></span><span>완료 주문 <strong>{m.completedSales}</strong></span><span>평점 <strong>★ {a.rating.average === null ? '—' : a.rating.average.toFixed(2)} ({a.rating.count})</strong></span><span>분쟁 <strong>{m.disputes}/{m.totalOrders} ({m.disputeRate.toFixed(1)}%)</strong></span></div>
