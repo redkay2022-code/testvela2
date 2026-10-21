@@ -105,7 +105,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
   const beats = useMemo(() => bgm && beatSync ? beatTimes(bpm, total) : [], [bgm, beatSync, bpm, total]);
 
   const exportVideo = async () => {
-    if (total > LIMIT + 0.05) return setErr(long ? '전체 길이를 5분 이하로 줄여 주세요.' : '전체 길이를 1분 이하로 줄여 주세요.');
+    if (total > LIMIT + 0.05) return setErr(long ? '전체 길이를 5분 이하로 줄여 주세요.' : '전체 길이를 30초 이하로 줄여 주세요.');
     stop(); setBusy('export'); setErr('');
     try {
       const first = clips[0]!; const probe = document.createElement('video'); probe.src = first.url; probe.muted = true; await new Promise(r => { probe.onloadedmetadata = r; });
@@ -183,7 +183,7 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
           <div className="flex flex-wrap items-center gap-2"><Button size="sm" variant={vertical ? 'gold' : 'goldOutline'} onClick={() => setVertical(true)}>9:16 쇼츠</Button><Button size="sm" variant={!vertical ? 'gold' : 'goldOutline'} onClick={() => setVertical(false)}>원본 비율</Button>
             <label className="ml-auto flex cursor-pointer items-center gap-1 text-xs text-primary"><Plus size={14}/>클립 추가<input type="file" accept="video/mp4,video/quicktime,video/webm" className="sr-only" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void addFile(f); }}/></label></div>
           {vertical && <label className="editor-row">자르기 위치(좌우)<input type="range" min={0} max={100} value={cropX} onChange={e => setCropX(Number(e.target.value))}/></label>}
-          {total > LIMIT + 0.05 && <p className="text-xs text-destructive">{long ? '전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.' : '전체 길이가 1분을 넘어요. 클립 구간을 줄여 주세요.'}</p>}
+          {total > LIMIT + 0.05 && <p className="text-xs text-destructive">{long ? '전체 길이가 5분을 넘어요. 클립 구간을 줄여 주세요.' : '전체 길이가 30초를 넘어요. 클립 구간을 줄여 주세요.'}</p>}
           {clips.map((c, i) => <div key={c.id} className="editor-card"><div className="flex items-center gap-2 text-xs"><strong>{`클립 ${i + 1}`}</strong><span className="text-muted-foreground">{fmt(c.start)} – {fmt(c.end)} {`(${(c.end - c.start).toFixed(1)}초)`}</span><span className="ml-auto flex gap-1"><Button size="icon" variant="ghost" className="size-7" aria-label="앞으로" disabled={i === 0} onClick={() => moveClip(c.id, -1)}><ArrowUp/></Button><Button size="icon" variant="ghost" className="size-7" aria-label="뒤로" disabled={i === clips.length - 1} onClick={() => moveClip(c.id, 1)}><ArrowDown/></Button><Button size="icon" variant="ghost" className="size-7" aria-label="클립 삭제" disabled={clips.length === 1} onClick={() => setClips(cs => cs.filter(x => x.id !== c.id))}><Trash2/></Button></span></div>
             <div className="trim-range" style={{ ['--s' as string]: `${(c.start / c.duration) * 100}%`, ['--e' as string]: `${(c.end / c.duration) * 100}%` }}><div className="trim-track"/><input type="range" aria-label="시작 지점" min={0} max={c.duration} step={0.1} value={c.start} onChange={e => updateClip(c.id, { start: Math.min(Number(e.target.value), c.end - 0.5) })}/><input type="range" aria-label="끝 지점" min={0} max={c.duration} step={0.1} value={c.end} onChange={e => updateClip(c.id, { end: Math.max(Number(e.target.value), c.start + 0.5) })}/></div>
             <div className="flex justify-between text-[11px] text-muted-foreground"><span>0:00</span><span>{fmt(c.duration)}</span></div></div>)}
@@ -223,6 +223,6 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
       </section>
     </div>
     {music && <audio ref={musicAudio} src={music.music_audio_url} loop preload="auto" />}
-    {limitPopup && <div role="alertdialog" aria-modal="true" aria-label="영상 길이 제한" className="fixed inset-0 z-[140] grid place-items-center bg-background/80 p-6"><div className="w-full max-w-sm rounded-xl border border-border bg-card p-5 text-center"><h3 className="text-base font-semibold">{long ? '영상은 5분 이내로만 올릴 수 있어요' : '영상은 1분 이내로만 올릴 수 있어요'}</h3><p className="mt-2 text-sm text-muted-foreground">{long ? `현재 길이는 ${total.toFixed(1)}초입니다. 5분 이내로 편집해 주세요.` : `현재 길이는 ${total.toFixed(1)}초입니다. 1분 이내로 편집해 주세요.`}</p><div className="mt-4 grid gap-2"><Button variant="gold" onClick={fitToLimit}>{long ? '앞 5분만 사용하기' : '앞 1분만 사용하기'}</Button><Button variant="goldOutline" onClick={() => setLimitPopup(false)}>직접 편집하기</Button></div></div></div>}
+    {limitPopup && <div role="alertdialog" aria-modal="true" aria-label="영상 길이 제한" className="fixed inset-0 z-[140] grid place-items-center bg-background/80 p-6"><div className="w-full max-w-sm rounded-xl border border-border bg-card p-5 text-center"><h3 className="text-base font-semibold">{long ? '영상은 5분 이내로만 올릴 수 있어요' : '영상은 30초 이내로만 올릴 수 있어요'}</h3><p className="mt-2 text-sm text-muted-foreground">{long ? `현재 길이는 ${total.toFixed(1)}초입니다. 5분 이내로 편집해 주세요.` : `현재 길이는 ${total.toFixed(1)}초입니다. 30초 이내로 편집해 주세요.`}</p><div className="mt-4 grid gap-2"><Button variant="gold" onClick={fitToLimit}>{long ? '앞 5분만 사용하기' : '앞 30초만 사용하기'}</Button><Button variant="goldOutline" onClick={() => setLimitPopup(false)}>직접 편집하기</Button></div></div></div>}
   </div>, document.body);
 }

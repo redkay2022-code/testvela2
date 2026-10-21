@@ -23,8 +23,7 @@ describe('My VELA dashboard role', () => {
 describe('trusted account page', () => {
   it('always opens the seller dashboard for a trusted seller', () => {
     expect(accountPage({ roles: ['user', 'seller'] })).toBe('/seller');
-    expect(accountPage({ roles: ['admin', 'seller'] })).toBe('/admin');
-    expect(accountPage({ roles: ['admin'] })).toBe('/admin');
+    expect(accountPage({ roles: ['admin', 'seller'] })).toBe('/seller');
   });
   it('keeps customers, pending users and guests on My VELA', () => {
     expect(accountPage({ roles: ['user'] })).toBe('/me');

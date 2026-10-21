@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Eye, Globe2, MousePointerClick, ShoppingBag, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Donut, LineChart, countryName, sourceName } from './mini-charts';
-import { TEST_COUNTS_ENABLED, shownPostLikes, testPostViews } from '@/lib/test-counts';
+import { shownPostLikes } from '@/lib/test-counts';
 
 type Stats = {
   days: number; live: number; visitors: number; orders: number; conversion: number;
@@ -39,7 +39,7 @@ export function SellerAnalytics() {
       <h3 className="mt-6 text-sm font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("방문 추이")}</span></h3>
       <LineChart label={tx('일별 조회수와 순 방문자')} labels={s.daily.map(d => d.d.slice(5))} series={[{ name: tx('조회수'), color: '#D4AF37', values: s.daily.map(d => d.views) }, { name: tx('순 방문자'), color: '#5B8DEF', values: s.daily.map(d => d.visitors) }]}/>
       <h3 className="mt-6 text-sm font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("인기 상품 Top 5")}</span></h3>
-      {s.top_products.length ? <ol className="mt-2 space-y-2">{s.top_products.map((p, i) => <li key={p.id} className="seller-thread-row"><span className="w-5 text-primary">{i + 1}</span><div className="min-w-0 flex-1"><strong className="block truncate">{p.title}</strong><small className="text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx('조회 {0} · 방문자 {1} · 좋아요 {2} · 문의 {3}', { 0: TEST_COUNTS_ENABLED ? testPostViews(p.id) : p.views, 1: p.visitors, 2: shownPostLikes(p.id, p.likes), 3: p.inquiries })}</span></small></div></li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 조회된 상품이 없습니다.")}</span></p>}
+      {s.top_products.length ? <ol className="mt-2 space-y-2">{s.top_products.map((p, i) => <li key={p.id} className="seller-thread-row"><span className="w-5 text-primary">{i + 1}</span><div className="min-w-0 flex-1"><strong className="block truncate">{p.title}</strong><small className="text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx('조회 {0} · 방문자 {1} · 좋아요 {2} · 문의 {3}', { 0: p.views, 1: p.visitors, 2: shownPostLikes(p.id, p.likes), 3: p.inquiries })}</span></small></div></li>)}</ol> : <p className="mt-2 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 조회된 상품이 없습니다.")}</span></p>}
       <div className="mt-6 grid gap-6 md:grid-cols-2">
         <div><h3 className="mb-2 flex items-center gap-2 text-sm font-semibold"><Globe2 size={15}/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("방문자 국가")}</span></h3><Donut label={tx('국가별 방문자')} items={s.countries.map(c => ({ label: countryName(c.country, lang), value: c.n }))}/></div>
         <div><h3 className="mb-2 text-sm font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("유입 경로")}</span></h3><Donut label={tx('유입 경로별 방문자')} items={s.sources.map(c => ({ label: tx(sourceName(c.source)), value: c.n }))}/></div>

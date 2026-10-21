@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
-export function LogoutItem({ compact = false }: { compact?: boolean } = {}) {
+export function LogoutItem() {
   const { lang } = useCurrency();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -24,11 +24,11 @@ export function LogoutItem({ compact = false }: { compact?: boolean } = {}) {
       setBusy(false);
     }
   };
-  return <div className={compact ? 'admin-logout-compact' : 'account-logout'}>
+  return <div className="account-logout">
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" className={compact ? 'admin-logout-button' : 'account-logout-button'} disabled={busy}>
-          {!compact && <LogOut size={18}/>}<span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("로그아웃")}</span></Button>
+        <Button variant="ghost" className="account-logout-button" disabled={busy}>
+          <LogOut size={18}/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("로그아웃")}</span></Button>
       </AlertDialogTrigger>
       <AlertDialogContent lang={lang} translate="no" className="notranslate" data-no-translate>
         <AlertDialogHeader>

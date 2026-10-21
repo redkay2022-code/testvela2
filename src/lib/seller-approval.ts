@@ -11,8 +11,6 @@ export function accountDashboardRole(account: Pick<SellerApprovalState, 'roles'>
 
 /** Account navigation uses trusted roles, never selected preview roles. */
 export function accountPage(account: Pick<SellerApprovalState, 'roles'> | undefined) {
-  /* 최고관리자는 '나' 메뉴에서 바로 관리자 백오피스(/admin)로 간다. */
-  if (account?.roles.includes('admin')) return '/admin' as const;
   return account?.roles.includes('seller') ? '/seller' as const : '/me' as const;
 }
 

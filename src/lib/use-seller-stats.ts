@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { TEST_COUNTS_ENABLED } from '@/lib/test-counts';
 
 export type SellerStat = { followers: number; likes: number; saves: number };
 
@@ -12,7 +11,7 @@ export function useSellerStats() {
       const call = supabase.rpc as unknown as (fn: string) => Promise<{ data: { seller_key: string; followers: number; likes: number; saves: number }[] | null; error: { message: string } | null }>;
       const { data, error } = await call.call(supabase, 'seller_public_stats');
       if (error) throw new Error(error.message);
-      return new Map((data ?? []).map(r => [r.seller_key, { followers: Number(r.followers), likes: Number(r.likes), saves: TEST_COUNTS_ENABLED ? Math.floor(Number(r.likes) / 3) : Number(r.saves) } satisfies SellerStat]));
+      return new Map((data ?? []).map(r => [r.seller_key, { followers: Number(r.followers), likes: Number(r.likes), saves: Number(r.saves) } satisfies SellerStat]));
     },
   });
 }

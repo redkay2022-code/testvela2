@@ -28,17 +28,3 @@ export const saveStoreContent = createServerFn({ method: 'POST' }).middleware([r
     }
     return { ok: true };
   });
-/** 최고관리자가 셀러의 '스토어 소개'를 작성·수정·삭제(빈 글 저장 = 삭제)합니다. */
-export const adminSaveStoreIntro = createServerFn({ method: 'POST' }).middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ sellerId: z.string().uuid(), introduction: storeIntroductionSchema }).parse(input))
-  .handler(async ({ data, context }) => {
-    const mod = await import('./admin-auth.server');
-    await mod.assertAdminRole(context.supabase, context.userId);
-    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const db = supabaseAdmin as any;
-    const result = data.introduction === ''
-      ? await db.from('seller_store_content').delete().eq('user_id', data.sellerId)
-      : await db.from('seller_store_content').upsert({ user_id: data.sellerId, introduction: data.introduction, updated_at: new Date().toISOString() });
-    if (result.error) throw new Error('저장하지 못했습니다.');
-    return { ok: true };
-  });

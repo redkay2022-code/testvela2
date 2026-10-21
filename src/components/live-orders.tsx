@@ -24,13 +24,12 @@ import { confirmOrderPayment } from '@/lib/order-verification.functions';
 import { isLogisticsOrder } from '@/lib/store-content';
 import { MAX_PRODUCT_PRICE_USD, PRICE_CAP_ENABLED, priceCapBuyMessage } from '@/lib/price-cap';
 import { POINT_HOLD_DAYS } from '@/lib/loyalty';
-import { COURIER_NAMES } from '@/lib/couriers';
 
 export const QC_MIN_PHOTOS = 9, QC_MIN_VIDEOS = 1, QC_MAX_PHOTOS = 14, QC_MAX_VIDEOS = 1, QC_MAX_VIDEO_SEC = 60;
 /** Reads a video's length in seconds from its metadata (NaN if it cannot be read). */
 const videoSeconds = (f: File) => new Promise<number>(res => { const v = document.createElement('video'), u = URL.createObjectURL(f); const done = (n: number) => { URL.revokeObjectURL(u); res(n); }; v.preload = 'metadata'; v.onloadedmetadata = () => done(v.duration); v.onerror = () => done(NaN); v.src = u; });
 /** Product thumbnail with a placeholder when the image is missing or fails to load. */
-export function OrderThumb({ srcs, size = 52 }: { srcs: (string | null | undefined)[]; size?: number }) { const list = [...new Set(srcs.filter((x): x is string => Boolean(x)))]; const key = list.join('|'); const [idx, setIdx] = useState(0); useEffect(() => setIdx(0), [key]); const src = list[idx]; const box = { width: size, height: size }; return src ? <img key={src} src={src} width={size} height={size} style={box} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="shrink-0 rounded-md object-cover" onError={() => setIdx(n => n + 1)} /> : <span style={box} className="flex shrink-0 items-center justify-center rounded-md bg-muted"><Camera className="text-primary" /></span>; }
+function OrderThumb({ srcs }: { srcs: (string | null | undefined)[] }) { const list = [...new Set(srcs.filter((x): x is string => Boolean(x)))]; const key = list.join('|'); const [idx, setIdx] = useState(0); useEffect(() => setIdx(0), [key]); const src = list[idx]; return src ? <img key={src} src={src} width={52} height={52} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="h-[52px] w-[52px] shrink-0 rounded-md object-cover" onError={() => setIdx(n => n + 1)} /> : <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-md bg-muted"><Camera className="text-primary" /></span>; }
 const BUCKET = 'qc-media';
 const extOf = (f: File) => (f.name.split('.').pop() || '').toLowerCase();
 /* 일부 폰은 파일 형식(type)을 비워 보내므로 확장자로도 사진/영상을 구분한다. */
@@ -41,8 +40,7 @@ export type Order = { shipping?: Record<string, string> | null; id: string; orde
 type Media = { id: string; order_id: string; path: string; kind: 'image' | 'video'; round: number; url?: string };
 type Msg = { id: string; order_id: string; author_role: string; kind: string; body: string; areas: string[]; created_at: string };
 
-export const couriers = COURIER_NAMES;
-export const CUSTOM_COURIER = '__custom__';
+export const couriers = ['SF Express', 'EMS', 'DHL Express', 'FedEx', 'UPS', 'CJ Logistics', 'China Post'];
 /** Block explorer page for a submitted TXID on its network. */
 export function explorerUrl(network: string | null, txid: string) {
   const t = encodeURIComponent(txid.trim());
@@ -236,11 +234,9 @@ function RequestForm({ o, close }: { o: Order; close: () => void }) {
 
 function ShipForm({ o }: { o: Order }) {
   const { lang } = useCurrency();
-  const [courier, setCourier] = useState(couriers[0]!); const [custom, setCustom] = useState(''); const [num, setNum] = useState(''); const [err, setErr] = useState('');
-  const isCustom = courier === CUSTOM_COURIER;
-  return <form className="ship-form" onSubmit={async e => { e.preventDefault(); const name = isCustom ? custom.trim() : courier; if (!name) { setErr(tx('택배사 이름을 입력해 주세요.')); return; } const r = await supabase.from('orders').update({ courier: name, tracking_number: num.trim(), stage: 'shipped' }).eq('id', o.id); setErr(r.error?.message ?? ''); }}>
-    <select className="form-input" value={courier} onChange={e => setCourier(e.target.value)} aria-label={tx("택배사")}>{couriers.map(c => <option key={c} value={c}>{c}</option>)}<option value={CUSTOM_COURIER}>{tx("직접 입력")}</option></select>
-    {isCustom && <input className="form-input" required maxLength={60} value={custom} onChange={e => setCustom(e.target.value)} placeholder={tx("택배사 이름 직접 입력")} aria-label={tx("택배사 이름 직접 입력")} />}
+  const [courier, setCourier] = useState(couriers[0]!); const [num, setNum] = useState(''); const [err, setErr] = useState('');
+  return <form className="ship-form" onSubmit={async e => { e.preventDefault(); const r = await supabase.from('orders').update({ courier, tracking_number: num.trim(), stage: 'shipped' }).eq('id', o.id); setErr(r.error?.message ?? ''); }}>
+    <select className="form-input" value={courier} onChange={e => setCourier(e.target.value)} aria-label={tx("택배사")}>{couriers.map(c => <option key={c}>{c}</option>)}</select>
     <input className="form-input" required maxLength={40} pattern="[A-Za-z0-9\-]{6,40}" value={num} onChange={e => setNum(e.target.value)} placeholder={tx("송장번호")} aria-label={tx("송장번호")} />
     <Button variant="gold" type="submit"><Truck /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("발송 완료 & 송장 등록")}</span></Button>{err && <p className="text-xs text-destructive"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx(err)}</span></p>}</form>;
 }

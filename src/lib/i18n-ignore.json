@@ -123,10 +123,7 @@
     "직접입력 (Custom Input)",
     "feed data",
     "long task (page froze)",
-    "1200px 0px",
-    "Instagram",
-    "TikTok",
-    "Reddit"
+    "1200px 0px"
   ],
   "patterns": [
     "^[A-Z0-9]{2,4} Factory( \\([A-Z0-9]+\\))?$",
@@ -166,10 +163,6 @@
     "lib/session-state.ts",
     "lib/brand-names.ts",
     "lib/default-avatar.ts",
-    "components/admin-orders.tsx",
-    "components/admin-application-table.tsx",
-    "components/admin-analytics.tsx",
-    "lib/page-tracker.ts",
-    "lib/admin-analytics.ts"
+    "components/admin-orders.tsx"
   ]
 }

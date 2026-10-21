@@ -16,22 +16,12 @@ export const testRange = (seed: string) => 50 + (hash(seed) % 51);
 
 export type TestSellerStat = { followers: number; likes: number; saves: number };
 /** 셀러(계정) 한 곳의 팔로워·좋아요·저장 합계 */
-export const testSellerStat = (key: string): TestSellerStat => { const k = sellerKey(key) || key; return { followers: testRange(`f|${k}`), likes: testRange(`l|${k}`), saves: Math.floor(testRange(`l|${k}`) / 3) }; };
+export const testSellerStat = (key: string): TestSellerStat => { const k = sellerKey(key) || key; return { followers: testRange(`f|${k}`), likes: testRange(`l|${k}`), saves: testRange(`s|${k}`) }; };
 /** 게시물 한 개의 좋아요/저장 */
 export const testPostLikes = (postId: string) => testRange(`pl|${postId}`);
-/** 저장 수는 항상 좋아요 수의 3분의 1(내림). */
-export const testPostSaves = (postId: string) => Math.floor(testPostLikes(postId) / 3);
-/** 게시물 조회수: 500~1000 (양끝 포함) */
-export const testPostViews = (postId: string) => 500 + (hash(`pv|${postId}`) % 501);
-/** 셀러 계정 전체 조회수: 500~1000 */
-export const testSellerViews = (key: string) => 500 + (hash(`sv|${sellerKey(key) || key}`) % 501);
-/** 화면에 보여 줄 조회수 (테스트 모드가 꺼져 있으면 실제 값 그대로) */
-export const shownViews = (postId: string, real: string | number) => (TEST_COUNTS_ENABLED ? String(testPostViews(postId)) : String(real));
+export const testPostSaves = (postId: string) => testRange(`ps|${postId}`);
 /** 화면에 보여 줄 게시물 좋아요 수 (테스트 모드가 꺼져 있으면 실제 값 그대로) */
 export const shownPostLikes = (postId: string, real: number) => (TEST_COUNTS_ENABLED ? testPostLikes(postId) : real);
-
-/** 내가 좋아요/저장을 누르면 숫자가 1 올라가고, 취소하면 내려간다(테스트 모드에서도 동일). */
-export const likeAdj = (on: boolean) => (on ? 1 : 0);
 
 /** 내 셀러 계정의 키 (공개 스토어/셀러 목록과 같은 규칙: 스토어 상품이면 이름, 아니면 사용자 ID) */
 export function useOwnSellerKey(userId: string): string {

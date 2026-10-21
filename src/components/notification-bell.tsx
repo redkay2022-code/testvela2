@@ -3,7 +3,6 @@ import { Link } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,9 +19,7 @@ export function useNotifications(user: User | null) {
   } });
   useEffect(() => {
     if (!user) return;
-    const ch = supabase.channel(`notifications-${user.id}-${Math.random().toString(36).slice(2)}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, payload => {
-      /* 새 알림이 오면 화면에 바로 알려준다(빨간 표시는 읽지 않은 알림 수로 자동 갱신). */
-      if (payload.eventType === 'INSERT') { const n = payload.new as { title?: string; kind?: string }; if (n?.title && n.kind !== SELLER_WELCOME_KIND) toast(n.title); }
+    const ch = supabase.channel(`notifications-${user.id}-${Math.random().toString(36).slice(2)}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
       void qc.invalidateQueries({ queryKey: ['notifications', user.id] });
       void qc.invalidateQueries({ queryKey: ['my-account', user.id] });
     }).subscribe();
@@ -39,14 +36,6 @@ export function useNotifications(user: User | null) {
 
 export const NotificationsContext = createContext<ReturnType<typeof useNotifications> | null>(null);
 export const useSharedNotifications = () => useContext(NotificationsContext);
-/** 알림의 주소("/admin?section=boards&boardItem=…")를 경로와 검색값으로 나눠 라우터에 넘긴다(물음표가 경로 글자로 취급되어 화면이 초기화되는 문제 방지). */
-function ctaTarget(url: string): { to: never; search?: never } {
-  try {
-    const u = new URL(url, 'https://vela.invalid');
-    const search = Object.fromEntries(u.searchParams.entries());
-    return (Object.keys(search).length ? { to: u.pathname, search } : { to: u.pathname }) as { to: never; search?: never };
-  } catch { return { to: url } as { to: never }; }
-}
 export function NotificationList({ notifications, onNavigate }: { notifications: ReturnType<typeof useNotifications>; onNavigate?: () => void }) {
   const lang = activeLang() === 'ko' ? 'ko' : 'en';
   return <div>{notifications.data.length === 0 ? <p className="py-8 text-center text-sm text-muted-foreground">새 알림이 없습니다.</p> : notifications.data.map(n => {
@@ -56,21 +45,19 @@ export function NotificationList({ notifications, onNavigate }: { notifications:
             <small className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleString()}</small>
             {welcome ? <div className="mt-3 space-y-3 text-sm"><p>{welcome.intro}</p>{welcome.rules.map(([h, b]) => <div key={h}><strong className="block text-foreground">{h}</strong><p className="text-muted-foreground">{b}</p></div>)}</div>
               : <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{n.body}</p>}
-            {(n.kind === 'qc_approved' || n.kind === 'qc_requested') ? <Button asChild variant="destructive" className="mt-4 w-full"><Link to="/seller-store" search={{ sellerView: 'shipping' }} onClick={onNavigate} replace={Boolean(onNavigate)}>{n.cta_label || '배송 준비'}</Link></Button>
-              : n.cta_url && <Button asChild variant="gold" className="mt-4 w-full"><Link {...ctaTarget(n.cta_url)} onClick={onNavigate} replace={Boolean(onNavigate)}>{welcome?.cta ?? n.cta_label}</Link></Button>}
+            {n.cta_url && <Button asChild variant="gold" className="mt-4 w-full"><Link to={n.cta_url} onClick={onNavigate}>{welcome?.cta ?? n.cta_label}</Link></Button>}
           </article>;
         })}</div>;
 }
 
-/** `onLink`: 알림 안의 버튼으로 다른 화면에 이동할 때 호출된다(이동하면 알림창은 저절로 닫히므로, 닫기 처리의 '뒤로 가기'가 이동을 되돌리지 않게 한다). */
-export function NotificationInbox({ user, open, onClose, onLink, notifications }: { user: User | null; open: boolean; onClose: () => void; onLink?: () => void; notifications: ReturnType<typeof useNotifications> }) {
+export function NotificationInbox({ user, open, onClose, notifications }: { user: User | null; open: boolean; onClose: () => void; notifications: ReturnType<typeof useNotifications> }) {
   const { unread, markRead } = notifications;
   useEffect(() => { if (open && unread) void markRead(); }, [open, unread]);
   return <Dialog.Root open={open} onOpenChange={o => { if (!o) onClose(); }}>
     <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-50 bg-background/70" />
       <Dialog.Content aria-describedby={undefined} className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl border border-border bg-card p-4">
         <div className="mb-3 flex items-center justify-between"><Dialog.Title className="text-base font-semibold">알림함</Dialog.Title><Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="닫기"><X /></Button></Dialog.Close></div>
-        {!user ? <p className="py-8 text-center text-sm text-muted-foreground">로그인하면 알림을 확인할 수 있습니다.</p> : <NotificationList notifications={notifications} onNavigate={onLink ?? onClose}/>}
+        {!user ? <p className="py-8 text-center text-sm text-muted-foreground">로그인하면 알림을 확인할 수 있습니다.</p> : <NotificationList notifications={notifications} onNavigate={onClose}/>}
       </Dialog.Content>
     </Dialog.Portal>
   </Dialog.Root>;

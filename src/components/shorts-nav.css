@@ -1,7 +1,0 @@
-/* 컴퓨터(마우스) 전용 이전/다음 영상 버튼: 터치 기기에서는 스와이프를 쓰므로 숨긴다 */
-.shorts-nav-arrows{display:none}
-@media (hover:hover) and (pointer:fine){
-  .shorts-nav-arrows{position:absolute;right:12px;top:42%;z-index:6;display:flex;flex-direction:column;gap:10px}
-  .shorts-nav-arrows button{width:40px;height:40px;border-radius:999px;background:color-mix(in oklab,var(--background) 60%,transparent);color:var(--media-label,#fff);backdrop-filter:blur(6px)}
-  .shorts-nav-arrows button:disabled{opacity:.3}
-}

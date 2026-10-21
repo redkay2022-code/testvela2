@@ -81,6 +81,7 @@ export type Database = {
           created_at: string
           creator: string
           id: string
+          kind: string
           parent_id: string | null
           post_id: string
           user_id: string
@@ -90,6 +91,7 @@ export type Database = {
           created_at?: string
           creator: string
           id?: string
+          kind?: string
           parent_id?: string | null
           post_id: string
           user_id: string
@@ -99,6 +101,7 @@ export type Database = {
           created_at?: string
           creator?: string
           id?: string
+          kind?: string
           parent_id?: string | null
           post_id?: string
           user_id?: string
@@ -608,6 +611,45 @@ export type Database = {
         }
         Relationships: []
       }
+      page_views: {
+        Row: {
+          created_at: string
+          device: string | null
+          id: number
+          kind: string
+          lang: string | null
+          path: string
+          referrer: string | null
+          session_id: string
+          term: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          id?: number
+          kind?: string
+          lang?: string | null
+          path?: string
+          referrer?: string | null
+          session_id: string
+          term?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          id?: number
+          kind?: string
+          lang?: string | null
+          path?: string
+          referrer?: string | null
+          session_id?: string
+          term?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount_usd: number
@@ -1032,23 +1074,30 @@ export type Database = {
       }
       seller_applications: {
         Row: {
-          plan_changed_at: string | null
-          promo_ends_at: string | null
-          requested_plan: string | null
           avg_price_range: string
+          billing_period: string | null
+          bio: string
           business_role: string
           country: string
+          created_at: string
           has_contracted_courier: boolean | null
+          id: string
           main_categories: string[]
           main_sales_items: string
-          plan: string
-          sales_channels: string[]
-          bio: string
-          created_at: string
-          id: string
           nickname: string | null
+          paid_until: string | null
+          payment_amount_usd: number | null
+          payment_network: string | null
+          payment_status: string | null
+          payment_submitted_at: string | null
+          payment_txid: string | null
+          plan: string
+          plan_changed_at: string | null
+          promo_ends_at: string | null
           region: string
+          requested_plan: string | null
           reviewed_at: string | null
+          sales_channels: string[]
           status: string
           studio_name: string
           system_code: string | null
@@ -1059,23 +1108,30 @@ export type Database = {
           wechat_phone: string | null
         }
         Insert: {
-          plan_changed_at?: string | null
-          promo_ends_at?: string | null
-          requested_plan?: string | null
           avg_price_range?: string
+          billing_period?: string | null
+          bio?: string
           business_role?: string
           country?: string
+          created_at?: string
           has_contracted_courier?: boolean | null
+          id?: string
           main_categories?: string[]
           main_sales_items?: string
-          plan?: string
-          sales_channels?: string[]
-          bio?: string
-          created_at?: string
-          id?: string
           nickname?: string | null
+          paid_until?: string | null
+          payment_amount_usd?: number | null
+          payment_network?: string | null
+          payment_status?: string | null
+          payment_submitted_at?: string | null
+          payment_txid?: string | null
+          plan?: string
+          plan_changed_at?: string | null
+          promo_ends_at?: string | null
           region?: string
+          requested_plan?: string | null
           reviewed_at?: string | null
+          sales_channels?: string[]
           status?: string
           studio_name?: string
           system_code?: string | null
@@ -1086,23 +1142,30 @@ export type Database = {
           wechat_phone?: string | null
         }
         Update: {
-          plan_changed_at?: string | null
-          promo_ends_at?: string | null
-          requested_plan?: string | null
           avg_price_range?: string
+          billing_period?: string | null
+          bio?: string
           business_role?: string
           country?: string
+          created_at?: string
           has_contracted_courier?: boolean | null
+          id?: string
           main_categories?: string[]
           main_sales_items?: string
-          plan?: string
-          sales_channels?: string[]
-          bio?: string
-          created_at?: string
-          id?: string
           nickname?: string | null
+          paid_until?: string | null
+          payment_amount_usd?: number | null
+          payment_network?: string | null
+          payment_status?: string | null
+          payment_submitted_at?: string | null
+          payment_txid?: string | null
+          plan?: string
+          plan_changed_at?: string | null
+          promo_ends_at?: string | null
           region?: string
+          requested_plan?: string | null
           reviewed_at?: string | null
+          sales_channels?: string[]
           status?: string
           studio_name?: string
           system_code?: string | null
@@ -1400,6 +1463,7 @@ export type Database = {
         }
         Returns: number
       }
+      admin_analytics: { Args: { _from: string; _to: string }; Returns: Json }
       comment_author_profiles: {
         Args: { _post_id: string }
         Returns: {
@@ -1439,6 +1503,10 @@ export type Database = {
       loyalty_refresh_membership: { Args: { _uid: string }; Returns: string }
       loyalty_release_user: { Args: { _uid: string }; Returns: number }
       market_max_price_usd: { Args: never; Returns: number }
+      notify_admins: {
+        Args: { _body: string; _item?: string; _kind: string; _title: string }
+        Returns: undefined
+      }
       order_party_labels: {
         Args: { _order_ids: string[] }
         Returns: {
@@ -1459,6 +1527,18 @@ export type Database = {
         }[]
       }
       store_is_visible: { Args: { _store_id: string }; Returns: boolean }
+      track_page_view: {
+        Args: {
+          _device: string
+          _kind: string
+          _lang: string
+          _path: string
+          _referrer: string
+          _session: string
+          _term: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "seller" | "user"

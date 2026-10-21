@@ -14,8 +14,6 @@ import { AdminMembers, TrafficSummary } from './admin-members';
 import { AdminReset } from './admin-reset';
 import { AdminProxy, hasProxyEditInProgress, PROXY_TAB_LABEL, PROXY_TAB_NOTE } from './admin-proxy';
 import { AdminReviews } from './admin-reviews';
-import { AdminBoards } from './admin-boards';
-import { AdminAnalytics, ANALYTICS_TAB_LABEL, ANALYTICS_SUBTITLE } from './admin-analytics';
 import { AdminCatalog, type CatalogSection } from './admin-catalog';
 import { AdminMuxMigration } from './admin-mux-migration';
 import type { LuxuryPost } from '@/lib/luxury-market';
@@ -29,7 +27,7 @@ const tabs = [
   ['disputes', '분쟁 중재', Scale],
   ['moderation', '피드 & 리뷰 관리', FileCheck],
 ] as const;
-const mainTabs = [['dashboard','Dashboard'],['analytics',ANALYTICS_TAB_LABEL],['applications','판매자 신청'],['members','회원 관리'],['proxy',PROXY_TAB_LABEL],['boards','게시판 관리'],['reviews','리뷰 관리'],['stores','Stores'],['products','Products'],['categories','Categories'],['inventory','Inventory'],['orders','Orders'],['loyalty','Loyalty / Points'],['reset','데이터 초기화'],['settings','Settings']] as const;
+const mainTabs = [['dashboard','Dashboard'],['applications','판매자 신청'],['members','회원 관리'],['proxy',PROXY_TAB_LABEL],['reviews','리뷰 관리'],['stores','Stores'],['products','Products'],['categories','Categories'],['inventory','Inventory'],['orders','Orders'],['loyalty','Loyalty / Points'],['reset','데이터 초기화'],['settings','Settings']] as const;
 const legacyKeys = ['sellers','verification','crypto','settlements','disputes','moderation'];
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 
@@ -40,8 +38,6 @@ export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
   if (top === 'applications') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>판매자 신청</h1><p>시스템 ID · 닉네임만 확인</p></div></div>{nav}<AdminApplications/></div>;
   if (top === 'members') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>회원 관리</h1><p>접속 현황 · 정지 / 추방</p></div></div>{nav}<AdminMembers/></div>;
   if (top === 'proxy') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>{PROXY_TAB_LABEL}</h1><p>{PROXY_TAB_NOTE}</p></div></div>{nav}<AdminProxy/></div>;
-  if (top === 'analytics') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>{ANALYTICS_TAB_LABEL}</h1><p>{ANALYTICS_SUBTITLE}</p></div></div>{nav}<AdminAnalytics/></div>;
-  if (top === 'boards') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>게시판 관리</h1><p>전체 셀러 문의 · 공지 열람 / 관리자 답변</p></div></div>{nav}<AdminBoards/></div>;
   if (top === 'reviews') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>리뷰 관리</h1><p>보류 · 삭제</p></div></div>{nav}<AdminReviews/></div>;
   if (top === 'reset') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>데이터 초기화</h1><p>테스트 회원 · 게시물 삭제</p></div></div>{nav}<AdminReset/></div>;
   if (top === 'loyalty') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>Loyalty / Points</h1><p>VELA Point 발행·사용·예산 관리</p></div></div>{nav}<AdminLoyalty/></div>;
