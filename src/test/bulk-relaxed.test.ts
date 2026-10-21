@@ -29,12 +29,12 @@ describe('photo + video only upload (relaxed validation)', () => {
     const values = { ...emptyValues(), price: 'abc', sell: '예' };
     expect(validateItem(item({ values }), new Set(), true).plan).toBeNull();
   });
-  it('warns when a video is longer than 30 seconds or there are more than 9 photos', () => {
+  it('warns when a video is longer than 1 minute or there are more than 9 photos', () => {
     const video = new File([new Uint8Array(10)], 'clip.mp4', { type: 'video/mp4' });
-    const long = validateItem(item({ video }), new Set(), true, 42);
+    const long = validateItem(item({ video }), new Set(), true, 75);
     expect(long.plan).toBeNull();
-    expect(long.errors.some(e => e.includes('30초'))).toBe(true);
-    expect(validateItem(item({ video }), new Set(), true, 30).plan === null).toBe(false);
+    expect(long.errors.some(e => e.includes('1분'))).toBe(true);
+    expect(validateItem(item({ video }), new Set(), true, 60).plan === null).toBe(false);
     expect(validateItem(item({ video }), new Set(), true, 0).plan === null).toBe(false); // length not read yet: checked again at upload
     const many = validateItem(item({ photos: Array.from({ length: 10 }, (_, i) => photo(`p-${i}.jpg`)) }), new Set(), true);
     expect(many.plan).toBeNull();
@@ -52,8 +52,8 @@ describe('photo + video only upload (relaxed validation)', () => {
   });
   it('ignores file sizes in the photo + video only upload (only photo count and video length block)', () => {
     const big = new File([new Uint8Array(10)], 'big.mp4', { type: 'video/mp4' });
-    Object.defineProperty(big, 'size', { value: 300 * 1024 * 1024 });
+    Object.defineProperty(big, 'size', { value: 301 * 1024 * 1024 });
     expect(validateItem(item({ video: big }), new Set(), true, 25).plan === null).toBe(false);
-    expect(validateItem(item({ video: big }), new Set(), false, 25).plan).toBeNull(); // normal table upload keeps the 100MB rule
+    expect(validateItem(item({ video: big }), new Set(), false, 25).plan).toBeNull(); // normal table upload keeps the 300MB rule
   });
 });

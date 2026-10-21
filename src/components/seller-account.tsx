@@ -8,6 +8,7 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import { Check, ShieldCheck, UserRound, X } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
+import { ApplicationTable } from '@/components/admin-application-table';
 import { decidePlanChange, decideSellerApplication, getMyAccount, listSellerApplications, setSellerTierOverride, updateNickname } from '@/lib/seller-accounts.functions';
 import { automatedTier, sellerTiers, studioNames, type SellerTier } from '@/lib/reputation';
 import { liveReputation } from '@/lib/studio-metrics';
@@ -125,11 +126,12 @@ export function AdminApplications() {
     <div className="flex flex-wrap gap-2 py-3">{([['pending', '대기'], ['approved', '승인'], ['rejected', '거절'], ['all', '전체']] as const).map(([k, l]) => <Button key={k} size="sm" variant={filter === k ? 'goldOutline' : 'ghost'} onClick={() => setFilter(k)}>{l} {k === 'all' ? rows.length : count(k)}</Button>)}</div>
     {msg && <p role="status" className="mb-2 text-sm text-primary">{msg}</p>}
     {!shown.length ? <p className="text-sm text-muted-foreground">{filter === 'pending' ? '검토 대기 중인 신청이 없습니다.' : '해당하는 신청이 없습니다.'}</p> :
-    <div className="management-list">{shown.map(a => { const name = a.nickname ?? 'Member'; return <div className="management-row" key={a.id}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small>{a.plan && a.country && <small data-no-translate className="block">{a.plan} · {a.country} · {a.business_role} · {a.avg_price_range} · {(a.main_categories ?? []).join('/')} · {(a.sales_channels ?? []).join('/')} · {`courier:${a.has_contracted_courier ? 'yes' : 'no'}`}{a.main_sales_items ? ` · ${a.main_sales_items}` : ''}</small>}{a.requested_plan && <span className="mt-1 flex flex-wrap items-center gap-2 text-xs" data-no-translate>{['plan request:', a.requested_plan].join(' ')}<Button size="sm" variant="goldOutline" disabled={busy === a.id} onClick={() => void planAct(a.id, true)}>{['approve', a.requested_plan].join(' ')}</Button><Button size="sm" variant="ghost" disabled={busy === a.id} onClick={() => void planAct(a.id, false)}>{['decline', a.requested_plan].join(' ')}</Button></span>}</div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
+    <div className="management-list">{shown.map(a => { const name = a.nickname ?? 'Member'; return <div className="management-row" key={a.id}><div className="studio-initial">{name[0]}</div><div><strong data-no-translate>{name}</strong><small data-no-translate>#{a.system_code ?? '—'} · {new Date(a.created_at).toLocaleDateString('ko-KR')}</small></div><span className="record-status">{statusLabel[a.status] ?? a.status}</span>
       <div className="record-actions">
         {a.status !== 'approved' && <Button variant="goldOutline" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, true, name)}><Check/>승인</Button>}
         {a.status !== 'rejected' && <Button variant="ghost" size="sm" disabled={busy === a.id} onClick={() => void act(a.id, false, name)}><X/>{a.status === 'approved' ? '권한 해제' : '거절'}</Button>}
       </div>
+      <ApplicationTable a={a} busy={busy === a.id} onPlan={(id, approve) => void planAct(id, approve)} />
       {a.status === 'approved' && (() => { const m = a.metrics, auto = automatedTier(liveReputation(m, null, a.rating)) ?? 'standard', cur = a.override ?? auto; return <div className="col-span-full mt-2 grid w-full gap-2 rounded-md border border-border p-3 text-xs" style={{ gridColumn: '1 / -1' }}>
         <div className="flex flex-wrap items-center gap-2"><StudioTierBadge tier={cur}/><span className="text-muted-foreground">자동 등급: {studioNames[auto]}{a.override ? ' · 수동 지정 적용 중' : ''}</span></div>
         <div className="grid grid-cols-2 gap-1 sm:grid-cols-4"><span>가상화폐 매출 <strong>${Math.round(m.volumeUsd).toLocaleString('en-US')}</strong></span><span>완료 주문 <strong>{m.completedSales}</strong></span><span>평점 <strong>★ {a.rating.average === null ? '—' : a.rating.average.toFixed(2)} ({a.rating.count})</strong></span><span>분쟁 <strong>{m.disputes}/{m.totalOrders} ({m.disputeRate.toFixed(1)}%)</strong></span></div>

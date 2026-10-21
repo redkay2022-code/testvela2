@@ -212,8 +212,8 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>, relaxe
   if (sell !== false && Number.isFinite(price) && price <= MAX_PRODUCT_PRICE_USD && box !== null && Number.isFinite(box) && exceedsPriceCap(price, box)) errors.push(priceCapMessage());
   if (!item.video && item.photos.length === 0) errors.push('사진도 영상도 없는 묶음은 올릴 수 없어요.');
   /* relaxed (photo + video only upload): only the photo count and the video length can block a product; file sizes are handled at upload time (photos are compressed, videos go to Mux). */
-  if (!relaxed && item.video && item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 100MB까지 올릴 수 있어요. “영상 길이 수정”으로 줄여 주세요.');
-  if (item.video && videoSeconds && videoSeconds > MAX_VIDEO_SECONDS + 0.05) errors.push(`영상은 최대 ${MAX_VIDEO_SECONDS}초까지 올릴 수 있어요. (지금 ${Math.ceil(videoSeconds)}초) “영상 길이 수정”으로 줄여 주세요.`);
+  if (!relaxed && item.video && item.video.size > MAX_VIDEO_BYTES) errors.push('영상은 최대 300MB까지 올릴 수 있어요. “영상 길이 수정”으로 줄여 주세요.');
+  if (item.video && videoSeconds && videoSeconds > MAX_VIDEO_SECONDS + 0.05) errors.push(`영상은 최대 1분까지 올릴 수 있어요. (지금 ${Math.ceil(videoSeconds)}초) “영상 길이 수정”으로 줄여 주세요.`);
   if (item.photos.length > MAX_LISTING_PHOTOS) errors.push(`사진은 최대 ${MAX_LISTING_PHOTOS}장까지 올릴 수 있어요. (지금 ${item.photos.length}장) 사진을 빼 주세요.`);
   if (!relaxed && item.photos.some(p => p.size > MAX_PHOTO_BYTES)) errors.push('사진은 장당 최대 10MB까지 올릴 수 있어요.');
   if (v.title.trim().length > 100) warnings.push('제목이 100자를 넘어 잘립니다.');

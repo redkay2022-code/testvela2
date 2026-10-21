@@ -173,7 +173,7 @@ async function uploadOne(item: BulkItem, publish: boolean) {
     let videoUrl: string | null = null;
     if (item.video) {
       const seconds = await readVideoDuration(item.video).catch(() => 0);
-      if (!seconds || seconds > MAX_VIDEO_SECONDS + 0.05) throw new Error(`영상 길이는 최대 ${MAX_VIDEO_SECONDS}초까지 가능해요.`);
+      if (!seconds || seconds > MAX_VIDEO_SECONDS + 0.05) throw new Error('영상 길이는 최대 1분까지 가능해요.');
       setItemState(item.id, { step: '영상 업로드' });
       const up = await uploadListingVideo(item.video, userId, r => setItemState(item.id, { pct: Math.round(r * 100) }));
       if (up.storagePath) uploaded.push(up.storagePath);

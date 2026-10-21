@@ -1,7 +1,7 @@
 export const MAX_LISTING_PHOTOS = 9;
-export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-export const MAX_VIDEO_SECONDS = 30;
-/** Videos above 100MB / 30s may still be PICKED so the editor can trim them; only absurdly huge files are refused. */
+export const MAX_VIDEO_BYTES = 300 * 1024 * 1024;
+export const MAX_VIDEO_SECONDS = 60;
+/** Videos above 300MB / 1 minute may still be PICKED so the editor can trim them; only absurdly huge files are refused. */
 export const MAX_EDITOR_VIDEO_BYTES = 2 * 1024 * 1024 * 1024;
 /** True when a video is above the upload limits and has to be trimmed in the editor first. */
 export const videoOverLimit = (file: { size: number }, seconds: number) => file.size > MAX_VIDEO_BYTES || !Number.isFinite(seconds) || seconds > MAX_VIDEO_SECONDS + 0.05;
@@ -57,9 +57,9 @@ export async function validateListingFiles(files: File[]) {
   if (photos.some(photoTooLarge)) throw new Error('사진은 장당 최대 10MB까지 올릴 수 있어요.');
   const video = videos[0];
   if (video) {
-    if (video.size > MAX_VIDEO_BYTES) throw new Error('영상이 100MB를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.');
+    if (video.size > MAX_VIDEO_BYTES) throw new Error('영상이 300MB를 넘어요. “영상 편집”에서 1분·300MB 이내로 줄인 뒤 올려 주세요.');
     const duration = await readVideoDuration(video);
-    if (!Number.isFinite(duration) || duration > MAX_VIDEO_SECONDS + 0.05) throw new Error('영상이 30초를 넘어요. “영상 편집”에서 30초·100MB 이내로 줄인 뒤 올려 주세요.');
+    if (!Number.isFinite(duration) || duration > MAX_VIDEO_SECONDS + 0.05) throw new Error('영상이 1분을 넘어요. “영상 편집”에서 1분·300MB 이내로 줄인 뒤 올려 주세요.');
   }
 }
 export const MAX_PHOTO_BYTES = 10 * 1024 * 1024;

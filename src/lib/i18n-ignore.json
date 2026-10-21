@@ -167,6 +167,7 @@
     "lib/brand-names.ts",
     "lib/default-avatar.ts",
     "components/admin-orders.tsx",
+    "components/admin-application-table.tsx",
     "components/admin-analytics.tsx",
     "lib/page-tracker.ts",
     "lib/admin-analytics.ts"

@@ -56,7 +56,7 @@ function MediaEditor({ item, disabled, seconds, onTrim }: { item: BulkItem; disa
       {!item.video && item.photos.length === 0 && <p className="text-destructive">사진도 영상도 없어요. 아래에서 추가하거나 이 상품을 빼 주세요.</p>}
     </div>
     {tooMany && <p className="mt-2 text-destructive" role="alert">수정 필요: 사진이 {item.photos.length}장이에요. 최대 {MAX_LISTING_PHOTOS}장까지 올릴 수 있어요. 사진을 빼 주세요.</p>}
-    {tooLong && <p className="mt-2 text-destructive" role="alert">수정 필요: 영상이 {Math.ceil(seconds!)}초예요. 최대 {MAX_VIDEO_SECONDS}초까지 올릴 수 있어요. 가위 버튼(영상 길이 수정)으로 줄여 주세요.</p>}
+    {tooLong && <p className="mt-2 text-destructive" role="alert">수정 필요: 영상이 {Math.ceil(seconds!)}초예요. 최대 1분까지 올릴 수 있어요. 가위 버튼(영상 길이 수정)으로 줄여 주세요.</p>}
     <div className="mt-3 flex flex-wrap gap-2">
       <label className="flex cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-3 py-2"><Upload size={14} />사진 추가<input className="sr-only" type="file" multiple accept="image/jpeg,image/png,image/webp" aria-label="사진 추가" disabled={disabled} onChange={e => { if (e.target.files?.length) bulkJob.addPhotos(item.id, Array.from(e.target.files)); e.target.value = ''; }} /></label>
       {item.video && <button type="button" className="flex items-center gap-1 rounded-md border border-border bg-background px-3 py-2 disabled:opacity-50" disabled={disabled} onClick={onTrim}><Scissors size={14} />영상 길이 수정</button>}
@@ -152,7 +152,7 @@ export function BulkUpload({ user, existingTitles, onClose, onDone }: { user: Us
       })}</ul>
       <datalist id="bulk-dispatch-list">{DISPATCH_OPTIONS.map(o => <option key={o.value} value={o.label} />)}</datalist><datalist id="bulk-factory-list">{factoryOptions.map(f => <option key={f} value={f} />)}</datalist>
       <p className="mt-4 text-xs text-muted-foreground">{manual ? '내용 없이 사진·영상만 올려요. 제목은 파일 이름으로, 가격은 없이 저장되니 올린 뒤 “내 상품 관리”의 편집에서 내용을 입력해 주세요. 임시저장은 구매자에게 보이지 않아요.' : '임시저장으로 올리면 구매자에게 보이지 않아요. “내 상품 관리”에서 확인한 뒤 상품마다 판매 스위치를 켜서 공개해요.'}</p>
-      {overLimit > 0 && <p className="mt-3 rounded-md border border-destructive p-2 text-xs text-destructive" role="alert">{`수정 필요: 사진이 ${MAX_LISTING_PHOTOS}장을 넘거나 영상이 ${MAX_VIDEO_SECONDS}초를 넘는 상품이 ${overLimit}개 있어요. 상품을 눌러 사진을 빼거나 영상 길이를 줄여 주세요.`}</p>}
+      {overLimit > 0 && <p className="mt-3 rounded-md border border-destructive p-2 text-xs text-destructive" role="alert">{`수정 필요: 사진이 ${MAX_LISTING_PHOTOS}장을 넘거나 영상이 1분을 넘는 상품이 ${overLimit}개 있어요. 상품을 눌러 사진을 빼거나 영상 길이를 줄여 주세요.`}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-3">
         {running
           ? <Button variant="goldOutline" onClick={() => bulkJob.pause()} disabled={phase === 'pausing'}><Pause className="mr-1 size-4" />{phase === 'pausing' ? '멈추는 중…' : '일시정지'}</Button>
