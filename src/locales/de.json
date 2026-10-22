@@ -2909,5 +2909,6 @@
   "No active transactions.": "Keine laufenden Transaktionen.",
   "거래 해시 (TXID)": "Transaktions-Hash (TXID)",
   "필수": "Pflichtfeld",
-  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "TXID eingeben, um die Zahlung zu bestätigen (Pflichtfeld)"
+  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "TXID eingeben, um die Zahlung zu bestätigen (Pflichtfeld)",
+  "대시보드": "Dashboard"
 }

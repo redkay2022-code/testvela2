@@ -2909,5 +2909,6 @@
   "No active transactions.": "Aucune transaction en cours.",
   "거래 해시 (TXID)": "Hash de la transaction (TXID)",
   "필수": "Obligatoire",
-  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "Saisissez votre TXID pour confirmer le paiement (obligatoire)"
+  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "Saisissez votre TXID pour confirmer le paiement (obligatoire)",
+  "대시보드": "Tableau de bord"
 }

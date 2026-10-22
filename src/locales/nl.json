@@ -2914,5 +2914,6 @@
   "No active transactions.": "Geen lopende transacties.",
   "거래 해시 (TXID)": "Transactiehash (TXID)",
   "필수": "Verplicht",
-  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "Voer uw TXID in om de betaling te bevestigen (verplicht)"
+  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "Voer uw TXID in om de betaling te bevestigen (verplicht)",
+  "대시보드": "Dashboard"
 }

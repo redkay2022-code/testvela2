@@ -13,7 +13,7 @@ export const storeSlugOf = (post: LuxuryPost) => { const id = sellerIdentity(pos
 export const sellerMatches = (post: LuxuryPost, seller: string) => {
   const target = sellerKey(seller);
   const short = /^[0-9a-f]{8}$/i.test(seller) ? seller.toLowerCase() : null;
-  return [sellerIdentity(post), post.creator].some(value => value === seller || sellerKey(value) === target || (short !== null && UUID_RE.test(value) && value.toLowerCase().startsWith(short)));
+  return [sellerIdentity(post), post.creator, post.source.user_id ?? ''].some(value => value === seller || sellerKey(value) === target || (short !== null && UUID_RE.test(value) && value.toLowerCase().startsWith(short)));
 };
 export type DirectorySeller = { id: string; post: LuxuryPost; items: LuxuryPost[]; rating: number | null; bio: string; reviews: number | null; followers: number | null };
 export function directorySellers(posts: LuxuryPost[]): DirectorySeller[] {

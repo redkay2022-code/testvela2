@@ -47,7 +47,7 @@ export function SellerApprovalRedirect({ user, applying }: { user: User | null; 
     { try { window.localStorage.setItem(key, '1'); } catch { /* storage is optional */ } }
     void qc.invalidateQueries({ queryKey: ['posts'] });
     void qc.invalidateQueries({ queryKey: ['stores'] });
-    void navigate({ to: '/seller', search: accountRedirect ? { ...search, role: 'seller' } : { role: 'seller' }, replace: true });
+    void navigate({ to: '/s/$slug', params: { slug: user.id }, search: accountRedirect ? { ...search, role: 'seller' } : { role: 'seller' }, replace: true });
   }, [account, user?.id, pathname, search, applying, navigate, qc]);
   return null;
 }
