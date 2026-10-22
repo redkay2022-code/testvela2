@@ -1758,5 +1758,6 @@
   "No active transactions.": "진행 중인 거래가 없습니다.",
   "Install": "설치",
   "VELA is already installed on this device. Open it from your home screen or desktop.": "이 기기에 VELA가 이미 설치되어 있습니다. 홈 화면 또는 바탕화면에서 열어 주세요.",
-  "Don't show again for 1 day": "하루 동안 보지 않기"
+  "Don't show again for 1 day": "하루 동안 보지 않기",
+  "The first launch after installing may load a little slowly.": "앱 설치 후 처음 실행할 때는 로딩이 조금 느릴 수 있습니다."
 }

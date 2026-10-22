@@ -1012,3 +1012,15 @@ html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s eas
 
 /* Seller avatar without a registered photo: neutral icon, never a product image */
 .store-avatar-fallback{display:grid;place-items:center;background:var(--muted);color:var(--muted-foreground)}
+
+/* 구형 브라우저(oklch 색상 미지원) 대비: 같은 색을 일반 색상값으로 다시 지정합니다. 최신 브라우저에는 적용되지 않습니다. */
+@supports not (color: oklch(0 0 0)) {
+:root{--background: #ffffff;--foreground: #231e1e;--card: #ffffff;--card-foreground: #020618;--popover: #ffffff;--popover-foreground: #020618;--primary: #ee455b;--primary-foreground: #f8fafc;--secondary: #f1f5f9;--secondary-foreground: #0f172b;--muted: #f8f6f6;--muted-foreground: #7b7676;--accent: #ffeeee;--accent-foreground: #ee455b;--destructive: #e7000b;--destructive-foreground: #f8fafc;--border: #edeaea;--input: #e6e4e4;--ring: #ee455b;--chart-1: #f54900;--chart-2: #009689;--chart-3: #104e64;--chart-4: #ffb900;--chart-5: #fe9a00;--sidebar: #f8fafc;--sidebar-foreground: #020618;--sidebar-primary: #0f172b;--sidebar-primary-foreground: #f8fafc;--sidebar-accent: #f1f5f9;--sidebar-accent-foreground: #0f172b;--sidebar-border: #e2e8f0;--sidebar-ring: #90a1b9;}
+.dark{--background: #020618;--foreground: #f8fafc;--card: #0f172b;--card-foreground: #f8fafc;--popover: #0f172b;--popover-foreground: #f8fafc;--primary: #e2e8f0;--primary-foreground: #0f172b;--secondary: #1d293d;--secondary-foreground: #f8fafc;--muted: #1d293d;--muted-foreground: #90a1b9;--accent: #1d293d;--accent-foreground: #f8fafc;--destructive: #ff6467;--destructive-foreground: #f8fafc;--border: rgba(255,255,255,0.1);--input: rgba(255,255,255,0.15);--ring: #6a7282;--chart-1: #1447e6;--chart-2: #00bc7d;--chart-3: #fe9a00;--chart-4: #ad46ff;--chart-5: #ff2056;--sidebar: #0f172b;--sidebar-foreground: #f8fafc;--sidebar-primary: #1447e6;--sidebar-primary-foreground: #f8fafc;--sidebar-accent: #1d293d;--sidebar-accent-foreground: #f8fafc;--sidebar-border: rgba(255,255,255,0.1);--sidebar-ring: #6a7282;}
+:root{--overlay: rgba(11,11,11,0.42);--media-label: #ffffff;--media-shade: rgba(22,22,22,0.5);--success: #2e7e4c;--shell-shadow: 0 -3px 20px rgba(22,22,22,0.03);--drawer-shadow: 0 0 50px rgba(22,22,22,0.15);}
+:root, .dark{--background:#0d0d0f;--foreground:#ffffff;--card:#141418;--primary:#d4af37;--soft-gold:#e0c368;--gold-end:#b89628;--muted-foreground:#a0a0ab;--accent:rgba(212,175,55,0.1);--border:rgba(255,255,255,0.08);--input:rgba(255,255,255,0.14);--gold-border:rgba(212,175,55,0.3);--overlay:rgba(0,0,0,0.78);--media-shade:rgba(6,6,6,0.65);--shell-shadow:0 -6px 30px rgba(0,0,0,0.25);--drawer-shadow:0 8px 80px rgba(0,0,0,0.5);--header-surface:rgba(13,13,15,0.95);}
+:root,.dark{--shorts-sheet-surface:rgba(13,13,15,0.95);--shorts-scrim:linear-gradient(180deg,rgba(0,0,0,0.48),transparent 28%,transparent 45%,rgba(0,0,0,0.85));--shorts-glow:0 0 20px rgba(212,175,55,0.22);}
+:root,.dark{--badge-platinum:#e5e7eb;--badge-bronze:#ac835b;--badge-aura:0 0 9px rgba(212,175,55,0.38);}
+:root,.dark{--shorts-exit-surface:rgba(0,0,0,0.5);}
+:root,.dark{--notification:#f52f39;}
+}

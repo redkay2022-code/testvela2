@@ -2914,5 +2914,7 @@
   "앱처럼 설치 (홈 화면에 추가)": "Als App installieren (zum Home-Bildschirm hinzufügen)",
   "Install": "Installieren",
   "VELA is already installed on this device. Open it from your home screen or desktop.": "VELA ist auf diesem Gerät bereits installiert. Öffne es über den Home-Bildschirm oder den Desktop.",
-  "Don't show again for 1 day": "1 Tag lang nicht mehr anzeigen"
+  "Don't show again for 1 day": "1 Tag lang nicht mehr anzeigen",
+  "The first launch after installing may load a little slowly.": "Nach der Installation kann der erste Start etwas langsamer laden.",
+  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "Nach der Installation kann das erste Öffnen etwas langsamer sein."
 }

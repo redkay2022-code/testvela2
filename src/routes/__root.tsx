@@ -108,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://stream.mux.com", crossOrigin: "anonymous" as const },
       { rel: "preconnect", href: "https://image.mux.com" },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "apple-touch-icon", href: "/icons/icon-180.png" },
+      { rel: "apple-touch-icon", href: "/icons/vela-180.png" },
       { rel: "manifest", href: "/manifest.json" },
     ],
   }),

@@ -2918,5 +2918,7 @@
   "앱처럼 설치 (홈 화면에 추가)": "安装为应用（添加到主屏幕）",
   "Install": "安装",
   "VELA is already installed on this device. Open it from your home screen or desktop.": "此设备上已安装 VELA。请从主屏幕或桌面打开。",
-  "Don't show again for 1 day": "1 天内不再显示"
+  "Don't show again for 1 day": "1 天内不再显示",
+  "The first launch after installing may load a little slowly.": "安装后首次启动时，加载可能稍慢。",
+  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "安装后首次打开时，加载可能稍慢。"
 }

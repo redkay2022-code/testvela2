@@ -3,10 +3,10 @@
  * - 화면(HTML)·상품 데이터·로그인·결제·서버 요청은 저장하지 않고 항상 최신으로 받습니다(상품·가격·주문이 오래된 값으로 보이지 않게).
  * - 인터넷이 끊긴 상태에서 페이지를 열면 안내 화면을 보여 줍니다.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const STATIC = `vela-static-${VERSION}`;
 const MAX_STATIC = 240;
-const SHELL = ['/manifest.json', '/favicon.png', '/icons/icon-180.png', '/icons/icon-192.png', '/icons/icon-512.png'];
+const SHELL = ['/favicon.png', '/icons/vela-180.png', '/icons/vela-192.png', '/icons/vela-512.png', '/icons/vela-maskable-192.png', '/icons/vela-maskable-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(STATIC).then(cache => cache.addAll(SHELL)).catch(() => undefined).then(() => self.skipWaiting()));

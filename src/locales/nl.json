@@ -2919,5 +2919,7 @@
   "앱처럼 설치 (홈 화면에 추가)": "Installeren als app (toevoegen aan beginscherm)",
   "Install": "Installeren",
   "VELA is already installed on this device. Open it from your home screen or desktop.": "VELA is al geïnstalleerd op dit apparaat. Open het via je beginscherm of bureaublad.",
-  "Don't show again for 1 day": "1 dag niet meer tonen"
+  "Don't show again for 1 day": "1 dag niet meer tonen",
+  "The first launch after installing may load a little slowly.": "Na installatie kan de eerste start iets langzamer laden.",
+  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "Na installatie kan de eerste keer openen iets langzamer zijn."
 }

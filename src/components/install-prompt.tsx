@@ -119,7 +119,7 @@ export function InstallPrompt() {
           <Button variant="ghost" size="icon" type="button" aria-label="Close" onClick={close}><X/></Button>
         </div>
         <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/40 p-3">
-          <img src="/icons/icon-192.png" alt="" width={48} height={48} className="size-12 rounded-xl"/>
+          <img src="/icons/vela-192.png" alt="" width={48} height={48} className="size-12 rounded-xl"/>
           <p className="text-sm leading-6">Open VELA in one tap from your desktop or home screen, just like an app.</p>
         </div>
         {platform === 'prompt' ? <Button type="button" className="mt-5 w-full" disabled={busy} onClick={() => void install()}><Download/>Install</Button>
@@ -129,6 +129,7 @@ export function InstallPrompt() {
             {platform === 'safari' && <><Share className="mt-1 size-4 shrink-0 text-primary"/>In Safari, choose File → Add to Dock.</>}
             {platform === 'other' && <><Download className="mt-1 size-4 shrink-0 text-primary"/>Open your browser menu and choose “Install VELA” or “Install page as app” (in Chrome: ⋮ → Cast, save, and share → Install page as app).</>}
           </p>}
+        {platform !== 'installed' && <p className="mt-3 text-xs leading-5 text-muted-foreground">The first launch after installing may load a little slowly.</p>}
         <label className="mt-4 flex min-h-11 cursor-pointer items-center gap-3 text-sm"><input type="checkbox" className="size-5 shrink-0 accent-primary" checked={hideDay} onChange={e => setHideDay(e.target.checked)}/>Don't show again for 1 day</label>
         <Button type="button" variant="ghost" className="mt-2 w-full" onClick={close}>Not now</Button>
       </Dialog.Content></Dialog.Portal></Dialog.Root>;
@@ -139,5 +140,5 @@ export function InstallMenuItem() {
   const [show, setShow] = useState(false);
   useEffect(() => setShow(!isStandalone()), []);
   if (!show) return null;
-  return <section className="border-b border-border py-4"><Button variant="ghost" className="h-auto min-h-11 w-full justify-start gap-3 px-2 py-2 text-start text-sm" onClick={() => window.dispatchEvent(new Event(MANUAL_EVENT))}><Download className="size-4 shrink-0 text-muted-foreground"/><span className="min-w-0 flex-1 whitespace-normal leading-5">앱처럼 설치 (홈 화면에 추가)</span></Button></section>;
+  return <section className="border-b border-border py-4"><Button variant="ghost" className="h-auto min-h-11 w-full justify-start gap-3 px-2 py-2 text-start text-sm" onClick={() => window.dispatchEvent(new Event(MANUAL_EVENT))}><Download className="size-4 shrink-0 text-muted-foreground"/><span className="min-w-0 flex-1 whitespace-normal leading-5">앱처럼 설치 (홈 화면에 추가)<small className="mt-0.5 block text-xs font-normal text-muted-foreground">설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.</small></span></Button></section>;
 }
