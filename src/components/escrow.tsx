@@ -14,7 +14,7 @@ export function EscrowTimeline({stage,preview=false}:{stage?:EscrowStage;preview
 }
 
 export function EscrowGuarantee(){
- return <section className="escrow-card" aria-label="Escrow protection"><div className="escrow-card-head"><span className="escrow-shield"><ShieldCheck size={20}/></span><div><strong>100% Escrow Protection</strong><p>Payment is held safely by VELA until the buyer confirms final delivery after receiving the item.</p></div></div><EscrowTimeline preview/><p className="escrow-fine"><Lock size={11}/> Preview flow · payment processing is not connected yet.</p></section>;
+ return <section className="escrow-card" aria-label="Escrow protection"><div className="escrow-card-head"><span className="escrow-shield"><ShieldCheck size={20}/></span><div><strong>100% Escrow Protection</strong><p>Payment is held safely by VELA until the buyer confirms final delivery after receiving the item.</p></div></div><EscrowTimeline preview/></section>;
 }
 
 function useFiles(){
