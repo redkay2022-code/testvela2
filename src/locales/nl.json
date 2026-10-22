@@ -2921,5 +2921,8 @@
   "VELA is already installed on this device. Open it from your home screen or desktop.": "VELA is al geïnstalleerd op dit apparaat. Open het via je beginscherm of bureaublad.",
   "Don't show again for 1 day": "1 dag niet meer tonen",
   "The first launch after installing may load a little slowly.": "Na installatie kan de eerste start iets langzamer laden.",
-  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "Na installatie kan de eerste keer openen iets langzamer zijn."
+  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "Na installatie kan de eerste keer openen iets langzamer zijn.",
+  "목록 종류": "Lijsttype",
+  "분류 없음": "Geen subcategorie",
+  "이 종류로 등록된 항목이 없어요.": "Nog geen items van dit type."
 }

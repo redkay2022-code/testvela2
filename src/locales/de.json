@@ -2916,5 +2916,8 @@
   "VELA is already installed on this device. Open it from your home screen or desktop.": "VELA ist auf diesem Gerät bereits installiert. Öffne es über den Home-Bildschirm oder den Desktop.",
   "Don't show again for 1 day": "1 Tag lang nicht mehr anzeigen",
   "The first launch after installing may load a little slowly.": "Nach der Installation kann der erste Start etwas langsamer laden.",
-  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "Nach der Installation kann das erste Öffnen etwas langsamer sein."
+  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "Nach der Installation kann das erste Öffnen etwas langsamer sein.",
+  "목록 종류": "Listentyp",
+  "분류 없음": "Keine Unterkategorie",
+  "이 종류로 등록된 항목이 없어요.": "Noch keine Einträge dieser Art."
 }

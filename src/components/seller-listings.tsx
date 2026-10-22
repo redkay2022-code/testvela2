@@ -6,7 +6,7 @@ import { activeLang } from '@/lib/i18n';
 import { WatchSpecificationsForm } from './watch-specifications-form';
 import { cleanWatchSpecs } from '@/lib/watch-specifications';
 import { normalizeMenuCategory, postCategoryLabels, uploadCategoryLabels } from '@/lib/feed-categories';
-import { isWatchStoryTag, normalizeStoryTag, watchStorySpecs } from '@/lib/watch-story';
+import { isWatchStoryTag, normalizeStoryTag, watchStoryOptions, watchStorySpecs } from '@/lib/watch-story';
 import { t } from '@/lib/i18n';
 import { validateLoungeFiles } from './lounge';
 import { LOUNGE_MAX_BYTES, LOUNGE_MAX_SECONDS, loungeTooLong } from '@/lib/lounge';
@@ -99,7 +99,14 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   const scope = actAs?.id ?? 'self';
   const [editing, setEditing] = useSessionState<Listing | 'new' | null>(`seller-listings:${scope}:editing`, null);
   const [bulk, setBulk] = useSessionState(`seller-listings:${scope}:bulk`, false);
-  const pager = usePagination(listings.data ?? [], acting?.id ?? 'self');
+  /* 목록 종류: 전체 / 상품 등록 / 스토리(세부 분류별) 드롭다운. 고른 값은 다른 페이지에 갔다가 돌아와도 유지된다. */
+  const [kind, setKind] = useSessionState(`seller-listings:${scope}:kind`, 'all');
+  const allListings = listings.data ?? [];
+  const kindOf = (l: Listing) => { if (!isStoryListing(l)) return 'product'; const tag = normalizeStoryTag(l.specs?.['storySubcategory']); return isWatchStoryTag(tag) ? `story:${tag}` : 'story:none'; };
+  const matchesKind = (l: Listing, k: string) => k === 'all' || (k === 'story' ? isStoryListing(l) : kindOf(l) === k);
+  const kindCount = (k: string) => allListings.filter(l => matchesKind(l, k)).length;
+  const shownListings = allListings.filter(l => matchesKind(l, kind));
+  const pager = usePagination(shownListings, `${acting?.id ?? 'self'}:${kind}`);
   const listTop = useRef<HTMLDivElement>(null);
   const [replacing, setReplacing] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState<Listing | null>(null);
@@ -150,7 +157,19 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
     <div ref={formTop} className="scroll-mt-4" />
     {editing && <ListingForm key={editing === 'new' ? 'new' : editing.id} user={user} owner={acting} catalog={(listings.data ?? []).filter(l => l.status === 'published').map(l => ({ id: l.id, title: l.title }))} listing={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
     {listings.isLoading ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("불러오는 중…")}</span></p> : !listings.data?.length ? <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("아직 등록한 상품이 없어요.")}</span></p> :
-    <><div ref={listTop} className="scroll-mt-4" /><ul className="seller-inventory-grid mt-5">{pager.items.map(l => <li key={l.id} className="seller-inventory-item">
+    <><div ref={listTop} className="scroll-mt-4" />
+    <div className="mt-4 flex items-center gap-2"><label htmlFor="listing-kind" className="shrink-0 text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("목록 종류")}</span></label>
+      <select id="listing-kind" className="form-input notranslate min-w-0 flex-1" translate="no" data-i18n-skip value={kind} onChange={e => setKind(e.target.value)}>
+        <option value="all">{tx('전체')} ({kindCount('all')})</option>
+        <option value="product">{tx('상품 등록')} ({kindCount('product')})</option>
+        <optgroup label={t('story')}>
+          <option value="story">{t('story')} · {tx('전체')} ({kindCount('story')})</option>
+          {watchStoryOptions.map(([, label, key]) => <option key={label} value={`story:${label}`}>{t(key)} ({kindCount(`story:${label}`)})</option>)}
+          {kindCount('story:none') > 0 && <option value="story:none">{tx('분류 없음')} ({kindCount('story:none')})</option>}
+        </optgroup>
+      </select></div>
+    {!shownListings.length && <p className="mt-3 text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("이 종류로 등록된 항목이 없어요.")}</span></p>}
+    <ul className="seller-inventory-grid mt-5">{pager.items.map(l => <li key={l.id} className="seller-inventory-item">
         <div className="min-w-0"><figure className={`seller-inventory-media ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`}>{l.thumb ? <img src={l.thumb} alt={l.title} loading="lazy" decoding="async" className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
           <div className="min-w-0"><p className="truncate font-medium">{l.title}</p><p className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.price != null ? formatMoney(l.price) : tx('가격 없음')}</span> · <span className="record-status"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.product_status === 'OUT_OF_STOCK' ? tx('판매 완료') : l.status === 'published' ? tx('판매 중') : tx('임시 저장')}</span></span></p>{l.specs.factory && <span className="text-xs text-primary" data-no-translate>{l.specs.factory}</span>}{l.specs.sourceType === 'custom' && <span className="text-xs text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("커스텀 제작")}</span></span>}</div></div>
         <div className="record-actions">

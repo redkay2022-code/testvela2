@@ -2918,5 +2918,8 @@
   "VELA is already installed on this device. Open it from your home screen or desktop.": "このデバイスにはVELAがすでにインストールされています。ホーム画面またはデスクトップから開いてください。",
   "Don't show again for 1 day": "1日間表示しない",
   "The first launch after installing may load a little slowly.": "インストール後の初回起動は、読み込みに少し時間がかかる場合があります。",
-  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "インストール後、初回起動時は読み込みが少し遅くなる場合があります。"
+  "설치 후 처음 열 때는 로딩이 조금 느릴 수 있습니다.": "インストール後、初回起動時は読み込みが少し遅くなる場合があります。",
+  "목록 종류": "一覧の種類",
+  "분류 없음": "小分類なし",
+  "이 종류로 등록된 항목이 없어요.": "この種類の項目はまだありません。"
 }
