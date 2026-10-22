@@ -2910,5 +2910,8 @@
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "付款已提交。团队将很快确认。在此之前，您当前的方案保持有效。",
   "Payment could not be submitted.": "无法提交付款。",
   "Your plan change is waiting for our team to confirm the payment.": "方案变更将在团队确认付款后生效。",
-  "No active transactions.": "暂无进行中的交易。"
+  "No active transactions.": "暂无进行中的交易。",
+  "거래 해시 (TXID)": "交易哈希 (TXID)",
+  "필수": "必填",
+  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "汇款后请输入交易哈希 (TXID) 以确认付款（必填）"
 }

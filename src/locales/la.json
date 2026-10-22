@@ -2911,5 +2911,8 @@
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "Solutio missa est. Turma nostra mox eam confirmabit. Interim consilium tuum praesens activum manet.",
   "Payment could not be submitted.": "Solutio mitti non potuit.",
   "Your plan change is waiting for our team to confirm the payment.": "Mutatio consilii confirmationem solutionis a turma nostra exspectat.",
-  "No active transactions.": "Nullae transactiones in cursu."
+  "No active transactions.": "Nullae transactiones in cursu.",
+  "거래 해시 (TXID)": "Transactionis hash (TXID)",
+  "필수": "Necessarium",
+  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "TXID inscribe ut solutionem confirmes (necessarium)"
 }

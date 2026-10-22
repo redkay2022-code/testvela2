@@ -2911,5 +2911,8 @@
   "Payment submitted. Our team will confirm it shortly. Your current plan stays active until then.": "Платёж отправлен. Наша команда скоро его подтвердит. До тех пор ваш текущий тариф остаётся активным.",
   "Payment could not be submitted.": "Не удалось отправить платёж.",
   "Your plan change is waiting for our team to confirm the payment.": "Смена тарифа ожидает подтверждения оплаты нашей командой.",
-  "No active transactions.": "Активных сделок нет."
+  "No active transactions.": "Активных сделок нет.",
+  "거래 해시 (TXID)": "Хеш транзакции (TXID)",
+  "필수": "Обязательно",
+  "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "Введите TXID для подтверждения оплаты (обязательно)"
 }

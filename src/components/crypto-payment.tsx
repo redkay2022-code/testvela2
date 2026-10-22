@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Copy, Check, Wallet, X, QrCode, Zap, ShieldCheck, CreditCard } from 'lucide-react';
 import QRCode from 'qrcode';
 import { Button } from './ui/button';
+import { Tx } from './tx';
 import { convert } from '@/lib/currency';
 import './checkout.css';
 
@@ -157,15 +158,15 @@ function AutoPay({ n, amount, onPaid }: { n: Net; amount: string; onPaid: (tx: s
 function DirectPay({ n, amount, onSubmit }: { n: Net; amount: string; onSubmit: (tx: string) => void }) {
   const [qr, setQr] = useState(''), [confirm, setConfirm] = useState(false), [txid, setTxid] = useState('');
   useEffect(() => { void QRCode.toDataURL(n.address, { margin: 1, width: 220, color: { dark: '#0D0D0F', light: '#F5E7B8' } }).then(setQr); }, [n.address]);
-  const t = txid.trim(), valid = !t || /^(0x)?[A-Za-z0-9]{20,100}$/.test(t);
+  const t = txid.trim(), valid = /^(0x)?[A-Za-z0-9]{20,100}$/.test(t); // the transaction hash is required before the order can be confirmed
   return <div className="mt-4">
     <div className="payment-direct"><div>{qr && <img src={qr} width={92} height={92} alt={`${n.label} 입금 주소 QR 코드`} />}</div><div className="min-w-0">
     <CopyRow label={`플랫폼 입금 주소 · ${n.chain}`} value={n.address} button="주소 복사" />
     <CopyRow label="정확한 입금 금액" value={amount} button="금액 복사" />
     </div></div>
     {!confirm ? <Button type="button" variant="gold" className="mt-5 w-full" onClick={() => setConfirm(true)}>입금 완료</Button> : <div className="mt-5">
-      <label className="form-label" htmlFor="txid">거래 해시 (TXID) · 선택</label>
-      <input id="txid" className="form-input" data-no-translate value={txid} maxLength={120} placeholder="입력하면 에스크로 확인이 빨라집니다" onChange={e => setTxid(e.target.value)} />
+      <label className="form-label" htmlFor="txid"><Tx>거래 해시 (TXID)</Tx> · <span className="txid-required"><Tx>필수</Tx></span></label>
+      <input id="txid" className="form-input" data-no-translate value={txid} maxLength={120} required aria-required="true" aria-invalid={Boolean(t) && !valid} placeholder="송금 후 거래 해시(TXID)를 입력해 주세요 (필수)" onChange={e => setTxid(e.target.value)} />
       <Button type="button" variant="gold" className="mt-3 w-full" disabled={!valid} onClick={() => onSubmit(t)}>주문 확정하기</Button></div>}
   </div>;
 }
