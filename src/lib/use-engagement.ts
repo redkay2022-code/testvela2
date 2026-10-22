@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { requestLogin } from './auth-required';
 
 export function useEngagement() {
   const client = useQueryClient();
@@ -28,6 +29,6 @@ export function useEngagement() {
   },
   onError:(_e,_v,ctx)=>{if(ctx?.prev)client.setQueryData(key,ctx.prev);toast.error(uid?'좋아요를 변경하지 못했습니다.':'로그인 후 좋아요를 남길 수 있습니다.');},
   onSettled:()=>{void client.invalidateQueries({queryKey:key});}});
-  const toggleLike=(id:string)=>mutation.mutate({id,liked:likedIds.has(id)});
+  const toggleLike=(id:string)=>{if(!user.isSuccess)return;if(!uid){requestLogin();return;}mutation.mutate({id,liked:likedIds.has(id)});};
   return {likedIds,toggleLike,busy:false};
 }

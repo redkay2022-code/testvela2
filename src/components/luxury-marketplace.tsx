@@ -71,6 +71,7 @@ import { PullToRefresh } from './pull-to-refresh';
 import { compactCount, useSellerStats } from '@/lib/use-seller-stats';
 import { discoveryListings } from '@/lib/catalog';
 import { useEngagement } from '@/lib/use-engagement';
+import { AUTH_REQUIRED_EVENT } from '@/lib/auth-required';
 import { postMediaRoute } from '@/lib/post-media';
 import { prefetchShort } from '@/lib/media-prefetch';
 import { TEST_COUNTS_ENABLED, shownPostLikes, shownViews, testPostSaves } from '@/lib/test-counts';
@@ -131,6 +132,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help,sto
  const guest=authReady&&!user;
  /* Guests who touch something locked see the LOGIN form first; the dialog has its own switch to sign up. */
  const guestSignup=()=>update({auth:true,authSignup:undefined});
+ useEffect(()=>{const open=()=>guestSignup();window.addEventListener(AUTH_REQUIRED_EVENT,open);return()=>window.removeEventListener(AUTH_REQUIRED_EVENT,open);});
  const guardGuest=(event:React.MouseEvent)=>{if(!guest)return;event.preventDefault();guestSignup();};
  const swipeStart=useRef<{x:number;y:number;t:number}|null>(null);
  const swipeTabs=['following','discover','reviews'] as const;
