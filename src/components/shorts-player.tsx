@@ -110,12 +110,12 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
  <div className="shorts-shade"/>
  {post.video&&!failed&&<button type="button" className="shorts-sound-toggle" aria-label={sound?'소리 끄기':'소리 켜기'} aria-pressed={sound} onClick={()=>{const v=video.current;if(!v)return;const next=!sound;shortsSound=next;v.muted=!next;setSound(next);if(next)void v.play().catch(()=>undefined);}}>{sound?<Volume2 size={18}/>:<VolumeX size={18}/>}{!sound&&<span>소리 켜기</span>}</button>}
  {(blocked||failed||!post.video)&&<div className="shorts-media-state">{blocked&&!failed?<Button variant="ghost" aria-label="Play video" onClick={()=>{void video.current?.play().then(()=>setBlocked(false)).catch(()=>notify('이 기기에서 영상을 재생할 수 없습니다.'));}}><Play/> 재생</Button>:failed?<Button variant="ghost" aria-label="Retry video" onClick={()=>{setReady(false);setFailed(false);}}><Play/> 다시 시도</Button>:<span>미리보기 이미지</span>}</div>}
- {hybrid&&shownTag&&<Link to="/post/$id" params={{id:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>}
+ {hybrid&&shownTag&&(user?<Link to="/post/$id" params={{id:shownTag.postId}} className="shorts-video-tag" data-no-translate><Tag size={13}/>{shownTag.title}</Link>:<button type="button" className="shorts-video-tag" data-no-translate onClick={requestAuth}><Tag size={13}/>{shownTag.title}</button>)}
  <div className="shorts-product-overlay">
   <div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
  <div className="shorts-seller-row">
   <ShortSellerIdentity post={post}/>
-  {post.menuCategory!=='스토리'&&<Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>}
+  {post.menuCategory!=='스토리'&&(user?<Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>:<Button variant="gold" className="shorts-view-details" aria-label="상세 보기" onClick={requestAuth}>상세 보기<ChevronRight size={17}/></Button>)}
  </div>
  </div>
  <footer className="shorts-bottom-bar">
