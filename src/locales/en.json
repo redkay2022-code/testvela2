@@ -1664,5 +1664,6 @@
   "거래 해시 (TXID)": "Transaction Hash (TXID)",
   "필수": "Required",
   "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "Enter your TXID to confirm payment (Required)",
-  "대시보드": "Dashboard"
+  "대시보드": "Dashboard",
+  "앱처럼 설치 (홈 화면에 추가)": "Install as an app (add to home screen)"
 }

@@ -13,6 +13,7 @@ type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{
 const OFFER_KEY = 'vela-install-offer';
 const DISMISS_KEY = 'vela-install-dismissed';
 const OPEN_EVENT = 'vela:offer-install';
+const MANUAL_EVENT = 'vela:open-install';
 
 let deferred: InstallEvent | null = null;
 
@@ -53,16 +54,18 @@ export function InstallPrompt() {
   const [platform, setPlatform] = useState<Platform>('other');
 
   useEffect(() => {
-    // Lets the browser treat VELA as an installable app. It is a pass-through worker: it never caches anything.
+    // Lets the browser treat VELA as an installable app. The worker only keeps hashed build files and icons; pages and data are always fetched fresh.
     const host = window.location.hostname;
     if (import.meta.env.PROD && 'serviceWorker' in navigator && !/lovableproject\.com$|^id-preview--/.test(host)) {
-      const register = () => void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+      const register = () => void navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => undefined);
       if (document.readyState === 'complete') register(); else window.addEventListener('load', register, { once: true });
     }
     const show = () => { if (isStandalone() || read(DISMISS_KEY)) return; setPlatform(detect()); setOpen(true); };
     if (read(OFFER_KEY)) window.setTimeout(show, 1200);
+    const manual = () => { if (isStandalone()) return; setPlatform(detect()); setOpen(true); };
     window.addEventListener(OPEN_EVENT, show);
-    return () => window.removeEventListener(OPEN_EVENT, show);
+    window.addEventListener(MANUAL_EVENT, manual);
+    return () => { window.removeEventListener(OPEN_EVENT, show); window.removeEventListener(MANUAL_EVENT, manual); };
   }, []);
 
   const close = (never = false) => { clear(OFFER_KEY); if (never) write(DISMISS_KEY, '1'); setOpen(false); };
@@ -93,4 +96,12 @@ export function InstallPrompt() {
           </p>}
         <div className="mt-4 grid grid-cols-2 gap-2"><Button type="button" variant="ghost" onClick={() => close()}>Not now</Button><Button type="button" variant="ghost" onClick={() => close(true)}>Don't show again</Button></div>
       </Dialog.Content></Dialog.Portal></Dialog.Root>;
+}
+
+/** 메뉴 안의 '앱처럼 설치' 버튼. 이미 앱으로 열었다면 보이지 않는다. 예전에 '다시 보지 않기'를 눌렀어도 직접 누르면 안내가 열린다. */
+export function InstallMenuItem() {
+  const [show, setShow] = useState(false);
+  useEffect(() => setShow(!isStandalone()), []);
+  if (!show) return null;
+  return <section className="border-b border-border py-4"><Button variant="ghost" className="h-auto min-h-11 w-full justify-start gap-3 px-2 py-2 text-start text-sm" onClick={() => window.dispatchEvent(new Event(MANUAL_EVENT))}><Download className="size-4 shrink-0 text-muted-foreground"/><span className="min-w-0 flex-1 whitespace-normal leading-5">앱처럼 설치 (홈 화면에 추가)</span></Button></section>;
 }
