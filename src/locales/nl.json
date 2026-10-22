@@ -2916,5 +2916,8 @@
   "필수": "Verplicht",
   "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "Voer uw TXID in om de betaling te bevestigen (verplicht)",
   "대시보드": "Dashboard",
-  "앱처럼 설치 (홈 화면에 추가)": "Installeren als app (toevoegen aan beginscherm)"
+  "앱처럼 설치 (홈 화면에 추가)": "Installeren als app (toevoegen aan beginscherm)",
+  "Install": "Installeren",
+  "VELA is already installed on this device. Open it from your home screen or desktop.": "VELA is al geïnstalleerd op dit apparaat. Open het via je beginscherm of bureaublad.",
+  "Don't show again for 1 day": "1 dag niet meer tonen"
 }

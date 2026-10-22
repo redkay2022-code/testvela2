@@ -2916,5 +2916,8 @@
   "필수": "Necessarium",
   "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "TXID inscribe ut solutionem confirmes (necessarium)",
   "대시보드": "Tabula",
-  "앱처럼 설치 (홈 화면에 추가)": "Ut applicatio instituatur (ad tabulam domesticam adde)"
+  "앱처럼 설치 (홈 화면에 추가)": "Ut applicatio instituatur (ad tabulam domesticam adde)",
+  "Install": "Instituere",
+  "VELA is already installed on this device. Open it from your home screen or desktop.": "VELA iam in hac machina instituta est. Ex tabula domestica vel mensa aperi.",
+  "Don't show again for 1 day": "Per unum diem ne ostendas"
 }

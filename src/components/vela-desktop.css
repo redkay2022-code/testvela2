@@ -21,7 +21,7 @@
 }
 
 @media (min-width: 721px) and (max-width: 899px) {
-  .lux-detail-page .lux-detail-scroll .lux-carousel > * { height: clamp(320px, 52dvh, 560px); }
+  .lux-detail-page .lux-detail-scroll .lux-carousel > * { height: clamp(320px, 58dvh, 620px); }
 }
 
 @media (min-width: 900px) {
@@ -36,5 +36,5 @@
   .lux-detail-page .lux-detail-scroll .carousel-controls { grid-column: 1; grid-row: 2; }
   .lux-detail-page .lux-detail-scroll > .lux-detail-copy { grid-column: 2; grid-row: 1 / span 2; max-width: none; margin: 0; padding: 16px 16px 28px 0; }
   .lux-detail-page .lux-detail-scroll > .lux-detail-copy:only-child { grid-column: 1 / -1; max-width: 960px; margin-inline: auto; padding-inline: 16px; }
-  .lux-detail-page .lux-detail-scroll .lux-carousel > * { height: clamp(360px, calc(100dvh - 230px), 760px); }
+  .lux-detail-page .lux-detail-scroll .lux-carousel > * { height: clamp(360px, calc(100dvh - 190px), 820px); }
 }

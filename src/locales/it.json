@@ -2911,5 +2911,8 @@
   "필수": "Obbligatorio",
   "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "Inserisci il TXID per confermare il pagamento (obbligatorio)",
   "대시보드": "Dashboard",
-  "앱처럼 설치 (홈 화면에 추가)": "Installa come app (aggiungi alla schermata Home)"
+  "앱처럼 설치 (홈 화면에 추가)": "Installa come app (aggiungi alla schermata Home)",
+  "Install": "Installa",
+  "VELA is already installed on this device. Open it from your home screen or desktop.": "VELA è già installato su questo dispositivo. Aprilo dalla schermata Home o dal desktop.",
+  "Don't show again for 1 day": "Non mostrare per 1 giorno"
 }

@@ -19,7 +19,7 @@ import { Globe, Loader2, Music, ArrowDownWideNarrow, ArrowLeft, ArrowRight, Bell
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { PasswordInput } from './password-input';
-import { offerInstall } from './install-prompt';
+import { offerInstall, offerInstallOnAuth } from './install-prompt';
 import { ProductComments } from './product-comments';
 import { supabase } from '@/integrations/supabase/client';
 import { categories, media, priceLabel } from '@/lib/market-media';
@@ -222,6 +222,7 @@ function SmallDialog({title,onClose,children}:{title:string;onClose:()=>void;chi
 export function AuthDialog({onClose,onSignedIn,initialSignup=false}:{onClose:()=>void;onSignedIn:()=>void;initialSignup?:boolean}) {
   const {lang,setLang}=useCurrency();
   const [signup,setSignup] = useState(initialSignup);
+  useEffect(()=>{offerInstallOnAuth();},[]);
   const [localPhone,setPhone] = useState('');
   const [country,setCountry] = useState(detectPhoneCountry());
   const phone = toE164(country, localPhone);

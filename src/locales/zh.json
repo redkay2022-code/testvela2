@@ -2915,5 +2915,8 @@
   "필수": "必填",
   "송금 후 거래 해시(TXID)를 입력해 주세요 (필수)": "汇款后请输入交易哈希 (TXID) 以确认付款（必填）",
   "대시보드": "仪表盘",
-  "앱처럼 설치 (홈 화면에 추가)": "安装为应用（添加到主屏幕）"
+  "앱처럼 설치 (홈 화면에 추가)": "安装为应用（添加到主屏幕）",
+  "Install": "安装",
+  "VELA is already installed on this device. Open it from your home screen or desktop.": "此设备上已安装 VELA。请从主屏幕或桌面打开。",
+  "Don't show again for 1 day": "1 天内不再显示"
 }
