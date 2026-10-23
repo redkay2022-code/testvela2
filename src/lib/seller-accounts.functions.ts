@@ -191,7 +191,7 @@ export const decidePlanChange = createServerFn({ method: 'POST' })
     const { data: app } = await supabaseAdmin.from('seller_applications').select('requested_plan, payment_status').eq('id', data.id).maybeSingle();
     if (!app || (!app.requested_plan && app.payment_status !== 'pending')) throw new Error('No plan request.');
     if (data.approve && !app.requested_plan) throw new Error('No plan request.');
-    const patch = data.approve ? { plan: app.requested_plan, requested_plan: null, plan_changed_at: new Date().toISOString() } : { requested_plan: null, payment_status: null, payment_txid: null, payment_network: null, payment_amount_usd: null, payment_submitted_at: null };
+    const patch = data.approve ? { plan: app.requested_plan as string, requested_plan: null, plan_changed_at: new Date().toISOString() } : { requested_plan: null, payment_status: null, payment_txid: null, payment_network: null, payment_amount_usd: null, payment_submitted_at: null };
     const { error } = await supabaseAdmin.from('seller_applications').update(patch).eq('id', data.id);
     if (error) throw new Error('Could not update the plan.');
     return { ok: true };

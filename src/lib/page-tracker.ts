@@ -40,7 +40,7 @@ export function usePageTracker() {
   }, [pathname]);
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const term = typeof q === 'string' ? q.trim() : '';
+    const term = typeof q === 'string' ? (q as string).trim() : '';
     if (!term || term === lastTerm.current) return;
     lastTerm.current = term;
     send('search', pathname, term, null);
