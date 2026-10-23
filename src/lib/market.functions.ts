@@ -132,7 +132,7 @@ export const getComments = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) => z.object({ postId: z.string().max(100), kind: z.enum(['comment','qna']).default('comment') }).parse(data))
   .handler(async ({data}) => {
     const client = publicClient(await callerToken());
-    const { data: rows, error } = await client.from('comments').select('id,user_id,body,created_at,parent_id').eq('post_id',data.postId).eq('kind',data.kind).order('created_at').order('id');
+    const { data: rows, error } = await client.from('comments').select('id,user_id,body,created_at,parent_id').eq('post_id',data.postId).eq('kind' as never,data.kind as never).order('created_at').order('id');
     if (error) throw new Error('댓글을 불러오지 못했습니다.');
     if (!rows.length) return [];
     const { data: postRow } = await client.from('posts').select('user_id,store_id,creator').eq('id',data.postId).maybeSingle();
@@ -185,7 +185,7 @@ export const addComment = createServerFn({ method: 'POST' })
     const { data: profile, error: profileError } = await context.supabase.from('profiles').select('nickname').eq('user_id',context.userId).maybeSingle();
     if (profileError) throw new Error('프로필을 불러오지 못했습니다.');
     const creator = (profile?.nickname.trim() || 'VELA 회원').slice(0,40);
-    const {error} = await context.supabase.from('comments').insert({post_id:data.postId,user_id:context.userId,creator,body:data.body,parent_id:data.parentId ?? null,kind:data.kind});
+    const {error} = await context.supabase.from('comments').insert({post_id:data.postId,user_id:context.userId,creator,body:data.body,parent_id:data.parentId ?? null,kind:data.kind} as never);
     if(error) throw new Error('댓글을 저장하지 못했습니다.');
     return {ok:true};
   });

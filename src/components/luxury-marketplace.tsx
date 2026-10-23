@@ -201,7 +201,7 @@ export function LuxuryMarketplace({mode='home',children,shortsId,postId,help,sto
  </NotificationsContext.Provider>;
 }
 const FEED_PAGE=24; let feedShown=FEED_PAGE; // how many cards are drawn; remembered so Back returns to the same scroll depth
-function Feed({posts,base,search,onSelectProduct}:{onSelectProduct?:(event:React.MouseEvent<HTMLAnchorElement>,post:LuxuryPost)=>void;posts:LuxuryPost[];base:'/'|'/explore'|'/market'|'/me'|'/upload'|'/store'|'/seller'|'/seller-store'|'/seller-messages'|'/admin';search:ReturnType<typeof marketSearch.parse>}) {
+function Feed({posts,base,search,onSelectProduct}:{onSelectProduct?:(event:React.MouseEvent<HTMLAnchorElement>,post:LuxuryPost)=>void;posts:LuxuryPost[];base:'/'|'/explore'|'/market'|'/me'|'/upload'|'/store'|'/seller'|'/seller-store'|'/seller-messages'|'/seller/apply'|'/admin';search:ReturnType<typeof marketSearch.parse>}) {
  const preview=useMarketPreview();const engagement=useEngagement();const compact=base==='/';const columns=compact?2:3;
  // Draw the first 24 cards, then 24 more each time the end of the list nears the screen (fewer photos, players and DOM nodes at once).
  const [limit,setLimit]=useState(()=>feedShown),sentinel=useRef<HTMLDivElement>(null),listKey=`${base}|${posts.length}|${posts[0]?.id ?? ''}`,lastKey=useRef(listKey);

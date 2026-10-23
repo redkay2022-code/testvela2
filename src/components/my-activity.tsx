@@ -48,7 +48,7 @@ export function MyActivity({ user, posts }: { user: User | null; posts: LuxuryPo
   const qna = useQuery({queryKey:['my-qna',uid],enabled:Boolean(uid),queryFn:async()=>{
     if(!uid) return [];
     const {data,error}=await supabase.from('comments').select('id,post_id,body,created_at,kind').eq('user_id',uid).order('created_at',{ascending:false});
-    if(error) throw error; return data ?? [];
+    if(error) throw error; return (data ?? []) as unknown as {id:string;post_id:string;body:string;created_at:string;kind:string|null}[];
   }});
   const [board,setBoard]=useState<'qna'|'comment'>('qna');
   const boardRows=(qna.data??[]).filter(c=>(c.kind==='comment'?'comment':'qna')===board);
