@@ -1061,3 +1061,26 @@ html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s eas
 .order-stat-button em{font-style:normal;font-size:10px;color:var(--primary)}
 .order-bucket-panel{margin-top:14px;padding-top:6px;border-top:1px solid var(--border)}
 @media(max-width:720px){.admin-groups{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-groups a{height:44px;font-size:12px}.admin-fold>summary{font-size:14px}.admin-fold>:not(summary){padding:12px}}
+
+/* 159차: 관리자 백오피스 폰 화면 — 옆으로 넘어가지 않고 한 화면에 맞춤 */
+.admin-core,.admin-folds,.admin-fold,.admin-fold>*{min-width:0;max-width:100%}
+.admin-fold p,.admin-fold small,.admin-fold span,.admin-fold strong,.admin-fold code{overflow-wrap:anywhere}
+.admin-fold select{max-width:100%;text-overflow:ellipsis}
+.app-detail-list{display:none;margin:0}
+@media(max-width:720px){
+  .admin-core{overflow-x:clip}
+  .app-detail-table{display:none}
+  .app-detail-list{display:grid;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .app-detail-list>div{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;padding:9px 12px;border-top:1px solid var(--border);font-size:13px;line-height:1.45}
+  .app-detail-list>div:first-child{border-top:0}
+  .app-detail-list dt{color:var(--muted-foreground);font-size:12px}
+  .app-detail-list dd{margin:0;overflow-wrap:anywhere}
+  .admin-fold .management-row{flex-wrap:wrap;gap:10px}
+  .admin-fold .management-row>div:not(.record-actions):not(.studio-initial){min-width:0;flex:1 1 120px}
+  .admin-fold .record-actions{width:100%;margin-left:0;justify-content:flex-start}
+  .admin-fold .section-heading{flex-wrap:wrap;gap:4px}
+  .admin-fold .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-fold .stat-item{padding:14px 10px}
+  .admin-fold .stat-item strong{font-size:20px;overflow-wrap:anywhere}
+  .admin-subtabs a{flex:1 1 auto;justify-content:center}
+}

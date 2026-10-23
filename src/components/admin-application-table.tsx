@@ -47,7 +47,8 @@ export function ApplicationTable({ a, busy, onPlan, onConfirmPayment }: { a: App
   const head = 'whitespace-nowrap border border-border bg-muted/40 px-3 py-2 text-left text-xs font-medium text-muted-foreground';
   const cell = 'border border-border px-3 py-2 align-top text-sm';
   return <div className="col-span-full mt-3 w-full" style={{ gridColumn: '1 / -1' }} data-i18n-skip data-no-translate translate="no">
-    <div className="w-full overflow-x-auto">
+    <dl className="app-detail-list">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+    <div className="app-detail-table w-full overflow-x-auto">
       <table className="w-full min-w-[760px] border-collapse">
         <thead><tr>{rows.map(([label]) => <th key={label} scope="col" className={head}>{label}</th>)}</tr></thead>
         <tbody><tr>{rows.map(([label, value]) => <td key={label} className={cell + ' break-words'}>{value}</td>)}</tr></tbody>
