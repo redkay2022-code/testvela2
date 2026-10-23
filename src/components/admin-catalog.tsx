@@ -257,6 +257,7 @@ function ProductList({ stores, products }: { stores: StoreRow[]; products: PostR
           <td data-no-translate>{sellerName(p)}</td>
           <td className="whitespace-nowrap">{fmtDate(p.updated_at || p.created_at)}</td>
           <td><div className="catalog-actions">
+            <Button asChild variant="ghost" size="sm">{p.video_url ? <Link to="/shorts/$id" params={{ id: p.id }}><Eye />상세보기</Link> : <Link to="/post/$id" params={{ id: p.id }}><Eye />상세보기</Link>}</Button>
             <Button asChild variant="ghost" size="sm"><Link to="/admin" search={{ role: 'admin', section: 'products', edit: p.id }}><Pencil />수정</Link></Button>
             <Button variant="ghost" size="sm" onClick={() => void toggleFeatured(p)}><Star />{p.featured ? '추천 해제' : '추천'}</Button>
             <Button variant="destructive" size="sm" onClick={() => void forceDelete(p)}><Trash2 />삭제</Button>

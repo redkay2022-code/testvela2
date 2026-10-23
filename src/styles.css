@@ -1084,3 +1084,26 @@ html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s eas
   .admin-fold .stat-item strong{font-size:20px;overflow-wrap:anywhere}
   .admin-subtabs a{flex:1 1 auto;justify-content:center}
 }
+
+/* 160차: 셀러(스토어) 페이지 — 인스타그램식 정리: 사진 + 이름/숫자, 소개글, 버튼, 접이식 공지 */
+.store-profile-v2 .store-head-row{align-items:center;gap:18px}
+.store-profile-v2 .store-avatar{width:84px;height:84px;border-width:2px}
+.store-head-info{gap:10px}
+.store-name-line{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-width:0}
+.store-name-line h1{font-size:19px;font-weight:700}
+.store-name-line .store-copy-link{height:30px;width:30px;padding:0;margin:0;border-radius:999px;justify-content:center}
+.store-head-info .store-stats{display:flex;gap:20px;margin:0;padding:0;border:0;flex-wrap:nowrap}
+.store-head-info .store-stats>span{display:flex;flex-direction:column;align-items:center;line-height:1.25;font-size:12px;color:var(--muted-foreground);white-space:nowrap}
+.store-head-info .store-stats strong{font-size:17px;font-weight:700;color:var(--foreground)}
+.store-profile-v2 .store-action-row{margin-top:14px}
+.store-content-public{margin:12px 0 0}
+.store-bio-block{padding:0}
+.store-bio-block p{font-size:14px;line-height:1.55;color:var(--foreground)}
+.store-notices-fold{margin-top:12px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.store-notices-fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:42px;padding:0 14px;font-size:14px;font-weight:600}
+.store-notices-fold>summary::-webkit-details-marker{display:none}
+.store-notices-fold>summary::after{content:'▾';color:var(--muted-foreground)}
+.store-notices-fold[open]>summary::after{content:'▴'}
+.store-notices-fold>:not(summary){padding:4px 14px 12px}
+.store-profile-v2 .seller-reputation{margin-top:12px}
+@media(max-width:380px){.store-head-info .store-stats{gap:14px}.store-name-line h1{font-size:17px}}
