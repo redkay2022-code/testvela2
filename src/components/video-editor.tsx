@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowDown, ArrowUp, Captions, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Captions, Image as ImageIcon, Loader2, Music, Palette, Pause, Play, Plus, Scissors, Tag, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MAX_VIDEO_SECONDS } from '@/lib/listing-media';
 import { MusicPicker, QuickMusicList, type SelectedMusic } from './music-picker';
@@ -15,7 +15,7 @@ type TextLayer = { id: string; text: string; start: number; end: number; style: 
 type Caption = { start: number; end: number; text: string };
 type TextStyle = 'gold-serif' | 'spec' | 'minimal';
 type FilterId = 'none' | 'bright' | 'dark' | 'metal' | 'cinema';
-type Layer = 'clips' | 'text' | 'music' | 'filter' | 'tags';
+type Layer = 'clips' | 'text' | 'music' | 'filter' | 'tags' | 'cover';
 
 export const luxuryFilters: Record<FilterId, { label: string; css: string; vignette: boolean }> = {
   none: { label: '원본', css: 'none', vignette: false },
@@ -30,7 +30,7 @@ const uid = () => crypto.randomUUID();
 const readDuration = (url: string) => new Promise<number>((res, rej) => { const v = document.createElement('video'); v.preload = 'metadata'; v.muted = true; v.onloadedmetadata = () => { if (Number.isFinite(v.duration)) return res(v.duration); v.ondurationchange = () => { if (Number.isFinite(v.duration)) res(v.duration); }; v.currentTime = 1e7; }; v.onerror = () => rej(new Error('영상을 읽을 수 없어요.')); v.src = url; });
 
 /** Full-screen seller video editor: trims/orders clips, crops 9:16, adds BGM/SFX, captions, text, filters and product tags, then exports one file. */
-export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicChange, maxSeconds }: { maxSeconds?: number | undefined; file: File; catalog: { id: string; title: string }[]; onDone: (r: { file: File; tags: VideoTag[] }) => void; onCancel: () => void; music?: SelectedMusic | null; onMusicChange?: (m: SelectedMusic | null) => void }) {
+export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicChange, maxSeconds }: { maxSeconds?: number | undefined; file: File; catalog: { id: string; title: string }[]; onDone: (r: { file: File; tags: VideoTag[]; cover?: Blob }) => void; onCancel: () => void; music?: SelectedMusic | null; onMusicChange?: (m: SelectedMusic | null) => void }) {
   const LIMIT = maxSeconds ?? MAX_VIDEO_SECONDS, long = LIMIT > MAX_VIDEO_SECONDS; // 스토리는 5분까지
   const [pickerOpen, setPickerOpen] = useState(false); const musicAudio = useRef<HTMLAudioElement | null>(null);
   const transcribe = useServerFn(transcribeVideoAudio);
@@ -45,6 +45,9 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
   const [sfx, setSfx] = useState<{ id: string; type: SfxType; at: number }[]>([]);
   const [tags, setTags] = useState<{ id: string; postId: string; title: string; at: number }[]>([]);
   const [t, setT] = useState(0); const [playing, setPlaying] = useState(false);
+  /* 썸네일: 영상 위에서 장면을 고르거나(coverAt), 사진을 직접 첨부(coverPhoto). 둘 다 없으면 자동. */
+  const [coverAt, setCoverAt] = useState<number | null>(null); const [coverPhoto, setCoverPhoto] = useState<File | null>(null); const [coverPreview, setCoverPreview] = useState('');
+  useEffect(() => { if (!coverPhoto) { setCoverPreview(''); return; } const u = URL.createObjectURL(coverPhoto); setCoverPreview(u); return () => URL.revokeObjectURL(u); }, [coverPhoto]);
   useEffect(() => { const a = musicAudio.current; if (!a) return; if (playing) { void a.play().catch(() => undefined); } else a.pause(); }, [playing, music?.music_audio_url]);
   const [busy, setBusy] = useState(''); const [err, setErr] = useState('');
   const [draft, setDraft] = useState({ text: '', style: 'gold-serif' as TextStyle, font: '' }); const [tagPick, setTagPick] = useState(catalog[0]?.id ?? '');
@@ -138,20 +141,23 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
       await Promise.all([...new Set(texts.filter(x => x.font).map(x => x.font))].map(f => loadFontForCanvas(f, texts.map(x => x.text).join(''))));
       await ac.resume(); rec.start(250);
       if (soundtrack.current) { const s = ac.createBufferSource(); s.buffer = soundtrack.current; s.connect(dest); s.start(); }
-      let acc = 0;
+      let acc = 0; const shot: { p: Promise<Blob | null> | null } = { p: null };
+      const shoot = () => { shot.p = new Promise<Blob | null>(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.85)); };
       for (const c of clips) {
         v.src = c.url; await new Promise(r => { v.onloadeddata = r; }); v.currentTime = c.start; await new Promise(r => { v.onseeked = r; });
         await v.play();
-        await new Promise<void>(r => { const loop = () => { const local = v.currentTime; drawFrame(acc + local - c.start); setT(acc + local - c.start); if (local >= c.end - 0.02 || v.ended) { v.pause(); r(); } else requestAnimationFrame(loop); }; loop(); });
+        await new Promise<void>(r => { const loop = () => { const local = v.currentTime; drawFrame(acc + local - c.start); setT(acc + local - c.start); if (coverAt !== null && !shot.p && acc + local - c.start >= coverAt - 0.02) shoot(); if (local >= c.end - 0.02 || v.ended) { v.pause(); r(); } else requestAnimationFrame(loop); }; loop(); });
         acc += c.end - c.start;
       }
+      if (coverAt !== null && !shot.p) shoot();
       rec.stop(); await done; await ac.close();
+      const cover: Blob | undefined = coverPhoto ?? (shot.p ? (await shot.p) ?? undefined : undefined);
       const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-      onDone({ file: new File(chunks, `vela-edit-${Date.now()}.${ext}`, { type: mime.split(';')[0] ?? 'video/webm' }), tags: tags.map(({ postId, title, at }) => ({ postId, title, at: +at.toFixed(2) })) });
+      onDone({ file: new File(chunks, `vela-edit-${Date.now()}.${ext}`, { type: mime.split(';')[0] ?? 'video/webm' }), tags: tags.map(({ postId, title, at }) => ({ postId, title, at: +at.toFixed(2) })), ...(cover ? { cover } : {}) });
     } catch (e) { setErr(e instanceof Error ? e.message : '영상을 만들지 못했어요.'); } finally { setBusy(''); }
   };
 
-  const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['music', '음악 추가', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag]];
+  const layers: [Layer, string, typeof Scissors][] = [['clips', '자르기·순서', Scissors], ['music', '음악 추가', Music], ['filter', '필터', Palette], ['tags', '상품 태그', Tag], ['cover', '썸네일', ImageIcon]];
   return createPortal(<div role="dialog" aria-modal="true" aria-label="영상 편집" className="video-editor" data-no-translate>
     <header className="video-editor-head"><Button variant="ghost" size="icon" aria-label="편집 취소" onClick={onCancel} disabled={busy === 'export'}><X/></Button><h2>영상 편집</h2><Button variant="gold" size="sm" disabled={!clips.length || !!busy} onClick={() => { if (total > LIMIT + 0.05) { setLimitPopup(true); return; } void exportVideo(); }}>{busy === 'export' ? <><Loader2 className="animate-spin"/>만드는 중…</> : '편집 완료'}</Button></header>
     <div className="video-editor-body">
@@ -214,6 +220,17 @@ export function VideoEditor({ file, catalog, onDone, onCancel, music, onMusicCha
             <label className="editor-row">원본 소리 크기<input type="range" min={0} max={1} step={0.05} disabled={origOff} value={origVol} onChange={e => setOrigVol(Number(e.target.value))}/></label></div>
         </>}
         {layer === 'filter' && <div className="grid grid-cols-2 gap-2">{(Object.keys(luxuryFilters) as FilterId[]).map(f => <button key={f} type="button" className={`editor-option ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}><span className="editor-swatch" style={{ filter: luxuryFilters[f].css }}/>{luxuryFilters[f].label}</button>)}</div>}
+        {layer === 'cover' && <div className="editor-card grid gap-3">
+          <strong className="text-sm">썸네일 고르기</strong>
+          <p className="text-xs leading-5 text-muted-foreground">아래 막대를 좌우로 밀어 썸네일로 쓸 장면을 고르거나, 사진을 직접 첨부하세요. 고르지 않으면 자동으로 정해져요.</p>
+          <input type="range" className="w-full accent-primary" aria-label="썸네일 장면 선택" min={0} max={Math.max(total, 0.1)} step={0.05} value={Math.min(coverAt ?? t, Math.max(total, 0.1))} disabled={!clips.length || !!busy} onChange={e => { const v = Number(e.target.value); stop(); seek(v); setCoverAt(v); setCoverPhoto(null); }}/>
+          <p className="text-xs text-muted-foreground" aria-live="polite">{coverPhoto ? `첨부한 사진을 썸네일로 사용: ${coverPhoto.name}` : coverAt === null ? '자동 (영상 첫 장면 근처)' : `선택한 장면: ${fmt(coverAt)}`}</p>
+          {coverPreview && <img src={coverPreview} alt="첨부한 썸네일 미리보기" className="h-28 w-auto rounded-md object-cover"/>}
+          <div className="flex flex-wrap gap-2">
+            <Button asChild size="sm" variant="goldOutline"><label className="cursor-pointer"><ImageIcon size={14}/>사진 첨부<input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (!f) return; if (!/^image\//.test(f.type)) { setErr('사진 파일(JPG·PNG·WEBP)을 선택해 주세요.'); return; } if (f.size > 10 * 1024 * 1024) { setErr('사진은 10MB 이하만 올릴 수 있어요.'); return; } setErr(''); setCoverPhoto(f); setCoverAt(null); }}/></label></Button>
+            <Button size="sm" variant="ghost" disabled={coverAt === null && !coverPhoto} onClick={() => { setCoverAt(null); setCoverPhoto(null); }}>자동으로 되돌리기</Button>
+          </div>
+        </div>}
         {layer === 'tags' && <>
           {catalog.length ? <div className="editor-card"><strong className="text-sm">VELA 상품 태그</strong><select aria-label="태그할 상품" className="form-input" value={tagPick} onChange={e => setTagPick(e.target.value)}>{catalog.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
             <Button size="sm" variant="gold" className="mt-2" disabled={!tagPick} onClick={() => { const item = catalog.find(c => c.id === tagPick); if (item) setTags(ts => [...ts, { id: uid(), postId: item.id, title: item.title, at: snap(t) }]); }}>{`현재 위치(${fmt(snap(t))})에 태그`}</Button></div>

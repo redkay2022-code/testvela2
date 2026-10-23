@@ -211,7 +211,7 @@ function ProductList({ stores, products }: { stores: StoreRow[]; products: PostR
   const [q, setQ] = useState(''), [filter, setFilter] = useState('all'), [msg, setMsg] = useState('');
   const refresh = useRefresh();
   const storeName = (id: string | null) => stores.find(s => s.id === id)?.store_name ?? '—';
-  const media = useMediaUrls(products.map(p => p.media_urls[0] ?? ''));
+  const media = useMediaUrls(products.flatMap(p => [p.media_urls[0] ?? '', (p.specs as Record<string, unknown> | null)?.['customThumb'] === 'true' && p.video_url ? p.thumbnail_url ?? '' : '']));
   // 올린 셀러: posts.user_id → profiles.nickname (관리자만 전체 조회 가능). 없으면 creator, 스토어 이름 순으로 대체합니다.
   const ownerIds = useMemo(() => [...new Set(products.map(p => p.user_id).filter((v): v is string => Boolean(v)))].sort(), [products]);
   const owners = useQuery({ queryKey: ['admin-owner-names', ownerIds.join(',')], enabled: ownerIds.length > 0, staleTime: 5 * 60_000, queryFn: async () => {
@@ -224,7 +224,7 @@ function ProductList({ stores, products }: { stores: StoreRow[]; products: PostR
   } });
   const sellerName = (p: PostRow) => (p.user_id && owners.data?.[p.user_id]) || p.creator || (p.store_id ? storeName(p.store_id) : '') || '—';
   // 썸네일: 첫 사진 → 없으면 Mux 영상 썸네일
-  const thumbOf = (p: PostRow) => (p.media_urls[0] ? media(p.media_urls[0]) : isMuxStreamUrl(p.video_url) ? muxThumbnailUrl(p.video_url, 160) : '');
+  const thumbOf = (p: PostRow) => { const custom = (p.specs as Record<string, unknown> | null)?.['customThumb'] === 'true' && p.video_url && p.thumbnail_url ? p.thumbnail_url : null; return custom ? media(custom) : p.media_urls[0] ? media(p.media_urls[0]) : isMuxStreamUrl(p.video_url) ? muxThumbnailUrl(p.video_url, 160) : ''; };
   const rows = products.filter(p => {
     const hay = `${p.title} ${p.brand} ${p.model} ${p.reference} ${sellerName(p)} ${storeName(p.store_id)} ${p.category}`.toLowerCase();
     return (!q || hay.includes(q.toLowerCase())) && (filter === 'all' || p.product_status === filter || (filter === 'DRAFT' && p.product_status === 'READY'));

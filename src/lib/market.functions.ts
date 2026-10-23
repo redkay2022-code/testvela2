@@ -45,7 +45,9 @@ async function loadPosts(token: string | null) {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
     const permitted = (post:typeof uploaded[number],path:string) => !path.includes('..') && (path.startsWith('seed:') || Boolean(post.store_id && path.split('/').length >= 2) || Boolean(post.user_id && path.startsWith(`${post.user_id}/`)));
     const cardPath = (post:typeof uploaded[number]):string|null => { const specs = post.specs; const card = specs && typeof specs === 'object' && !Array.isArray(specs) ? (specs as Record<string,unknown>)['cardImage'] : null; return typeof card === 'string' ? card : null; };
-    const paths = [...new Set(uploaded.flatMap(p => [...p.media_urls,...(p.video_url && !isExternalVideo(p.video_url) ? [p.video_url]:[]),...(p.thumbnail_url && !isMuxStreamUrl(p.video_url) ? [p.thumbnail_url]:[]),...(cardPath(p) ? [cardPath(p) as string]:[])].filter(path => permitted(p,path) && !path.startsWith('seed:'))))];
+    /* 셀러가 직접 고른 썸네일(영상 장면 또는 첨부 사진)은 Mux 자동 썸네일보다 우선한다. */
+    const customThumb = (post:typeof uploaded[number]) => { const specs = post.specs; return Boolean(post.thumbnail_url) && Boolean(specs && typeof specs === 'object' && !Array.isArray(specs) && (specs as Record<string,unknown>)['customThumb'] === 'true'); };
+    const paths = [...new Set(uploaded.flatMap(p => [...p.media_urls,...(p.video_url && !isExternalVideo(p.video_url) ? [p.video_url]:[]),...(p.thumbnail_url && (!isMuxStreamUrl(p.video_url) || customThumb(p)) ? [p.thumbnail_url]:[]),...(cardPath(p) ? [cardPath(p) as string]:[])].filter(path => permitted(p,path) && !path.startsWith('seed:'))))];
     // Sign in small batches: one oversized request used to fail the whole feed once many posts were published.
     // A batch that fails only drops its own media (the post still renders without it) instead of breaking the page.
     // Links signed in the last 5 hours are reused (they stay valid for 6); only new or expired paths are signed again.
@@ -66,7 +68,7 @@ async function loadPosts(token: string | null) {
       const card = cardPath(post);
       if(card) { const { cardImage: _unsigned, ...restSpecs } = post.specs as Record<string,unknown>; post.specs = (permitted(post,card) && urls.get(card) ? { ...restSpecs, cardImage: urls.get(card) } : restSpecs) as typeof post.specs; }
       // Mux videos use Mux's image CDN for the poster: faster, cacheable, and no signing work on every feed load.
-      if(isMuxStreamUrl(post.video_url)) post.thumbnail_url = muxThumbnailUrl(post.video_url);
+      if(isMuxStreamUrl(post.video_url) && !customThumb(post)) post.thumbnail_url = muxThumbnailUrl(post.video_url);
       else if(post.thumbnail_url) post.thumbnail_url = permitted(post,post.thumbnail_url) ? urls.get(post.thumbnail_url) || null : null;
       // Mux streams are public HLS URLs (no signing); videos still processing on Mux are hidden until ready.
       if(post.video_url) post.video_url = isMuxStreamUrl(post.video_url) ? post.video_url : isMuxPending(post.video_url) ? null : permitted(post,post.video_url) ? sign(post.video_url) || null : null;

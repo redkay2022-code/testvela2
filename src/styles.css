@@ -1024,3 +1024,14 @@ html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s eas
 :root,.dark{--shorts-exit-surface:rgba(0,0,0,0.5);}
 :root,.dark{--notification:#f52f39;}
 }
+
+/* 157차: 스토어 상단 — 사진 오른쪽에 이름·등급·링크 복사, 아래에 대시보드(팔로우)·공지·메시지 */
+.store-profile-v2{padding:calc(env(safe-area-inset-top) + 20px) 6px 20px;margin-top:0}
+.store-profile-v2 .store-avatar{margin-top:0;flex-shrink:0}
+.store-head-row{display:flex;align-items:center;gap:16px;min-width:0}
+.store-head-info{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0;flex:1}
+.store-head-info h1{font-size:22px;line-height:1.25;overflow-wrap:anywhere;margin:0}
+.store-head-info .store-copy-link{height:32px;padding:0 8px;margin-left:-8px;font-size:12px;gap:6px;color:var(--muted-foreground)}
+.store-action-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:16px}
+.store-action-row>*{min-width:0;width:100%;height:44px;padding-inline:6px;font-size:13px;gap:6px;white-space:nowrap}
+.store-action-row>a{display:inline-flex;align-items:center;justify-content:center}

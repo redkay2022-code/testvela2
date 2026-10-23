@@ -22,8 +22,10 @@ export const getOrderThumbs = createServerFn({ method: 'POST' }).middleware([req
     for (const p of posts.data) {
       const specs = p.specs && typeof p.specs === 'object' && !Array.isArray(p.specs) ? p.specs as Record<string, unknown> : {};
       const card = typeof specs['cardImage'] === 'string' ? specs['cardImage'] as string : null;
-      if (isMuxStreamUrl(p.video_url)) { out[p.id] = muxThumbnailUrl(p.video_url); continue; }
-      const path = [card, p.media_urls?.[0], p.thumbnail_url].find((x): x is string => Boolean(x) && !x!.startsWith('seed:') && !x!.includes('..'));
+      /* 셀러가 직접 고른 영상 썸네일이 있으면 Mux 자동 썸네일보다 우선한다. */
+      const custom = specs['customThumb'] === 'true' && p.video_url && p.thumbnail_url ? p.thumbnail_url : null;
+      if (isMuxStreamUrl(p.video_url) && !custom) { out[p.id] = muxThumbnailUrl(p.video_url); continue; }
+      const path = [custom, card, p.media_urls?.[0], p.thumbnail_url].find((x): x is string => Boolean(x) && !x!.startsWith('seed:') && !x!.includes('..'));
       if (!path) continue;
       if (/^https?:\/\//.test(path)) out[p.id] = path; else pending.set(p.id, path);
     }

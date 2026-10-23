@@ -37,7 +37,7 @@ import { useAdminPasswordGate } from './admin-password-gate';
 import { formatMoney } from '@/lib/currency';
 import { VideoEditor, type VideoTag } from './video-editor';
 import { VideoStartPreview } from './video-start-preview';
-import { uploadVideoThumbnail } from '@/lib/video-thumbnail';
+import { uploadCoverThumbnail, uploadVideoThumbnail } from '@/lib/video-thumbnail';
 import { compressImage, LONG_CACHE } from '@/lib/image-compress';
 import { COMPRESS_THRESHOLD_BYTES } from '@/lib/video-compress';
 import { uploadListingVideo } from '@/lib/video-upload';
@@ -54,7 +54,7 @@ type Specs = Record<string, string> & { sourceType?: string; factory?: string };
 const isStoryListing = (l: { category: string; specs?: Record<string, unknown> | null }) => l.category === 'lounge' || String(l.specs?.['menuCategory'] ?? '') === '스토리' || String(l.specs?.['lounge'] ?? '') === 'true';
 type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string | undefined; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
-type VideoItem = { path?: string; file?: File; preview: string };
+type VideoItem = { path?: string; file?: File; preview: string; cover?: Blob };
 
 export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   const { lang } = useCurrency();
@@ -278,8 +278,9 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     try {
       let nextVideo = video?.path ?? null;
       let nextThumb: string | null | undefined = video?.file ? null : undefined;
+      let customThumb = !video?.file && listing?.specs?.['customThumb'] === 'true'; /* 영상을 바꾸지 않았다면 이전에 고른 썸네일 표시를 유지 */
       setEta(estimateUploadSeconds([...photos.flatMap(p => p.file ? [p.file] : []), ...(video?.file ? [video.file] : [])], 30, Boolean(video?.file && video.file.size > COMPRESS_THRESHOLD_BYTES)));
-      if (video?.file) { setConvertPct(0); const up = await uploadListingVideo(video.file, folder, r => setConvertPct(Math.round(r * 100)), { compress: !lounge }); setConvertPct(null); setEta(estimateUploadSeconds(photos.flatMap(p => p.file ? [p.file] : []))); if (up.storagePath) uploaded.push(up.storagePath); nextVideo = up.videoUrl; nextThumb = await uploadVideoThumbnail(up.file, folder); if (nextThumb) uploaded.push(nextThumb); }
+      if (video?.file) { setConvertPct(0); const up = await uploadListingVideo(video.file, folder, r => setConvertPct(Math.round(r * 100)), { compress: !lounge }); setConvertPct(null); setEta(estimateUploadSeconds(photos.flatMap(p => p.file ? [p.file] : []))); if (up.storagePath) uploaded.push(up.storagePath); nextVideo = up.videoUrl; if (video.cover) { nextThumb = await uploadCoverThumbnail(video.cover, folder); if (nextThumb) customThumb = true; } if (!nextThumb) nextThumb = await uploadVideoThumbnail(up.file, folder); if (nextThumb) uploaded.push(nextThumb); }
       const photoPaths: string[] = [];
       const settled = await Promise.allSettled(photos.map(async photo => {
         if (photo.path) return photo.path;
@@ -306,6 +307,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       Object.assign(cleanSpecs, watchStorySpecs(menuCategory, storySubcategory));
       if (!story) delete cleanSpecs['storySubcategory'];
       if (card) cleanSpecs['cardImage'] = card;
+      if (nextVideo && customThumb) cleanSpecs['customThumb'] = 'true';
       if (!story) { if (sourceType === 'custom') delete cleanSpecs['factory']; else cleanSpecs['factory'] = factory.trim().slice(0, 80); }
       const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
       if (listing) {
@@ -332,7 +334,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const releaseLeaveWarning = useLeaveWarning(pending || touched || (!listing && (photos.length > 0 || video !== null || title.trim() !== '' || description.trim() !== '' || price !== '')), { keepOnNavigate: true });
   const closeForm = () => { if (touched && !window.confirm(LEAVE_WARNING_MESSAGE)) return; releaseLeaveWarning(); discardDraft(); onClose(); };
   return <div className="form-panel mt-4 rounded-lg border border-border p-4" onChange={() => setTouched(true)}>
-    {editing && <VideoEditor maxSeconds={story ? LOUNGE_MAX_SECONDS : undefined} file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags }) => { if (video?.file) { previewUrls.drop(video.preview); } setVideo({ file, preview: createPreview(file) }); setVideoTags(tags); setEditing(null); }} />}
+    {editing && <VideoEditor maxSeconds={story ? LOUNGE_MAX_SECONDS : undefined} file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags, cover }) => { if (video?.file) { previewUrls.drop(video.preview); } setVideo({ file, preview: createPreview(file), ...(cover ? { cover } : {}) }); setVideoTags(tags); setEditing(null); }} />}
     <div className="flex items-center justify-between"><h3 className="font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{listing ? tx('상품 수정') : tx('새 상품 등록')}</span></h3><Button size="icon" variant="ghost" aria-label={tx("닫기")} onClick={closeForm}><X /></Button></div>
     <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-destructive bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("영상과 사진 한 번에 선택")}</span></span><span className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{lounge ? tx('사진 최대 {0}장 + MP4·MOV·WEBM•5분•500MB', { 0: MAX_LISTING_PHOTOS }) : tx('영상 1개 · 1분 · 300MB · 사진 10MB / 사진 {0}/{1}', { 0: photoTotal, 1: MAX_LISTING_PHOTOS })}</span></span><span className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx('1080p로 촬영하면 더 빨리 올라가요')}</span></span>
       <input className="sr-only" type="file" accept="image/*,video/*" multiple aria-label={tx("상품 영상과 사진 한 번에 선택")} onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} /></label>

@@ -36,13 +36,10 @@ export function BuyerBadge({ tier = 'member', compact = false }: { tier?: BuyerT
 }
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 export function SellerRatings({ reputation }: { reputation: SellerReputation }) {
-  const average = ratingAverage(reputation), next = nextSellerTier(reputation), tier = sellerTier(reputation);
+  const average = ratingAverage(reputation);
   return <section className="seller-reputation" aria-label="Seller reputation">
     <div className="reputation-heading"><div><span className="lux-eyebrow">STUDIO REPUTATION{reputation.sample ? ' · SAMPLE' : ''}</span><h3>{average === null ? 'Not yet rated' : <><strong>{average.toFixed(2)}</strong><span> / 5.00</span></>}</h3></div><SellerBadge reputation={reputation}/></div>
     {reputation.ratings && <div className="rating-criteria">{ratingCriteria.map((label, i) => <div className="rating-criterion" key={label}><span>{label}</span><progress max={5} value={reputation.ratings?.[i] ?? 0} aria-label={label}/><strong>{reputation.ratings?.[i]?.toFixed(2) ?? '—'}</strong></div>)}</div>}
-    <div className="tier-progress">
-      {next ? <><div className="next-tier-heading"><span>Next tier</span><span className="reputation-next"><StudioEmblem tier={next.tier}/>{studioNames[next.tier]}</span></div><div className="tier-progress-row"><span>Escrowed sales</span><span>{usd(reputation.volumeUsd ?? 0)} / {usd(next.volume)}</span><progress max={100} value={next.volumeProgress} aria-label="Sales volume progress"/></div><div className="tier-progress-row"><span>Completed orders</span><span>{reputation.completedSales} / {next.sales}</span><progress max={100} value={next.salesProgress} aria-label="Completed orders progress"/></div></> : <p>{tier === 'master' ? 'Highest studio tier achieved' : reputation.approved ? 'Your reputation begins here.' : 'Seller approval pending · No earned tier yet'}</p>}
-    </div>
   </section>;
 }
 /** Seller Center "Studio Tier" tab: current tier, metrics, progress and comparison. */

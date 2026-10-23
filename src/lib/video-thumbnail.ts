@@ -38,3 +38,21 @@ export async function uploadVideoThumbnail(file: Blob, folder: string): Promise<
   const { error } = await putMarketMedia(path, frame, { contentType: 'image/jpeg' });
   return error ? null : path;
 }
+
+/** 셀러가 직접 고른 썸네일(영상에서 고른 장면 또는 첨부한 사진)을 가로 720px 이하 JPEG로 줄여 올린다. 실패하면 null(자동 썸네일을 쓴다). */
+export async function uploadCoverThumbnail(image: Blob, folder: string, maxWidth = 720): Promise<string | null> {
+  try {
+    const bitmap = await createImageBitmap(image);
+    const scale = Math.min(1, maxWidth / bitmap.width);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height); bitmap.close?.();
+    const blob = await new Promise<Blob | null>(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.85));
+    if (!blob) return null;
+    const path = `${folder}/${crypto.randomUUID()}-thumb.jpg`;
+    const { error } = await putMarketMedia(path, blob, { contentType: 'image/jpeg' });
+    return error ? null : path;
+  } catch { return null; }
+}
