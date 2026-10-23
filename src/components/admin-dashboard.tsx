@@ -30,13 +30,25 @@ const tabs = [
   ['moderation', '피드 & 리뷰 관리', FileCheck],
 ] as const;
 const mainTabs = [['dashboard','Dashboard'],['analytics',ANALYTICS_TAB_LABEL],['applications','판매자 신청'],['members','회원 관리'],['proxy',PROXY_TAB_LABEL],['boards','게시판 관리'],['reviews','리뷰 관리'],['stores','Stores'],['products','Products'],['categories','Categories'],['inventory','Inventory'],['orders','Orders'],['loyalty','Loyalty / Points'],['reset','데이터 초기화'],['settings','Settings']] as const;
+/** 관리자 메뉴를 6개 묶음으로 정리한다. 위 줄에서 묶음을 고르면 아래 줄에 그 묶음의 세부 메뉴가 나온다. */
+const adminGroups: { id: string; label: string; keys: readonly string[] }[] = [
+  { id: 'home', label: '홈', keys: ['dashboard'] },
+  { id: 'orders', label: '주문 · 정산', keys: ['orders', 'loyalty'] },
+  { id: 'catalog', label: '상품 · 스토어', keys: ['stores', 'products', 'categories', 'inventory'] },
+  { id: 'people', label: '회원 · 셀러', keys: ['applications', 'members', 'proxy'] },
+  { id: 'content', label: '게시판 · 리뷰', keys: ['boards', 'reviews'] },
+  { id: 'system', label: '통계 · 설정', keys: ['analytics', 'settings', 'reset'] },
+];
+const tabLabel = (key: string) => mainTabs.find(t => t[0] === key)?.[1] ?? key;
 const legacyKeys = ['sellers','verification','crypto','settlements','disputes','moderation'];
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
 
 export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
   const search = marketSearch.parse(useRouterState({ select: s => s.location.search }));
   const top = !search.section ? (hasProxyEditInProgress() ? 'proxy' : 'dashboard') : legacyKeys.includes(search.section) ? 'settings' : search.section;
-  const nav = <nav className="dashboard-tabs flex-wrap" aria-label="관리자 메뉴">{mainTabs.map(([key, label]) => <Button asChild variant="ghost" key={key} className={top === key ? 'active' : ''}><Link to="/admin" search={{ role: 'admin', section: key === 'settings' ? 'crypto' : key }} resetScroll={false}>{label}</Link></Button>)}</nav>;
+  const group = adminGroups.find(g => g.keys.includes(top)) ?? adminGroups[0]!;
+  const go = (key: string) => ({ role: 'admin' as const, section: (key === 'settings' ? 'crypto' : key) as never });
+  const nav = <div className="admin-nav" lang="ko" data-no-translate><nav className="admin-groups" aria-label="관리자 메뉴 묶음">{adminGroups.map(g => <Button asChild variant="ghost" key={g.id} className={group.id === g.id ? 'active' : ''}><Link to="/admin" search={go(g.keys[0]!)} resetScroll={false} aria-current={group.id === g.id ? 'page' : undefined}>{g.label}</Link></Button>)}</nav>{group.keys.length > 1 && <nav className="admin-subtabs" aria-label={`${group.label} 세부 메뉴`}>{group.keys.map(key => <Button asChild variant="ghost" size="sm" key={key} className={top === key ? 'active' : ''}><Link to="/admin" search={go(key)} resetScroll={false} aria-current={top === key ? 'page' : undefined}>{tabLabel(key)}</Link></Button>)}</nav>}</div>;
   if (top === 'applications') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>판매자 신청</h1><p>시스템 ID · 닉네임만 확인</p></div></div>{nav}<AdminApplications/></div>;
   if (top === 'members') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>회원 관리</h1><p>접속 현황 · 정지 / 추방</p></div></div>{nav}<AdminMembers/></div>;
   if (top === 'proxy') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>{PROXY_TAB_LABEL}</h1><p>{PROXY_TAB_NOTE}</p></div></div>{nav}<AdminProxy/></div>;
@@ -46,7 +58,7 @@ export function AdminDashboard({ posts }: { posts: LuxuryPost[] }) {
   if (top === 'reset') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>데이터 초기화</h1><p>테스트 회원 · 게시물 삭제</p></div></div>{nav}<AdminReset/></div>;
   if (top === 'loyalty') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>Loyalty / Points</h1><p>VELA Point 발행·사용·예산 관리</p></div></div>{nav}<AdminLoyalty/></div>;
   if (top === 'orders') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>주문 · 입금 관리</h1><p>구매자 TXID 확인 · 에스크로 보관</p></div></div>{nav}<AdminOrdersPanel/></div>;
-  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}{top === 'dashboard' && <><AdminOrderSummary/><AdminMuxMigration/><div lang="ko" data-no-translate><TrafficSummary/></div><div className="section-heading"><h2>판매자 신청</h2><span>대기 중인 신청</span></div><AdminApplications/></>}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
+  if (top !== 'settings') return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1><p>Seller → Store → Product 카탈로그 관리</p></div></div>{nav}{top === 'dashboard' && <div className="admin-folds" lang="ko" data-no-translate><details className="admin-fold" open><summary>주문 · 입금 현황</summary><AdminOrderSummary bare/></details><details className="admin-fold" open><summary>방문 · 트래픽 요약</summary><TrafficSummary/></details><details className="admin-fold" open><summary>판매자 신청 · 대기 중인 신청</summary><AdminApplications/></details><details className="admin-fold"><summary>도구 · 기존 영상 Mux 이전</summary><AdminMuxMigration/></details></div>}<AdminCatalog section={top as CatalogSection} edit={search.edit}/></div>;
   return <div className="dashboard admin-core"><div className="dashboard-heading"><div><span className="lux-eyebrow">VELA CONTROL CENTER</span><h1>관리자 백오피스</h1></div></div>{nav}<LegacyAdmin posts={posts}/></div>;
 }
 

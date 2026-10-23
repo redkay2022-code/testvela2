@@ -381,7 +381,7 @@ export function useAdminOrders(filter: 'crypto' | 'disputes') {
 }
 
 /** Admin: real submitted TXIDs with 1-click block-explorer verification. */
-export function AdminCryptoOrders() {
+export function AdminCryptoOrders({ bucket = 'all' }: { bucket?: OrderBucket } = {}) {
   const q = useAdminOrders('crypto'), client = useQueryClient(), verify = useServerFn(confirmOrderPayment);
   const [busy, setBusy] = useState<string | null>(null);
   const confirmPayment = async (order: Order) => {
@@ -395,7 +395,9 @@ export function AdminCryptoOrders() {
   };
   if (q.isLoading) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("주문을 불러오는 중…")}</span></p>;
   if (q.error) return <p className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("관리자 계정으로 로그인하면 실제 TXID를 확인할 수 있습니다.")}</span></p>;
-  const orders = q.data?.orders ?? [];
+  const allOrders = q.data?.orders ?? [];
+  const orders = allOrders.filter(o => inBucket(o, bucket));
+  if (allOrders.length && !orders.length) return <p className="py-4 text-sm text-muted-foreground" lang="ko" data-no-translate>해당하는 주문이 없습니다.</p>;
   if (!orders.length) return <div className="lux-empty"><ShieldCheck /><h2><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("수신된 실제 TXID가 없습니다.")}</span></h2><p><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("구매자가 TXID를 제출하면 여기에 실시간으로 표시됩니다.")}</span></p></div>;
   return <div className="management-list">{orders.map(o => { const ex = explorerUrl(o.network, o.txid ?? ''); return <div className="management-row" key={o.id}>
     <div className="min-w-0"><strong>{o.title}</strong><small data-no-translate>{o.order_no} · {o.seller_name} · {o.network ?? '—'}</small><small className="break-all" data-no-translate>TXID {o.txid ?? tx('미제출')} · {tx(stageLabel(o.stage as EscrowStage))} · {new Date(o.created_at).toLocaleString()}</small></div>
@@ -430,21 +432,27 @@ function useOrderStats() {
   const waiting = orders.filter(o => !o.payment_verified_at), held = orders.filter(o => o.payment_verified_at && o.stage !== 'delivered'), done = orders.filter(o => o.stage === 'delivered');
   return { q, total: orders.length, waiting: waiting.length, waitingUsd: sum(waiting), heldUsd: sum(held), doneUsd: sum(done) };
 }
-function OrderStatGrid() {
+export type OrderBucket = 'all' | 'waiting' | 'held' | 'done';
+const bucketLabels: Record<OrderBucket, string> = { all: '전체 주문', waiting: '입금 확인 대기', held: '에스크로 보관', done: '구매 확정 (정산 대상)' };
+const inBucket = (o: Order, bucket: OrderBucket) => bucket === 'all' ? true : bucket === 'waiting' ? !o.payment_verified_at : bucket === 'held' ? Boolean(o.payment_verified_at) && o.stage !== 'delivered' : o.stage === 'delivered';
+/** 네 칸 요약: 칸을 누르면 해당 주문 목록이 아래에 열린다(다시 누르면 닫힘). */
+function OrderStatGrid({ selected, onSelect }: { selected?: OrderBucket | null; onSelect?: (b: OrderBucket | null) => void }) {
   const s = useOrderStats();
   const usdFmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
-  const items: [string, string, string][] = [
-    ['전체 주문', s.q.isLoading ? '…' : String(s.total), '실제 주문 · 실시간'],
-    ['입금 확인 대기', s.q.isLoading ? '…' : `${s.waiting}건`, usdFmt(s.waitingUsd)],
-    ['에스크로 보관', usdFmt(s.heldUsd), '입금 확인 완료 · 구매 확정 전'],
-    ['구매 확정 (정산 대상)', usdFmt(s.doneUsd), '수령 확인 완료'],
+  const items: [OrderBucket, string, string][] = [
+    ['all', s.q.isLoading ? '…' : String(s.total), '실제 주문 · 실시간'],
+    ['waiting', s.q.isLoading ? '…' : `${s.waiting}건`, usdFmt(s.waitingUsd)],
+    ['held', usdFmt(s.heldUsd), '입금 확인 완료 · 구매 확정 전'],
+    ['done', usdFmt(s.doneUsd), '수령 확인 완료'],
   ];
-  return <div className="dashboard-stats" lang="ko" data-no-translate>{items.map(([l, v, n]) => <div className="stat-item" key={l}><span>{l}</span><strong>{v}</strong><small>{n}</small></div>)}</div>;
+  return <div className="dashboard-stats order-stat-grid" lang="ko" data-no-translate>{items.map(([key, v, n]) => <button type="button" className={`stat-item order-stat-button ${selected === key ? 'is-selected' : ''}`} key={key} aria-pressed={selected === key} aria-label={`${bucketLabels[key]} 목록 ${selected === key ? '닫기' : '보기'}`} onClick={() => onSelect?.(selected === key ? null : key)}><span>{bucketLabels[key]}</span><strong>{v}</strong><small>{n}</small><em aria-hidden="true">{selected === key ? '목록 닫기 ▲' : '목록 보기 ▼'}</em></button>)}</div>;
 }
-export function AdminOrderSummary() {
-  return <section className="mb-6"><div className="section-heading" lang="ko" data-no-translate><h2>주문 · 입금 현황</h2><span>구매자가 TXID를 제출하면 바로 반영됩니다</span></div><OrderStatGrid /></section>;
+export function AdminOrderSummary({ bare = false }: { bare?: boolean } = {}) {
+  const [open, setOpen] = useState<OrderBucket | null>(null);
+  return <section className={bare ? '' : 'mb-6'}><div className="section-heading" lang="ko" data-no-translate>{!bare && <h2>주문 · 입금 현황</h2>}<span>카드를 누르면 해당 주문이 열립니다 · 구매자가 TXID를 제출하면 바로 반영됩니다</span></div><OrderStatGrid selected={open} onSelect={setOpen} />{open && <div className="order-bucket-panel" lang="ko" data-no-translate><div className="section-heading"><h2>{bucketLabels[open]}</h2><Button variant="ghost" size="sm" onClick={() => setOpen(null)}>닫기</Button></div><AdminCryptoOrders bucket={open} /></div>}</section>;
 }
 /** Admin "Orders" tab: all real orders with deposit verification. */
 export function AdminOrdersPanel() {
-  return <div className="mt-4"><OrderStatGrid /><div className="section-heading mt-6" lang="ko" data-no-translate><h2>전체 주문 · TXID 입금 확인</h2><span>최신순</span></div><AdminCryptoOrders /></div>;
+  const [bucket, setBucket] = useState<OrderBucket | null>(null);
+  return <div className="mt-4"><OrderStatGrid selected={bucket} onSelect={setBucket} /><div className="section-heading mt-6" lang="ko" data-no-translate><h2>{bucket ? bucketLabels[bucket] : '전체 주문 · TXID 입금 확인'}</h2><span>{bucket ? '카드를 다시 누르면 전체로 돌아갑니다' : '최신순'}</span></div><AdminCryptoOrders bucket={bucket ?? 'all'} /></div>;
 }
