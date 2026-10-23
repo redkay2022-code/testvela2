@@ -115,7 +115,7 @@ const ShortScene=memo(function ShortScene({post,active,dist,ahead,openSheet,noti
   <div className="shorts-tier-line"><SellerBadge reputation={post.reputation} withRating/></div>
  <div className="shorts-seller-row">
   <ShortSellerIdentity post={post}/>
-  {post.menuCategory!=='스토리'&&(user?<Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>:<Button variant="gold" className="shorts-view-details" aria-label="상세 보기" onClick={requestAuth}>상세 보기<ChevronRight size={17}/></Button>)}
+  {(user?<Button asChild variant="gold" className="shorts-view-details"><Link to="/post/$id" params={{id:post.id}} aria-label="상세 보기">상세 보기<ChevronRight size={17}/></Link></Button>:<Button variant="gold" className="shorts-view-details" aria-label="상세 보기" onClick={requestAuth}>상세 보기<ChevronRight size={17}/></Button>)}
  </div>
  </div>
  <footer className="shorts-bottom-bar">
