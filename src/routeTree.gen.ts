@@ -18,15 +18,15 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SellerRouteImport } from './routes/seller'
 import { Route as SellerMessagesRouteImport } from './routes/seller-messages'
-import { Route as SellerApplyRouteImport } from './routes/seller_.apply'
 import { Route as SellerStoreRouteImport } from './routes/seller-store'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ApiMuxWebhookRouteImport } from './routes/api/mux-webhook'
 import { Route as BuyIdRouteImport } from './routes/buy.$id'
-import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as PostIdRouteImport } from './routes/post.$id'
+import { Route as SSlugRouteImport } from './routes/s.$slug'
+import { Route as SellerApplyRouteImport } from './routes/seller_.apply'
 import { Route as ShortsIdRouteImport } from './routes/shorts.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -74,11 +74,6 @@ const SellerMessagesRoute = SellerMessagesRouteImport.update({
   path: '/seller-messages',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SellerApplyRoute = SellerApplyRouteImport.update({
-  id: '/seller_/apply',
-  path: '/seller/apply',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SellerStoreRoute = SellerStoreRouteImport.update({
   id: '/seller-store',
   path: '/seller-store',
@@ -109,14 +104,19 @@ const BuyIdRoute = BuyIdRouteImport.update({
   path: '/buy/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PostIdRoute = PostIdRouteImport.update({
+  id: '/post/$id',
+  path: '/post/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SSlugRoute = SSlugRouteImport.update({
   id: '/s/$slug',
   path: '/s/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PostIdRoute = PostIdRouteImport.update({
-  id: '/post/$id',
-  path: '/post/$id',
+const SellerApplyRoute = SellerApplyRouteImport.update({
+  id: '/seller_/apply',
+  path: '/seller/apply',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShortsIdRoute = ShortsIdRouteImport.update({
@@ -135,7 +135,6 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
   '/seller-messages': typeof SellerMessagesRoute
-  '/seller/apply': typeof SellerApplyRoute
   '/seller-store': typeof SellerStoreRoute
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
@@ -144,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
   '/s/$slug': typeof SSlugRoute
+  '/seller/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesByTo {
@@ -156,7 +156,6 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
   '/seller-messages': typeof SellerMessagesRoute
-  '/seller/apply': typeof SellerApplyRoute
   '/seller-store': typeof SellerStoreRoute
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
@@ -165,6 +164,7 @@ export interface FileRoutesByTo {
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
   '/s/$slug': typeof SSlugRoute
+  '/seller/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRoutesById {
@@ -178,7 +178,6 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/seller': typeof SellerRoute
   '/seller-messages': typeof SellerMessagesRoute
-  '/seller_/apply': typeof SellerApplyRoute
   '/seller-store': typeof SellerStoreRoute
   '/store': typeof StoreRoute
   '/support': typeof SupportRoute
@@ -187,6 +186,7 @@ export interface FileRoutesById {
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
   '/s/$slug': typeof SSlugRoute
+  '/seller_/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
 }
 export interface FileRouteTypes {
@@ -201,7 +201,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/seller'
     | '/seller-messages'
-    | '/seller/apply'
     | '/seller-store'
     | '/store'
     | '/support'
@@ -210,6 +209,7 @@ export interface FileRouteTypes {
     | '/buy/$id'
     | '/post/$id'
     | '/s/$slug'
+    | '/seller/apply'
     | '/shorts/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -222,7 +222,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/seller'
     | '/seller-messages'
-    | '/seller/apply'
     | '/seller-store'
     | '/store'
     | '/support'
@@ -231,6 +230,7 @@ export interface FileRouteTypes {
     | '/buy/$id'
     | '/post/$id'
     | '/s/$slug'
+    | '/seller/apply'
     | '/shorts/$id'
   id:
     | '__root__'
@@ -243,7 +243,6 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/seller'
     | '/seller-messages'
-    | '/seller_/apply'
     | '/seller-store'
     | '/store'
     | '/support'
@@ -252,6 +251,7 @@ export interface FileRouteTypes {
     | '/buy/$id'
     | '/post/$id'
     | '/s/$slug'
+    | '/seller_/apply'
     | '/shorts/$id'
   fileRoutesById: FileRoutesById
 }
@@ -265,7 +265,6 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SellerRoute: typeof SellerRoute
   SellerMessagesRoute: typeof SellerMessagesRoute
-  SellerApplyRoute: typeof SellerApplyRoute
   SellerStoreRoute: typeof SellerStoreRoute
   StoreRoute: typeof StoreRoute
   SupportRoute: typeof SupportRoute
@@ -274,6 +273,7 @@ export interface RootRouteChildren {
   BuyIdRoute: typeof BuyIdRoute
   PostIdRoute: typeof PostIdRoute
   SSlugRoute: typeof SSlugRoute
+  SellerApplyRoute: typeof SellerApplyRoute
   ShortsIdRoute: typeof ShortsIdRoute
 }
 
@@ -342,13 +342,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SellerMessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/seller_/apply': {
-      id: '/seller_/apply'
-      path: '/seller/apply'
-      fullPath: '/seller/apply'
-      preLoaderRoute: typeof SellerApplyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/seller-store': {
       id: '/seller-store'
       path: '/seller-store'
@@ -391,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/post/$id': {
+      id: '/post/$id'
+      path: '/post/$id'
+      fullPath: '/post/$id'
+      preLoaderRoute: typeof PostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$slug': {
       id: '/s/$slug'
       path: '/s/$slug'
@@ -398,11 +398,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/post/$id': {
-      id: '/post/$id'
-      path: '/post/$id'
-      fullPath: '/post/$id'
-      preLoaderRoute: typeof PostIdRouteImport
+    '/seller_/apply': {
+      id: '/seller_/apply'
+      path: '/seller/apply'
+      fullPath: '/seller/apply'
+      preLoaderRoute: typeof SellerApplyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shorts/$id': {
@@ -425,7 +425,6 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SellerRoute: SellerRoute,
   SellerMessagesRoute: SellerMessagesRoute,
-  SellerApplyRoute: SellerApplyRoute,
   SellerStoreRoute: SellerStoreRoute,
   StoreRoute: StoreRoute,
   SupportRoute: SupportRoute,
@@ -434,6 +433,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuyIdRoute: BuyIdRoute,
   PostIdRoute: PostIdRoute,
   SSlugRoute: SSlugRoute,
+  SellerApplyRoute: SellerApplyRoute,
   ShortsIdRoute: ShortsIdRoute,
 }
 export const routeTree = rootRouteImport
