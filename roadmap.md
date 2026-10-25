@@ -94,3 +94,4 @@
 - [x] Add shared eleven-field watch specifications to upload, seller creation/edit and admin catalog; retain units/multiline content. Sixteen tests and build pass; browser input/custom selection and 390px single-column layout verified. No live product was created, so saved-product end-to-end readback remains unverified.
 
 - [x] Move store introduction editing to seller profile (150 characters); notices editing to Store Manager; public storefront stays read-only. Shared client/server length validation and 3 tests pass. Public placement verified; seller save end-to-end awaits seller session.
+- [stopped] 홈·상품 상세·스토어 숫자 연동 검증 — 사용자 요청으로 중단 (2026-10-25). 백엔드 재시작 완료, 홈 200 확인.
