@@ -12,6 +12,41 @@ export const PROXY_NOT_SELLER_MESSAGE = '선택한 회원은 승인된 셀러가
 
 const clean = (q: string) => q.replace(/[%,()"'\\*]/g, ' ').trim().slice(0, 40);
 
+export type ProxyMember = { id: string; nickname: string; code: string | null; seller: boolean };
+
+/** 대리 관리용 회원 목록. onlySellers 이면 등록된 셀러를 모두(최대 2000명) 가져오고, 아니면 최근 가입 회원 80명을 보여준다. 검색어는 닉네임/코드에 적용된다. */
+export async function fetchProxyMembers(search: string, onlySellers: boolean): Promise<ProxyMember[]> {
+  const q = clean(search);
+  const filter = (b: any) => (q ? b.or(`nickname.ilike.%${q}%,system_code.ilike.%${q}%`) : b);
+  if (!onlySellers) {
+    const { data, error } = await filter(supabase.from('profiles').select('user_id,nickname,system_code').order('created_at', { ascending: false }).limit(80));
+    if (error) throw error;
+    const rows = (data ?? []) as { user_id: string; nickname: string; system_code: string | null }[];
+    const sellers = new Set<string>();
+    for (let i = 0; i < rows.length; i += 80) {
+      const { data: roles } = await supabase.from('user_roles').select('user_id').eq('role', 'seller').in('user_id', rows.slice(i, i + 80).map(r => r.user_id));
+      (roles ?? []).forEach(r => sellers.add(r.user_id));
+    }
+    return rows.map(r => ({ id: r.user_id, nickname: r.nickname, code: r.system_code, seller: sellers.has(r.user_id) }));
+  }
+  const ids: string[] = [];
+  for (let from = 0; from < 2000; from += 1000) {
+    const { data, error } = await supabase.from('user_roles').select('user_id').eq('role', 'seller').range(from, from + 999);
+    if (error) throw error;
+    (data ?? []).forEach(r => ids.push(r.user_id));
+    if ((data?.length ?? 0) < 1000) break;
+  }
+  const uniq = Array.from(new Set(ids));
+  const out: { user_id: string; nickname: string; system_code: string | null; created_at: string }[] = [];
+  for (let i = 0; i < uniq.length; i += 100) {
+    const { data, error } = await filter(supabase.from('profiles').select('user_id,nickname,system_code,created_at').in('user_id', uniq.slice(i, i + 100)));
+    if (error) throw error;
+    out.push(...((data ?? []) as typeof out));
+  }
+  out.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  return out.map(r => ({ id: r.user_id, nickname: r.nickname, code: r.system_code, seller: true }));
+}
+
 /**
  * 관리자 전용 박스: 다른 회원(셀러) 이름으로 상품을 올리거나 관리하도록 대상을 고르고,
  * 로그인 없이 대신 등록용으로만 쓰는 셀러 계정을 만든다. 관리자가 아니면 아무것도 보이지 않는다.
@@ -31,24 +66,11 @@ export function MemberPicker({ userId, value, onChange }: { userId: string; valu
     queryFn: async () => { const { data } = await supabase.rpc('has_role', { _user_id: userId, _role: 'admin' }); return Boolean(data); },
     staleTime: 5 * 60_000,
   });
+  const [onlySellers, setOnlySellers] = useState(true);
   const members = useQuery({
-    queryKey: ['proxy-members', search],
+    queryKey: ['proxy-members', search, onlySellers],
     enabled: admin.data === true && open,
-    queryFn: async () => {
-      let query = supabase.from('profiles').select('user_id,nickname,system_code').order('created_at', { ascending: false }).limit(30);
-      const q = clean(search);
-      if (q) query = query.or(`nickname.ilike.%${q}%,system_code.ilike.%${q}%`);
-      const { data, error } = await query;
-      if (error) throw error;
-      const rows = data ?? [];
-      const ids = rows.map(r => r.user_id);
-      const sellers = new Set<string>();
-      if (ids.length) {
-        const { data: roles } = await supabase.from('user_roles').select('user_id').eq('role', 'seller').in('user_id', ids);
-        (roles ?? []).forEach(r => sellers.add(r.user_id));
-      }
-      return rows.map(r => ({ id: r.user_id, nickname: r.nickname, code: r.system_code, seller: sellers.has(r.user_id) }));
-    },
+    queryFn: () => fetchProxyMembers(search, onlySellers),
   });
 
   if (!admin.data) return null;
@@ -79,6 +101,7 @@ export function MemberPicker({ userId, value, onChange }: { userId: string; valu
         <input className="form-input min-w-0 flex-1" aria-label="회원 검색" placeholder="닉네임 또는 코드(VELA_…) 검색" maxLength={40} value={input} onChange={e => setInput(e.target.value)} />
         <Button type="submit" size="sm" variant="outline">검색</Button>
       </form>
+      <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={onlySellers} onChange={e => setOnlySellers(e.target.checked)} />셀러 계정만 보기</label>
       {members.isLoading ? <p className="text-xs text-muted-foreground">불러오는 중…</p> : !members.data?.length ? <p className="text-xs text-muted-foreground">검색된 회원이 없어요.</p> :
         <ul className="max-h-60 space-y-1 overflow-y-auto" role="listbox" aria-label="회원 목록">
           {members.data.map(m => <li key={m.id}><button type="button" role="option" aria-selected={value?.id === m.id} className={`flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-left text-sm ${value?.id === m.id ? 'border-primary bg-primary/10' : 'border-input bg-background'}`} onClick={() => { onChange({ id: m.id, nickname: m.nickname, seller: m.seller }); setOpen(false); }}>

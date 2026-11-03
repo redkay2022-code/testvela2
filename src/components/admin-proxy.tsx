@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { createProxySellers, getProxyProfile, updateProxyNickname, signProxyAvatarUpload, setProxyAvatar } from '@/lib/proxy-seller.functions';
 import { MAX_AVATAR_BYTES } from '@/lib/avatar';
 import { SellerListings } from './seller-listings';
-import type { ProxyTarget } from './member-picker';
+import { fetchProxyMembers, type ProxyTarget } from './member-picker';
 
 export const PROXY_TAB_LABEL = '셀러 대리 관리';
 export const PROXY_TAB_NOTE = '셀러 계정 만들기 · 셀러 대신 프로필·상품 등록·수정·삭제';
@@ -17,7 +17,6 @@ export const PROXY_TAB_NOTE = '셀러 계정 만들기 · 셀러 대신 프로�
 /** 셀러 대리 관리에서 상품을 수정하던 중이면 true. 관리자 화면을 다시 열 때 백오피스 첫 화면 대신 수정 화면으로 돌려보내는 데 쓴다. */
 export const hasProxyEditInProgress = () => { const t = sessionGet<ProxyTarget>('admin-proxy:target'); return !!t && sessionHas(`seller-listings:${t.id}:editing`); };
 
-const clean = (q: string) => q.replace(/[%,()"'\\*]/g, ' ').trim().slice(0, 40);
 
 /** 선택한 셀러의 닉네임·프로필 사진을 일반 셀러의 프로필 화면처럼 등록·수정한다. */
 function ProxyProfile({ target, onRenamed }: { target: ProxyTarget; onRenamed: (nickname: string) => void }) {
@@ -86,28 +85,7 @@ export function AdminProxy() {
 
   const members = useQuery({
     queryKey: ['proxy-admin-members', search, onlySellers],
-    queryFn: async () => {
-      let ids: string[] | null = null;
-      if (onlySellers) {
-        const { data: roles, error: re } = await supabase.from('user_roles').select('user_id').eq('role', 'seller').limit(500);
-        if (re) throw re;
-        ids = (roles ?? []).map(r => r.user_id);
-        if (!ids.length) return [];
-      }
-      let query = supabase.from('profiles').select('user_id,nickname,system_code').order('created_at', { ascending: false }).limit(60);
-      if (ids) query = query.in('user_id', ids);
-      const q = clean(search);
-      if (q) query = query.or(`nickname.ilike.%${q}%,system_code.ilike.%${q}%`);
-      const { data, error } = await query;
-      if (error) throw error;
-      const rows = data ?? [];
-      const sellers = new Set<string>(ids ?? []);
-      if (!ids && rows.length) {
-        const { data: roles } = await supabase.from('user_roles').select('user_id').eq('role', 'seller').in('user_id', rows.map(r => r.user_id));
-        (roles ?? []).forEach(r => sellers.add(r.user_id));
-      }
-      return rows.map(r => ({ id: r.user_id, nickname: r.nickname, code: r.system_code, seller: sellers.has(r.user_id) }));
-    },
+    queryFn: () => fetchProxyMembers(search, onlySellers),
   });
 
   const create = async () => {
