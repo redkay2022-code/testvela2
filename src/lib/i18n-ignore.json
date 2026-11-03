@@ -1,6 +1,7 @@
 {
   "_comment": "Text that must NOT be translated: brand names, codes, units, technical strings. 'exact' = literal strings, 'patterns' = regular expressions.",
   "exact": [
+    "{0} USDT",
     "Telegram",
     "Group Discount",
     "Buy together with friends on VELA and earn bonus points.",

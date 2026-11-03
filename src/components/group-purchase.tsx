@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
 import { ShareRow } from './referral';
 import { tx } from '@/lib/dom-translate';
+import { useServerFn } from '@tanstack/react-start';
+import { getGroupPreview } from '@/lib/group.functions';
 import { GROUP_DEFAULT_HOURS, GROUP_HOUR_PRESETS, GROUP_MAX_HOURS, GROUP_MAX_SIZE, GROUP_MIN_HOURS, GROUP_MIN_SIZE, clampGroupHours, clampGroupSize, groupDiscountPct, groupLink, rememberGroup, storedGroup, timeLeft } from '@/lib/group';
 
 export const groupRpc = (name: string, args?: object) => (supabase as unknown as { rpc: (n: string, a?: object) => Promise<{ data: unknown; error: { message: string } | null }> }).rpc(name, args);
@@ -22,6 +24,12 @@ export const usePublicGroup = (id: string | null | undefined) => useQuery({
   queryKey: ['group-public', id], enabled: !!id, refetchInterval: 15_000,
   queryFn: async () => { const { data, error } = await groupRpc('group_public', { _id: id }); if (error) throw error; return (data ?? null) as PublicGroup | null; },
 });
+
+/** 공동구매 링크 화면용: 상품 사진·설명·가격(로그인 없이) */
+export const useGroupPreview = (groupId: string | null | undefined) => {
+  const fn = useServerFn(getGroupPreview);
+  return useQuery({ queryKey: ['group-preview', groupId], enabled: !!groupId, staleTime: 30 * 60_000, retry: 1, queryFn: () => fn({ data: { groupId: groupId as string } }) });
+};
 
 /** 체크아웃: 이 상품을 지금 사면 적용되는 공동구매 할인율 (없으면 null) */
 export const useGroupQuote = (productId: string | undefined) => useQuery({

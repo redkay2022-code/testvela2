@@ -2993,5 +2993,9 @@
   "최대 {p}% (목표 인원 달성 시)": "Jusqu'à {p} % (une fois l'objectif atteint)",
   "2~3명 5% · 4~6명 8% · 7~9명 12% · 10명 15% 즉시 할인. 공동구매 주문에는 포인트가 적립되지 않아요.": "2-3 personnes 5 % · 4-6 personnes 8 % · 7-9 personnes 12 % · 10 personnes 15 % de remise immédiate. Les commandes groupées ne rapportent pas de points.",
   "최종 인원 기준 할인율로 정산되고, 판매자 대금은 에스크로 수령 확정 후 지급돼요.": "Réglé selon l'effectif final. Le vendeur est payé après confirmation de réception (séquestre).",
-  "Group Discount": "Remise groupée"
+  "Group Discount": "Remise groupée",
+  "제품 정보": "Infos produit",
+  "원가": "Prix d'origine",
+  "공동구매 성공 시 가격": "Prix si l'achat groupé réussit",
+  "현재 인원 기준 가격": "Prix selon l'effectif actuel"
 }

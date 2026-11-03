@@ -2998,5 +2998,9 @@
   "최대 {p}% (목표 인원 달성 시)": "Usque ad {p}% (cum numerus propositus attingitur)",
   "2~3명 5% · 4~6명 8% · 7~9명 12% · 10명 15% 즉시 할인. 공동구매 주문에는 포인트가 적립되지 않아요.": "2-3 homines 5% · 4-6 homines 8% · 7-9 homines 12% · 10 homines 15% remissio statim. Mandata communia puncta non pariunt.",
   "최종 인원 기준 할인율로 정산되고, 판매자 대금은 에스크로 수령 확정 후 지급돼요.": "Secundum numerum finalem computatur. Venditor post receptionem confirmatam (escrow) solvitur.",
-  "Group Discount": "Remissio communis"
+  "Group Discount": "Remissio communis",
+  "제품 정보": "Notitia producti",
+  "원가": "Pretium originale",
+  "공동구매 성공 시 가격": "Pretium si emptio communis perficitur",
+  "현재 인원 기준 가격": "Pretium secundum numerum praesentem"
 }

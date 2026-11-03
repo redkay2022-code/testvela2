@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Countdown, usePublicGroup } from '@/components/group-purchase';
-import { isGroupId, rememberGroup } from '@/lib/group';
+import { Countdown, useGroupPreview, usePublicGroup } from '@/components/group-purchase';
+import { groupDiscountUsd, isGroupId, rememberGroup } from '@/lib/group';
 import { tx } from '@/lib/dom-translate';
 
 /** 공동구매 링크: /group/<그룹 ID> — 방문 기록(30일)을 남기고 참여 화면을 보여준다. */
@@ -16,6 +16,7 @@ function GroupPage() {
   const { id } = Route.useParams();
   useEffect(() => { rememberGroup(id); }, [id]);
   const q = usePublicGroup(isGroupId(id) ? id : null);
+  const pv = useGroupPreview(isGroupId(id) ? id : null);
   const g = q.data;
   const open = Boolean(g && g.status === 'active' && new Date(g.expires_at).getTime() > Date.now());
   return <main className="mx-auto w-full max-w-xl px-4 pb-16 pt-6">
@@ -23,8 +24,26 @@ function GroupPage() {
     {q.isLoading ? <p className="mt-6 text-sm text-muted-foreground">{tx('불러오는 중…')}</p>
       : !g ? <div className="lux-empty mt-6"><p>{tx('공동구매를 찾을 수 없어요.')}</p><Button asChild variant="goldOutline" className="mt-4"><Link to="/">{tx('홈으로')}</Link></Button></div>
       : <section className="mt-4 rounded-lg border border-border bg-card p-4">
-        <div className="flex gap-3">{g.image && <img src={g.image} alt="" width={72} height={72} className="size-[72px] rounded-md object-cover" loading="lazy" />}
-          <div className="min-w-0"><p className="truncate font-semibold" data-no-translate>{g.title}</p><p className="mt-1 text-xs text-muted-foreground">{tx('리더')}: <span data-no-translate>{g.leader}</span></p></div></div>
+        {(() => {
+          const img = pv.data?.image || g.image;
+          const base = g.price != null ? g.price + (pv.data?.boxPrice ?? 0) : null;
+          const finalPrice = base != null ? base - groupDiscountUsd(base, g.max_pct) : null;
+          const nowPrice = base != null ? base - groupDiscountUsd(base, g.discount_pct) : null;
+          const money = (n: number) => `${n.toFixed(2)} USDT`;
+          return <>
+            <div className="flex gap-3">
+              {img ? <img src={img} alt="" width={96} height={96} className="size-24 shrink-0 rounded-md object-cover" loading="lazy" /> : <div className="size-24 shrink-0 rounded-md bg-muted" aria-hidden />}
+              <div className="min-w-0"><p className="font-semibold" data-no-translate>{g.title}</p>
+                {pv.data?.category ? <p className="mt-1 text-xs text-muted-foreground" data-no-translate>{pv.data.category}</p> : null}
+                <p className="mt-1 text-xs text-muted-foreground">{tx('리더')}: <span data-no-translate>{g.leader}</span></p></div></div>
+            {pv.data?.description ? <div className="mt-3"><p className="text-xs font-semibold text-muted-foreground">{tx('제품 정보')}</p><p className="mt-1 line-clamp-4 whitespace-pre-line text-sm">{pv.data.description}</p></div> : null}
+            {base != null && finalPrice != null && nowPrice != null ? <div className="mt-3 rounded-md border border-border bg-background/40 p-3 text-sm" data-no-translate>
+              <p className="flex justify-between gap-2"><span className="text-muted-foreground">{tx('원가')}</span><span className={g.max_pct > 0 ? 'line-through text-muted-foreground' : ''}>{money(base)}</span></p>
+              <p className="mt-1 flex justify-between gap-2"><span className="text-muted-foreground">{tx('공동구매 성공 시 가격')}</span><strong className="text-primary">{money(finalPrice)}</strong></p>
+              {g.discount_pct > 0 && g.discount_pct < g.max_pct ? <p className="mt-1 flex justify-between gap-2 text-xs"><span className="text-muted-foreground">{tx('현재 인원 기준 가격')}</span><span>{money(nowPrice)}</span></p> : null}
+            </div> : null}
+          </>;
+        })()}
         <p className="mt-4 text-2xl font-bold text-primary" data-no-translate>{g.current_size}/{g.target_size}</p>
         <p className="mt-1 text-sm">{open ? <Countdown expiresAt={g.expires_at} /> : tx('이 공동구매는 마감됐어요.')}</p>
         <p className="mt-3 text-sm"><strong className="text-primary" data-no-translate>{g.discount_pct}%</strong> {tx('즉시 할인')} · <span className="text-xs text-muted-foreground">{tx('최대 {p}% (목표 인원 달성 시)', { p: g.max_pct })}</span></p>

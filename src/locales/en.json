@@ -1743,5 +1743,9 @@
   "최대 {p}% (목표 인원 달성 시)": "Up to {p}% (when the target size is reached)",
   "2~3명 5% · 4~6명 8% · 7~9명 12% · 10명 15% 즉시 할인. 공동구매 주문에는 포인트가 적립되지 않아요.": "2-3 people 5% · 4-6 people 8% · 7-9 people 12% · 10 people 15% instant discount. Group purchase orders do not earn points.",
   "최종 인원 기준 할인율로 정산되고, 판매자 대금은 에스크로 수령 확정 후 지급돼요.": "Settled at the rate for the final headcount. The seller is paid after escrow receipt confirmation.",
-  "Group Discount": "Group Discount"
+  "Group Discount": "Group Discount",
+  "제품 정보": "Product info",
+  "원가": "Original price",
+  "공동구매 성공 시 가격": "Price if the group purchase succeeds",
+  "현재 인원 기준 가격": "Price at current headcount"
 }
