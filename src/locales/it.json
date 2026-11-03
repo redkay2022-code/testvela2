@@ -2923,5 +2923,20 @@
   "공지": "Avvisi",
   "편집용 영상을 준비하는 중이에요. 처음 한 번은 1분 정도 걸릴 수 있어요.": "Sto preparando il video per la modifica. La prima volta può richiedere circa un minuto.",
   "제품 리뷰": "Recensioni dei prodotti",
-  "아직 등록된 제품 리뷰가 없습니다.": "Non ci sono ancora recensioni dei prodotti."
+  "아직 등록된 제품 리뷰가 없습니다.": "Non ci sono ancora recensioni dei prodotti.",
+  "추천 보너스": "Bonus passaparola",
+  "VELA에서 함께 쇼핑해요! {link}": "Facciamo shopping insieme su VELA! {link}",
+  "복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.": "Impossibile copiare. Tieni premuto il link per copiarlo.",
+  "VELA에서 함께 쇼핑해요!": "Facciamo shopping insieme su VELA!",
+  "링크를 복사했어요. 카카오톡에 붙여넣어 보내 주세요.": "Link copiato. Incollalo su KakaoTalk per inviarlo.",
+  "공유하고 포인트 받기": "Condividi e guadagna punti",
+  "친구가 내 링크로 가입해 구매를 완료하면 결제 상품금액의 {rate}%를 포인트로 드려요. (배송비·세금 제외, 수령 확정 후 지급)": "Quando un amico si registra con il tuo link e completa un acquisto, ricevi il {rate}% dell'importo pagato del prodotto in punti (spedizione e tasse escluse; accreditati dopo la conferma di consegna).",
+  "내 추천 링크": "Il mio link di invito",
+  "카카오톡": "KakaoTalk",
+  "추천한 친구": "Amici invitati",
+  "구매 완료 건수": "Acquisti completati",
+  "누적 추천 포인트": "Punti invito totali guadagnati",
+  "정산 대기 포인트": "Punti in attesa di accredito",
+  "추천 현황": "Dashboard inviti",
+  "정산 대기 포인트는 친구가 수령 확정(에스크로 정산)을 하면 지급됩니다. 취소·환불·분쟁 주문은 지급되지 않고, 지급 후 환불되면 회수됩니다.": "I punti in attesa vengono accreditati quando il tuo amico conferma la ricezione (liquidazione escrow). Gli ordini annullati, rimborsati o contestati non danno punti e, se l'ordine viene rimborsato dopo l'accredito, i punti vengono revocati."
 }

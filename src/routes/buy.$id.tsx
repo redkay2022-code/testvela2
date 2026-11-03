@@ -14,6 +14,7 @@ import { CheckoutForm } from '@/components/luxury-marketplace';
 import { SellerBadge } from '@/components/reputation';
 import { ProductComments } from '@/components/product-comments';
 import { EscrowGuarantee } from '@/components/escrow';
+import { ReferralShare } from '@/components/referral';
 import { TranslatableText } from '@/components/translatable-text';
 
 export const Route = createFileRoute('/buy/$id')({
@@ -59,6 +60,7 @@ function BuyPage() {
         : !user ? <div className="mt-3"><p className="text-sm text-muted-foreground">결제하려면 로그인이 필요합니다.</p><Button variant="gold" className="mt-3 w-full" onClick={requestAuth}>로그인하고 결제하기</Button></div>
         : <CheckoutForm item={post} onDone={() => setDone(true)} />}
     </section>
+    {done && <ReferralShare />}
     <EscrowGuarantee />
     <section className="mt-6">
       <h2 className="text-sm font-semibold">구매자 리뷰</h2>

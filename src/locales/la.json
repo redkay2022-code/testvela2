@@ -2928,5 +2928,20 @@
   "공지": "Nuntii",
   "편집용 영상을 준비하는 중이에요. 처음 한 번은 1분 정도 걸릴 수 있어요.": "Video ad emendandum parator. Primo tempore una fere minuta requiri potest.",
   "제품 리뷰": "Recensiones productorum",
-  "아직 등록된 제품 리뷰가 없습니다.": "Nondum recensiones productorum sunt."
+  "아직 등록된 제품 리뷰가 없습니다.": "Nondum recensiones productorum sunt.",
+  "추천 보너스": "Praemium commendationis",
+  "VELA에서 함께 쇼핑해요! {link}": "Una in VELA emamus! {link}",
+  "복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.": "Exscribi non potuit. Nexum diu preme ut exscribas.",
+  "VELA에서 함께 쇼핑해요!": "Una in VELA emamus!",
+  "링크를 복사했어요. 카카오톡에 붙여넣어 보내 주세요.": "Nexus exscriptus est. In KakaoTalk insere ut mittas.",
+  "공유하고 포인트 받기": "Divide et puncta lucrare",
+  "친구가 내 링크로 가입해 구매를 완료하면 결제 상품금액의 {rate}%를 포인트로 드려요. (배송비·세금 제외, 수령 확정 후 지급)": "Cum amicus per nexum tuum se inscripserit et emptionem perfecerit, {rate}% pretii soluti producti in punctis accipies (sine vectura et tributis; post receptionem confirmatam conceduntur).",
+  "내 추천 링크": "Nexus meae commendationis",
+  "카카오톡": "KakaoTalk",
+  "추천한 친구": "Amici commendati",
+  "구매 완료 건수": "Emptiones perfectae",
+  "누적 추천 포인트": "Puncta commendationis summatim parta",
+  "정산 대기 포인트": "Puncta computationem exspectantia",
+  "추천 현황": "Tabula commendationis",
+  "정산 대기 포인트는 친구가 수령 확정(에스크로 정산)을 하면 지급됩니다. 취소·환불·분쟁 주문은 지급되지 않고, 지급 후 환불되면 회수됩니다.": "Puncta exspectantia conceduntur cum amicus receptionem confirmaverit (computatio escrow). Mandata dimissa, reddita vel controversa nihil pariunt, et si post concessionem redduntur, puncta recipiuntur."
 }

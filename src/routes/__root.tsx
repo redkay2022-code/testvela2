@@ -20,6 +20,7 @@ import { MarketPreviewProvider } from '@/components/market-preview';
 import { Toaster } from '@/components/ui/sonner';
 import { usePageTracker } from '@/lib/page-tracker';
 import { OrderNotifier } from '@/components/live-orders';
+import { ReferralTracker } from '@/components/referral';
 import { TransactionSampleProvider } from '@/components/transaction-sample';
 
 function NotFoundComponent() {
@@ -142,6 +143,7 @@ function RootComponent() {
       <TransactionSampleProvider><MarketPreviewProvider><Outlet /></MarketPreviewProvider></TransactionSampleProvider>
       <Toaster position="top-center" richColors />
       <OrderNotifier />
+      <ReferralTracker />
       <ViewTracker />
       <SanctionNotice />
       <InstallPrompt />

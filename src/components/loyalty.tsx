@@ -7,10 +7,11 @@ import { Button } from './ui/button';
 import { clampRedeem, daysUntil, earnPoints, formatPoints, formatPointsUsd, maxRedeemPoints, pointsToUsd, POINT_HOLD_DAYS } from '@/lib/loyalty';
 import { BASE_FEE_RATE, insuranceRateForTier } from '@/lib/insurance';
 import { tx } from '@/lib/dom-translate';
+import { ReferralDashboard, ReferralShare } from './referral';
 
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n);
 const icons: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' };
-const typeLabel: Record<string, string> = { EARN: '적립', REDEEM: '사용', REFUND: '사용 취소 복구', REVERSAL: '적립 회수', EXPIRED: '만료', ADMIN_ADJUSTMENT: '관리자 조정', BONUS: '보너스' };
+const typeLabel: Record<string, string> = { EARN: '적립', REDEEM: '사용', REFUND: '사용 취소 복구', REVERSAL: '적립 회수', EXPIRED: '만료', ADMIN_ADJUSTMENT: '관리자 조정', BONUS: '보너스', REFERRAL: '추천 보너스' };
 
 type Summary = { available: number; pending: number; lifetime_earned: number; lifetime_redeemed: number; expiring_soon: number; expiring_at: string | null; tier: string; spend: number };
 
@@ -89,6 +90,8 @@ export function VelaWallet() {
   return <div className="mt-4">
     <p className="text-sm text-muted-foreground">구매 → 포인트 적립 → 다음 구매에서 사용. VELA의 모든 스토어에서 함께 쓰는 포인트입니다.</p>
     <div className="dashboard-stats mt-4">{stats.map(([l, v, I]) => <div className="stat-item" key={l}><I size={18}/><span>{l}</span><strong data-no-translate>{formatPoints(v)}</strong><small data-no-translate>{usd(pointsToUsd(v, value))}</small></div>)}</div>
+    <ReferralShare />
+    <ReferralDashboard />
     {s.expiring_soon > 0 && <p className="mt-3 text-sm text-primary" data-no-translate>{formatPoints(s.expiring_soon)} expires in {days} days</p>}
     <p className="mt-2 text-xs text-muted-foreground">{tx('Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.', { 0: String(POINT_HOLD_DAYS) })}</p>
     <div className="section-heading mt-6"><h2>Transaction History</h2></div>

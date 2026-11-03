@@ -1673,5 +1673,20 @@
   "공지": "Notice",
   "편집용 영상을 준비하는 중이에요. 처음 한 번은 1분 정도 걸릴 수 있어요.": "Preparing the video for editing. The first time can take about a minute.",
   "제품 리뷰": "Product Reviews",
-  "아직 등록된 제품 리뷰가 없습니다.": "No product reviews yet."
+  "아직 등록된 제품 리뷰가 없습니다.": "No product reviews yet.",
+  "추천 보너스": "Referral bonus",
+  "VELA에서 함께 쇼핑해요! {link}": "Let's shop together on VELA! {link}",
+  "복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.": "Couldn't copy. Please press and hold the link to copy it.",
+  "VELA에서 함께 쇼핑해요!": "Let's shop together on VELA!",
+  "링크를 복사했어요. 카카오톡에 붙여넣어 보내 주세요.": "Link copied. Paste it into KakaoTalk to send.",
+  "공유하고 포인트 받기": "Share & Earn Points",
+  "친구가 내 링크로 가입해 구매를 완료하면 결제 상품금액의 {rate}%를 포인트로 드려요. (배송비·세금 제외, 수령 확정 후 지급)": "When a friend signs up with your link and completes a purchase, you earn {rate}% of the paid product amount as points (excluding shipping and taxes; granted after delivery is confirmed).",
+  "내 추천 링크": "My referral link",
+  "카카오톡": "KakaoTalk",
+  "추천한 친구": "Friends referred",
+  "구매 완료 건수": "Completed purchases",
+  "누적 추천 포인트": "Total referral points earned",
+  "정산 대기 포인트": "Points pending settlement",
+  "추천 현황": "Referral dashboard",
+  "정산 대기 포인트는 친구가 수령 확정(에스크로 정산)을 하면 지급됩니다. 취소·환불·분쟁 주문은 지급되지 않고, 지급 후 환불되면 회수됩니다.": "Pending points are granted once your friend confirms receipt (escrow settlement). Canceled, refunded or disputed orders earn nothing, and points are reversed if the order is refunded after payout."
 }

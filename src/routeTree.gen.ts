@@ -25,6 +25,7 @@ import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ApiMuxWebhookRouteImport } from './routes/api/mux-webhook'
 import { Route as BuyIdRouteImport } from './routes/buy.$id'
 import { Route as PostIdRouteImport } from './routes/post.$id'
+import { Route as RefCodeRouteImport } from './routes/ref.$code'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as SellerApplyRouteImport } from './routes/seller_.apply'
 import { Route as ShortsIdRouteImport } from './routes/shorts.$id'
@@ -109,6 +110,11 @@ const PostIdRoute = PostIdRouteImport.update({
   path: '/post/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RefCodeRoute = RefCodeRouteImport.update({
+  id: '/ref/$code',
+  path: '/ref/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SSlugRoute = SSlugRouteImport.update({
   id: '/s/$slug',
   path: '/s/$slug',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/api/mux-webhook': typeof ApiMuxWebhookRoute
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
+  '/ref/$code': typeof RefCodeRoute
   '/s/$slug': typeof SSlugRoute
   '/seller/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/api/mux-webhook': typeof ApiMuxWebhookRoute
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
+  '/ref/$code': typeof RefCodeRoute
   '/s/$slug': typeof SSlugRoute
   '/seller/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/api/mux-webhook': typeof ApiMuxWebhookRoute
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
+  '/ref/$code': typeof RefCodeRoute
   '/s/$slug': typeof SSlugRoute
   '/seller_/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/api/mux-webhook'
     | '/buy/$id'
     | '/post/$id'
+    | '/ref/$code'
     | '/s/$slug'
     | '/seller/apply'
     | '/shorts/$id'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/api/mux-webhook'
     | '/buy/$id'
     | '/post/$id'
+    | '/ref/$code'
     | '/s/$slug'
     | '/seller/apply'
     | '/shorts/$id'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/api/mux-webhook'
     | '/buy/$id'
     | '/post/$id'
+    | '/ref/$code'
     | '/s/$slug'
     | '/seller_/apply'
     | '/shorts/$id'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   ApiMuxWebhookRoute: typeof ApiMuxWebhookRoute
   BuyIdRoute: typeof BuyIdRoute
   PostIdRoute: typeof PostIdRoute
+  RefCodeRoute: typeof RefCodeRoute
   SSlugRoute: typeof SSlugRoute
   SellerApplyRoute: typeof SellerApplyRoute
   ShortsIdRoute: typeof ShortsIdRoute
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PostIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ref/$code': {
+      id: '/ref/$code'
+      path: '/ref/$code'
+      fullPath: '/ref/$code'
+      preLoaderRoute: typeof RefCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$slug': {
       id: '/s/$slug'
       path: '/s/$slug'
@@ -432,6 +452,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMuxWebhookRoute: ApiMuxWebhookRoute,
   BuyIdRoute: BuyIdRoute,
   PostIdRoute: PostIdRoute,
+  RefCodeRoute: RefCodeRoute,
   SSlugRoute: SSlugRoute,
   SellerApplyRoute: SellerApplyRoute,
   ShortsIdRoute: ShortsIdRoute,
