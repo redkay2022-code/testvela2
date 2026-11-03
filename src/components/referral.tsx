@@ -53,6 +53,22 @@ async function copyText(text: string) {
   }
 }
 
+/** 링크 복사 / WhatsApp / 카카오톡(공유 메뉴, 안 되면 복사) 버튼 줄 */
+export function ShareRow({ link, message, shareText }: { link: string; message: string; shareText: string }) {
+  const copy = async () => { if (await copyText(link)) toast.success(tx('링크를 복사했어요.')); else toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.')); };
+  const kakao = async () => {
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try { await navigator.share({ title: 'VELA', text: shareText, url: link }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; }
+    }
+    if (await copyText(message)) toast.success(tx('링크를 복사했어요. 카카오톡에 붙여넣어 보내 주세요.')); else toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.'));
+  };
+  return <div className="mt-3 grid grid-cols-3 gap-2">
+    <Button variant="goldOutline" size="sm" onClick={() => void copy()}><Copy size={14} />링크 복사</Button>
+    <Button variant="goldOutline" size="sm" asChild><a href={whatsappShareUrl(message)} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} />WhatsApp</a></Button>
+    <Button variant="goldOutline" size="sm" onClick={() => void kakao()}><Share2 size={14} />카카오톡</Button>
+  </div>;
+}
+
 /** 공유하고 포인트 받기 — 링크 복사 / WhatsApp / 카카오톡 */
 export function ReferralShare({ compact = false }: { compact?: boolean }) {
   const summary = useReferralSummary();
@@ -61,22 +77,11 @@ export function ReferralShare({ compact = false }: { compact?: boolean }) {
   const link = referralLink(uid);
   const rate = summary.data?.rate_pct ?? 2;
   const message = tx('VELA에서 함께 쇼핑해요! {link}', { link });
-  const copy = async () => { if (await copyText(link)) toast.success(tx('링크를 복사했어요.')); else toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.')); };
-  const kakao = async () => {
-    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-      try { await navigator.share({ title: 'VELA', text: tx('VELA에서 함께 쇼핑해요!'), url: link }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; }
-    }
-    if (await copyText(message)) toast.success(tx('링크를 복사했어요. 카카오톡에 붙여넣어 보내 주세요.')); else toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.'));
-  };
   return <section className="mt-4 rounded-lg border border-border bg-card p-4" aria-label={tx('공유하고 포인트 받기')}>
     <h2 className="flex items-center gap-2 text-sm font-semibold"><Gift size={16} className="text-primary" />공유하고 포인트 받기</h2>
     {!compact && <p className="mt-2 text-xs text-muted-foreground">{tx('친구가 내 링크로 가입해 구매를 완료하면 결제 상품금액의 {rate}%를 포인트로 드려요. (배송비·세금 제외, 수령 확정 후 지급)', { rate })}</p>}
     <div className="mt-3 flex items-center gap-2"><input readOnly value={link} onFocus={e => e.currentTarget.select()} className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs" aria-label={tx('내 추천 링크')} data-no-translate /></div>
-    <div className="mt-3 grid grid-cols-3 gap-2">
-      <Button variant="goldOutline" size="sm" onClick={() => void copy()}><Copy size={14} />링크 복사</Button>
-      <Button variant="goldOutline" size="sm" asChild><a href={whatsappShareUrl(message)} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} />WhatsApp</a></Button>
-      <Button variant="goldOutline" size="sm" onClick={() => void kakao()}><Share2 size={14} />카카오톡</Button>
-    </div>
+    <ShareRow link={link} message={message} shareText={tx('VELA에서 함께 쇼핑해요!')} />
   </section>;
 }
 

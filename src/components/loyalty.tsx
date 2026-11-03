@@ -8,6 +8,7 @@ import { clampRedeem, daysUntil, earnPoints, formatPoints, formatPointsUsd, maxR
 import { BASE_FEE_RATE, insuranceRateForTier } from '@/lib/insurance';
 import { tx } from '@/lib/dom-translate';
 import { ReferralDashboard, ReferralShare } from './referral';
+import { MyGroups } from './group-purchase';
 
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n);
 const icons: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' };
@@ -92,6 +93,7 @@ export function VelaWallet() {
     <div className="dashboard-stats mt-4">{stats.map(([l, v, I]) => <div className="stat-item" key={l}><I size={18}/><span>{l}</span><strong data-no-translate>{formatPoints(v)}</strong><small data-no-translate>{usd(pointsToUsd(v, value))}</small></div>)}</div>
     <ReferralShare />
     <ReferralDashboard />
+    <MyGroups />
     {s.expiring_soon > 0 && <p className="mt-3 text-sm text-primary" data-no-translate>{formatPoints(s.expiring_soon)} expires in {days} days</p>}
     <p className="mt-2 text-xs text-muted-foreground">{tx('Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.', { 0: String(POINT_HOLD_DAYS) })}</p>
     <div className="section-heading mt-6"><h2>Transaction History</h2></div>
@@ -197,7 +199,7 @@ function LoyaltySettingsForm({ rules, onSaved }: { rules: Rules; onSaved: () => 
     <div className="mt-2 grid grid-cols-2 gap-3">{rules.tiers.map(t => <label key={t.tier} className="grid gap-1 text-xs"><span data-no-translate>{t.tier.toUpperCase()}</span><input className="form-input" inputMode="decimal" value={rates[t.tier]} onChange={e => setRates(p => ({ ...p, [t.tier]: e.target.value }))}/></label>)}</div>
     <h3 className="mt-4 text-sm font-semibold">Point Rules · 1P = <span data-no-translate>${Number(c?.point_value_usd ?? 0.001)}</span></h3>
     <div className="mt-2 grid grid-cols-2 gap-3">
-      {field('max_redemption_pct', 'Maximum Redemption % (≤20)')}{field('expiration_months', 'Point Expiration (months)')}
+      {field('max_redemption_pct', 'Maximum Redemption % (≤30)')}{field('expiration_months', 'Point Expiration (months)')}
       {field('commission_rate_pct', 'Commission Rate %')}{field('loyalty_budget_pct', 'Loyalty Budget % of commission')}
       {field('max_earn_rate_pct', 'Maximum Earn Rate %')}{field('monthly_point_budget_usd', 'Monthly Point Budget USD (0 = 무제한)')}
       {field('max_outstanding_liability_usd', 'Max Outstanding Liability USD (0 = 무제한)')}

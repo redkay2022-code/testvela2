@@ -26,6 +26,7 @@ import { Route as ApiMuxWebhookRouteImport } from './routes/api/mux-webhook'
 import { Route as BuyIdRouteImport } from './routes/buy.$id'
 import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as RefCodeRouteImport } from './routes/ref.$code'
+import { Route as GroupIdRouteImport } from './routes/group.$id'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as SellerApplyRouteImport } from './routes/seller_.apply'
 import { Route as ShortsIdRouteImport } from './routes/shorts.$id'
@@ -115,6 +116,11 @@ const RefCodeRoute = RefCodeRouteImport.update({
   path: '/ref/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GroupIdRoute = GroupIdRouteImport.update({
+  id: '/group/$id',
+  path: '/group/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SSlugRoute = SSlugRouteImport.update({
   id: '/s/$slug',
   path: '/s/$slug',
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
   '/ref/$code': typeof RefCodeRoute
+  '/group/$id': typeof GroupIdRoute
   '/s/$slug': typeof SSlugRoute
   '/seller/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
   '/ref/$code': typeof RefCodeRoute
+  '/group/$id': typeof GroupIdRoute
   '/s/$slug': typeof SSlugRoute
   '/seller/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/buy/$id': typeof BuyIdRoute
   '/post/$id': typeof PostIdRoute
   '/ref/$code': typeof RefCodeRoute
+  '/group/$id': typeof GroupIdRoute
   '/s/$slug': typeof SSlugRoute
   '/seller_/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/buy/$id'
     | '/post/$id'
     | '/ref/$code'
+    | '/group/$id'
     | '/s/$slug'
     | '/seller/apply'
     | '/shorts/$id'
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/buy/$id'
     | '/post/$id'
     | '/ref/$code'
+    | '/group/$id'
     | '/s/$slug'
     | '/seller/apply'
     | '/shorts/$id'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/buy/$id'
     | '/post/$id'
     | '/ref/$code'
+    | '/group/$id'
     | '/s/$slug'
     | '/seller_/apply'
     | '/shorts/$id'
@@ -285,6 +297,7 @@ export interface RootRouteChildren {
   BuyIdRoute: typeof BuyIdRoute
   PostIdRoute: typeof PostIdRoute
   RefCodeRoute: typeof RefCodeRoute
+  GroupIdRoute: typeof GroupIdRoute
   SSlugRoute: typeof SSlugRoute
   SellerApplyRoute: typeof SellerApplyRoute
   ShortsIdRoute: typeof ShortsIdRoute
@@ -411,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RefCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/group/$id': {
+      id: '/group/$id'
+      path: '/group/$id'
+      fullPath: '/group/$id'
+      preLoaderRoute: typeof GroupIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/s/$slug': {
       id: '/s/$slug'
       path: '/s/$slug'
@@ -453,6 +473,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuyIdRoute: BuyIdRoute,
   PostIdRoute: PostIdRoute,
   RefCodeRoute: RefCodeRoute,
+  GroupIdRoute: GroupIdRoute,
   SSlugRoute: SSlugRoute,
   SellerApplyRoute: SellerApplyRoute,
   ShortsIdRoute: ShortsIdRoute,

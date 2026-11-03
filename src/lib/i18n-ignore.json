@@ -1,6 +1,9 @@
 {
   "_comment": "Text that must NOT be translated: brand names, codes, units, technical strings. 'exact' = literal strings, 'patterns' = regular expressions.",
   "exact": [
+    "Buy together with friends on VELA and earn bonus points.",
+    "VELA Group Purchase",
+    "Maximum Redemption % (≤30)",
     "WhatsApp",
     "최고관리자 모드 · “",
     "” 스토어의 상품·스토리를 대신 등록하고 수정합니다.",
