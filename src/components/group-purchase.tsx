@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronDown, Users } from 'lucide-react';
+import { ChevronDown, Users, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
@@ -173,4 +174,25 @@ export function MyGroups({ compact = false }: { compact?: boolean }) {
     <div className="section-heading"><h2>{compact ? tx('내 진행 중인 공동구매') : tx('내 공동구매')}</h2></div>
     <div className="mt-3 grid gap-3">{list.map(g => <GroupRow key={g.id} g={g} />)}</div>
   </section>;
+}
+
+/** 상품 상세 하단 바: "장바구니"와 "바로 구매" 사이의 공동구매 버튼. 누르면 공동구매 만들기 창이 열린다. */
+export function GroupCreateButton({ productId, signedIn, requestAuth }: { productId: string; signedIn: boolean; requestAuth: () => void }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+  return <>
+    <Button variant="goldOutline" onClick={() => (signedIn ? setOpen(true) : requestAuth())}>{tx('공동구매')}</Button>
+    {open && typeof document !== 'undefined' && createPortal(<>
+      <div className="lux-backdrop overlay-front" onClick={() => setOpen(false)} aria-hidden />
+      <div className="lux-dialog" role="dialog" aria-modal="true" aria-label={tx('공동구매 만들기')} style={{ padding: 0 }}>
+        <div className="flex justify-end px-3 pt-3"><Button type="button" variant="ghost" size="icon" aria-label={tx('닫기')} onClick={() => setOpen(false)}><X size={18} /></Button></div>
+        <div className="px-4 pb-4 [&>section:first-child]:mt-0"><GroupBanner productId={productId} /><GroupCreate productId={productId} /></div>
+      </div>
+    </>, document.body)}
+  </>;
 }
