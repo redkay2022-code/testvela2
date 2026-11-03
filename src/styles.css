@@ -1107,3 +1107,9 @@ html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s eas
 .store-notices-fold>:not(summary){padding:4px 14px 12px}
 .store-profile-v2 .seller-reputation{margin-top:12px}
 @media(max-width:380px){.store-head-info .store-stats{gap:14px}.store-name-line h1{font-size:17px}}
+
+/* 163차: 아이폰 상단(카메라 섬·시계·배터리)과 겹치지 않도록, 상단 헤더에 안전 영역만큼 여백을 둔다 */
+.lux-header{height:auto;padding-top:env(safe-area-inset-top,0px)}
+.lux-header-inner{height:56px}
+.red-home-header .lux-header-inner{height:56px}
+.lux-header-tabs{height:55px}
