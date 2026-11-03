@@ -200,9 +200,10 @@ export function validateItem(item: BulkItem, existingTitles: Set<string>, relaxe
   else if (PRICE_CAP_ENABLED && sell !== false && price > MAX_PRODUCT_PRICE_USD) errors.push(priceCapMessage());
   const category = productCategories.find(c => norm(c) === norm(v.category)) ?? (v.category ? undefined : '커스텀제작');
   if (!category) errors.push(`카테고리는 ${productCategories.join(' / ')} 중 하나여야 해요.`);
-  const menuCategory = v.menuCategory.trim() ? postCategoryLabels.find(c => norm(c) === norm(normalizeMenuCategory(v.menuCategory) ?? '')) : '시계';
+  const legacyWatch = norm(v.menuCategory) === norm('시계');
+  const menuCategory = v.menuCategory.trim() && !legacyWatch ? postCategoryLabels.find(c => norm(c) === norm(normalizeMenuCategory(v.menuCategory) ?? '')) : (v.factory.trim() ? '공장' : '커스텀');
   if (!menuCategory) errors.push(`메뉴 카테고리는 ${postCategoryLabels.join(' / ')} 중 하나여야 해요.`);
-  else if (!v.menuCategory.trim()) warnings.push('메뉴 카테고리가 비어 있어 “시계”로 저장돼요.');
+  else if (!v.menuCategory.trim() || legacyWatch) warnings.push('메뉴 카테고리가 비어 있어 출처에 맞게 “커스텀” 또는 “공장”으로 저장돼요.');
   if (menuCategory && isWatchStory(menuCategory) && !isWatchStoryTag(v.storySubcategory)) errors.push(t('selectStorySubcategory'));
   const source = v.source ? SOURCE_ALIASES[norm(v.source)] : (v.factory ? 'factory' : 'custom');
   if (sell !== false && !source) errors.push('제조 / 출처 구분은 커스텀 제작 / 공장 선택 / 기타 - 직접입력 중 하나여야 해요.');

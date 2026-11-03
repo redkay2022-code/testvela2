@@ -22,7 +22,7 @@ describe('seller directory',()=>{
   expect(matchesStoreCategory(seller,'unknown-old-link')).toBe(true);
  });
  it('uses the main page category row and keeps selection in validated URL state',()=>{
-  expect(storeFilters.map(f=>f[1])).toEqual(['전체','시계','악세사리','가방','의류','파츠','커스텀 제작','기타']);
+  expect(storeFilters.map(f=>f[1])).toEqual(['전체','커스텀','공장','파츠','악세사리','가방','의류','기타']);
   expect(marketSearch.parse({storeCategory:'custom',role:'buyer',panel:'cart'})).toMatchObject({storeCategory:'custom',role:'buyer',panel:'cart'});
  });
 });

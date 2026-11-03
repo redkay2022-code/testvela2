@@ -10,7 +10,7 @@ const mergedAway=new Set(['bulgari','van-cleef-arpels']);
 /** Every brand a seller can pick when uploading (the same list as the upload form's brand dropdown), in A-Z order. */
 const watchBrandItems:readonly (readonly [string,string])[]=ALL_WATCH_BRANDS.map(name=>[brandSlug(name),name] as const).filter(([id])=>!mergedAway.has(id)).map(([id,name])=>[id,koreanBrandNames[id] ?? name] as const);
 export const categoryGroups:readonly {label:string;items:readonly (readonly [string,string])[]}[] = [
- {label:'카테고리',items:[['recommend','전체'],['news','뉴스'],['ready','바로발송'],['story','스토리'],['product-review','제품 리뷰'],['watches','시계'],['accessories','악세사리'],['bags','가방'],['clothes','의류'],['parts','파츠'],['custom','커스텀 제작'],['etc','기타']]},
+ {label:'카테고리',items:[['recommend','전체'],['news','뉴스'],['ready','바로발송'],['story','스토리'],['product-review','제품 리뷰'],['custom','커스텀'],['factory','공장'],['parts','파츠'],['accessories','악세사리'],['bags','가방'],['clothes','의류'],['etc','기타']]},
  {label:'시계 브랜드',items:watchBrandItems},
  {label:'명품 악세사리 브랜드',items:accessoryBrandItems},
 ] as const;
@@ -30,7 +30,9 @@ export const brandMenu={
  others:watchBrandItems.filter(item=>!popularBrandIds.includes(item[0])),
 };
 /** Menu-category labels saved before the 2026-10 cleanup, mapped to today's labels ("18K 금" was removed and now counts as 기타). */
-const legacyMenuLabels:Record<string,string>={'커스텀':'커스텀 제작','18K 금':'기타','Story':'스토리','Watch Story':'스토리'};
+const legacyMenuLabels:Record<string,string>={'커스텀 제작':'커스텀','18K 금':'기타','Story':'스토리','Watch Story':'스토리'};
+/** 예전 '시계' 글은 출처(공장 표기)에 따라 커스텀 / 공장으로 나눈다. */
+const watchMenuLabel=(post:{factory?:string}):string=>String(post.factory ?? '').trim()?'공장':'커스텀';
 export const normalizeMenuCategory=(label:string|undefined):string|undefined=>label===undefined?undefined:legacyMenuLabels[label.trim()] ?? label;
 export const primaryCategories=(categoryGroups[0]?.items ?? []).filter(item=>!hiddenTabIds.includes(item[0]));
 /** 업로드 화면의 '메뉴 카테고리' 라벨: 제품 리뷰 */
@@ -38,9 +40,9 @@ export const PRODUCT_REVIEW_LABEL='제품 리뷰';
 /** Menu categories sellers choose from (stored in posts.specs.menuCategory, separate from the older 카테고리 field) (the "전체" entry is a filter only, never a post category). */
 export const postCategories:readonly (readonly [string,string])[]=(categoryGroups[0]?.items ?? []).filter(item=>item[0]!=='recommend');
 export const postCategoryLabels:readonly string[]=postCategories.map(item=>item[1]);
-/** Upload dropdown order: 파츠 right after 시계 (the top menu keeps its own order). */
-export const uploadCategoryLabels:readonly string[]=(()=>{const out:string[]=postCategoryLabels.filter(l=>l!=='파츠');const watch=out.indexOf('시계');out.splice(watch<0?out.length:watch+1,0,'파츠');return out;})();
-const baseCategoryLabel=(id:string)=>storyFeedTag(id) ?? (id.startsWith('b:')?id.slice(2):categoryGroups.flatMap(group=>group.items).find(item=>item[0]===id)?.[1] ?? id);
+/** Upload dropdown order: 파츠 right after 공장 (the top menu keeps its own order). */
+export const uploadCategoryLabels:readonly string[]=(()=>{const out:string[]=postCategoryLabels.filter(l=>l!=='파츠');const watch=out.indexOf('공장');out.splice(watch<0?out.length:watch+1,0,'파츠');return out;})();
+const baseCategoryLabel=(id:string)=>id==='watches'?'시계':storyFeedTag(id) ?? (id.startsWith('b:')?id.slice(2):categoryGroups.flatMap(group=>group.items).find(item=>item[0]===id)?.[1] ?? id);
 /** Feed ids are a category ("watches"), a brand ("rolex") or both joined with "~" ("watches~rolex" = Rolex within 시계). */
 export const splitFeedId=(id:string|undefined):{category:string;brand:string}=>{const i=(id ?? '').indexOf('~');return i<0?{category:id ?? '',brand:''}:{category:id!.slice(0,i),brand:id!.slice(i+1)};};
 export const categoryLabel=(id:string)=>{const {category,brand}=splitFeedId(id);return brand?`${baseCategoryLabel(category)} · ${baseCategoryLabel(brand)}`:baseCategoryLabel(id);};
@@ -68,9 +70,10 @@ export function matchesFeedCategory(post:FeedPostLike,id:string|undefined):boole
   if(id.startsWith('story:')){const tag=storyFeedTag(id);const specs=post.source?.specs;return Boolean(tag&&matchesFeedCategory(post,'story')&&specs&&typeof specs==='object'&&'storySubcategory' in specs&&normalizeStoryTag(specs.storySubcategory)===tag);}
  if(id.includes('~')){const {category,brand}=splitFeedId(id);return matchesFeedCategory(post,category)&&(brand.startsWith('b:')?postBrandId(post).toLowerCase()===brand.toLowerCase():postBrandId(post)===brand||matchesFeedCategory(post,brand));}
  if(id.startsWith('b:'))return postBrandId(post).toLowerCase()===id.toLowerCase();
- const own=postCategories.find(item=>item[0]===id),menu=normalizeMenuCategory(post.menuCategory);
+ const own=postCategories.find(item=>item[0]===id),rawMenu=normalizeMenuCategory(post.menuCategory),menu=rawMenu==='시계'?watchMenuLabel(post):rawMenu;
+ if(id==='watches'){if(post.sample)return true;if(menu&&postCategoryLabels.includes(menu))return menu==='커스텀'||menu==='공장';}
+ if(id==='custom'&&post.sample&&!menu)return true;
  if(own&&menu&&postCategoryLabels.includes(menu))return menu===own[1];
- if(id==='watches'&&post.sample)return true;
  const text=`${post.title} ${post.description} ${post.category} ${post.factory} ${post.source?.brand ?? ''} ${post.source?.model ?? ''}`.toLowerCase();
  const en=(brandEnglishName(id) ?? id).toLowerCase(),list=aliases[id] ?? [...new Set([en,en.normalize('NFD').replace(/[\u0300-\u036f]/g,'')])];
  // Brand names are matched as whole words so short names (Oris, Rado, Sinn…) do not hit unrelated words.

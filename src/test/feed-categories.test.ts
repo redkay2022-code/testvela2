@@ -12,19 +12,19 @@ describe('Home category filters',()=>{
   expect(matchesFeedCategory(post,'cartier')).toBe(false);
   expect(matchesFeedCategory({...post,title:'반클리프 앤 아펠 목걸이'},'van-cleef')).toBe(true);
  });
- it('has the main row in the requested order',()=>expect(primaryCategories.map(c=>c[0])).toEqual(['recommend','news','ready','story','watches','accessories','bags','clothes','parts','custom','etc']));
+ it('has the main row in the requested order',()=>expect(primaryCategories.map(c=>c[0])).toEqual(['recommend','story','product-review','custom','factory','parts','accessories','bags','clothes','etc']));
  it('matches the new story, bags, clothes and etc categories',()=>{
   expect(matchesFeedCategory({...post,category:'제작 과정'},'story')).toBe(true);
   expect(matchesFeedCategory({...post,title:'Leather tote bag'},'bags')).toBe(true);
   expect(matchesFeedCategory({...post,title:'Denim jacket'},'clothes')).toBe(true);
   expect(matchesFeedCategory({...post,category:'기타'},'etc')).toBe(true);
  });
- it('offers sellers exactly the ten official post categories (no 전체)',()=>expect(postCategoryLabels).toEqual(['뉴스','바로발송','스토리','시계','악세사리','가방','의류','파츠','커스텀 제작','기타']));
+ it('offers sellers the official post categories (no 전체, 시계 split into 커스텀 / 공장)',()=>expect(postCategoryLabels).toEqual(['뉴스','바로발송','스토리','제품 리뷰','커스텀','공장','파츠','악세사리','가방','의류','기타']));
  it('filters strictly by the saved menu category',()=>{
   const watch={...post,title:'Leather tote bag',category:'시계',menuCategory:'시계'};
   expect(matchesFeedCategory(watch,'bags')).toBe(false);expect(matchesFeedCategory(watch,'watches')).toBe(true);
   expect(matchesFeedCategory({...watch,menuCategory:'가방'},'bags')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'파츠'},'parts')).toBe(true);
-  expect(matchesFeedCategory({...watch,menuCategory:'커스텀 제작'},'custom')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'커스텀 제작'},'watches')).toBe(false);
+  expect(matchesFeedCategory({...watch,menuCategory:'커스텀 제작'},'custom')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'공장'},'factory')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'공장'},'custom')).toBe(false);expect(matchesFeedCategory({...watch,menuCategory:'가방'},'watches')).toBe(false);expect(matchesFeedCategory({...watch,menuCategory:'시계',factory:'ABC'},'factory')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'시계'},'custom')).toBe(true);
   expect(matchesFeedCategory(watch,undefined)).toBe(true);expect(matchesFeedCategory(watch,'recommend')).toBe(true);
  });
  it('falls back to keywords for older posts without a menu category',()=>{expect(matchesFeedCategory({...post,category:'제작 과정'},'story')).toBe(true);expect(matchesFeedCategory({...post,title:'Leather tote bag',category:'시계'},'bags')).toBe(true);});

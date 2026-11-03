@@ -188,6 +188,12 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   </section>;
 }
 
+/** 저장된 메뉴 카테고리를 현재 라벨로 바꾼다. 예전 '시계'는 출처(공장 표기)에 따라 커스텀 / 공장. */
+const menuFromListing = (listing?: { specs?: Record<string, unknown> | null } | null): string => {
+  const raw = normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '';
+  return raw === '시계' ? (String(listing?.specs?.['factory'] ?? '').trim() ? '공장' : '커스텀') : raw;
+};
+
 function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user: User; owner?: ProxyTarget | null; listing: Listing | null; catalog: { id: string; title: string }[]; onClose: () => void; onSaved: () => void }) {
   const { lang } = useCurrency();
   /* 작성 중인 내용은 메모리에 함께 보관해서, 다른 페이지에 갔다가 돌아와도 그대로 이어서 수정할 수 있다. 저장하거나 닫으면 비운다. */
@@ -199,7 +205,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const [title, setTitle] = useSessionState(draftKey + 'title', listing?.title ?? '');
   const [description, setDescription] = useSessionState(draftKey + 'description', listing?.description ?? '');
   const [category, setCategory] = useSessionState(draftKey + 'category', listing?.category === '악세사리' ? '악세사리' : '시계');
-  const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '') ? String(normalizeMenuCategory(String(listing?.specs?.['menuCategory']))) : '');
+  const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(menuFromListing(listing)) ? menuFromListing(listing) : '');
   const [storySubcategory, setStorySubcategory] = useSessionState(draftKey + 'storySubcategory', isWatchStoryTag(normalizeStoryTag(listing?.specs?.['storySubcategory'])) ? normalizeStoryTag(listing?.specs?.['storySubcategory']) : '');
   /* Story posts only have a title and text: no price, dispatch time, specification or factory fields. */
   const story = menuCategory === '스토리', review = menuCategory === '제품 리뷰', lounge = story || review, noSale = story || review; /* 스토리는 영상 1개(10분·1GB) 규칙 */
