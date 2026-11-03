@@ -3002,5 +3002,20 @@
   "제품 정보": "Productinfo",
   "원가": "Originele prijs",
   "공동구매 성공 시 가격": "Prijs bij geslaagde groepsaankoop",
-  "현재 인원 기준 가격": "Prijs bij huidig aantal deelnemers"
+  "현재 인원 기준 가격": "Prijs bij huidig aantal deelnemers",
+  "초대 코드": "Uitnodigingscode",
+  "링크가 안 열리면 가입할 때 이 코드를 입력하면 돼요.": "Als de link niet opent, voer deze code in bij het registreren.",
+  "VELA 공동구매 같이 해요! {link} (초대 코드: {code})": "Doe mee met mijn VELA-groepsaankoop! {link} (Uitnodigingscode: {code})",
+  "초대 코드 입력": "Uitnodigingscode invoeren",
+  "공동구매에 참여했어요.": "Je doet mee aan de groepsaankoop.",
+  "이미 참여 중이에요.": "Je doet al mee aan deze groepsaankoop.",
+  "내가 만든 공동구매예요.": "Dit is je eigen groepsaankoop.",
+  "마감됐거나 인원이 가득 찬 공동구매예요.": "Deze groepsaankoop is afgelopen of vol.",
+  "이 상품의 다른 공동구매에 이미 참여 중이에요.": "Je doet al mee aan een andere groepsaankoop voor dit product.",
+  "초대 코드를 찾을 수 없어요.": "Uitnodigingscode niet gevonden.",
+  "적용": "Toepassen",
+  "🎁 이 초대로 가입하면 최대 {p}% 즉시 할인을 받을 수 있어요. 가입과 동시에 공동구매에 자동 참여돼요.": "🎁 Registreer met deze uitnodiging voor tot {p}% directe korting. Je doet automatisch mee aan de groepsaankoop.",
+  "초대 코드 (선택)": "Uitnodigingscode (optioneel)",
+  "가입하고 함께 구매하기": "Registreren en samen kopen",
+  "가입하면 이 초대가 자동으로 연결돼요.": "Je uitnodiging wordt bij het registreren automatisch gekoppeld."
 }

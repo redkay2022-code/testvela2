@@ -2997,5 +2997,20 @@
   "제품 정보": "Informazioni sul prodotto",
   "원가": "Prezzo originale",
   "공동구매 성공 시 가격": "Prezzo se l'acquisto di gruppo riesce",
-  "현재 인원 기준 가격": "Prezzo con i partecipanti attuali"
+  "현재 인원 기준 가격": "Prezzo con i partecipanti attuali",
+  "초대 코드": "Codice invito",
+  "링크가 안 열리면 가입할 때 이 코드를 입력하면 돼요.": "Se il link non si apre, inserisci questo codice durante la registrazione.",
+  "VELA 공동구매 같이 해요! {link} (초대 코드: {code})": "Unisciti al mio acquisto di gruppo su VELA! {link} (Codice invito: {code})",
+  "초대 코드 입력": "Inserisci il codice invito",
+  "공동구매에 참여했어요.": "Hai aderito all'acquisto di gruppo.",
+  "이미 참여 중이에요.": "Partecipi già a questo acquisto di gruppo.",
+  "내가 만든 공동구매예요.": "Questo è il tuo acquisto di gruppo.",
+  "마감됐거나 인원이 가득 찬 공동구매예요.": "Questo acquisto di gruppo è terminato o al completo.",
+  "이 상품의 다른 공동구매에 이미 참여 중이에요.": "Partecipi già a un altro acquisto di gruppo per questo prodotto.",
+  "초대 코드를 찾을 수 없어요.": "Codice invito non trovato.",
+  "적용": "Applica",
+  "🎁 이 초대로 가입하면 최대 {p}% 즉시 할인을 받을 수 있어요. 가입과 동시에 공동구매에 자동 참여돼요.": "🎁 Registrati con questo invito per ottenere fino al {p}% di sconto immediato. Entri automaticamente nell'acquisto di gruppo.",
+  "초대 코드 (선택)": "Codice invito (facoltativo)",
+  "가입하고 함께 구매하기": "Registrati e acquista insieme",
+  "가입하면 이 초대가 자동으로 연결돼요.": "L'invito viene collegato automaticamente alla registrazione."
 }

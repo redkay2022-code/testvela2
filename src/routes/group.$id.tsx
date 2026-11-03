@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Countdown, useGroupPreview, usePublicGroup } from '@/components/group-purchase';
-import { groupDiscountUsd, isGroupId, rememberGroup } from '@/lib/group';
+import { supabase } from '@/integrations/supabase/client';
+import { groupDiscountUsd, isGroupCode, isGroupId, normalizeInvite, rememberGroup, setReturnTo } from '@/lib/group';
 import { tx } from '@/lib/dom-translate';
 
 /** 공동구매 링크: /group/<그룹 ID> — 방문 기록(30일)을 남기고 참여 화면을 보여준다. */
@@ -14,10 +15,15 @@ export const Route = createFileRoute('/group/$id')({
 
 function GroupPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  useEffect(() => { void supabase.auth.getUser().then(({ data }) => setSignedIn(Boolean(data.user))); const { data } = supabase.auth.onAuthStateChange((_e, s) => setSignedIn(Boolean(s?.user))); return () => data.subscription.unsubscribe(); }, []);
   useEffect(() => { rememberGroup(id); }, [id]);
-  const q = usePublicGroup(isGroupId(id) ? id : null);
-  const pv = useGroupPreview(isGroupId(id) ? id : null);
+  const ref = isGroupId(id) ? id : isGroupCode(id) ? normalizeInvite(id) : null;
+  const q = usePublicGroup(ref);
   const g = q.data;
+  useEffect(() => { if (g?.id) rememberGroup(g.id); }, [g?.id]);
+  const pv = useGroupPreview(g?.id);
   const open = Boolean(g && g.status === 'active' && new Date(g.expires_at).getTime() > Date.now());
   return <main className="mx-auto w-full max-w-xl px-4 pb-16 pt-6">
     <h1 className="flex items-center gap-2 text-xl font-semibold"><Users size={20} className="text-primary" />{tx('공동구매')}</h1>
@@ -49,7 +55,10 @@ function GroupPage() {
         <p className="mt-3 text-sm"><strong className="text-primary" data-no-translate>{g.discount_pct}%</strong> {tx('즉시 할인')} · <span className="text-xs text-muted-foreground">{tx('최대 {p}% (목표 인원 달성 시)', { p: g.max_pct })}</span></p>
         <p className="mt-1 text-xs text-muted-foreground">{tx('2~3명 5% · 4~6명 8% · 7~9명 12% · 10명 15% 즉시 할인. 공동구매 주문에는 포인트가 적립되지 않아요.')}</p>
         <p className="mt-1 text-xs text-muted-foreground">{tx('최종 인원 기준 할인율로 정산되고, 판매자 대금은 에스크로 수령 확정 후 지급돼요.')}</p>
-        <Button asChild variant="gold" className="mt-5 w-full"><Link to="/buy/$id" params={{ id: g.product_id }}>{open ? tx('함께 구매하기') : tx('상품 보러가기')}</Link></Button>
+        {signedIn === false && open
+          ? <><Button type="button" variant="gold" className="mt-5 w-full" onClick={() => { setReturnTo(`/buy/${g.product_id}`); void navigate({ to: '/', search: { auth: true, authSignup: true } as never }); }}>{tx('가입하고 함께 구매하기')}</Button>
+            <p className="mt-2 text-center text-xs text-muted-foreground">{tx('가입하면 이 초대가 자동으로 연결돼요.')}</p></>
+          : <Button asChild variant="gold" className="mt-5 w-full"><Link to="/buy/$id" params={{ id: g.product_id }}>{open ? tx('함께 구매하기') : tx('상품 보러가기')}</Link></Button>}
       </section>}
   </main>;
 }

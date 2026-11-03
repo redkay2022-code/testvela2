@@ -33,17 +33,22 @@ export function ReferralTracker() {
     let busy = false;
     const claim = async () => {
       if (busy) return;
-      const ref = storedReferral(), grp = storedGroup();
-      if (!ref && !grp) return;
       busy = true;
       try {
-        const { data: auth } = await supabase.auth.getUser();
-        if (!auth.user) return;
-        if (ref) { const { data, error } = await rpc('claim_referral', { _code: ref }); if (!error && data) clearReferral(); } // 결과가 나오면(성공/거부 모두) 다시 시도하지 않음
+        const { data: sess } = await supabase.auth.getSession();
+        const authUser = sess.session?.user;
+        if (!authUser) return;
+        /* 가입 서버가 계정에 남겨 둔 초대 정보: 브라우저에 저장된 값이 없을 때 대신 사용한다(다른 브라우저로 이어서 로그인한 경우 등). */
+        const meta = (authUser.user_metadata ?? {}) as { invite_group?: string; invite_ref?: string };
+        const ref = storedReferral() ?? meta.invite_ref ?? null, grp = storedGroup() ?? meta.invite_group ?? null;
+        if (!ref && !grp) return;
+        let finished = true;
+        if (ref) { const { data, error } = await rpc('claim_referral', { _code: ref }); if (!error && data) clearReferral(); else finished = false; } // 결과가 나오면(성공/거부 모두) 다시 시도하지 않음
         if (grp) {
           const { data, error } = await rpc('claim_group', { _id: grp });
-          if (!error && data) { if (data !== 'ok' && data !== 'already' && data !== 'leader') clearGroup(); void qc.invalidateQueries({ queryKey: ['group-mine'] }); void qc.invalidateQueries({ queryKey: ['group-quote'] }); }
+          if (!error && data) { if (data !== 'ok' && data !== 'already' && data !== 'leader') clearGroup(); void qc.invalidateQueries({ queryKey: ['group-mine'] }); void qc.invalidateQueries({ queryKey: ['group-quote'] }); } else finished = false;
         }
+        if (finished && (meta.invite_group || meta.invite_ref)) void supabase.auth.updateUser({ data: { invite_group: null, invite_ref: null } });
       } finally { busy = false; }
     };
     void claim();

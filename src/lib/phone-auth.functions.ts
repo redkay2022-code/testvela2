@@ -54,7 +54,7 @@ export async function verifyTurnstile(token: string, fetchImpl: typeof fetch = f
 }
 
 export const signUpWithPhone = createServerFn({ method: 'POST' })
-  .inputValidator(d => creds.extend({ nickname: z.string().trim().min(1).max(30) }).parse(d))
+  .inputValidator(d => creds.extend({ nickname: z.string().trim().min(1).max(30), invite: z.string().trim().max(64).optional(), ref: z.string().trim().max(64).optional() }).parse(d))
   .handler(async ({ data }) => {
     await verifyTurnstile(data.captchaToken);
     const hash = await hashPhone(normalizePhone(data.phone));
@@ -70,6 +70,15 @@ export const signUpWithPhone = createServerFn({ method: 'POST' })
       else if (pErr.code === '23505' && pErr.message.includes('phone_hash')) break;
     }
     if (!saved) { await supabaseAdmin.auth.admin.deleteUser(created.user.id); throw new Error('An account already exists with this phone number.'); }
+    /* 초대 연결: 계정이 만들어진 바로 이 자리에서 서버가 직접 연결한다. 실패해도 가입은 절대 막지 않고,
+       초대 정보는 계정에도 남겨 두어 첫 로그인 때 한 번 더 시도한다. */
+    const invite = data.invite || undefined, ref = data.ref || undefined;
+    if (invite || ref) {
+      const rpc = (supabaseAdmin as unknown as { rpc: (n: string, a: object) => Promise<{ data: unknown; error: unknown }> }).rpc.bind(supabaseAdmin);
+      try { if (invite) await rpc('_group_claim', { _uid: created.user.id, _id: invite }); } catch { /* 가입은 계속 */ }
+      try { if (ref) await rpc('_referral_claim', { _uid: created.user.id, _code: ref }); } catch { /* 가입은 계속 */ }
+      try { await supabaseAdmin.auth.admin.updateUserById(created.user.id, { user_metadata: { ...(invite ? { invite_group: invite } : {}), ...(ref ? { invite_ref: ref } : {}) } }); } catch { /* ignore */ }
+    }
     return passwordSession(authEmail(hash), data.password);
   });
 

@@ -1,3 +1,4 @@
+import { setReturnTo, storedGroup } from '@/lib/group';
 import { useEffect, useState } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
@@ -41,7 +42,7 @@ function BuyPage() {
   const [user, setUser] = useState<User | null>(null), [done, setDone] = useState(false), [ask, setAsk] = useState(false);
   useEffect(() => { void supabase.auth.getUser().then(({ data }) => setUser(data.user)); const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null)); return () => subscription.unsubscribe(); }, []);
   const reviews = useQuery({ queryKey: ['post-reviews', id], queryFn: async () => (await supabase.from('reviews').select('id, nickname, rating, body, created_at').eq('post_id', id).order('created_at', { ascending: false }).limit(20)).data ?? [] });
-  const requestAuth = () => void navigate({ to: '/', search: { auth: true } });
+  const requestAuth = () => { setReturnTo(`/buy/${id}`); void navigate({ to: '/', search: (storedGroup() ? { auth: true, authSignup: true } : { auth: true }) as never }); };
   if (!post) return <div className="lux-empty"><h2>상품을 찾을 수 없습니다.</h2><Button asChild variant="goldOutline"><Link to="/">홈으로</Link></Button></div>;
   const pr = postRatings.data?.[post.id];
   return <main className="mx-auto w-full max-w-xl px-4 pb-16 pt-4">

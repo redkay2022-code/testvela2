@@ -1747,5 +1747,20 @@
   "제품 정보": "Product info",
   "원가": "Original price",
   "공동구매 성공 시 가격": "Price if the group purchase succeeds",
-  "현재 인원 기준 가격": "Price at current headcount"
+  "현재 인원 기준 가격": "Price at current headcount",
+  "초대 코드": "Invite code",
+  "링크가 안 열리면 가입할 때 이 코드를 입력하면 돼요.": "If the link does not open, enter this code when you sign up.",
+  "VELA 공동구매 같이 해요! {link} (초대 코드: {code})": "Join my VELA group purchase! {link} (Invite code: {code})",
+  "초대 코드 입력": "Enter invite code",
+  "공동구매에 참여했어요.": "You joined the group purchase.",
+  "이미 참여 중이에요.": "You are already in this group purchase.",
+  "내가 만든 공동구매예요.": "This is your own group purchase.",
+  "마감됐거나 인원이 가득 찬 공동구매예요.": "This group purchase has ended or is full.",
+  "이 상품의 다른 공동구매에 이미 참여 중이에요.": "You already joined another group purchase for this product.",
+  "초대 코드를 찾을 수 없어요.": "Invite code not found.",
+  "적용": "Apply",
+  "🎁 이 초대로 가입하면 최대 {p}% 즉시 할인을 받을 수 있어요. 가입과 동시에 공동구매에 자동 참여돼요.": "🎁 Sign up with this invite to get up to {p}% off instantly. You join the group purchase automatically when you sign up.",
+  "초대 코드 (선택)": "Invite code (optional)",
+  "가입하고 함께 구매하기": "Sign up and buy together",
+  "가입하면 이 초대가 자동으로 연결돼요.": "Your invite is linked automatically when you sign up."
 }

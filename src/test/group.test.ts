@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampGroupHours, clampGroupSize, groupDiscountPct, groupDiscountUsd, isGroupId, timeLeft } from '@/lib/group';
+import { clampGroupHours, clampGroupSize, groupDiscountPct, groupDiscountUsd, isGroupId, isInvite, normalizeInvite, timeLeft } from '@/lib/group';
 
 describe('group purchase rules', () => {
   it('maps member count to the direct discount rate', () => {
@@ -19,5 +19,11 @@ describe('group purchase rules', () => {
   it('validates group ids', () => {
     expect(isGroupId('99999999-0000-0000-0000-000000000009')).toBe(true);
     expect(isGroupId('nope')).toBe(false);
+  });
+  it('초대 코드/ID 판별', () => {
+    expect(isInvite('VELA-K7M2')).toBe(true); expect(isInvite(' vela-k7m2 ')).toBe(true);
+    expect(isInvite('99999999-0000-0000-0000-000000000009')).toBe(true);
+    expect(isInvite('K7M2')).toBe(false); expect(isInvite('')).toBe(false);
+    expect(normalizeInvite(' vela-k7m2 ')).toBe('VELA-K7M2');
   });
 });

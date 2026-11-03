@@ -10,6 +10,11 @@ export const GROUP_MAX_HOURS = 72;
 export const GROUP_DEFAULT_HOURS = 72;
 export const GROUP_HOUR_PRESETS = [6, 12, 24, 48, 72] as const;
 
+const CODE = /^VELA-[A-Z0-9]{4,6}$/i;
+export const isGroupCode = (v: string | null | undefined): v is string => !!v && CODE.test(v.trim());
+/** 초대 링크 ID(uuid) 또는 초대 코드(VELA-XXXX) */
+export const isInvite = (v: string | null | undefined): v is string => !!v && (UUID.test(v.trim()) || CODE.test(v.trim()));
+export const normalizeInvite = (v: string) => (UUID.test(v.trim()) ? v.trim().toLowerCase() : v.trim().toUpperCase());
 export const isGroupId = (v: string | null | undefined): v is string => !!v && UUID.test(v);
 export const groupLink = (id: string, origin = typeof window === 'undefined' ? 'https://velamarket.app' : window.location.origin) => `${origin}/group/${id}`;
 
@@ -62,4 +67,15 @@ export function clearGroup() {
   if (typeof window === 'undefined') return;
   try { window.localStorage.removeItem(KEY); } catch { /* ignore */ }
   try { document.cookie = `${KEY}=; max-age=0; path=/`; } catch { /* ignore */ }
+}
+
+/** 가입/로그인이 끝나면 돌아갈 곳(결제 화면 등). 이 탭에서만 잠깐 기억한다. */
+const RETURN_KEY = 'vela_return_to';
+export function setReturnTo(path: string) {
+  if (typeof window === 'undefined' || !/^\/(buy|group)\/[\w-]+$/.test(path)) return;
+  try { window.sessionStorage.setItem(RETURN_KEY, path); } catch { /* ignore */ }
+}
+export function takeReturnTo(): string | null {
+  if (typeof window === 'undefined') return null;
+  try { const v = window.sessionStorage.getItem(RETURN_KEY); window.sessionStorage.removeItem(RETURN_KEY); return v && /^\/(buy|group)\/[\w-]+$/.test(v) ? v : null; } catch { return null; }
 }
