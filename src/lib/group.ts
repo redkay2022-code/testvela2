@@ -1,26 +1,28 @@
-/** 공동구매: 링크 추적(30일), 등급표, 남은 시간 계산. 등급표는 DB 함수 _group_tier 와 같은 값이다. */
+/** 공동구매(즉시 가격 할인, 포인트 적립 없음): 링크 추적(7일), 할인율표, 남은 시간 계산. 할인율표는 DB 함수 _group_discount_pct 와 같은 값이다. */
 const KEY = 'vela_group';
-const DAYS = 30;
+const DAYS = 7;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const GROUP_MIN_SIZE = 2;
 export const GROUP_MAX_SIZE = 10;
 export const GROUP_MIN_HOURS = 1;
 export const GROUP_MAX_HOURS = 72;
-export const GROUP_DEFAULT_HOURS = 48;
+export const GROUP_DEFAULT_HOURS = 72;
 export const GROUP_HOUR_PRESETS = [6, 12, 24, 48, 72] as const;
 
 export const isGroupId = (v: string | null | undefined): v is string => !!v && UUID.test(v);
 export const groupLink = (id: string, origin = typeof window === 'undefined' ? 'https://velamarket.app' : window.location.origin) => `${origin}/group/${id}`;
 
-export function groupTier(members: number): { participant: number; leader: number; welcome: boolean } {
+/** 인원수 → 즉시 할인율(%): 2~3명 5 / 4~6명 8 / 7~9명 12 / 10명 15 */
+export function groupDiscountPct(members: number): number {
   const n = Math.floor(members);
-  if (n >= 10) return { participant: 8, leader: 5, welcome: true };
-  if (n >= 7) return { participant: 6, leader: 3, welcome: false };
-  if (n >= 4) return { participant: 4, leader: 2, welcome: false };
-  if (n >= 2) return { participant: 2, leader: 1, welcome: false };
-  return { participant: 0, leader: 0, welcome: false };
+  if (n >= 10) return 15;
+  if (n >= 7) return 12;
+  if (n >= 4) return 8;
+  if (n >= 2) return 5;
+  return 0;
 }
+export const groupDiscountUsd = (productUsd: number, pct: number) => Math.round(productUsd * pct) / 100;
 
 export const clampGroupSize = (n: number) => Math.min(GROUP_MAX_SIZE, Math.max(GROUP_MIN_SIZE, Math.floor(Number.isFinite(n) ? n : GROUP_MIN_SIZE)));
 export const clampGroupHours = (n: number) => Math.min(GROUP_MAX_HOURS, Math.max(GROUP_MIN_HOURS, Math.floor(Number.isFinite(n) ? n : GROUP_DEFAULT_HOURS)));

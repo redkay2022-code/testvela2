@@ -7,6 +7,7 @@ import { Button } from './ui/button';
 import { clearReferral, referralLink, storedReferral, whatsappShareUrl } from '@/lib/referral';
 import { formatPoints } from '@/lib/loyalty';
 import { tx } from '@/lib/dom-translate';
+import { clearGroup, storedGroup } from '@/lib/group';
 
 const rpc = (name: string, args?: object) => (supabase as unknown as { rpc: (n: string, a?: object) => Promise<{ data: unknown; error: { message: string } | null }> }).rpc(name, args);
 
@@ -27,23 +28,28 @@ function useReferralSummary() {
 
 /** 방문한 추천 링크를 로그인 후 내 계정에 연결한다. 앱 전체에서 한 번만 실행. */
 export function ReferralTracker() {
+  const qc = useQueryClient();
   useEffect(() => {
     let busy = false;
     const claim = async () => {
-      const code = storedReferral();
-      if (!code || busy) return;
+      if (busy) return;
+      const ref = storedReferral(), grp = storedGroup();
+      if (!ref && !grp) return;
       busy = true;
       try {
         const { data: auth } = await supabase.auth.getUser();
         if (!auth.user) return;
-        const { data, error } = await rpc('claim_referral', { _code: code });
-        if (!error && data) clearReferral(); // 처리 결과가 나오면(성공/거부 모두) 다시 시도하지 않음
+        if (ref) { const { data, error } = await rpc('claim_referral', { _code: ref }); if (!error && data) clearReferral(); } // 결과가 나오면(성공/거부 모두) 다시 시도하지 않음
+        if (grp) {
+          const { data, error } = await rpc('claim_group', { _id: grp });
+          if (!error && data) { if (data !== 'ok' && data !== 'already' && data !== 'leader') clearGroup(); void qc.invalidateQueries({ queryKey: ['group-mine'] }); void qc.invalidateQueries({ queryKey: ['group-quote'] }); }
+        }
       } finally { busy = false; }
     };
     void claim();
     const { data } = supabase.auth.onAuthStateChange((e) => { if (e === 'SIGNED_IN') setTimeout(() => void claim(), 0); });
     return () => data.subscription.unsubscribe();
-  }, []);
+  }, [qc]);
   return null;
 }
 

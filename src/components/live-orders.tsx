@@ -63,7 +63,7 @@ export async function orderBlockReason(input: { seller_id: string | null; produc
 }
 
 /** Creates a persistent order for a signed-in buyer after TXID submission. */
-export async function createLiveOrder(input: { post_id: string; title: string; image_url?: string; amount_usd: number; product_amount_usd?: number; points_redeemed?: number; seller_id: string | null; seller_name: string; network: string; txid?: string; shipping: Record<string, string> }) {
+export async function createLiveOrder(input: { post_id: string; title: string; image_url?: string; amount_usd: number; product_amount_usd?: number; points_redeemed?: number; group_discount_usd?: number; seller_id: string | null; seller_name: string; network: string; txid?: string; shipping: Record<string, string> }) {
   const { data } = await supabase.auth.getUser();
   if (!data.user) throw new Error('로그인이 필요합니다.');
   const blocked = await orderBlockReason({ seller_id: input.seller_id, product_usd: input.product_amount_usd ?? input.amount_usd });

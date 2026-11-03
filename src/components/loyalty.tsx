@@ -8,7 +8,6 @@ import { clampRedeem, daysUntil, earnPoints, formatPoints, formatPointsUsd, maxR
 import { BASE_FEE_RATE, insuranceRateForTier } from '@/lib/insurance';
 import { tx } from '@/lib/dom-translate';
 import { ReferralDashboard, ReferralShare } from './referral';
-import { MyGroups } from './group-purchase';
 
 const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n);
 const icons: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇', platinum: '💎' };
@@ -93,7 +92,6 @@ export function VelaWallet() {
     <div className="dashboard-stats mt-4">{stats.map(([l, v, I]) => <div className="stat-item" key={l}><I size={18}/><span>{l}</span><strong data-no-translate>{formatPoints(v)}</strong><small data-no-translate>{usd(pointsToUsd(v, value))}</small></div>)}</div>
     <ReferralShare />
     <ReferralDashboard />
-    <MyGroups />
     {s.expiring_soon > 0 && <p className="mt-3 text-sm text-primary" data-no-translate>{formatPoints(s.expiring_soon)} expires in {days} days</p>}
     <p className="mt-2 text-xs text-muted-foreground">{tx('Pending Points는 구매 확정(수령 확인) 후 {0}일이 지나면 사용 가능한 포인트로 지급됩니다. 포인트는 적립일로부터 유효기간이 지나면 만료되며, 현금화·양도할 수 없습니다.', { 0: String(POINT_HOLD_DAYS) })}</p>
     <div className="section-heading mt-6"><h2>Transaction History</h2></div>
@@ -133,10 +131,11 @@ export function CheckoutPoints({ product, points, onChange }: { product: number;
   </section>;
 }
 
-export function CheckoutSummary({ product, insurance, total, points }: { product: number; insurance: number; total: number; points: number }) {
+export function CheckoutSummary({ product, insurance, total, points, groupDiscount = 0 }: { product: number; insurance: number; total: number; points: number; groupDiscount?: number }) {
   const value = Number(useLoyaltyRules().data?.config?.point_value_usd ?? 0.001), discount = pointsToUsd(points, value);
   return <dl className="insurance-breakdown mt-4" aria-label="Order Summary">
     <div><dt>Product Subtotal</dt><dd data-no-translate>{usd(product)}</dd></div>
+    {groupDiscount > 0 && <div><dt>Group Discount</dt><dd className="text-primary" data-no-translate>-{usd(groupDiscount)}</dd></div>}
     <div><dt>Insurance</dt><dd data-no-translate>{usd(insurance)}</dd></div>
     <div><dt>Shipping</dt><dd>판매자 안내</dd></div>
     <div><dt>Taxes / Duties</dt><dd>수령국 기준</dd></div>

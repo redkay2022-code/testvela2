@@ -1,36 +1,53 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Clock, Users } from 'lucide-react';
+import { ChevronDown, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
 import { ShareRow } from './referral';
 import { tx } from '@/lib/dom-translate';
-import { formatPoints } from '@/lib/loyalty';
-import { GROUP_DEFAULT_HOURS, GROUP_HOUR_PRESETS, GROUP_MAX_HOURS, GROUP_MAX_SIZE, GROUP_MIN_HOURS, GROUP_MIN_SIZE, clampGroupHours, clampGroupSize, groupLink, groupTier, rememberGroup, storedGroup, timeLeft } from '@/lib/group';
+import { GROUP_DEFAULT_HOURS, GROUP_HOUR_PRESETS, GROUP_MAX_HOURS, GROUP_MAX_SIZE, GROUP_MIN_HOURS, GROUP_MIN_SIZE, clampGroupHours, clampGroupSize, groupDiscountPct, groupLink, rememberGroup, storedGroup, timeLeft } from '@/lib/group';
 
-const rpc = (name: string, args?: object) => (supabase as unknown as { rpc: (n: string, a?: object) => Promise<{ data: unknown; error: { message: string } | null }> }).rpc(name, args);
+export const groupRpc = (name: string, args?: object) => (supabase as unknown as { rpc: (n: string, a?: object) => Promise<{ data: unknown; error: { message: string } | null }> }).rpc(name, args);
 
-export type PublicGroup = { id: string; product_id: string; title: string | null; price: number | null; image: string | null; leader: string; target_size: number; current_size: number; status: 'active' | 'successful' | 'expired'; expires_at: string; participant_pct: number; leader_pct: number; welcome: boolean };
-export type MyGroup = { id: string; product_id: string; title: string | null; target_size: number; current_size: number; status: 'active' | 'successful' | 'expired'; expires_at: string; created_at: string; paid_at: string | null; duration_hours: number; is_leader: boolean; reward_points: number };
+type GroupStatus = 'active' | 'successful' | 'expired';
+type MemberStatus = 'joined' | 'paid' | 'escrow_approved' | 'canceled';
+export type PublicGroup = { id: string; product_id: string; title: string | null; price: number | null; image: string | null; leader: string; target_size: number; current_size: number; status: GroupStatus; expires_at: string; discount_pct: number; max_pct: number };
+export type MyGroup = { id: string; product_id: string; title: string | null; target_size: number; current_size: number; status: GroupStatus; expires_at: string; created_at: string; duration_hours: number; discount_pct: number; is_leader: boolean; my_status: MemberStatus | null; refund_due_usd: number };
+type Member = { nickname: string; status: MemberStatus; joined_at: string; is_leader: boolean; refund_due_usd: number };
+
+const usd = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(n);
 
 export const usePublicGroup = (id: string | null | undefined) => useQuery({
-  queryKey: ['group-public', id], enabled: !!id, refetchInterval: 30_000,
-  queryFn: async () => { const { data, error } = await rpc('group_public', { _id: id }); if (error) throw error; return (data ?? null) as PublicGroup | null; },
+  queryKey: ['group-public', id], enabled: !!id, refetchInterval: 15_000,
+  queryFn: async () => { const { data, error } = await groupRpc('group_public', { _id: id }); if (error) throw error; return (data ?? null) as PublicGroup | null; },
 });
 
-const useMyGroups = () => useQuery({
-  queryKey: ['group-mine'], staleTime: 15_000,
+/** 체크아웃: 이 상품을 지금 사면 적용되는 공동구매 할인율 (없으면 null) */
+export const useGroupQuote = (productId: string | undefined) => useQuery({
+  queryKey: ['group-quote', productId], enabled: !!productId, staleTime: 10_000,
   queryFn: async () => {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return null;
-    const { data, error } = await rpc('group_my_summary');
+    const { data, error } = await groupRpc('group_checkout_quote', { _product: productId, _group: storedGroup() });
+    if (error) return null;
+    const q = data as { group_id: string; pct: number; current_size: number; target_size: number; expires_at: string } | null;
+    return q && q.pct > 0 ? q : null;
+  },
+});
+
+const useMyGroups = () => useQuery({
+  queryKey: ['group-mine'], staleTime: 5_000, refetchInterval: 15_000,
+  queryFn: async () => {
+    const { data: auth } = await supabase.auth.getUser();
+    if (!auth.user) return null;
+    const { data, error } = await groupRpc('group_my_summary');
     if (error) throw error;
     return ((data as { groups?: MyGroup[] } | null)?.groups ?? []) as MyGroup[];
   },
 });
 
-/** 1초마다 갱신되는 남은 시간 문구 */
+/** 남은 시간 */
 export function Countdown({ expiresAt }: { expiresAt: string }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = window.setInterval(() => setNow(Date.now()), 30_000); return () => window.clearInterval(t); }, []);
@@ -40,12 +57,7 @@ export function Countdown({ expiresAt }: { expiresAt: string }) {
   return <span data-no-translate>{text}</span>;
 }
 
-function TierPreview({ size }: { size: number }) {
-  const t = groupTier(size);
-  return <p className="text-xs text-muted-foreground">{tx('{n}명이 모이면 참여자 {p}% · 리더 +{l}% 포인트', { n: size, p: t.participant, l: t.leader })}{t.welcome ? ` · ${tx('웰컴 보너스 포인트')}` : ''}</p>;
-}
-
-/** 공동구매 만들기: 생성자가 인원(2~10명)과 제한 시간(1~72시간)을 직접 정한다. */
+/** 공동구매 만들기: 생성자가 인원(2~10명)과 제한 시간(1~72시간, 기본 72시간)을 정한다. */
 export function GroupCreate({ productId }: { productId: string }) {
   const qc = useQueryClient();
   const [size, setSize] = useState(4), [hours, setHours] = useState(GROUP_DEFAULT_HOURS), [hoursText, setHoursText] = useState(String(GROUP_DEFAULT_HOURS));
@@ -54,11 +66,11 @@ export function GroupCreate({ productId }: { productId: string }) {
     mutationFn: async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) throw new Error(tx('로그인이 필요합니다.'));
-      const { data, error } = await rpc('create_group', { _product: productId, _size: clampGroupSize(size), _hours: clampGroupHours(hours) });
+      const { data, error } = await groupRpc('create_group', { _product: productId, _size: clampGroupSize(size), _hours: clampGroupHours(hours) });
       if (error) throw error;
       return String(data);
     },
-    onSuccess: id => { rememberGroup(id); setCreated(id); void qc.invalidateQueries({ queryKey: ['group-mine'] }); },
+    onSuccess: id => { rememberGroup(id); setCreated(id); void qc.invalidateQueries({ queryKey: ['group-mine'] }); void qc.invalidateQueries({ queryKey: ['group-quote'] }); },
     onError: e => toast.error((e as Error).message || tx('공동구매를 만들지 못했어요. 다시 시도해 주세요.')),
   });
   const setH = (v: number) => { const n = clampGroupHours(v); setHours(n); setHoursText(String(n)); };
@@ -73,13 +85,13 @@ export function GroupCreate({ productId }: { productId: string }) {
   }
   return <section className="mt-4 rounded-lg border border-border bg-card p-4" aria-label={tx('공동구매 만들기')}>
     <h2 className="flex items-center gap-2 text-sm font-semibold"><Users size={16} className="text-primary" />{tx('공동구매 만들기')}</h2>
-    <p className="mt-2 text-xs text-muted-foreground">{tx('친구와 함께 사면 모두 포인트를 더 받아요. 인원과 제한 시간을 정해 링크를 만드세요.')}</p>
+    <p className="mt-2 text-xs text-muted-foreground">{tx('친구와 함께 사면 인원에 따라 가격이 바로 할인돼요. 공동구매 주문에는 포인트가 적립되지 않아요.')}</p>
     <label className="mt-3 block text-xs font-medium">{tx('인원 (2~10명)')}
       <select className="form-input mt-1 w-full" value={size} onChange={e => setSize(Number(e.target.value))} data-no-translate>
         {Array.from({ length: GROUP_MAX_SIZE - GROUP_MIN_SIZE + 1 }, (_, i) => i + GROUP_MIN_SIZE).map(n => <option key={n} value={n}>{n}</option>)}
       </select>
     </label>
-    <TierPreview size={size} />
+    <p className="mt-2 text-xs text-muted-foreground">{tx('{n}명이 모이면 최대 {p}% 즉시 할인', { n: size, p: groupDiscountPct(size) })}</p>
     <div className="mt-3 text-xs font-medium">{tx('제한 시간 (1~72시간)')}</div>
     <div className="mt-1 flex flex-wrap gap-2">
       {GROUP_HOUR_PRESETS.map(h => <Button key={h} type="button" size="sm" variant={hours === h ? 'gold' : 'goldOutline'} onClick={() => setH(h)} data-no-translate>{h}h</Button>)}
@@ -91,7 +103,7 @@ export function GroupCreate({ productId }: { productId: string }) {
   </section>;
 }
 
-/** 구매 페이지 상단: 공동구매 링크로 들어온 경우 현재 모인 인원과 남은 시간을 보여준다. */
+/** 구매 페이지 상단: 공동구매 링크로 들어온 경우 현재 인원, 적용 중인 할인율과 남은 시간 */
 export function GroupBanner({ productId }: { productId: string }) {
   const [gid] = useState(() => storedGroup());
   const g = usePublicGroup(gid).data;
@@ -100,27 +112,57 @@ export function GroupBanner({ productId }: { productId: string }) {
   return <section className="mt-4 rounded-lg border border-primary/40 bg-card p-4" aria-label={tx('공동구매 참여')}>
     <h2 className="flex items-center gap-2 text-sm font-semibold"><Users size={16} className="text-primary" />{tx('공동구매에 참여 중이에요')}</h2>
     {open ? <>
-      <p className="mt-2 text-sm"><strong data-no-translate>{g.current_size}/{g.target_size}</strong> · <Countdown expiresAt={g.expires_at} /></p>
-      <p className="mt-1 text-xs text-muted-foreground">{tx('모두 수령 확정을 하면 참여자 {p}% 포인트가 지급돼요.', { p: g.participant_pct })}</p>
+      <p className="mt-2 text-sm"><strong data-no-translate>{g.current_size}/{g.target_size}</strong> · <strong className="text-primary" data-no-translate>{g.discount_pct}%</strong> {tx('즉시 할인')} · <Countdown expiresAt={g.expires_at} /></p>
+      <p className="mt-1 text-xs text-muted-foreground">{tx('인원이 늘면 할인율이 올라가요. 최종 인원 기준 할인율로 정산돼요.')}</p>
     </> : <p className="mt-2 text-xs text-muted-foreground">{tx('이 공동구매는 마감됐어요. 일반 구매로 진행돼요.')}</p>}
   </section>;
 }
 
-const statusLabel = (g: MyGroup) => g.status === 'active' ? tx('진행 중') : g.status === 'successful' ? (g.paid_at ? tx('완료') : tx('인원 모집 완료')) : tx('마감');
+const groupStatusLabel = (g: MyGroup) => g.status === 'active' ? tx('진행 중') : g.status === 'successful' ? tx('성사') : tx('마감');
+const memberStatusLabel = (s: MemberStatus) => s === 'joined' ? tx('결제 대기') : s === 'paid' ? tx('결제 완료 (에스크로 진행 중)') : s === 'escrow_approved' ? tx('에스크로 승인 (완료)') : tx('취소');
 
-/** 내 공동구매: 진행 / 완료 상태와 받은 포인트 */
+/** 리더용: 참여자별 결제/에스크로 상태 (15초마다 갱신) */
+function LeaderMembers({ id }: { id: string }) {
+  const q = useQuery({
+    queryKey: ['group-leader', id], refetchInterval: 10_000,
+    queryFn: async () => { const { data, error } = await groupRpc('group_leader_detail', { _id: id }); if (error) throw error; return ((data as { members?: Member[] } | null)?.members ?? []) as Member[]; },
+  });
+  if (!q.data) return <p className="mt-2 text-xs text-muted-foreground">{tx('불러오는 중…')}</p>;
+  return <ul className="mt-2 grid gap-1 text-xs" aria-label={tx('참여자 현황')}>{q.data.map((m, i) => <li key={i} className="flex items-center justify-between gap-2 rounded-md bg-background px-3 py-2">
+    <span className="min-w-0 truncate"><span data-no-translate>{m.nickname || '—'}</span>{m.is_leader && <span className="ml-1 text-primary">· {tx('리더')}</span>}</span>
+    <span className={m.status === 'canceled' ? 'text-destructive' : m.status === 'escrow_approved' ? 'text-primary' : 'text-muted-foreground'}>{memberStatusLabel(m.status)}</span>
+  </li>)}</ul>;
+}
+
+function GroupRow({ g }: { g: MyGroup }) {
+  const [open, setOpen] = useState(false);
+  const refund = Number(g.refund_due_usd);
+  return <div className="rounded-lg border border-border bg-card p-3">
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0"><strong className="block truncate text-sm" data-no-translate>{g.title ?? ''}</strong>
+        <p className="mt-1 text-xs text-muted-foreground"><span data-no-translate>{g.current_size}/{g.target_size}</span> · <strong className="text-primary" data-no-translate>{g.discount_pct}%</strong> {tx('할인')} · {g.is_leader ? tx('리더') : tx('참여자')} · {groupStatusLabel(g)}</p>
+        {g.status === 'active' && <p className="mt-1 text-xs"><Countdown expiresAt={g.expires_at} /></p>}
+        {g.my_status && <p className="mt-1 text-xs text-muted-foreground">{tx('내 상태')}: {memberStatusLabel(g.my_status)}</p>}
+        {refund > 0 && <p className="mt-1 text-xs text-primary" data-no-translate>{tx('환급 예정')} {usd(refund)}</p>}
+        {refund < 0 && <p className="mt-1 text-xs text-destructive" data-no-translate>{tx('추가 결제 필요')} {usd(-refund)}</p>}
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        {g.status === 'active' && g.is_leader && <Button type="button" variant="ghost" size="sm" onClick={() => { void navigator.clipboard?.writeText(groupLink(g.id)).then(() => toast.success(tx('링크를 복사했어요.')), () => toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.'))); }}>{tx('링크 복사')}</Button>}
+        {g.is_leader && <Button type="button" variant="ghost" size="sm" aria-expanded={open} onClick={() => setOpen(v => !v)}>{tx('참여자')} <ChevronDown size={14} className={open ? 'rotate-180' : ''} /></Button>}
+      </div>
+    </div>
+    {open && g.is_leader && <LeaderMembers id={g.id} />}
+  </div>;
+}
+
+/** 마이페이지 위젯: 내가 만든/참여한 공동구매 (인원, 적용 할인율, 남은 시간, 참여자 상태) */
 export function MyGroups({ compact = false }: { compact?: boolean }) {
   const q = useMyGroups();
   if (!q.data) return null;
   const list = compact ? q.data.filter(g => g.status !== 'expired').slice(0, 3) : q.data;
   if (!list.length) return compact ? null : <section className="mt-6"><div className="section-heading"><h2>{tx('내 공동구매')}</h2></div><p className="mt-2 text-sm text-muted-foreground">{tx('아직 참여한 공동구매가 없어요. 상품 구매 화면에서 공동구매를 만들어 보세요.')}</p></section>;
   return <section className="mt-6" aria-label={tx('내 공동구매')}>
-    <div className="section-heading"><h2>{tx('내 공동구매')}</h2></div>
-    <div className="management-list mt-3">{list.map(g => <div className="management-row" key={g.id}>
-      <div className="min-w-0"><strong className="block truncate" data-no-translate>{g.title ?? ''}</strong>
-        <small><span data-no-translate>{g.current_size}/{g.target_size}</span> · {g.is_leader ? tx('리더') : tx('참여자')} · {statusLabel(g)}{g.status === 'active' && <> · <Countdown expiresAt={g.expires_at} /></>}</small></div>
-      <div className="text-right text-xs">{g.reward_points > 0 ? <strong className="text-primary" data-no-translate>+{formatPoints(g.reward_points)}</strong> : null}
-        {g.status === 'active' && g.is_leader && <Button type="button" variant="ghost" size="sm" onClick={() => { void navigator.clipboard?.writeText(groupLink(g.id)).then(() => toast.success(tx('링크를 복사했어요.')), () => toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.'))); }}>{tx('링크 복사')}</Button>}</div>
-    </div>)}</div>
+    <div className="section-heading"><h2>{compact ? tx('내 진행 중인 공동구매') : tx('내 공동구매')}</h2></div>
+    <div className="mt-3 grid gap-3">{list.map(g => <GroupRow key={g.id} g={g} />)}</div>
   </section>;
 }

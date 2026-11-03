@@ -27,8 +27,9 @@ function GroupPage() {
           <div className="min-w-0"><p className="truncate font-semibold" data-no-translate>{g.title}</p><p className="mt-1 text-xs text-muted-foreground">{tx('리더')}: <span data-no-translate>{g.leader}</span></p></div></div>
         <p className="mt-4 text-2xl font-bold text-primary" data-no-translate>{g.current_size}/{g.target_size}</p>
         <p className="mt-1 text-sm">{open ? <Countdown expiresAt={g.expires_at} /> : tx('이 공동구매는 마감됐어요.')}</p>
-        <p className="mt-3 text-xs text-muted-foreground">{tx('{n}명이 모이면 참여자 {p}% · 리더 +{l}% 포인트', { n: g.target_size, p: g.participant_pct, l: g.leader_pct })}{g.welcome ? ` · ${tx('웰컴 보너스 포인트')}` : ''}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{tx('모든 참여자가 수령 확정을 하면 포인트가 지급돼요. 취소·환불·분쟁 주문은 제외돼요.')}</p>
+        <p className="mt-3 text-sm"><strong className="text-primary" data-no-translate>{g.discount_pct}%</strong> {tx('즉시 할인')} · <span className="text-xs text-muted-foreground">{tx('최대 {p}% (목표 인원 달성 시)', { p: g.max_pct })}</span></p>
+        <p className="mt-1 text-xs text-muted-foreground">{tx('2~3명 5% · 4~6명 8% · 7~9명 12% · 10명 15% 즉시 할인. 공동구매 주문에는 포인트가 적립되지 않아요.')}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{tx('최종 인원 기준 할인율로 정산되고, 판매자 대금은 에스크로 수령 확정 후 지급돼요.')}</p>
         <Button asChild variant="gold" className="mt-5 w-full"><Link to="/buy/$id" params={{ id: g.product_id }}>{open ? tx('함께 구매하기') : tx('상품 보러가기')}</Link></Button>
       </section>}
   </main>;
