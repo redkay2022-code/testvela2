@@ -81,6 +81,7 @@ export type Database = {
           created_at: string
           creator: string
           id: string
+          kind: string
           parent_id: string | null
           post_id: string
           user_id: string
@@ -90,6 +91,7 @@ export type Database = {
           created_at?: string
           creator: string
           id?: string
+          kind?: string
           parent_id?: string | null
           post_id: string
           user_id: string
@@ -99,6 +101,7 @@ export type Database = {
           created_at?: string
           creator?: string
           id?: string
+          kind?: string
           parent_id?: string | null
           post_id?: string
           user_id?: string
@@ -116,6 +119,130 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          order_id: string | null
+          refund_due_usd: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          order_id?: string | null
+          refund_due_usd?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          order_id?: string | null
+          refund_due_usd?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_purchases: {
+        Row: {
+          created_at: string
+          current_size: number
+          discount_tier: number
+          duration_hours: number
+          expires_at: string
+          id: string
+          leader_id: string
+          paid_at: string | null
+          product_id: string
+          status: string
+          target_size: number
+        }
+        Insert: {
+          created_at?: string
+          current_size?: number
+          discount_tier?: number
+          duration_hours: number
+          expires_at: string
+          id?: string
+          leader_id: string
+          paid_at?: string | null
+          product_id: string
+          status?: string
+          target_size: number
+        }
+        Update: {
+          created_at?: string
+          current_size?: number
+          discount_tier?: number
+          duration_hours?: number
+          expires_at?: string
+          id?: string
+          leader_id?: string
+          paid_at?: string | null
+          product_id?: string
+          status?: string
+          target_size?: number
+        }
+        Relationships: []
+      }
+      group_rewards: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          kind: string
+          order_id: string | null
+          points_base: number
+          points_paid: number
+          points_reversed: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          kind: string
+          order_id?: string | null
+          points_base?: number
+          points_paid?: number
+          points_reversed?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          kind?: string
+          order_id?: string | null
+          points_base?: number
+          points_paid?: number
+          points_reversed?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_rewards_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "group_purchases"
             referencedColumns: ["id"]
           },
         ]
@@ -204,6 +331,8 @@ export type Database = {
         Row: {
           commission_rate_pct: number
           expiration_months: number
+          group_reward_cap_pct: number
+          group_welcome_bonus_points: number
           id: number
           loyalty_budget_pct: number
           max_earn_rate_pct: number
@@ -212,11 +341,14 @@ export type Database = {
           monthly_point_budget_usd: number
           point_value_usd: number
           points_enabled: boolean
+          referral_rate_pct: number
           updated_at: string
         }
         Insert: {
           commission_rate_pct?: number
           expiration_months?: number
+          group_reward_cap_pct?: number
+          group_welcome_bonus_points?: number
           id?: number
           loyalty_budget_pct?: number
           max_earn_rate_pct?: number
@@ -225,11 +357,14 @@ export type Database = {
           monthly_point_budget_usd?: number
           point_value_usd?: number
           points_enabled?: boolean
+          referral_rate_pct?: number
           updated_at?: string
         }
         Update: {
           commission_rate_pct?: number
           expiration_months?: number
+          group_reward_cap_pct?: number
+          group_welcome_bonus_points?: number
           id?: number
           loyalty_budget_pct?: number
           max_earn_rate_pct?: number
@@ -238,6 +373,7 @@ export type Database = {
           monthly_point_budget_usd?: number
           point_value_usd?: number
           points_enabled?: boolean
+          referral_rate_pct?: number
           updated_at?: string
         }
         Relationships: []
@@ -509,6 +645,9 @@ export type Database = {
           created_at: string
           dispute_open: boolean
           dispute_opened_at: string | null
+          group_discount_pct: number | null
+          group_discount_usd: number
+          group_id: string | null
           id: string
           image_url: string | null
           network: string | null
@@ -523,6 +662,7 @@ export type Database = {
           post_id: string | null
           product_amount_usd: number | null
           purchase_confirmed_at: string | null
+          referrer_id: string | null
           refunded_amount_usd: number
           seller_id: string | null
           seller_name: string
@@ -544,6 +684,9 @@ export type Database = {
           created_at?: string
           dispute_open?: boolean
           dispute_opened_at?: string | null
+          group_discount_pct?: number | null
+          group_discount_usd?: number
+          group_id?: string | null
           id?: string
           image_url?: string | null
           network?: string | null
@@ -558,6 +701,7 @@ export type Database = {
           post_id?: string | null
           product_amount_usd?: number | null
           purchase_confirmed_at?: string | null
+          referrer_id?: string | null
           refunded_amount_usd?: number
           seller_id?: string | null
           seller_name?: string
@@ -579,6 +723,9 @@ export type Database = {
           created_at?: string
           dispute_open?: boolean
           dispute_opened_at?: string | null
+          group_discount_pct?: number | null
+          group_discount_usd?: number
+          group_id?: string | null
           id?: string
           image_url?: string | null
           network?: string | null
@@ -593,6 +740,7 @@ export type Database = {
           post_id?: string | null
           product_amount_usd?: number | null
           purchase_confirmed_at?: string | null
+          referrer_id?: string | null
           refunded_amount_usd?: number
           seller_id?: string | null
           seller_name?: string
@@ -605,6 +753,45 @@ export type Database = {
           txid?: string | null
           updated_at?: string
           verification_status?: string
+        }
+        Relationships: []
+      }
+      page_views: {
+        Row: {
+          created_at: string
+          device: string | null
+          id: number
+          kind: string
+          lang: string | null
+          path: string
+          referrer: string | null
+          session_id: string
+          term: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          id?: number
+          kind?: string
+          lang?: string | null
+          path?: string
+          referrer?: string | null
+          session_id: string
+          term?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          id?: number
+          kind?: string
+          lang?: string | null
+          path?: string
+          referrer?: string | null
+          session_id?: string
+          term?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -943,6 +1130,8 @@ export type Database = {
           created_at: string
           nickname: string
           phone_hash: string
+          referred_at: string | null
+          referred_by: string | null
           system_code: string
           user_id: string
         }
@@ -951,6 +1140,8 @@ export type Database = {
           created_at?: string
           nickname: string
           phone_hash: string
+          referred_at?: string | null
+          referred_by?: string | null
           system_code: string
           user_id: string
         }
@@ -959,8 +1150,76 @@ export type Database = {
           created_at?: string
           nickname?: string
           phone_hash?: string
+          referred_at?: string | null
+          referred_by?: string | null
           system_code?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      public_feed_snapshot: {
+        Row: {
+          built_at: string
+          data: Json
+          id: number
+        }
+        Insert: {
+          built_at?: string
+          data: Json
+          id: number
+        }
+        Update: {
+          built_at?: string
+          data?: Json
+          id?: number
+        }
+        Relationships: []
+      }
+      referral_rewards: {
+        Row: {
+          base_usd: number
+          created_at: string
+          order_id: string
+          paid_at: string | null
+          points_base: number
+          points_paid: number
+          points_reversed: number
+          points_target: number
+          rate_pct: number
+          referred_id: string
+          referrer_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          base_usd?: number
+          created_at?: string
+          order_id: string
+          paid_at?: string | null
+          points_base?: number
+          points_paid?: number
+          points_reversed?: number
+          points_target?: number
+          rate_pct: number
+          referred_id: string
+          referrer_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          base_usd?: number
+          created_at?: string
+          order_id?: string
+          paid_at?: string | null
+          points_base?: number
+          points_paid?: number
+          points_reversed?: number
+          points_target?: number
+          rate_pct?: number
+          referred_id?: string
+          referrer_id?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1032,30 +1291,30 @@ export type Database = {
       }
       seller_applications: {
         Row: {
-          plan_changed_at: string | null
-          promo_ends_at: string | null
-          billing_period: string | null
-          payment_status: string | null
-          payment_txid: string | null
-          payment_network: string | null
-          payment_amount_usd: number | null
-          payment_submitted_at: string | null
-          paid_until: string | null
-          requested_plan: string | null
           avg_price_range: string
+          billing_period: string | null
+          bio: string
           business_role: string
           country: string
+          created_at: string
           has_contracted_courier: boolean | null
+          id: string
           main_categories: string[]
           main_sales_items: string
-          plan: string
-          sales_channels: string[]
-          bio: string
-          created_at: string
-          id: string
           nickname: string | null
+          paid_until: string | null
+          payment_amount_usd: number | null
+          payment_network: string | null
+          payment_status: string | null
+          payment_submitted_at: string | null
+          payment_txid: string | null
+          plan: string
+          plan_changed_at: string | null
+          promo_ends_at: string | null
           region: string
+          requested_plan: string | null
           reviewed_at: string | null
+          sales_channels: string[]
           status: string
           studio_name: string
           system_code: string | null
@@ -1066,30 +1325,30 @@ export type Database = {
           wechat_phone: string | null
         }
         Insert: {
-          plan_changed_at?: string | null
-          promo_ends_at?: string | null
-          billing_period?: string | null
-          payment_status?: string | null
-          payment_txid?: string | null
-          payment_network?: string | null
-          payment_amount_usd?: number | null
-          payment_submitted_at?: string | null
-          paid_until?: string | null
-          requested_plan?: string | null
           avg_price_range?: string
+          billing_period?: string | null
+          bio?: string
           business_role?: string
           country?: string
+          created_at?: string
           has_contracted_courier?: boolean | null
+          id?: string
           main_categories?: string[]
           main_sales_items?: string
-          plan?: string
-          sales_channels?: string[]
-          bio?: string
-          created_at?: string
-          id?: string
           nickname?: string | null
+          paid_until?: string | null
+          payment_amount_usd?: number | null
+          payment_network?: string | null
+          payment_status?: string | null
+          payment_submitted_at?: string | null
+          payment_txid?: string | null
+          plan?: string
+          plan_changed_at?: string | null
+          promo_ends_at?: string | null
           region?: string
+          requested_plan?: string | null
           reviewed_at?: string | null
+          sales_channels?: string[]
           status?: string
           studio_name?: string
           system_code?: string | null
@@ -1100,30 +1359,30 @@ export type Database = {
           wechat_phone?: string | null
         }
         Update: {
-          plan_changed_at?: string | null
-          promo_ends_at?: string | null
-          billing_period?: string | null
-          payment_status?: string | null
-          payment_txid?: string | null
-          payment_network?: string | null
-          payment_amount_usd?: number | null
-          payment_submitted_at?: string | null
-          paid_until?: string | null
-          requested_plan?: string | null
           avg_price_range?: string
+          billing_period?: string | null
+          bio?: string
           business_role?: string
           country?: string
+          created_at?: string
           has_contracted_courier?: boolean | null
+          id?: string
           main_categories?: string[]
           main_sales_items?: string
-          plan?: string
-          sales_channels?: string[]
-          bio?: string
-          created_at?: string
-          id?: string
           nickname?: string | null
+          paid_until?: string | null
+          payment_amount_usd?: number | null
+          payment_network?: string | null
+          payment_status?: string | null
+          payment_submitted_at?: string | null
+          payment_txid?: string | null
+          plan?: string
+          plan_changed_at?: string | null
+          promo_ends_at?: string | null
           region?: string
+          requested_plan?: string | null
           reviewed_at?: string | null
+          sales_channels?: string[]
           status?: string
           studio_name?: string
           system_code?: string | null
@@ -1403,6 +1662,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _group_can_see: { Args: { _gid: string }; Returns: boolean }
+      _group_close: { Args: { gid: string }; Returns: undefined }
+      _group_discount_pct: { Args: { _n: number }; Returns: number }
+      _group_eval: { Args: { gid: string }; Returns: undefined }
+      _group_expire_all: { Args: never; Returns: undefined }
+      _group_is_leader: { Args: { _gid: string }; Returns: boolean }
+      _group_settle: { Args: { gid: string }; Returns: undefined }
       _loyalty_budget_add: {
         Args: { _commission: number; _issued: number; _redeemed: number }
         Returns: undefined
@@ -1421,6 +1687,13 @@ export type Database = {
         }
         Returns: number
       }
+      _referral_sync: {
+        Args: { o: Database["public"]["Tables"]["orders"]["Row"] }
+        Returns: undefined
+      }
+      admin_analytics: { Args: { _from: string; _to: string }; Returns: Json }
+      claim_group: { Args: { _id: string }; Returns: string }
+      claim_referral: { Args: { _code: string }; Returns: string }
       comment_author_profiles: {
         Args: { _post_id: string }
         Returns: {
@@ -1429,6 +1702,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      create_group: {
+        Args: { _hours: number; _product: string; _size: number }
+        Returns: string
+      }
+      group_checkout_quote: {
+        Args: { _group?: string; _product: string }
+        Returns: Json
+      }
+      group_leader_detail: { Args: { _id: string }; Returns: Json }
+      group_my_summary: { Args: never; Returns: Json }
+      group_public: { Args: { _id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1460,6 +1744,10 @@ export type Database = {
       loyalty_refresh_membership: { Args: { _uid: string }; Returns: string }
       loyalty_release_user: { Args: { _uid: string }; Returns: number }
       market_max_price_usd: { Args: never; Returns: number }
+      notify_admins: {
+        Args: { _body: string; _item?: string; _kind: string; _title: string }
+        Returns: undefined
+      }
       order_party_labels: {
         Args: { _order_ids: string[] }
         Returns: {
@@ -1468,6 +1756,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      referral_my_summary: { Args: never; Returns: Json }
       seller_activity_summary: { Args: never; Returns: Json }
       seller_dashboard_stats: { Args: never; Returns: Json }
       seller_public_stats: {
@@ -1480,6 +1769,18 @@ export type Database = {
         }[]
       }
       store_is_visible: { Args: { _store_id: string }; Returns: boolean }
+      track_page_view: {
+        Args: {
+          _device: string
+          _kind: string
+          _lang: string
+          _path: string
+          _referrer: string
+          _session: string
+          _term: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "seller" | "user"
