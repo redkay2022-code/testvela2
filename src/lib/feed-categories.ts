@@ -10,14 +10,16 @@ const mergedAway=new Set(['bulgari','van-cleef-arpels']);
 /** Every brand a seller can pick when uploading (the same list as the upload form's brand dropdown), in A-Z order. */
 const watchBrandItems:readonly (readonly [string,string])[]=ALL_WATCH_BRANDS.map(name=>[brandSlug(name),name] as const).filter(([id])=>!mergedAway.has(id)).map(([id,name])=>[id,koreanBrandNames[id] ?? name] as const);
 export const categoryGroups:readonly {label:string;items:readonly (readonly [string,string])[]}[] = [
- {label:'카테고리',items:[['recommend','전체'],['news','뉴스'],['ready','바로발송'],['story','스토리'],['watches','시계'],['accessories','악세사리'],['bags','가방'],['clothes','의류'],['parts','파츠'],['custom','커스텀 제작'],['etc','기타']]},
+ {label:'카테고리',items:[['recommend','전체'],['news','뉴스'],['ready','바로발송'],['story','스토리'],['product-review','제품 리뷰'],['watches','시계'],['accessories','악세사리'],['bags','가방'],['clothes','의류'],['parts','파츠'],['custom','커스텀 제작'],['etc','기타']]},
  {label:'시계 브랜드',items:watchBrandItems},
  {label:'명품 악세사리 브랜드',items:accessoryBrandItems},
 ] as const;
 /** Ids of the "how to browse" entries (not product categories); the picker shows them in their own row. */
-export const viewCategoryIds:readonly string[]=['recommend','news','ready','story'];
+export const viewCategoryIds:readonly string[]=['recommend','story','product-review'];
+/** 상단 카테고리 줄에서 뺀 항목(뉴스·바로발송): 기존 글의 분류와 업로드 선택지는 그대로 둔다. */
+const hiddenTabIds:readonly string[]=['news','ready'];
 /** Product categories (picker tabs); the ones that have brands also list them below. */
-export const productCategoryItems:readonly (readonly [string,string])[]=(categoryGroups[0]?.items ?? []).filter(item=>!viewCategoryIds.includes(item[0]));
+export const productCategoryItems:readonly (readonly [string,string])[]=(categoryGroups[0]?.items ?? []).filter(item=>!viewCategoryIds.includes(item[0])&&!hiddenTabIds.includes(item[0]));
 /** Brand dropdown data for the picker: popular brands first, luxury accessory brands, then every other upload brand A-Z. */
 export const brandEnglishName=(id:string):string|undefined=>ALL_WATCH_BRANDS.find(name=>brandSlug(name)===id) ?? ({'chrome-hearts':'Chrome Hearts','van-cleef':'Van Cleef & Arpels',boucheron:'Boucheron',bvlgari:'Bulgari',tiffany:'Tiffany & Co.'} as Record<string,string>)[id];
 export const popularBrandIds:readonly string[]=['rolex','patek-philippe','audemars-piguet','cartier','richard-mille','omega','iwc','panerai','hublot'];
@@ -30,7 +32,9 @@ export const brandMenu={
 /** Menu-category labels saved before the 2026-10 cleanup, mapped to today's labels ("18K 금" was removed and now counts as 기타). */
 const legacyMenuLabels:Record<string,string>={'커스텀':'커스텀 제작','18K 금':'기타','Story':'스토리','Watch Story':'스토리'};
 export const normalizeMenuCategory=(label:string|undefined):string|undefined=>label===undefined?undefined:legacyMenuLabels[label.trim()] ?? label;
-export const primaryCategories=categoryGroups[0]?.items ?? [];
+export const primaryCategories=(categoryGroups[0]?.items ?? []).filter(item=>!hiddenTabIds.includes(item[0]));
+/** 업로드 화면의 '메뉴 카테고리' 라벨: 제품 리뷰 */
+export const PRODUCT_REVIEW_LABEL='제품 리뷰';
 /** Menu categories sellers choose from (stored in posts.specs.menuCategory, separate from the older 카테고리 field) (the "전체" entry is a filter only, never a post category). */
 export const postCategories:readonly (readonly [string,string])[]=(categoryGroups[0]?.items ?? []).filter(item=>item[0]!=='recommend');
 export const postCategoryLabels:readonly string[]=postCategories.map(item=>item[1]);

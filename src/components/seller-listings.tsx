@@ -52,6 +52,7 @@ import { isListingPhoto, isListingVideo, MAX_EDITOR_VIDEO_BYTES, MAX_LISTING_PHO
 
 type Specs = Record<string, string> & { sourceType?: string; factory?: string };
 /** 스토리(구 라운지) 게시물은 판매 상품이 아니므로 판매 스위치·판매 완료 체크를 숨긴다. */
+const isReviewListing = (l: { specs?: Record<string, unknown> | null }) => String(l.specs?.['menuCategory'] ?? '') === '제품 리뷰';
 const isStoryListing = (l: { category: string; specs?: Record<string, unknown> | null }) => l.category === 'lounge' || String(l.specs?.['menuCategory'] ?? '') === '스토리' || String(l.specs?.['lounge'] ?? '') === 'true';
 type Listing = { id: string; title: string; description: string; category: string; price: number | null; box_price: number | null; dispatch_time?: string | null; media_urls: string[]; video_url: string | null; status: string; product_status?: string | null; stock_qty?: number; reserved_qty?: number; specs: Specs; video_tags?: VideoTag[]; created_at: string; thumbnail_url?: string | null; thumb?: string | undefined; signed_media_urls?: string[]; signed_video_url?: string | undefined };
 type PhotoItem = { id: string; path?: string; file?: File; preview: string };
@@ -103,7 +104,7 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   /* 목록 종류: 전체 / 상품 등록 / 스토리(세부 분류별) 드롭다운. 고른 값은 다른 페이지에 갔다가 돌아와도 유지된다. */
   const [kind, setKind] = useSessionState(`seller-listings:${scope}:kind`, 'all');
   const allListings = listings.data ?? [];
-  const kindOf = (l: Listing) => { if (!isStoryListing(l)) return 'product'; const tag = normalizeStoryTag(l.specs?.['storySubcategory']); return isWatchStoryTag(tag) ? `story:${tag}` : 'story:none'; };
+  const kindOf = (l: Listing) => { if (isReviewListing(l)) return 'review'; if (!isStoryListing(l)) return 'product'; const tag = normalizeStoryTag(l.specs?.['storySubcategory']); return isWatchStoryTag(tag) ? `story:${tag}` : 'story:none'; };
   const matchesKind = (l: Listing, k: string) => k === 'all' || (k === 'story' ? isStoryListing(l) : kindOf(l) === k);
   const kindCount = (k: string) => allListings.filter(l => matchesKind(l, k)).length;
   const shownListings = allListings.filter(l => matchesKind(l, kind));
@@ -163,6 +164,7 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
       <select id="listing-kind" className="form-input notranslate min-w-0 flex-1" translate="no" data-i18n-skip value={kind} onChange={e => setKind(e.target.value)}>
         <option value="all">{tx('전체')} ({kindCount('all')})</option>
         <option value="product">{tx('상품 등록')} ({kindCount('product')})</option>
+        <option value="review">{tx('제품 리뷰')} ({kindCount('review')})</option>
         <optgroup label={t('story')}>
           <option value="story">{t('story')} · {tx('전체')} ({kindCount('story')})</option>
           {watchStoryOptions.map(([, label, key]) => <option key={label} value={`story:${label}`}>{t(key)} ({kindCount(`story:${label}`)})</option>)}
@@ -174,8 +176,8 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
         <div className="min-w-0"><figure className={`seller-inventory-media cursor-pointer ${l.product_status==='OUT_OF_STOCK'?'is-sold-out':''}`} role="button" tabIndex={0} aria-label={tx("미리보기")} onClick={() => void openWithMedia(l, setPreviewing)} onKeyDown={e => { if (e.key === 'Enter') void openWithMedia(l, setPreviewing); }}>{l.thumb ? <img src={l.thumb} alt={l.title} loading="lazy" decoding="async" className="seller-inventory-image" /> : <div className="seller-inventory-image bg-muted" />}{l.product_status==='OUT_OF_STOCK'&&<span className="lux-soldout" data-no-translate>SOLD OUT</span>}</figure>
           <div className="min-w-0"><p className="cursor-pointer truncate font-medium" onClick={() => void openWithMedia(l, setPreviewing)}>{l.title}</p><p className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.price != null ? formatMoney(l.price) : tx('가격 없음')}</span> · <span className="record-status"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{l.product_status === 'OUT_OF_STOCK' ? tx('판매 완료') : l.status === 'published' ? tx('판매 중') : tx('임시 저장')}</span></span></p>{l.specs.factory && <span className="text-xs text-primary" data-no-translate>{l.specs.factory}</span>}{l.specs.sourceType === 'custom' && <span className="text-xs text-primary"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("커스텀 제작")}</span></span>}</div></div>
         <div className="record-actions">
-          {!isStoryListing(l) && l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label={tx("판매 완료")} checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 완료")}</span></label>}
-           {!isStoryListing(l) && <label className="flex items-center gap-2 text-xs"><Switch aria-label={tx("{0} 판매", { 0: l.title })} checked={l.status==='published'} onCheckedChange={() => void toggle(l)}/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매")}</span></label>}
+          {!isStoryListing(l) && !isReviewListing(l) && l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label={tx("판매 완료")} checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 완료")}</span></label>}
+           {!isStoryListing(l) && !isReviewListing(l) && <label className="flex items-center gap-2 text-xs"><Switch aria-label={tx("{0} 판매", { 0: l.title })} checked={l.status==='published'} onCheckedChange={() => void toggle(l)}/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매")}</span></label>}
           <Button size="sm" variant="ghost" aria-label={tx("미리보기")} onClick={() => void openWithMedia(l, setPreviewing)}><Eye /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("미리보기")}</span></Button>
           <Button size="sm" variant="ghost" aria-label={tx("편집")} onClick={() => void openWithMedia(l, setEditing)}><Pencil /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("편집")}</span></Button>
           <Button asChild size="sm" variant="ghost"><label aria-label={tx("영상 재업로드")} className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{replacing === l.id ? tx('올리는 중') : tx('재업로드')}</span><input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
@@ -200,7 +202,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '') ? String(normalizeMenuCategory(String(listing?.specs?.['menuCategory']))) : '');
   const [storySubcategory, setStorySubcategory] = useSessionState(draftKey + 'storySubcategory', isWatchStoryTag(normalizeStoryTag(listing?.specs?.['storySubcategory'])) ? normalizeStoryTag(listing?.specs?.['storySubcategory']) : '');
   /* Story posts only have a title and text: no price, dispatch time, specification or factory fields. */
-  const story = menuCategory === '스토리', lounge = story; /* 스토리는 영상 1개(10분·1GB) 규칙 */
+  const story = menuCategory === '스토리', review = menuCategory === '제품 리뷰', lounge = story || review, noSale = story || review; /* 스토리는 영상 1개(10분·1GB) 규칙 */
   const [price, setPrice] = useSessionState(draftKey + 'price', listing?.price != null ? String(listing.price) : '');
   const initialDispatch = listing ? (listing.dispatch_time ?? '7d') : '5d';
   const [dispatch, setDispatch] = useSessionState<string>(draftKey + 'dispatch', initialDispatch.startsWith('custom:') ? 'custom' : initialDispatch);
@@ -279,11 +281,11 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     if (!title.trim()) { setError('상품명을 입력해 주세요.'); return; }
     if (!uploadCategoryLabels.includes(menuCategory)) { setError('메뉴 카테고리를 선택해 주세요.'); return; }
     if (story && !isWatchStoryTag(storySubcategory)) { setError(t('selectStorySubcategory')); return; }
-    const p = Number(price); if (!story && (!Number.isFinite(p) || p < 1)) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
+    const p = Number(price); if (!noSale && (!Number.isFinite(p) || p < 1)) { setError('판매 가격(USD)을 입력해 주세요.'); return; }
     if (photos.length === 0 && !video) { setError('사진 또는 영상을 1개 이상 추가해 주세요.'); return; }
     if (video?.file) { try { if (lounge) await validateLoungeFiles([video.file]); else await validateListingFiles([video.file]); } catch (err) { setError(err instanceof Error ? err.message : '영상을 확인해 주세요.'); return; } }
-    if (!story && sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
-    if (!story && sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
+    if (!noSale && sourceType === 'factory' && !factory) { setError('공장을 선택해 주세요.'); return; }
+    if (!noSale && sourceType === 'other' && !factory.trim()) { setError('출처 / 공장을 직접 입력해 주세요.'); return; }
     setError(''); setPending(true);
     const uploaded: string[] = [];
     try {
@@ -312,15 +314,15 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       let card: string | null = null;
       if (firstPhoto?.path && firstPhoto.path === listing?.media_urls[0]) card = prevCard;
       else if (firstPhoto?.file) { card = await uploadCardImage(firstPhoto.file, folder); if (card) uploaded.push(card); }
-      const cleanSpecs = story ? {} as Record<string, string> : cleanWatchSpecs(specs);
-      if (!story) cleanSpecs['sourceType'] = sourceType;
+      const cleanSpecs = noSale ? {} as Record<string, string> : cleanWatchSpecs(specs);
+      if (!noSale) cleanSpecs['sourceType'] = sourceType;
       cleanSpecs['menuCategory'] = menuCategory;
       Object.assign(cleanSpecs, watchStorySpecs(menuCategory, storySubcategory));
       if (!story) delete cleanSpecs['storySubcategory'];
       if (card) cleanSpecs['cardImage'] = card;
       if (nextVideo && customThumb) cleanSpecs['customThumb'] = 'true';
-      if (!story) { if (sourceType === 'custom') delete cleanSpecs['factory']; else cleanSpecs['factory'] = factory.trim().slice(0, 80); }
-      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: story ? null : Math.round(p), box_price: story ? null : boxPriceOrDefault(boxPrice), dispatch_time: story ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
+      if (!noSale) { if (sourceType === 'custom') delete cleanSpecs['factory']; else cleanSpecs['factory'] = factory.trim().slice(0, 80); }
+      const row = { title: title.trim().slice(0, 100), description: description.trim().slice(0, 3000), category, price: noSale ? null : Math.round(p), box_price: noSale ? null : boxPriceOrDefault(boxPrice), dispatch_time: noSale ? null : dispatchValue(dispatch, customDispatch), media_urls: photoPaths, video_url: nextVideo, ...(nextThumb !== undefined || !nextVideo ? { thumbnail_url: nextVideo ? nextThumb ?? null : null } : {}), video_tags: nextVideo ? videoTags : [], specs: cleanSpecs, source_lang: activeLang(), status, updated_at: new Date().toISOString() };
       if (listing) {
         const { error: e } = await supabase.from('posts').update(row).eq('id', listing.id); if (e) throw new Error('저장하지 못했어요.');
         const retained = new Set(photoPaths); const removed = [...(prevCard && prevCard !== card ? [prevCard] : []), ...listing.media_urls.filter(path => !retained.has(path)), ...(listing.video_url && listing.video_url !== nextVideo && !isExternalVideo(listing.video_url) ? [listing.video_url] : [])]; if (removed.length) await (owner ? removeMarketMedia({ data: { paths: removed } }).catch(() => undefined) : supabase.storage.from('market-media').remove(removed));
@@ -345,7 +347,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const releaseLeaveWarning = useLeaveWarning(pending || touched || (!listing && (photos.length > 0 || video !== null || title.trim() !== '' || description.trim() !== '' || price !== '')), { keepOnNavigate: true });
   const closeForm = () => { if (touched && !window.confirm(LEAVE_WARNING_MESSAGE)) return; releaseLeaveWarning(); discardDraft(); onClose(); };
   return <div className="form-panel mt-4 rounded-lg border border-border p-4" onChange={() => setTouched(true)}>
-    {editing && <VideoEditor maxSeconds={story ? LOUNGE_MAX_SECONDS : undefined} file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags, cover }) => { if (video?.file) { previewUrls.drop(video.preview); } setVideo({ file, preview: createPreview(file), ...(cover ? { cover } : {}) }); setVideoTags(tags); setEditing(null); }} />}
+    {editing && <VideoEditor maxSeconds={lounge ? LOUNGE_MAX_SECONDS : undefined} file={editing} catalog={catalog.filter(c => c.id !== listing?.id)} onCancel={() => setEditing(null)} onDone={({ file, tags, cover }) => { if (video?.file) { previewUrls.drop(video.preview); } setVideo({ file, preview: createPreview(file), ...(cover ? { cover } : {}) }); setVideoTags(tags); setEditing(null); }} />}
     <div className="flex items-center justify-between"><h3 className="font-semibold"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{listing ? tx('상품 수정') : tx('새 상품 등록')}</span></h3><Button size="icon" variant="ghost" aria-label={tx("닫기")} onClick={closeForm}><X /></Button></div>
     <label className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-destructive bg-muted p-4"><span className="flex gap-2 text-primary"><Video/><ImagePlus/></span><span className="text-sm text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("영상과 사진 한 번에 선택")}</span></span><span className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{lounge ? tx('사진 최대 {0}장 + MP4·MOV·WEBM•10분•1GB', { 0: MAX_LISTING_PHOTOS }) : tx('영상 1개 · 1분 · 300MB · 사진 10MB / 사진 {0}/{1}', { 0: photoTotal, 1: MAX_LISTING_PHOTOS })}</span></span><span className="text-xs text-muted-foreground"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx('1080p로 촬영하면 더 빨리 올라가요')}</span></span>
       <input className="sr-only" type="file" accept="image/*,video/*" multiple aria-label={tx("상품 영상과 사진 한 번에 선택")} onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} /></label>
@@ -362,11 +364,11 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     </div>}
     <input ref={photoPicker} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" multiple aria-label={tx("추가 사진 선택")} onChange={e => { const selected = Array.from(e.target.files || []); e.target.value = ''; void selectMedia(selected); }} />
     <PostCategoryField value={menuCategory} onChange={setMenuCategory} subcategory={storySubcategory} onSubcategoryChange={setStorySubcategory} onTitleChange={setTitle} />
-    <label htmlFor="l-title" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{story ? tx("제목") : tx("상품명")}</span></label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
-    {!story && <><label htmlFor="l-cat" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("카테고리")}</span></label><select id="l-cat" translate="no" className="form-input notranslate" value={category} onChange={e => setCategory(e.target.value)}><option value="시계" translate="no" className="notranslate"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("시계")}</span></option><option value="악세사리" translate="no" className="notranslate"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("악세사리")}</span></option></select>
+    <label htmlFor="l-title" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{noSale ? tx("제목") : tx("상품명")}</span></label><input id="l-title" className="form-input" maxLength={100} value={title} onChange={e => setTitle(e.target.value)} />
+    {!noSale && <><label htmlFor="l-cat" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("카테고리")}</span></label><select id="l-cat" translate="no" className="form-input notranslate" value={category} onChange={e => setCategory(e.target.value)}><option value="시계" translate="no" className="notranslate"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("시계")}</span></option><option value="악세사리" translate="no" className="notranslate"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("악세사리")}</span></option></select>
     <WatchSpecificationsForm idPrefix="l-spec" value={specs} onChange={setSpecs} afterWater={<SourceFactorySelect id="l-source" sourceType={sourceType} factory={factory} onChange={(type, next) => { setSourceType(type); setFactory(next); }} />} /></>}
-    <label htmlFor="l-desc" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{story ? tx("내용") : tx("상품 설명")}</span></label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
-    {!story && <>
+    <label htmlFor="l-desc" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{noSale ? tx("내용") : tx("상품 설명")}</span></label><textarea id="l-desc" className="form-input min-h-24" maxLength={3000} value={description} onChange={e => setDescription(e.target.value)} />
+    {!noSale && <>
     <div className="grid grid-cols-2 gap-x-3">
       <div><label htmlFor="l-price" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 가격 (USD $)")}</span></label><input id="l-price" className="form-input" type="number" min={1} inputMode="numeric" value={price} onChange={e => setPrice(e.target.value)} /></div>
       <fieldset className="sm:col-span-2"><legend className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("예상 발송 시간")}</span></legend><DispatchSelect dispatch={dispatch} customDispatch={customDispatch} onDispatch={setDispatch} onCustom={setCustomDispatch} /></fieldset><div><label htmlFor="l-box" className="form-label"><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("풀셋 박스 (USD $, 선택)")}</span></label><input id="l-box" className="form-input" type="number" min={0} inputMode="numeric" value={boxPrice} onChange={e => setBoxPrice(e.target.value)} /></div>

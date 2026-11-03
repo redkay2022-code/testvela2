@@ -93,7 +93,7 @@ const fail = (code: string, detail: string) => ({ ok: false as const, code, deta
 /** Stories are not counted as products (same rule as the seller's listing screen). */
 const isStoryRow = (r: { category: string | null; specs: unknown }) => {
   const sp = (r.specs && typeof r.specs === 'object' && !Array.isArray(r.specs) ? r.specs : {}) as Record<string, unknown>;
-  return r.category === 'lounge' || String(sp['menuCategory'] ?? '') === '스토리' || String(sp['lounge'] ?? '') === 'true';
+  return r.category === 'lounge' || ['스토리', '제품 리뷰'].includes(String(sp['menuCategory'] ?? '')) || String(sp['lounge'] ?? '') === 'true';
 };
 
 /** An approved seller switches plan later. Basic / Pro apply immediately; Enterprise is requested and approved by the team.
