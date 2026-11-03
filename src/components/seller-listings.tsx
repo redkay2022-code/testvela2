@@ -188,10 +188,10 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   </section>;
 }
 
-/** 저장된 메뉴 카테고리를 현재 라벨로 바꾼다. 예전 '시계'는 출처(공장 표기)에 따라 커스텀 / 공장. */
+/** 저장된 메뉴 카테고리를 업로드 선택지로 바꾼다. 시계·커스텀·공장은 '시계' 하나(출처 구분으로 자동 분류). */
 const menuFromListing = (listing?: { specs?: Record<string, unknown> | null } | null): string => {
   const raw = normalizeMenuCategory(String(listing?.specs?.['menuCategory'] ?? '')) ?? '';
-  return raw === '시계' ? (String(listing?.specs?.['factory'] ?? '').trim() ? '공장' : '커스텀') : raw;
+  return raw === '커스텀' || raw === '공장' ? '시계' : raw;
 };
 
 function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user: User; owner?: ProxyTarget | null; listing: Listing | null; catalog: { id: string; title: string }[]; onClose: () => void; onSaved: () => void }) {
@@ -205,7 +205,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
   const [title, setTitle] = useSessionState(draftKey + 'title', listing?.title ?? '');
   const [description, setDescription] = useSessionState(draftKey + 'description', listing?.description ?? '');
   const [category, setCategory] = useSessionState(draftKey + 'category', listing?.category === '악세사리' ? '악세사리' : '시계');
-  const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', postCategoryLabels.includes(menuFromListing(listing)) ? menuFromListing(listing) : '');
+  const [menuCategory, setMenuCategory] = useSessionState(draftKey + 'menu', uploadCategoryLabels.includes(menuFromListing(listing)) ? menuFromListing(listing) : '');
   const [storySubcategory, setStorySubcategory] = useSessionState(draftKey + 'storySubcategory', isWatchStoryTag(normalizeStoryTag(listing?.specs?.['storySubcategory'])) ? normalizeStoryTag(listing?.specs?.['storySubcategory']) : '');
   /* Story posts only have a title and text: no price, dispatch time, specification or factory fields. */
   const story = menuCategory === '스토리', review = menuCategory === '제품 리뷰', lounge = story || review, noSale = story || review; /* 스토리는 영상 1개(10분·1GB) 규칙 */

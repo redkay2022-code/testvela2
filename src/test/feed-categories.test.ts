@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {brandDisplayName,sortBrandChoices,categoryGroups,brandMenu,brandsByCategory,categoryLabel,splitFeedId,postBrandId,matchesFeedCategory,normalizeMenuCategory,postCategoryLabels,primaryCategories} from '@/lib/feed-categories';
+import {brandDisplayName,sortBrandChoices,categoryGroups,brandMenu,brandsByCategory,categoryLabel,splitFeedId,postBrandId,matchesFeedCategory,normalizeMenuCategory,postCategoryLabels,uploadCategoryLabels,primaryCategories} from '@/lib/feed-categories';
 import {ALL_WATCH_BRANDS} from '@/lib/watch-brands';
 import {marketSearch} from '@/lib/market';
 const post={title:'Rolex watch',description:'Inspection',category:'Ready to Ship',factory:'VS Factory',sample:false};
@@ -20,11 +20,16 @@ describe('Home category filters',()=>{
   expect(matchesFeedCategory({...post,category:'기타'},'etc')).toBe(true);
  });
  it('offers sellers the official post categories (no 전체, 시계 split into 커스텀 / 공장)',()=>expect(postCategoryLabels).toEqual(['뉴스','바로발송','스토리','제품 리뷰','커스텀','공장','파츠','악세사리','가방','의류','기타']));
+ it('upload dropdown merges 커스텀 / 공장 into 시계 (auto-split by source)',()=>expect(uploadCategoryLabels).toEqual(['뉴스','바로발송','스토리','제품 리뷰','시계','파츠','악세사리','가방','의류','기타']));
  it('filters strictly by the saved menu category',()=>{
   const watch={...post,title:'Leather tote bag',category:'시계',menuCategory:'시계'};
   expect(matchesFeedCategory(watch,'bags')).toBe(false);expect(matchesFeedCategory(watch,'watches')).toBe(true);
   expect(matchesFeedCategory({...watch,menuCategory:'가방'},'bags')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'파츠'},'parts')).toBe(true);
-  expect(matchesFeedCategory({...watch,menuCategory:'커스텀 제작'},'custom')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'공장'},'factory')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'공장'},'custom')).toBe(false);expect(matchesFeedCategory({...watch,menuCategory:'가방'},'watches')).toBe(false);expect(matchesFeedCategory({...watch,menuCategory:'시계',factory:'ABC'},'factory')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'시계'},'custom')).toBe(true);
+  const src=(sourceType:string,factory='')=>({...watch,menuCategory:'시계',factory:'',source:{specs:{sourceType,factory}}} as never);
+  expect(matchesFeedCategory(src('custom'),'custom')).toBe(true);expect(matchesFeedCategory(src('custom'),'factory')).toBe(false);
+  expect(matchesFeedCategory(src('factory','VS'),'factory')).toBe(true);expect(matchesFeedCategory(src('other','ABC'),'factory')).toBe(true);expect(matchesFeedCategory(src('other','ABC'),'custom')).toBe(false);
+  expect(matchesFeedCategory({...watch,menuCategory:'커스텀 제작'},'custom')).toBe(true);expect(matchesFeedCategory({...watch,menuCategory:'가방'},'watches')).toBe(false);
+  expect(matchesFeedCategory({...watch,menuCategory:'시계',source:{specs:{factory:'ABC'}}} as never,'factory')).toBe(true);
   expect(matchesFeedCategory(watch,undefined)).toBe(true);expect(matchesFeedCategory(watch,'recommend')).toBe(true);
  });
  it('falls back to keywords for older posts without a menu category',()=>{expect(matchesFeedCategory({...post,category:'제작 과정'},'story')).toBe(true);expect(matchesFeedCategory({...post,title:'Leather tote bag',category:'시계'},'bags')).toBe(true);});
