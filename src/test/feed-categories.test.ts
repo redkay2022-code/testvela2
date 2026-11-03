@@ -12,7 +12,7 @@ describe('Home category filters',()=>{
   expect(matchesFeedCategory(post,'cartier')).toBe(false);
   expect(matchesFeedCategory({...post,title:'반클리프 앤 아펠 목걸이'},'van-cleef')).toBe(true);
  });
- it('has the main row in the requested order',()=>expect(primaryCategories.map(c=>c[0])).toEqual(['recommend','story','product-review','custom','factory','parts','accessories','bags','clothes','etc']));
+ it('has the main row in the requested order',()=>expect(primaryCategories.map(c=>c[0])).toEqual(['recommend','story','custom','factory','parts','accessories','bags','clothes','etc']));
  it('matches the new story, bags, clothes and etc categories',()=>{
   expect(matchesFeedCategory({...post,category:'제작 과정'},'story')).toBe(true);
   expect(matchesFeedCategory({...post,title:'Leather tote bag'},'bags')).toBe(true);

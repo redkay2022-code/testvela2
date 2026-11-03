@@ -18,6 +18,8 @@ export const categoryGroups:readonly {label:string;items:readonly (readonly [str
 export const viewCategoryIds:readonly string[]=['recommend','story','product-review'];
 /** 상단 카테고리 줄에서 뺀 항목(뉴스·바로발송): 기존 글의 분류와 업로드 선택지는 그대로 둔다. */
 const hiddenTabIds:readonly string[]=['news','ready'];
+/** 상단 메뉴에 이미 '제품 리뷰' 탭이 있어서 둘째 줄 카테고리에서는 뺀다(업로드 선택지·분류는 그대로). */
+const rowHiddenIds:readonly string[]=[...hiddenTabIds,'product-review'];
 /** Product categories (picker tabs); the ones that have brands also list them below. */
 export const productCategoryItems:readonly (readonly [string,string])[]=(categoryGroups[0]?.items ?? []).filter(item=>!viewCategoryIds.includes(item[0])&&!hiddenTabIds.includes(item[0]));
 /** Brand dropdown data for the picker: popular brands first, luxury accessory brands, then every other upload brand A-Z. */
@@ -34,7 +36,7 @@ const legacyMenuLabels:Record<string,string>={'커스텀 제작':'커스텀','18
 /** 예전 '시계' 글은 출처(공장 표기)에 따라 커스텀 / 공장으로 나눈다. */
 const watchMenuLabel=(post:{factory?:string}):string=>String(post.factory ?? '').trim()?'공장':'커스텀';
 export const normalizeMenuCategory=(label:string|undefined):string|undefined=>label===undefined?undefined:legacyMenuLabels[label.trim()] ?? label;
-export const primaryCategories=(categoryGroups[0]?.items ?? []).filter(item=>!hiddenTabIds.includes(item[0]));
+export const primaryCategories=(categoryGroups[0]?.items ?? []).filter(item=>!rowHiddenIds.includes(item[0]));
 /** 업로드 화면의 '메뉴 카테고리' 라벨: 제품 리뷰 */
 export const PRODUCT_REVIEW_LABEL='제품 리뷰';
 /** Menu categories sellers choose from (stored in posts.specs.menuCategory, separate from the older 카테고리 field) (the "전체" entry is a filter only, never a post category). */
