@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Gift, MessageCircle, Share2 } from 'lucide-react';
+import { Copy, Gift, MessageCircle, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
-import { clearReferral, referralLink, storedReferral, whatsappShareUrl } from '@/lib/referral';
+import { clearReferral, referralLink, storedReferral, whatsappShareUrl, telegramShareUrl } from '@/lib/referral';
 import { formatPoints } from '@/lib/loyalty';
 import { tx } from '@/lib/dom-translate';
 import { clearGroup, storedGroup } from '@/lib/group';
@@ -59,23 +59,17 @@ async function copyText(text: string) {
   }
 }
 
-/** 링크 복사 / WhatsApp / 카카오톡(공유 메뉴, 안 되면 복사) 버튼 줄 */
+/** 링크 복사 / WhatsApp / Telegram 버튼 줄 */
 export function ShareRow({ link, message, shareText }: { link: string; message: string; shareText: string }) {
   const copy = async () => { if (await copyText(link)) toast.success(tx('링크를 복사했어요.')); else toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.')); };
-  const kakao = async () => {
-    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-      try { await navigator.share({ title: 'VELA', text: shareText, url: link }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; }
-    }
-    if (await copyText(message)) toast.success(tx('링크를 복사했어요. 카카오톡에 붙여넣어 보내 주세요.')); else toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.'));
-  };
   return <div className="mt-3 grid grid-cols-3 gap-2">
     <Button variant="goldOutline" size="sm" onClick={() => void copy()}><Copy size={14} />링크 복사</Button>
     <Button variant="goldOutline" size="sm" asChild><a href={whatsappShareUrl(message)} target="_blank" rel="noopener noreferrer"><MessageCircle size={14} />WhatsApp</a></Button>
-    <Button variant="goldOutline" size="sm" onClick={() => void kakao()}><Share2 size={14} />카카오톡</Button>
+    <Button variant="goldOutline" size="sm" asChild><a href={telegramShareUrl(link, shareText)} target="_blank" rel="noopener noreferrer"><Send size={14} />Telegram</a></Button>
   </div>;
 }
 
-/** 공유하고 포인트 받기 — 링크 복사 / WhatsApp / 카카오톡 */
+/** 공유하고 포인트 받기 — 링크 복사 / WhatsApp / Telegram */
 export function ReferralShare({ compact = false }: { compact?: boolean }) {
   const summary = useReferralSummary();
   const uid = summary.data?.user_id;

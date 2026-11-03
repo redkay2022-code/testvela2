@@ -6,6 +6,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const isReferralCode = (v: string | null | undefined): v is string => !!v && UUID.test(v);
 export const referralLink = (userId: string, origin = typeof window === 'undefined' ? 'https://velamarket.app' : window.location.origin) => `${origin}/ref/${userId}`;
 export const whatsappShareUrl = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
+export const telegramShareUrl = (url: string, text: string) => `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
 
 export function rememberReferral(code: string) {
   if (typeof window === 'undefined' || !isReferralCode(code)) return;
