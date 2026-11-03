@@ -93,6 +93,7 @@ export function GroupCreate({ productId }: { productId: string }) {
       <input readOnly value={link} onFocus={e => e.currentTarget.select()} className="mt-3 w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-xs" aria-label={tx('공동구매 링크')} data-no-translate />
       {code && <p className="mt-2 text-xs text-muted-foreground">{tx('초대 코드')}: <strong className="select-all text-sm text-primary" data-no-translate>{code}</strong> · {tx('링크가 안 열리면 가입할 때 이 코드를 입력하면 돼요.')}</p>}
       <ShareRow link={link} message={code ? tx('VELA 공동구매 같이 해요! {link} (초대 코드: {code})', { link, code }) : tx('VELA 공동구매 같이 해요! {link}', { link })} shareText={tx('VELA 공동구매 같이 해요!')} />
+      <Button type="button" variant="ghost" size="sm" className="mt-3 w-full" onClick={() => setCreated(null)}>{tx('새 공동구매 링크 또 만들기')}</Button>
     </section>;
   }
   return <section className="mt-4 rounded-lg border border-border bg-card p-4" aria-label={tx('공동구매 만들기')}>
