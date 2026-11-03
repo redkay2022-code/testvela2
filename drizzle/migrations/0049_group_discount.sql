@@ -33,7 +33,7 @@ DROP FUNCTION IF EXISTS public.group_public(uuid);
 CREATE TABLE IF NOT EXISTS public.group_purchases (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   leader_id uuid NOT NULL,
-  product_id uuid NOT NULL,
+  product_id text NOT NULL,
   target_size int NOT NULL CHECK (target_size BETWEEN 2 AND 10),
   current_size int NOT NULL DEFAULT 1 CHECK (current_size >= 0),
   duration_hours int NOT NULL DEFAULT 72 CHECK (duration_hours BETWEEN 1 AND 72),
@@ -43,6 +43,13 @@ CREATE TABLE IF NOT EXISTS public.group_purchases (
   expires_at timestamptz NOT NULL,
   paid_at timestamptz
 );
+-- posts.id 는 text 이므로 이미 uuid 로 만들어진 경우 text 로 바꾼다
+DO $$ BEGIN
+  IF (SELECT data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='group_purchases' AND column_name='product_id') = 'uuid' THEN
+    DROP INDEX IF EXISTS public.group_purchases_product_idx;
+    ALTER TABLE public.group_purchases ALTER COLUMN product_id TYPE text USING product_id::text;
+  END IF;
+END $$;
 ALTER TABLE public.group_purchases ADD COLUMN IF NOT EXISTS discount_tier int NOT NULL DEFAULT 0;
 CREATE INDEX IF NOT EXISTS group_purchases_leader_idx ON public.group_purchases(leader_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS group_purchases_product_idx ON public.group_purchases(product_id) WHERE status = 'active';
@@ -165,8 +172,10 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public._group_eval(uuid) FROM PUBLIC, anon, authenticated;
 
+DROP FUNCTION IF EXISTS public.create_group(uuid,int,int);
+DROP FUNCTION IF EXISTS public.group_checkout_quote(uuid,text);
 -- 7) 공동구매 만들기 (인원 2~10, 시간 1~72시간 — 기본 72시간)
-CREATE OR REPLACE FUNCTION public.create_group(_product uuid, _size int, _hours int) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+CREATE OR REPLACE FUNCTION public.create_group(_product text, _size int, _hours int) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE uid uuid := auth.uid(); p record; existing uuid; gid uuid;
 BEGIN
   IF uid IS NULL THEN RAISE EXCEPTION 'Sign in required'; END IF;
@@ -185,8 +194,8 @@ BEGIN
   INSERT INTO public.group_members(group_id, user_id) VALUES (gid, uid);
   RETURN gid;
 END $$;
-REVOKE ALL ON FUNCTION public.create_group(uuid,int,int) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.create_group(uuid,int,int) TO authenticated;
+REVOKE ALL ON FUNCTION public.create_group(text,int,int) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.create_group(text,int,int) TO authenticated;
 
 -- 8) 가입/로그인 직후 자동 참여 (링크를 클릭해 저장된 group_id 로)
 CREATE OR REPLACE FUNCTION public.claim_group(_id text) RETURNS text LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -211,7 +220,7 @@ REVOKE ALL ON FUNCTION public.claim_group(text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.claim_group(text) TO authenticated;
 
 -- 9) 체크아웃 견적: 이 상품을 지금 사면 적용되는 할인율
-CREATE OR REPLACE FUNCTION public.group_checkout_quote(_product uuid, _group text DEFAULT NULL) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+CREATE OR REPLACE FUNCTION public.group_checkout_quote(_product text, _group text DEFAULT NULL) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE uid uuid := auth.uid(); g public.group_purchases; m public.group_members; gid uuid; n int;
 BEGIN
   IF uid IS NULL THEN RETURN NULL; END IF;
@@ -233,8 +242,8 @@ BEGIN
   END IF;
   RETURN jsonb_build_object('group_id', g.id, 'pct', public._group_discount_pct(n), 'current_size', g.current_size, 'target_size', g.target_size, 'expires_at', g.expires_at);
 END $$;
-REVOKE ALL ON FUNCTION public.group_checkout_quote(uuid,text) FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.group_checkout_quote(uuid,text) TO authenticated;
+REVOKE ALL ON FUNCTION public.group_checkout_quote(text,text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.group_checkout_quote(text,text) TO authenticated;
 
 -- 10) 공개 그룹 정보 (링크로 들어온 방문자용)
 CREATE OR REPLACE FUNCTION public.group_public(_id uuid) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
