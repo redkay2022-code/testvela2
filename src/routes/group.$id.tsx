@@ -4,6 +4,7 @@ import { Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Countdown, useGroupPreview, usePublicGroup } from '@/components/group-purchase';
 import { supabase } from '@/integrations/supabase/client';
+import { MainBottomNav } from '@/components/main-bottom-nav';
 import { groupDiscountUsd, isGroupCode, isGroupId, normalizeInvite, rememberGroup, setReturnTo } from '@/lib/group';
 import { tx } from '@/lib/dom-translate';
 
@@ -25,7 +26,7 @@ function GroupPage() {
   useEffect(() => { if (g?.id) rememberGroup(g.id); }, [g?.id]);
   const pv = useGroupPreview(g?.id);
   const open = Boolean(g && g.status === 'active' && new Date(g.expires_at).getTime() > Date.now());
-  return <main className="mx-auto w-full max-w-xl px-4 pb-16 pt-6">
+  return <><main className="mx-auto w-full max-w-xl px-4 pb-28 pt-6">
     <h1 className="flex items-center gap-2 text-xl font-semibold"><Users size={20} className="text-primary" />{tx('공동구매')}</h1>
     {q.isLoading ? <p className="mt-6 text-sm text-muted-foreground">{tx('불러오는 중…')}</p>
       : !g ? <div className="lux-empty mt-6"><p>{tx('공동구매를 찾을 수 없어요.')}</p><Button asChild variant="goldOutline" className="mt-4"><Link to="/">{tx('홈으로')}</Link></Button></div>
@@ -60,5 +61,5 @@ function GroupPage() {
             <p className="mt-2 text-center text-xs text-muted-foreground">{tx('가입하면 이 초대가 자동으로 연결돼요.')}</p></>
           : <Button asChild variant="gold" className="mt-5 w-full"><Link to="/buy/$id" params={{ id: g.product_id }}>{open ? tx('함께 구매하기') : tx('상품 보러가기')}</Link></Button>}
       </section>}
-  </main>;
+  </main><MainBottomNav /></>;
 }

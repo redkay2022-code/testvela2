@@ -17,6 +17,7 @@ import { ProductComments } from '@/components/product-comments';
 import { EscrowGuarantee } from '@/components/escrow';
 import { ReferralShare } from '@/components/referral';
 import { GroupBanner, MyGroups } from '@/components/group-purchase';
+import { MainBottomNav } from '@/components/main-bottom-nav';
 import { TranslatableText } from '@/components/translatable-text';
 
 export const Route = createFileRoute('/buy/$id')({
@@ -45,7 +46,7 @@ function BuyPage() {
   const requestAuth = () => { setReturnTo(`/buy/${id}`); void navigate({ to: '/', search: (storedGroup() ? { auth: true, authSignup: true } : { auth: true }) as never }); };
   if (!post) return <div className="lux-empty"><h2>상품을 찾을 수 없습니다.</h2><Button asChild variant="goldOutline"><Link to="/">홈으로</Link></Button></div>;
   const pr = postRatings.data?.[post.id];
-  return <main className="mx-auto w-full max-w-xl px-4 pb-16 pt-4">
+  return <><main className="mx-auto w-full max-w-xl px-4 pb-28 pt-4">
     <Button variant="ghost" size="sm" onClick={() => window.history.length > 1 ? window.history.back() : void navigate({ to: '/' })}><ArrowLeft size={16} />돌아가기</Button>
     <h1 className="mt-3 text-xl font-semibold">구매하기</h1>
     <section className="mt-4 rounded-lg border border-border bg-card p-4">
@@ -69,5 +70,5 @@ function BuyPage() {
       {reviews.data?.length ? <div className="mt-3 grid gap-3">{reviews.data.map(r => <article key={r.id} className="rounded-lg border border-border bg-card p-4"><div className="flex items-center justify-between text-xs"><span className="flex items-center gap-1 font-semibold" data-no-translate>{r.nickname}<BadgeCheck size={14} className="text-primary" aria-label="인증 구매자" /></span><span className="text-muted-foreground">{formatDate(r.created_at)}</span></div>{r.rating !== null && <div className="mt-2"><Stars value={r.rating} size={12} /></div>}<TranslatableText as="p" className="mt-2 text-sm leading-6 text-muted-foreground" text={r.body}/></article>)}</div>
         : <p className="mt-2 text-sm text-muted-foreground">아직 이 상품의 리뷰가 없습니다. 구매 후 수령 확인을 하면 별점과 리뷰를 남길 수 있습니다.</p>}
     </section>
-  </main>;
+  </main><MainBottomNav /></>;
 }
