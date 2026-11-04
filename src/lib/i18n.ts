@@ -29,6 +29,7 @@ type Entry = Record<Lang, string>;
 const d = (en: string, ko: string, zh: string, ja: string, it: string, fr: string, de: string, nl: string, ru: string, la: string, ar: string): Entry => ({ en, ko, zh, ja, it, fr, de, nl, ru, la, ar });
 export const dict = {
   story: d('Story', '스토리', '故事', 'ストーリー', 'Storia', 'Histoire', 'Story', 'Verhaal', 'История', 'Fabula', 'قصة'),
+  gallery: d('Gallery', '갤러리', '图集', 'ギャラリー', 'Galleria', 'Galerie', 'Galerie', 'Galerij', 'Галерея', 'Pinacotheca', 'معرض'),
   makeProcess: d('Make Process', '제작 과정', '制作过程', '製作過程', 'Processo di produzione', 'Processus de fabrication', 'Herstellungsprozess', 'Productieproces', 'Процесс изготовления', 'Processus fabricationis', 'عملية التصنيع'),
   dailyStyle: d('Daily Style', '데일리 스타일', '日常穿搭', 'デイリースタイル', 'Stile quotidiano', 'Style du quotidien', 'Alltagsstil', 'Dagelijkse stijl', 'Повседневный стиль', 'Stilus cotidianus', 'الإطلالة اليومية'),
   repairCare: d('Repair & Care', '수리 및 관리', '维修与保养', '修理とお手入れ', 'Riparazione e cura', 'Réparation et entretien', 'Reparatur & Pflege', 'Reparatie en onderhoud', 'Ремонт и уход', 'Reparatio et cura', 'الإصلاح والعناية'),
