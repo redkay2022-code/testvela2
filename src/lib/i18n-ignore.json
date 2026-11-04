@@ -1,6 +1,8 @@
 {
   "_comment": "Text that must NOT be translated: brand names, codes, units, technical strings. 'exact' = literal strings, 'patterns' = regular expressions.",
   "exact": [
+    "calc({0} * 100dvh)",
+    "linear-gradient(to bottom, transparent, var(--background))",
     "{0} USDT",
     "Telegram",
     "Group Discount",
