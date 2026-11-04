@@ -24,9 +24,9 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as UploadRouteImport } from './routes/upload'
 import { Route as ApiMuxWebhookRouteImport } from './routes/api/mux-webhook'
 import { Route as BuyIdRouteImport } from './routes/buy.$id'
+import { Route as GroupIdRouteImport } from './routes/group.$id'
 import { Route as PostIdRouteImport } from './routes/post.$id'
 import { Route as RefCodeRouteImport } from './routes/ref.$code'
-import { Route as GroupIdRouteImport } from './routes/group.$id'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as SellerApplyRouteImport } from './routes/seller_.apply'
 import { Route as ShortsIdRouteImport } from './routes/shorts.$id'
@@ -106,6 +106,11 @@ const BuyIdRoute = BuyIdRouteImport.update({
   path: '/buy/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GroupIdRoute = GroupIdRouteImport.update({
+  id: '/group/$id',
+  path: '/group/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PostIdRoute = PostIdRouteImport.update({
   id: '/post/$id',
   path: '/post/$id',
@@ -114,11 +119,6 @@ const PostIdRoute = PostIdRouteImport.update({
 const RefCodeRoute = RefCodeRouteImport.update({
   id: '/ref/$code',
   path: '/ref/$code',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GroupIdRoute = GroupIdRouteImport.update({
-  id: '/group/$id',
-  path: '/group/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SSlugRoute = SSlugRouteImport.update({
@@ -153,9 +153,9 @@ export interface FileRoutesByFullPath {
   '/upload': typeof UploadRoute
   '/api/mux-webhook': typeof ApiMuxWebhookRoute
   '/buy/$id': typeof BuyIdRoute
+  '/group/$id': typeof GroupIdRoute
   '/post/$id': typeof PostIdRoute
   '/ref/$code': typeof RefCodeRoute
-  '/group/$id': typeof GroupIdRoute
   '/s/$slug': typeof SSlugRoute
   '/seller/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -176,9 +176,9 @@ export interface FileRoutesByTo {
   '/upload': typeof UploadRoute
   '/api/mux-webhook': typeof ApiMuxWebhookRoute
   '/buy/$id': typeof BuyIdRoute
+  '/group/$id': typeof GroupIdRoute
   '/post/$id': typeof PostIdRoute
   '/ref/$code': typeof RefCodeRoute
-  '/group/$id': typeof GroupIdRoute
   '/s/$slug': typeof SSlugRoute
   '/seller/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -200,9 +200,9 @@ export interface FileRoutesById {
   '/upload': typeof UploadRoute
   '/api/mux-webhook': typeof ApiMuxWebhookRoute
   '/buy/$id': typeof BuyIdRoute
+  '/group/$id': typeof GroupIdRoute
   '/post/$id': typeof PostIdRoute
   '/ref/$code': typeof RefCodeRoute
-  '/group/$id': typeof GroupIdRoute
   '/s/$slug': typeof SSlugRoute
   '/seller_/apply': typeof SellerApplyRoute
   '/shorts/$id': typeof ShortsIdRoute
@@ -225,9 +225,9 @@ export interface FileRouteTypes {
     | '/upload'
     | '/api/mux-webhook'
     | '/buy/$id'
+    | '/group/$id'
     | '/post/$id'
     | '/ref/$code'
-    | '/group/$id'
     | '/s/$slug'
     | '/seller/apply'
     | '/shorts/$id'
@@ -248,9 +248,9 @@ export interface FileRouteTypes {
     | '/upload'
     | '/api/mux-webhook'
     | '/buy/$id'
+    | '/group/$id'
     | '/post/$id'
     | '/ref/$code'
-    | '/group/$id'
     | '/s/$slug'
     | '/seller/apply'
     | '/shorts/$id'
@@ -271,9 +271,9 @@ export interface FileRouteTypes {
     | '/upload'
     | '/api/mux-webhook'
     | '/buy/$id'
+    | '/group/$id'
     | '/post/$id'
     | '/ref/$code'
-    | '/group/$id'
     | '/s/$slug'
     | '/seller_/apply'
     | '/shorts/$id'
@@ -295,9 +295,9 @@ export interface RootRouteChildren {
   UploadRoute: typeof UploadRoute
   ApiMuxWebhookRoute: typeof ApiMuxWebhookRoute
   BuyIdRoute: typeof BuyIdRoute
+  GroupIdRoute: typeof GroupIdRoute
   PostIdRoute: typeof PostIdRoute
   RefCodeRoute: typeof RefCodeRoute
-  GroupIdRoute: typeof GroupIdRoute
   SSlugRoute: typeof SSlugRoute
   SellerApplyRoute: typeof SellerApplyRoute
   ShortsIdRoute: typeof ShortsIdRoute
@@ -410,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuyIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/group/$id': {
+      id: '/group/$id'
+      path: '/group/$id'
+      fullPath: '/group/$id'
+      preLoaderRoute: typeof GroupIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/post/$id': {
       id: '/post/$id'
       path: '/post/$id'
@@ -422,13 +429,6 @@ declare module '@tanstack/react-router' {
       path: '/ref/$code'
       fullPath: '/ref/$code'
       preLoaderRoute: typeof RefCodeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/group/$id': {
-      id: '/group/$id'
-      path: '/group/$id'
-      fullPath: '/group/$id'
-      preLoaderRoute: typeof GroupIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/s/$slug': {
@@ -471,9 +471,9 @@ const rootRouteChildren: RootRouteChildren = {
   UploadRoute: UploadRoute,
   ApiMuxWebhookRoute: ApiMuxWebhookRoute,
   BuyIdRoute: BuyIdRoute,
+  GroupIdRoute: GroupIdRoute,
   PostIdRoute: PostIdRoute,
   RefCodeRoute: RefCodeRoute,
-  GroupIdRoute: GroupIdRoute,
   SSlugRoute: SSlugRoute,
   SellerApplyRoute: SellerApplyRoute,
   ShortsIdRoute: ShortsIdRoute,
