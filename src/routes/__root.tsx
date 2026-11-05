@@ -1,4 +1,5 @@
 import { SplashScreen } from "@/components/splash-screen";
+import { FirstVisitNotice } from "@/components/first-visit-notice";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ViewTracker } from "@/components/view-tracker";
 import { SanctionNotice } from "@/components/sanction-notice";
@@ -150,6 +151,7 @@ function RootComponent() {
       <InstallPrompt />
       <AutoFullscreen />
       <SplashScreen />
+      <FirstVisitNotice />
     </QueryClientProvider>
   );
 }
