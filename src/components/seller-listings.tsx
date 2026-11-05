@@ -114,14 +114,26 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
   const [previewing, setPreviewing] = useState<Listing | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
   // 목록은 가볍게 대표 사진만 서명하므로, 미리보기·편집을 열 때 해당 상품의 사진·영상을 그때 서명한다.
+  /* 사진·영상 서명 주소를 미리 받아 두면 편집/미리보기가 바로 열린다: 버튼에 손/마우스를 올리는 순간부터 받기 시작하고(결과는 20분간 재사용), 서버 서명과 직접 서명 중 먼저 끝나는 쪽을 쓴다. */
+  const mediaCache = useRef(new Map<string, { at: number; p: Promise<Listing> }>());
+  const loadMedia = (l: Listing): Promise<Listing> => {
+    const hit = mediaCache.current.get(l.id);
+    if (hit && Date.now() - hit.at < 20 * 60 * 1000) return hit.p;
+    const viaServer = async () => { const res = (await signMedia({ data: { ids: [l.id], full: true, ...(acting ? { ownerId: acting.id } : {}) } }))[l.id]; if (!res || !(res.media.some(Boolean) || res.video)) throw new Error('empty'); return { ...l, signed_media_urls: res.media, signed_video_url: res.video || undefined } as Listing; };
+    const direct = async () => {
+      const paths = [...l.media_urls, isExternalVideo(l.video_url) ? null : l.video_url].filter(Boolean) as string[]; const map = new Map<string, string>();
+      for (let i = 0; i < paths.length; i += 100) { const { data: signed } = await supabase.storage.from('market-media').createSignedUrls(paths.slice(i, i + 100), 3600); signed?.forEach(x => x.path && x.signedUrl && map.set(x.path, x.signedUrl)); }
+      if (!paths.length || !paths.some(x => map.has(x))) throw new Error('empty');
+      return { ...l, signed_media_urls: l.media_urls.map(x => map.get(x) ?? ''), signed_video_url: isMuxStreamUrl(l.video_url) ? l.video_url : l.video_url ? map.get(l.video_url) : undefined } as Listing;
+    };
+    const p = Promise.any([viaServer(), direct()]).catch(() => ({ ...l, signed_media_urls: l.media_urls.map(() => ''), signed_video_url: isMuxStreamUrl(l.video_url) ? l.video_url : undefined } as Listing));
+    mediaCache.current.set(l.id, { at: Date.now(), p });
+    return p;
+  };
+  const warm = (l: Listing) => { void loadMedia(l); };
   const openWithMedia = async (l: Listing, open: (value: Listing) => void) => {
     if (opening) return; setOpening(l.id);
-    try {
-      try { const res = (await signMedia({ data: { ids: [l.id], full: true, ...(acting ? { ownerId: acting.id } : {}) } }))[l.id]; if (res && (res.media.some(Boolean) || res.video)) { open({ ...l, signed_media_urls: res.media, signed_video_url: res.video || undefined }); return; } } catch { /* 직접 서명으로 보완 */ }
-      const paths = [...l.media_urls, isExternalVideo(l.video_url) ? null : l.video_url].filter(Boolean) as string[]; const map = new Map<string, string>();
-      for (let i = 0; i < paths.length; i += 100) { try { const { data: signed } = await supabase.storage.from('market-media').createSignedUrls(paths.slice(i, i + 100), 3600); signed?.forEach(x => x.path && x.signedUrl && map.set(x.path, x.signedUrl)); } catch { /* 일부 실패해도 열기 */ } }
-      open({ ...l, signed_media_urls: l.media_urls.map(p => map.get(p) ?? ''), signed_video_url: isMuxStreamUrl(l.video_url) ? l.video_url : l.video_url ? map.get(l.video_url) : undefined });
-    } finally { setOpening(null); }
+    try { open(await loadMedia(l)); } finally { setOpening(null); }
   };
   const formTop = useRef<HTMLDivElement>(null);
   useEffect(() => { if (editing) formTop.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, [editing]);
@@ -178,8 +190,8 @@ export function SellerListings({ actAs }: { actAs?: ProxyTarget | null } = {}) {
         <div className="record-actions">
           {!isStoryListing(l) && !isReviewListing(l) && l.status === 'published' && <label className="flex items-center gap-1 text-xs"><input type="checkbox" className="accent-primary" aria-label={tx("판매 완료")} checked={l.product_status === 'OUT_OF_STOCK'} onChange={e => void toggleSold(l, e.target.checked)} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매 완료")}</span></label>}
            {!isStoryListing(l) && !isReviewListing(l) && <label className="flex items-center gap-2 text-xs"><Switch aria-label={tx("{0} 판매", { 0: l.title })} checked={l.status==='published'} onCheckedChange={() => void toggle(l)}/><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("판매")}</span></label>}
-          <Button size="sm" variant="ghost" aria-label={tx("미리보기")} onClick={() => void openWithMedia(l, setPreviewing)}><Eye /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("미리보기")}</span></Button>
-          <Button size="sm" variant="ghost" aria-label={tx("편집")} onClick={() => void openWithMedia(l, setEditing)}><Pencil /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("편집")}</span></Button>
+          <Button size="sm" variant="ghost" aria-label={tx("미리보기")} onPointerEnter={() => warm(l)} onTouchStart={() => warm(l)} onFocus={() => warm(l)} onClick={() => void openWithMedia(l, setPreviewing)}><Eye /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("미리보기")}</span></Button>
+          <Button size="sm" variant="ghost" aria-label={tx("편집")} onPointerEnter={() => warm(l)} onTouchStart={() => warm(l)} onFocus={() => warm(l)} onClick={() => void openWithMedia(l, setEditing)}><Pencil /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("편집")}</span></Button>
           <Button asChild size="sm" variant="ghost"><label aria-label={tx("영상 재업로드")} className={replacing === l.id ? 'pointer-events-none opacity-60' : 'cursor-pointer'}><RefreshCw className={replacing === l.id ? 'animate-spin' : ''} /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{replacing === l.id ? tx('올리는 중') : tx('재업로드')}</span><input type="file" accept="video/*" className="sr-only" disabled={replacing === l.id} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void replaceVideo(l, f); }} /></label></Button>
           <Button size="sm" variant="ghost" aria-label={tx("삭제")} onClick={() => void remove(l)}><Trash2 /><span data-i18n-skip data-no-translate translate="no" className="notranslate">{tx("삭제")}</span></Button>
         </div></li>)}</ul></>}
@@ -245,7 +257,7 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
       const mux = [video.path, video.preview].find(isMuxStreamUrl);
       if (mux) {
         let src = '';
-        for (let i = 0; i < 60 && !src; i++) { const r = await prepareEdit({ data: { videoUrl: mux } }); if (r.ready) src = r.url; else await new Promise(ok => setTimeout(ok, 3000)); }
+        for (let i = 0; i < 90 && !src; i++) { const r = await prepareEdit({ data: { videoUrl: mux } }); if (r.ready) src = r.url; else await new Promise(ok => setTimeout(ok, i < 5 ? 1000 : 2500)); }
         if (!src) throw new Error('mux-timeout');
         const res = await fetch(src); if (!res.ok) throw new Error('fetch'); blob = await res.blob();
         setEditing(new File([blob], 'video.mp4', { type: 'video/mp4' })); return;
@@ -258,6 +270,8 @@ function ListingForm({ user, owner, listing, catalog, onClose, onSaved }: { user
     } catch { setError('기존 영상을 불러오지 못했어요. 영상을 다시 선택해 주세요.'); }
     finally { setLoadingVideo(false); }
   };
+  /* 기존 Mux 영상은 편집용 MP4 준비가 오래 걸리므로, 수정 화면이 열리면 미리 준비를 시켜 둔다. */
+  useEffect(() => { const m = listing?.video_url && isMuxStreamUrl(listing.video_url) ? listing.video_url : ''; if (m) void prepareEdit({ data: { videoUrl: m } }).catch(() => undefined); }, [listing?.video_url]);
   const removeVideo = () => { if (video?.file) { previewUrls.drop(video.preview); } setVideo(null); };
   const movePhoto = (id: string, offset: number) => setPhotos(current => { const from = current.findIndex(photo => photo.id === id); const to = from + offset; if (from < 0 || to < 0 || to >= current.length) return current; const next = [...current]; const [item] = next.splice(from, 1); if (!item) return current; next.splice(to, 0, item); return next; });
   const dropPhoto = (targetId: string) => { if (!draggedPhoto || draggedPhoto === targetId) return; setPhotos(current => { const from = current.findIndex(photo => photo.id === draggedPhoto); const to = current.findIndex(photo => photo.id === targetId); if (from < 0 || to < 0) return current; const next = [...current]; const [item] = next.splice(from, 1); if (!item) return current; next.splice(to, 0, item); return next; }); setDraggedPhoto(null); };
