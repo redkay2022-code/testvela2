@@ -134,14 +134,15 @@ export function ReferralShare({ compact = false }: { compact?: boolean }) {
   const link = s.referral_code ? referralLink(s.referral_code) : '';
   const message = tx('VELA에서 함께 쇼핑해요! {link}', { link });
   return <section className="mt-4 rounded-lg border border-border bg-card p-4" aria-label={tx('공유하고 포인트 받기')}>
-    <h2 className="flex items-center gap-2 text-sm font-semibold"><Gift size={16} className="text-primary" />공유하고 포인트 받기</h2>
+    <h2 className="flex items-center gap-2 text-sm font-semibold"><Gift size={16} className="text-primary" />{tx('공유하고 포인트 받기')}</h2>
     {!compact && <p className="mt-2 text-xs text-muted-foreground">{tx('친구가 내 링크로 가입해 구매를 완료하면 결제 상품금액의 {rate}%를 포인트로 드려요. (배송비·세금 제외, 수령 확정 후 지급)', { rate })}</p>}
     {!compact && <p className="mt-1 text-xs text-muted-foreground">{tx('추천 포인트는 ${min} 이상 주문에만 쓸 수 있고, 적립 후 {days}일이 지나면 사라져요.', { min, days })}</p>}
     {link ? <>
-      <div className="mt-3 flex items-center gap-2"><input readOnly value={link} onFocus={e => e.currentTarget.select()} className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs" aria-label={tx('내 추천 링크')} data-no-translate /></div>
+      <div className="mt-3 flex items-center gap-2"><input readOnly value={link} onFocus={e => e.currentTarget.select()} className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs" aria-label={tx('내 추천 링크')} data-no-translate />
+        <Button type="button" variant="gold" size="icon" aria-label={tx('링크 복사')} title={tx('링크 복사')} onClick={() => void copyText(link).then(ok => { if (ok) toast.success(tx('링크를 복사했어요.')); else toast.error(tx('복사하지 못했어요. 링크를 길게 눌러 복사해 주세요.')); })}><Copy size={16} /></Button></div>
       <p className="mt-2 text-xs text-muted-foreground">{tx('내 추천 코드')}: <span data-no-translate className="font-mono font-semibold text-foreground">{s.referral_code}</span></p>
       <ShareRow link={link} message={message} shareText={tx('VELA에서 함께 쇼핑해요!')} />
-    </> : <Button type="button" variant="gold" className="mt-3 w-full" disabled={busy} onClick={() => void make()}>{tx('추천 코드 만들기')}</Button>}
+    </> : <Button type="button" variant="gold" className="mt-3 w-full" disabled={busy} onClick={() => void make()}>{tx('레퍼럴 코드 생성')}</Button>}
     {!compact && <WelcomeCouponCard />}
   </section>;
 }

@@ -3035,5 +3035,6 @@
   "추천 코드를 만들지 못했어요. 잠시 후 다시 시도해 주세요.": "Kon de uitnodigingscode niet maken. Probeer het zo opnieuw.",
   "추천 포인트는 ${min} 이상 주문에만 쓸 수 있고, 적립 후 {days}일이 지나면 사라져요.": "Uitnodigingspunten kunnen alleen worden gebruikt bij bestellingen vanaf ${min} en vervallen {days} dagen na ontvangst.",
   "내 추천 코드": "Mijn uitnodigingscode",
-  "추천 코드 만들기": "Uitnodigingscode maken"
+  "레퍼럴 코드 생성": "Uitnodigingscode maken",
+  "내 공동 구매 현황": "Mijn groepsaankopen"
 }

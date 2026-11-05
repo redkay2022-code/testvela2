@@ -148,7 +148,7 @@ function LeaderMembers({ id }: { id: string }) {
 }
 
 function GroupRow({ g }: { g: MyGroup }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(g.is_leader && g.status === 'active'); // 내가 만든 진행 중 공동구매는 참여자 현황을 바로 보여준다
   const refund = Number(g.refund_due_usd);
   return <div className="rounded-lg border border-border bg-card p-3">
     <div className="flex items-start justify-between gap-3">
@@ -173,10 +173,10 @@ function GroupRow({ g }: { g: MyGroup }) {
 export function MyGroups({ compact = false }: { compact?: boolean }) {
   const q = useMyGroups();
   if (!q.data) return null;
-  const list = compact ? q.data.filter(g => g.status !== 'expired').slice(0, 3) : q.data;
-  if (!list.length) return <section className="mt-6" aria-label={tx('초대 코드 입력')}><div className="section-heading"><h2>{compact ? tx('초대 코드 입력') : tx('내 공동구매')}</h2></div>{compact ? null : <p className="mt-2 text-sm text-muted-foreground">{tx('아직 참여한 공동구매가 없어요. 상품 구매 화면에서 공동구매를 만들어 보세요.')}</p>}<InviteCodeEntry /></section>;
-  return <section className="mt-6" aria-label={tx('내 공동구매')}>
-    <div className="section-heading"><h2>{compact ? tx('내 진행 중인 공동구매') : tx('내 공동구매')}</h2></div>
+  const list = compact ? q.data.filter(g => g.status !== 'expired').slice(0, 5) : q.data;
+  if (!list.length) return <section className="mt-6" aria-label={tx('내 공동 구매 현황')}><div className="section-heading"><h2>{tx('내 공동 구매 현황')}</h2></div><p className="mt-2 text-sm text-muted-foreground">{tx('아직 참여한 공동구매가 없어요. 상품 구매 화면에서 공동구매를 만들어 보세요.')}</p><InviteCodeEntry /></section>;
+  return <section className="mt-6" aria-label={tx('내 공동 구매 현황')}>
+    <div className="section-heading"><h2>{tx('내 공동 구매 현황')}</h2></div>
     <div className="mt-3 grid gap-3">{list.map(g => <GroupRow key={g.id} g={g} />)}</div>
     <InviteCodeEntry />
   </section>;
