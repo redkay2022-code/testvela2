@@ -169,6 +169,7 @@ export type Database = {
           duration_hours: number
           expires_at: string
           id: string
+          invite_code: string | null
           leader_id: string
           paid_at: string | null
           product_id: string
@@ -182,6 +183,7 @@ export type Database = {
           duration_hours: number
           expires_at: string
           id?: string
+          invite_code?: string | null
           leader_id: string
           paid_at?: string | null
           product_id: string
@@ -195,6 +197,7 @@ export type Database = {
           duration_hours?: number
           expires_at?: string
           id?: string
+          invite_code?: string | null
           leader_id?: string
           paid_at?: string | null
           product_id?: string
@@ -1663,11 +1666,14 @@ export type Database = {
     }
     Functions: {
       _group_can_see: { Args: { _gid: string }; Returns: boolean }
+      _group_claim: { Args: { _id: string; _uid: string }; Returns: string }
       _group_close: { Args: { gid: string }; Returns: undefined }
       _group_discount_pct: { Args: { _n: number }; Returns: number }
       _group_eval: { Args: { gid: string }; Returns: undefined }
       _group_expire_all: { Args: never; Returns: undefined }
       _group_is_leader: { Args: { _gid: string }; Returns: boolean }
+      _group_new_code: { Args: never; Returns: string }
+      _group_resolve: { Args: { _id: string }; Returns: string }
       _group_settle: { Args: { gid: string }; Returns: undefined }
       _loyalty_budget_add: {
         Args: { _commission: number; _issued: number; _redeemed: number }
@@ -1686,6 +1692,10 @@ export type Database = {
           _uid: string
         }
         Returns: number
+      }
+      _referral_claim: {
+        Args: { _code: string; _uid: string }
+        Returns: string
       }
       _referral_sync: {
         Args: { o: Database["public"]["Tables"]["orders"]["Row"] }

@@ -1,4 +1,5 @@
 export const watchStoryOptions = [
+  ['gallery', 'Gallery', 'gallery'],
   ['make-process', 'Make Process', 'makeProcess'],
   ['daily-style', 'Daily Style', 'dailyStyle'],
   ['repair-care', 'Repair & Care', 'repairCare'],

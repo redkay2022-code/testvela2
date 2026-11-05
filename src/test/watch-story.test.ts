@@ -9,8 +9,8 @@ describe('Story tags', () => {
     const tagged = { ...item, values: { ...item.values, storySubcategory: 'New Release Review' } };
     expect(validateItem(tagged, new Set()).plan?.specs['storySubcategory']).toBe('New Release Review');
   });
-  it('offers exactly the five requested tags', () => {
-    expect(watchStoryOptions.map(option => option[1])).toEqual(['Make Process', 'Daily Style', 'Repair & Care', 'Genuine vs Custom', 'New Release Review']);
+  it('offers exactly the six requested tags', () => {
+    expect(watchStoryOptions.map(option => option[1])).toEqual(['Gallery', 'Make Process', 'Daily Style', 'Repair & Care', 'Genuine vs Custom', 'New Release Review']);
   });
   it('requires a valid subcategory for Watch Story', () => {
     expect(() => watchStorySpecs('스토리', '')).toThrow();
