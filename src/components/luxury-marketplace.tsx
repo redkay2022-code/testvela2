@@ -1,6 +1,7 @@
 import { GuestScrollLimit } from './guest-scroll-limit';
 import { groupDiscountUsd, takeReturnTo } from '@/lib/group';
 import { useGroupQuote } from './group-purchase';
+import { useWelcomeCoupon } from './referral';
 import './vela-desktop.css';
 import './store-header.css';
 import { avatarKey, defaultAvatarUrl } from '@/lib/default-avatar';
@@ -282,7 +283,7 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   const [network,setNetwork]=useState<CryptoNetwork>('USDT-TRC20'); const [deposit,setDeposit]=useState(false); const [points,setPoints]=useState(0); const [err,setErr]=useState('');
   const qc=useQueryClient();
   const insRate=useInsuranceRate();
-  const quote=useGroupQuote(item.sample?undefined:item.id),productUsd=price+(box?boxPrice:0),groupDiscount=quote.data?groupDiscountUsd(productUsd,quote.data.pct):0,purchase=insuredPurchase(price,box?boxPrice:0,insured,insRate),cash=cashPayment(purchase.total-groupDiscount,points);
+  const quote=useGroupQuote(item.sample?undefined:item.id),productUsd=price+(box?boxPrice:0),groupDiscount=quote.data?groupDiscountUsd(productUsd,quote.data.pct):0,coupon=useWelcomeCoupon().data,[applyCoupon,setApplyCoupon]=useState(false),couponOk=!item.sample&&!quote.data&&coupon?.status==='active'&&new Date(coupon.expires_at).getTime()>Date.now(),couponDiscount=couponOk&&applyCoupon&&coupon?groupDiscountUsd(productUsd,coupon.pct):0,purchase=insuredPurchase(price,box?boxPrice:0,insured,insRate),cash=cashPayment(purchase.total-groupDiscount-couponDiscount,points);
  return <form className="checkout-form" onSubmit={async e=>{e.preventDefault();const bad=shippingError(f);setErr(bad);if(bad)return;const block=await orderBlockReason({seller_id:item.sample?null:item.source.user_id??null,product_usd:productUsd});if(block){setErr(block);return;}setDeposit(true);}}>
   <TrustBanner/>
   {quote.data&&<p className="text-xs font-semibold text-primary" data-i18n-skip>{tx('공동구매 {p}% 즉시 할인이 적용돼요. 포인트는 적립되지 않아요.',{p:quote.data.pct})}</p>}
@@ -293,13 +294,15 @@ export function CheckoutForm({item,onDone}:{item:LuxuryPost;onDone:()=>void}){
   <ShippingFields value={f} onChange={setF} idPrefix="checkout"/>
   <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" className="size-4 accent-primary" checked={remember} onChange={e=>setRemember(e.target.checked)}/>이 배송지를 내 페이지에 저장</label>
   {err&&<p role="alert" className="text-xs text-destructive">{err}</p>}
+  {couponOk&&coupon&&<label className="box-option"><input type="checkbox" checked={applyCoupon} onChange={e=>setApplyCoupon(e.target.checked)} className="size-4 accent-primary"/><span>{tx('가입 환영 쿠폰 {p}% 사용',{p:coupon.pct})}</span><strong className="text-primary" data-no-translate>-{dollars(groupDiscountUsd(productUsd,coupon.pct))}</strong></label>}
+  {!item.sample&&quote.data&&coupon?.status==='active'&&<p className="text-xs text-muted-foreground">{tx('공동구매 주문에는 쿠폰을 함께 쓸 수 없어요.')}</p>}
   <details><summary>결제 명세 · 포인트 사용</summary>
-    <CheckoutPoints product={productUsd-groupDiscount} points={points} onChange={setPoints}/>
-    <CheckoutSummary product={productUsd} insurance={purchase.insurance} total={purchase.total-groupDiscount} points={points} groupDiscount={groupDiscount}/>
+    <CheckoutPoints product={productUsd-groupDiscount-couponDiscount} points={points} onChange={setPoints}/>
+    <CheckoutSummary product={productUsd} insurance={purchase.insurance} total={purchase.total-groupDiscount-couponDiscount} points={points} groupDiscount={groupDiscount} couponDiscount={couponDiscount}/>
   </details>
   <div className="checkout-total"><span className="text-xs text-muted-foreground">총 결제 금액</span><strong data-no-translate>{cash.toFixed(2)} USDT</strong></div>
   <p className="text-[11px] leading-5 text-muted-foreground">배송비·관세는 판매자 및 수령국 안내를 따릅니다. 카드 결제 수수료는 MoonPay에서 별도로 확인하세요.</p>
   <Button variant="gold" className="w-full" type="submit">안전 에스크로 결제하기<ShieldCheck size={16}/></Button>
-  {deposit&&<CryptoDepositDialog network={network} usd={cash} onNetwork={setNetwork} onClose={()=>setDeposit(false)} onSubmit={async txid=>{setDeposit(false);try{await createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:purchase.total-groupDiscount,product_amount_usd:productUsd-groupDiscount,points_redeemed:points,group_discount_usd:groupDiscount,seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid,shipping:normalizeShipping(f)});if(remember)await ship.save(f).catch(console.error);preview.order(item);await qc.invalidateQueries();toast.success('결제 완료 및 에스크로 보관 — 주문이 등록되었습니다.');onDone();}catch(e){console.error(e);const why=(e as {message?:string})?.message??'';toast.error('주문을 저장하지 못했습니다. 다시 시도해 주세요.',{description:[why,txid&&('TXID '+txid)].filter(Boolean).join(' · '),duration:20000});setDeposit(true);}}}/>}
+  {deposit&&<CryptoDepositDialog network={network} usd={cash} onNetwork={setNetwork} onClose={()=>setDeposit(false)} onSubmit={async txid=>{setDeposit(false);try{await createLiveOrder({post_id:item.id,title:item.title,image_url:item.images[0]?.startsWith('http')?item.images[0]:undefined as never,amount_usd:purchase.total-groupDiscount-couponDiscount,product_amount_usd:productUsd-groupDiscount-couponDiscount,points_redeemed:points,group_discount_usd:groupDiscount,...(couponDiscount>0&&coupon?{coupon_id:coupon.id,coupon_discount_usd:couponDiscount}:{}),seller_id:item.sample?null:item.source.user_id??null,seller_name:item.creator,network,txid,shipping:normalizeShipping(f)});if(remember)await ship.save(f).catch(console.error);preview.order(item);await qc.invalidateQueries();toast.success('결제 완료 및 에스크로 보관 — 주문이 등록되었습니다.');onDone();}catch(e){console.error(e);const why=(e as {message?:string})?.message??'';toast.error('주문을 저장하지 못했습니다. 다시 시도해 주세요.',{description:[why,txid&&('TXID '+txid)].filter(Boolean).join(' · '),duration:20000});setDeposit(true);}}}/>}
  </form>;
 }

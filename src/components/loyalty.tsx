@@ -131,11 +131,12 @@ export function CheckoutPoints({ product, points, onChange }: { product: number;
   </section>;
 }
 
-export function CheckoutSummary({ product, insurance, total, points, groupDiscount = 0 }: { product: number; insurance: number; total: number; points: number; groupDiscount?: number }) {
+export function CheckoutSummary({ product, insurance, total, points, groupDiscount = 0, couponDiscount = 0 }: { product: number; insurance: number; total: number; points: number; groupDiscount?: number; couponDiscount?: number }) {
   const value = Number(useLoyaltyRules().data?.config?.point_value_usd ?? 0.001), discount = pointsToUsd(points, value);
   return <dl className="insurance-breakdown mt-4" aria-label="Order Summary">
     <div><dt>Product Subtotal</dt><dd data-no-translate>{usd(product)}</dd></div>
     {groupDiscount > 0 && <div><dt>Group Discount</dt><dd className="text-primary" data-no-translate>-{usd(groupDiscount)}</dd></div>}
+    {couponDiscount > 0 && <div><dt>Welcome Coupon</dt><dd className="text-primary" data-no-translate>-{usd(couponDiscount)}</dd></div>}
     <div><dt>Insurance</dt><dd data-no-translate>{usd(insurance)}</dd></div>
     <div><dt>Shipping</dt><dd>판매자 안내</dd></div>
     <div><dt>Taxes / Duties</dt><dd>수령국 기준</dd></div>

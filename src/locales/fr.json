@@ -3016,5 +3016,19 @@
   "새 공동구매 링크 또 만들기": "Créer un autre lien d'achat groupé",
   "가입하거나 로그인하면 더 많은 상품을 볼 수 있어요.": "Inscrivez-vous ou connectez-vous pour voir plus de produits.",
   "회원가입 / 로그인": "S'inscrire / Se connecter",
-  "첫 접속 시 연결이 다소 지연될 수 있습니다. 양해 부탁드립니다.": "Lors de la première connexion, le chargement peut être légèrement plus long. Merci de votre patience."
+  "첫 접속 시 연결이 다소 지연될 수 있습니다. 양해 부탁드립니다.": "Lors de la première connexion, le chargement peut être légèrement plus long. Merci de votre patience.",
+  "가입 환영 쿠폰 {p}% 사용": "Utiliser le coupon de bienvenue de {p} %",
+  "공동구매 주문에는 쿠폰을 함께 쓸 수 없어요.": "Les coupons ne sont pas cumulables avec les commandes d’achat groupé.",
+  "🎁 추천 링크로 가입하면 5% 환영 쿠폰을 드려요. (공동구매 주문에는 함께 쓸 수 없어요)": "🎁 Inscrivez-vous via un lien de parrainage et recevez un coupon de bienvenue de 5 %. (Non cumulable avec les achats groupés)",
+  "추천 코드": "Code de parrainage",
+  "사용 가능 · {d}까지": "Valable jusqu’au {d}",
+  "사용 완료": "Utilisé",
+  "기간 만료": "Expiré",
+  "가입 환영 쿠폰": "Coupon de bienvenue",
+  "가입 환영 쿠폰 {p}%": "Coupon de bienvenue de {p} %",
+  "공동구매 주문에는 함께 쓸 수 없어요.": "Non cumulable avec les commandes d’achat groupé.",
+  "추천 코드를 만들지 못했어요. 잠시 후 다시 시도해 주세요.": "Impossible de créer le code de parrainage. Réessayez dans un instant.",
+  "추천 포인트는 ${min} 이상 주문에만 쓸 수 있고, 적립 후 {days}일이 지나면 사라져요.": "Les points de parrainage ne sont utilisables que sur les commandes de ${min} ou plus et expirent {days} jours après leur obtention.",
+  "내 추천 코드": "Mon code de parrainage",
+  "추천 코드 만들기": "Créer un code de parrainage"
 }

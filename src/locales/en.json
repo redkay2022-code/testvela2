@@ -1766,5 +1766,19 @@
   "새 공동구매 링크 또 만들기": "Create another group link",
   "가입하거나 로그인하면 더 많은 상품을 볼 수 있어요.": "Sign up or log in to see more products.",
   "회원가입 / 로그인": "Sign up / Log in",
-  "첫 접속 시 연결이 다소 지연될 수 있습니다. 양해 부탁드립니다.": "The first connection may be slightly delayed. Thank you for your patience."
+  "첫 접속 시 연결이 다소 지연될 수 있습니다. 양해 부탁드립니다.": "The first connection may be slightly delayed. Thank you for your patience.",
+  "가입 환영 쿠폰 {p}% 사용": "Use {p}% welcome coupon",
+  "공동구매 주문에는 쿠폰을 함께 쓸 수 없어요.": "Coupons cannot be combined with group purchase orders.",
+  "🎁 추천 링크로 가입하면 5% 환영 쿠폰을 드려요. (공동구매 주문에는 함께 쓸 수 없어요)": "🎁 Sign up with a referral link and get a 5% welcome coupon. (Not combinable with group purchase orders)",
+  "추천 코드": "Referral code",
+  "사용 가능 · {d}까지": "Valid until {d}",
+  "사용 완료": "Used",
+  "기간 만료": "Expired",
+  "가입 환영 쿠폰": "Welcome coupon",
+  "가입 환영 쿠폰 {p}%": "{p}% welcome coupon",
+  "공동구매 주문에는 함께 쓸 수 없어요.": "Cannot be combined with group purchase orders.",
+  "추천 코드를 만들지 못했어요. 잠시 후 다시 시도해 주세요.": "Could not create a referral code. Please try again shortly.",
+  "추천 포인트는 ${min} 이상 주문에만 쓸 수 있고, 적립 후 {days}일이 지나면 사라져요.": "Referral points can only be used on orders of ${min} or more, and expire {days} days after they are earned.",
+  "내 추천 코드": "My referral code",
+  "추천 코드 만들기": "Create referral code"
 }

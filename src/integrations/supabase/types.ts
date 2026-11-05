@@ -649,6 +649,8 @@ export type Database = {
           dispute_open: boolean
           dispute_opened_at: string | null
           group_discount_pct: number | null
+          coupon_discount_usd: number
+          coupon_id: string | null
           group_discount_usd: number
           group_id: string | null
           id: string
@@ -687,6 +689,8 @@ export type Database = {
           created_at?: string
           dispute_open?: boolean
           dispute_opened_at?: string | null
+          coupon_discount_usd?: number
+          coupon_id?: string | null
           group_discount_pct?: number | null
           group_discount_usd?: number
           group_id?: string | null
@@ -726,6 +730,8 @@ export type Database = {
           created_at?: string
           dispute_open?: boolean
           dispute_opened_at?: string | null
+          coupon_discount_usd?: number
+          coupon_id?: string | null
           group_discount_pct?: number | null
           group_discount_usd?: number
           group_id?: string | null
