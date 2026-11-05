@@ -71,17 +71,40 @@ export async function loadWithSnapshot<T>(o: {
   build: () => Promise<T>;
   write: (data: T) => Promise<void>;
   ttlMs: number; staleOkMs: number; writeWaitMs?: number; now?: Clock;
+  /**
+   * Serve-then-refresh: a saved copy older than `ttlMs` but younger than `swrMs` is returned immediately and the rebuild runs
+   * in the background (through `background`, e.g. the host's waitUntil), so no visitor waits for it. Off when omitted.
+   */
+  swrMs?: number; background?: (work: Promise<unknown>) => void;
 }): Promise<T> {
   const now = o.now ?? Date.now;
   const snap = await o.read().catch(() => null);
   if (snap && now() - snap.at < o.ttlMs) return snap.data;
-  try {
+  const rebuild = async () => {
     const data = await o.build();
     // Saving is best effort and bounded, so a slow or missing table never makes the visitor wait long or fail.
     await Promise.race([o.write(data).catch(() => undefined), new Promise<void>(r => setTimeout(r, o.writeWaitMs ?? 4000))]);
     return data;
+  };
+  if (snap && o.swrMs && now() - snap.at < o.swrMs) {
+    if (!refreshing || now() - refreshing.at > REFRESH_MAX_MS) {
+      const entry = { at: now() };
+      refreshing = entry;
+      const work = rebuild().catch(() => undefined).finally(() => { if (refreshing === entry) refreshing = null; });
+      (o.background ?? (() => undefined))(work);
+    }
+    return snap.data;
+  }
+  try {
+    return await rebuild();
   } catch (error) {
     if (snap && now() - snap.at < o.staleOkMs) return snap.data;
     throw error;
   }
 }
+
+/** Only one background rebuild at a time per server; a stuck one is replaced after this long. */
+const REFRESH_MAX_MS = 60_000;
+let refreshing: { at: number } | null = null;
+/** For tests. */
+export const resetRefreshing = () => { refreshing = null; };

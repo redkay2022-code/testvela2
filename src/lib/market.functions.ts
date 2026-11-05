@@ -106,10 +106,22 @@ async function writeFeedSnapshot(rows: FeedRows) {
   if (error) console.error('feed snapshot save failed');
 }
 
+/** Lets the rebuild finish after the response was sent (Cloudflare waitUntil). Without it the rebuild is just started and may be cut short. */
+function runInBackground(work: Promise<unknown>) {
+  void (async () => {
+    try {
+      const server = await import('@tanstack/react-start/server') as unknown as { getEvent?: () => { waitUntil?: (p: Promise<unknown>) => void; context?: { cloudflare?: { context?: { waitUntil?: (p: Promise<unknown>) => void } } } } };
+      const ev = server.getEvent?.();
+      const cf = ev?.context?.cloudflare?.context;
+      if (ev?.waitUntil) ev.waitUntil(work); else if (cf?.waitUntil) cf.waitUntil(work);
+    } catch { /* 가능한 경우에만 사용 */ }
+  })();
+}
+
 export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
   const token = await callerToken();
   if (token) return loadPosts(token);
-  return publicFeed.get(() => loadWithSnapshot<FeedRows>({ read: readFeedSnapshot, build: () => loadPosts(null), write: writeFeedSnapshot, ttlMs: 10 * 60_000, staleOkMs: 60 * 60_000 }));
+  return publicFeed.get(() => loadWithSnapshot<FeedRows>({ read: readFeedSnapshot, build: () => loadPosts(null), write: writeFeedSnapshot, ttlMs: 10 * 60_000, staleOkMs: 5 * 60 * 60_000, swrMs: 5 * 60 * 60_000, background: runInBackground }));
 });
 
 export const getStores = createServerFn({ method: 'GET' }).handler(async () => {

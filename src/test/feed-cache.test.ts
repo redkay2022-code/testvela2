@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SharedFeedCache, SignedUrlMemo, loadWithSnapshot } from '@/lib/feed-cache';
+import { SharedFeedCache, SignedUrlMemo, loadWithSnapshot, resetRefreshing } from '@/lib/feed-cache';
 
 describe('signed link memo', () => {
   it('reuses links signed within 5 hours and signs again afterwards', () => {
@@ -69,5 +69,28 @@ describe('saved feed copy', () => {
     const out = await loadWithSnapshot({ read: snap(0), build: fail, write: async () => {}, ttlMs: 1000, staleOkMs: 10_000, now: () => 5000 });
     expect(out).toBe('saved');
     await expect(loadWithSnapshot({ read: snap(0), build: fail, write: async () => {}, ttlMs: 1000, staleOkMs: 10_000, now: () => 20_000 })).rejects.toThrow('db down');
+  });
+  it('serves an older saved copy at once and refreshes it in the background (serve-then-refresh)', async () => {
+    resetRefreshing();
+    let built = 0, saved = '', bg: Promise<unknown> | null = null;
+    const run = () => loadWithSnapshot({ read: snap(0), build: async () => { built++; return 'new'; }, write: async d => { saved = d; }, ttlMs: 1000, staleOkMs: 99_999, swrMs: 99_999, now: () => 5000, background: p => { bg = p; } });
+    expect(await run()).toBe('saved');
+    expect(bg).not.toBeNull();
+    await bg;
+    expect([built, saved]).toEqual([1, 'new']);
+    resetRefreshing();
+  });
+  it('starts only one background refresh at a time and still rebuilds in front when the copy is too old', async () => {
+    resetRefreshing();
+    let built = 0;
+    let release: () => void = () => {};
+    const gate = new Promise<void>(r => { release = r; });
+    const common = { read: snap(0), build: async () => { built++; await gate; return 'new'; }, write: async () => {}, ttlMs: 1000, staleOkMs: 99_999, swrMs: 20_000, background: () => {} };
+    const [a, b] = await Promise.all([loadWithSnapshot({ ...common, now: () => 5000 }), loadWithSnapshot({ ...common, now: () => 5000 })]);
+    expect([a, b, built]).toEqual(['saved', 'saved', 1]);
+    release();
+    resetRefreshing();
+    const ancient = await loadWithSnapshot({ ...common, build: async () => 'rebuilt', now: () => 50_000 });
+    expect(ancient).toBe('rebuilt');
   });
 });
