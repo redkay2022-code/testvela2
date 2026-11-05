@@ -24,13 +24,13 @@ export function GuestScrollLimit({ active, onSignup, children }: { active: boole
     Array.from(el.children).forEach(c => ro.observe(c));
     return () => ro.disconnect();
   }, [active]);
-  if (!active) return <>{children}</>;
+  // 회원/비회원 전환 시 화면이 다시 만들어지며 깜빡이지 않도록 항상 같은 구조를 유지한다.
   return <>
-    <div ref={box} style={{ maxHeight: `calc(${GUEST_MAX_SCREENS} * 100dvh)`, overflow: 'hidden', position: 'relative' }}>
+    <div ref={box} style={active ? { maxHeight: `calc(${GUEST_MAX_SCREENS} * 100dvh)`, overflow: 'hidden', position: 'relative' } : undefined}>
       {children}
-      {clipped && <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 120, pointerEvents: 'none', background: 'linear-gradient(to bottom, transparent, var(--background))' }} />}
+      {active && clipped && <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 120, pointerEvents: 'none', background: 'linear-gradient(to bottom, transparent, var(--background))' }} />}
     </div>
-    {clipped && <section className="mx-auto my-6 max-w-md rounded-lg border border-primary/40 bg-card p-5 text-center" aria-label={tx('회원가입 / 로그인')}>
+    {active && clipped && <section className="mx-auto my-6 max-w-md rounded-lg border border-primary/40 bg-card p-5 text-center" aria-label={tx('회원가입 / 로그인')}>
       <Lock className="mx-auto mb-2 text-primary" size={22} aria-hidden />
       <p className="text-sm font-semibold">{tx('가입하거나 로그인하면 더 많은 상품을 볼 수 있어요.')}</p>
       <Button type="button" variant="gold" className="mt-4 w-full" onClick={onSignup}>{tx('회원가입 / 로그인')}</Button>

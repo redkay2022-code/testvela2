@@ -289,7 +289,7 @@
 .lux-header-tabs {display:flex;align-items:center;justify-content:center;gap:28px;height:55px;min-width:0;}
 .lux-header-tabs .lux-tab {height:55px;font-size:13px;font-weight:500;color:#A0A0AB;white-space:nowrap;padding:0 4px;flex-shrink:0;transition:color .2s ease;}
 .lux-header-tabs .lux-tab.active {color:#FFFFFF;font-weight:700;}.lux-header-tabs .lux-tab.active::after {bottom:0;}
-.lux-feed-transition {animation:lux-feed-enter .2s ease-out;}
+.lux-feed-transition {}
 @keyframes lux-feed-enter {from {opacity:.45;}to {opacity:1;}}
 .lux-search-overlay {position:fixed;inset:0;z-index:71;background:var(--background);overflow-y:auto;overscroll-behavior:contain;}
 .lux-search-overlay-inner {max-width:1080px;margin:auto;padding:0 16px max(24px,env(safe-area-inset-bottom));}
@@ -994,8 +994,8 @@ img[class*="avatar"],[class*="avatar"]>img {object-fit:cover;object-position:cen
 @media (max-width:360px) { .customer-order { padding:10px; } .customer-product-copy { padding:8px; } .customer-wallet-row { flex-wrap:wrap; } }
 
 /* Home feed: swipe between 팔로잉 · 추천 · 리뷰 slides the whole screen */
-@keyframes feed-slide-from-right{from{transform:translateX(38px);opacity:.2}to{transform:none;opacity:1}}
-@keyframes feed-slide-from-left{from{transform:translateX(-38px);opacity:.2}to{transform:none;opacity:1}}
+@keyframes feed-slide-from-right{from{transform:translateX(24px)}to{transform:none}}
+@keyframes feed-slide-from-left{from{transform:translateX(-24px)}to{transform:none}}
 html[data-slide="left"] .red-home-shell{animation:feed-slide-from-right .28s ease-out}
 html[data-slide="right"] .red-home-shell{animation:feed-slide-from-left .28s ease-out}
 .red-home-shell{touch-action:pan-y}

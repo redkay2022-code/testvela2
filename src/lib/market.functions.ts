@@ -106,22 +106,18 @@ async function writeFeedSnapshot(rows: FeedRows) {
   if (error) console.error('feed snapshot save failed');
 }
 
-/** Lets the rebuild finish after the response was sent (Cloudflare waitUntil). Without it the rebuild is just started and may be cut short. */
-function runInBackground(work: Promise<unknown>) {
-  void (async () => {
-    try {
-      const server = await import('@tanstack/react-start/server') as unknown as { getEvent?: () => { waitUntil?: (p: Promise<unknown>) => void; context?: { cloudflare?: { context?: { waitUntil?: (p: Promise<unknown>) => void } } } } };
-      const ev = server.getEvent?.();
-      const cf = ev?.context?.cloudflare?.context;
-      if (ev?.waitUntil) ev.waitUntil(work); else if (cf?.waitUntil) cf.waitUntil(work);
-    } catch { /* 가능한 경우에만 사용 */ }
-  })();
-}
-
 export const getPosts = createServerFn({ method: 'GET' }).handler(async () => {
   const token = await callerToken();
   if (token) return loadPosts(token);
-  return publicFeed.get(() => loadWithSnapshot<FeedRows>({ read: readFeedSnapshot, build: () => loadPosts(null), write: writeFeedSnapshot, ttlMs: 10 * 60_000, staleOkMs: 5 * 60 * 60_000, swrMs: 5 * 60 * 60_000, background: runInBackground }));
+  // 서버 전용: 응답 후에도 갱신이 끝나도록 호스트의 waitUntil 사용(없으면 그냥 시작만 함). 이 안에만 둬서 브라우저 번들에 섞이지 않게 함.
+  let waitUntil: ((p: Promise<unknown>) => void) | undefined;
+  try {
+    const server = await import('@tanstack/react-start/server') as unknown as { getEvent?: () => { waitUntil?: (p: Promise<unknown>) => void; context?: { cloudflare?: { context?: { waitUntil?: (p: Promise<unknown>) => void } } } } };
+    const ev = server.getEvent?.();
+    waitUntil = ev?.waitUntil ? (p) => ev.waitUntil!(p) : ev?.context?.cloudflare?.context?.waitUntil ? (p) => ev.context!.cloudflare!.context!.waitUntil!(p) : undefined;
+  } catch { /* 없으면 사용 안 함 */ }
+  const background = (work: Promise<unknown>) => { try { waitUntil?.(work); } catch { /* 무시 */ } };
+  return publicFeed.get(() => loadWithSnapshot<FeedRows>({ read: readFeedSnapshot, build: () => loadPosts(null), write: writeFeedSnapshot, ttlMs: 10 * 60_000, staleOkMs: 5 * 60 * 60_000, swrMs: 5 * 60 * 60_000, background }));
 });
 
 export const getStores = createServerFn({ method: 'GET' }).handler(async () => {
