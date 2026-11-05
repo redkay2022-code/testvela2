@@ -3036,5 +3036,9 @@
   "추천 포인트는 ${min} 이상 주문에만 쓸 수 있고, 적립 후 {days}일이 지나면 사라져요.": "Uitnodigingspunten kunnen alleen worden gebruikt bij bestellingen vanaf ${min} en vervallen {days} dagen na ontvangst.",
   "내 추천 코드": "Mijn uitnodigingscode",
   "레퍼럴 코드 생성": "Uitnodigingscode maken",
-  "내 공동 구매 현황": "Mijn groepsaankopen"
+  "내 공동 구매 현황": "Mijn groepsaankopen",
+  "추천·초대 코드 (선택)": "Uitnodigings- / referralcode (optioneel)",
+  "추천 코드(8자리) 또는 공동구매 초대 코드(VELA-XXXX) 중 하나를 입력하세요. 링크로 들어오셨다면 자동으로 채워져요.": "Voer een referralcode (8 tekens) of een uitnodigingscode voor groepsaankopen (VELA-XXXX) in. Wordt automatisch ingevuld als je via een link komt.",
+  "🎁 추천 코드가 적용됐어요. 가입하면 5% 환영 쿠폰을 드려요. (공동구매 주문에는 함께 쓸 수 없어요)": "🎁 Referralcode toegepast. Meld je aan en ontvang een welkomstcoupon van 5%. (Niet te combineren met groepsaankopen)",
+  "코드 형식을 확인해 주세요. (추천 코드 8자리 또는 VELA-XXXX)": "Controleer het codeformaat. (referralcode van 8 tekens of VELA-XXXX)"
 }

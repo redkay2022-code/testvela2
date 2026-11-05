@@ -42,18 +42,6 @@ export function useWelcomeCoupon() {
   });
 }
 
-/** 가입 화면: 추천 링크로 들어온 경우 코드가 적용됐고 환영 쿠폰이 나온다는 안내. */
-export function ReferralSignupNote() {
-  const [code, setCode] = useState<string | null>(null);
-  useEffect(() => { setCode(storedReferral()); }, []);
-  if (!code) return null;
-  const short = code.length === 8;
-  return <div className="mb-3 rounded-md border border-primary/40 bg-primary/10 p-3 text-xs leading-5">
-    <p className="font-semibold text-primary">{tx('🎁 추천 링크로 가입하면 5% 환영 쿠폰을 드려요. (공동구매 주문에는 함께 쓸 수 없어요)')}</p>
-    {short && <p className="mt-1 text-muted-foreground">{tx('추천 코드')}: <span data-no-translate className="font-mono">{code}</span></p>}
-  </div>;
-}
-
 /** 마이페이지: 내 환영 쿠폰 상태 */
 function WelcomeCouponCard() {
   const { data: c } = useWelcomeCoupon();

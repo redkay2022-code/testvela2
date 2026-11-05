@@ -1,6 +1,7 @@
 {
   "_comment": "Text that must NOT be translated: brand names, codes, units, technical strings. 'exact' = literal strings, 'patterns' = regular expressions.",
   "exact": [
+    "ABCD2345 / VELA-XXXX",
     "Welcome Coupon",
     "calc({0} * 100dvh)",
     "linear-gradient(to bottom, transparent, var(--background))",

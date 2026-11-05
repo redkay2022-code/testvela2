@@ -5,6 +5,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const SHORT = /^[A-HJ-NP-Z2-9]{8}$/;
 export const isReferralCode = (v: string | null | undefined): v is string => !!v && (UUID.test(v) || SHORT.test(v.toUpperCase()));
+/** 8자리 추천 코드인지 (예전 사용자ID 링크·공동구매 ID와 구분하기 위해 짧은 코드만). */
+export const isShortReferral = (v: string | null | undefined): v is string => !!v && SHORT.test(v.trim().toUpperCase());
 /** 저장·전송용으로 통일: 짧은 코드는 대문자, 예전 ID는 소문자. */
 export const normalizeReferral = (v: string) => (UUID.test(v) ? v.toLowerCase() : v.toUpperCase());
 export const referralLink = (code: string, origin = typeof window === 'undefined' ? 'https://velamarket.app' : window.location.origin) => `${origin}/ref/${code}`;

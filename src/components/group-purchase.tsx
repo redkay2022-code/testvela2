@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from './ui/button';
 import { ShareRow } from './referral';
+import { isShortReferral, storedReferral } from '@/lib/referral';
 import { tx } from '@/lib/dom-translate';
 import { useServerFn } from '@tanstack/react-start';
 import { getGroupPreview } from '@/lib/group.functions';
@@ -229,15 +230,27 @@ export function InviteCodeEntry() {
 
 /** 회원가입 화면: 초대 혜택 안내 + 초대 코드 칸(링크로 들어왔으면 자동 입력) */
 export function SignupInvite({ code, setCode }: { code: string; setCode: (v: string) => void }) {
+  /* 입력칸은 하나: 8자리 추천 코드도, 공동구매 초대 코드(VELA-XXXX)도 여기에 넣는다. 링크로 들어오면 자동으로 채워진다. */
   const [touched, setTouched] = useState(false);
-  const lookup = isInvite(code) ? normalizeInvite(code) : touched ? null : storedGroup();
+  const [storedRef, setStoredRef] = useState<string | null>(null);
+  useEffect(() => { setStoredRef(storedReferral()); }, []);
+  const typed = code.trim(), typedRef = isShortReferral(typed);
+  const lookup = isInvite(typed) ? normalizeInvite(typed) : touched ? null : storedGroup();
   const g = usePublicGroup(lookup).data ?? null;
-  useEffect(() => { if (g?.invite_code && !touched && !code) setCode(g.invite_code); }, [g?.invite_code, touched, code, setCode]);
+  useEffect(() => {
+    if (touched || code) return;
+    if (g?.invite_code) setCode(g.invite_code); else if (storedRef) setCode(storedRef);
+  }, [g?.invite_code, storedRef, touched, code, setCode]);
   useEffect(() => { if (g && g.status === 'active') rememberGroup(g.id); }, [g?.id, g?.status]);
   const open = Boolean(g && g.status === 'active' && new Date(g.expires_at).getTime() > Date.now());
+  const refApplied = typedRef || Boolean(storedRef);
+  const unknownShape = Boolean(typed) && !typedRef && !isInvite(typed);
   return <div className="mt-4">
-    {open && g && <div className="mb-3 rounded-md border border-primary/40 bg-primary/10 p-3 text-xs leading-5"><p className="font-semibold text-primary">{tx('🎁 이 초대로 가입하면 최대 {p}% 즉시 할인을 받을 수 있어요. 가입과 동시에 공동구매에 자동 참여돼요.', { p: g.max_pct })}</p><p className="mt-1 text-muted-foreground" data-no-translate>{g.title}</p></div>}
-    <label className="form-label" htmlFor="invite-code">{tx('초대 코드 (선택)')}</label>
-    <input id="invite-code" className="form-input" value={code} maxLength={40} placeholder="VELA-XXXX" autoCapitalize="characters" autoComplete="off" data-no-translate onChange={e => { setTouched(true); setCode(e.target.value); }} />
+    <label className="form-label" htmlFor="invite-code">{tx('추천·초대 코드 (선택)')}</label>
+    <input id="invite-code" className="form-input" value={code} maxLength={40} placeholder="ABCD2345 / VELA-XXXX" autoCapitalize="characters" autoComplete="off" data-no-translate onChange={e => { setTouched(true); setCode(e.target.value); }} />
+    <p className="mt-1 text-xs text-muted-foreground">{tx('추천 코드(8자리) 또는 공동구매 초대 코드(VELA-XXXX) 중 하나를 입력하세요. 링크로 들어오셨다면 자동으로 채워져요.')}</p>
+    {refApplied && <div className="mt-3 rounded-md border border-primary/40 bg-primary/10 p-3 text-xs leading-5"><p className="font-semibold text-primary">{tx('🎁 추천 코드가 적용됐어요. 가입하면 5% 환영 쿠폰을 드려요. (공동구매 주문에는 함께 쓸 수 없어요)')}</p></div>}
+    {open && g && <div className="mt-3 rounded-md border border-primary/40 bg-primary/10 p-3 text-xs leading-5"><p className="font-semibold text-primary">{tx('🎁 이 초대로 가입하면 최대 {p}% 즉시 할인을 받을 수 있어요. 가입과 동시에 공동구매에 자동 참여돼요.', { p: g.max_pct })}</p><p className="mt-1 text-muted-foreground" data-no-translate>{g.title}</p></div>}
+    {unknownShape && <p className="mt-2 text-xs text-destructive">{tx('코드 형식을 확인해 주세요. (추천 코드 8자리 또는 VELA-XXXX)')}</p>}
   </div>;
 }
