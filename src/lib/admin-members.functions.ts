@@ -18,36 +18,60 @@ export type MemberRow = {
   sanction: { id: string; kind: 'suspend' | 'ban'; reason: string; ends_at: string | null } | null;
 };
 
+/** Sign-ups from the last 48 hours are shown in their own block above the regular list; afterwards they move to the regular list on their own. */
+const NEW_MEMBER_HOURS = 48;
+
+async function buildMemberRows(db: any, profiles: any[]): Promise<MemberRow[]> {
+  const ids: string[] = profiles.map((p: any) => p.user_id);
+  if (!ids.length) return [];
+  const [roles, sanctions, comments, orders, auths] = await Promise.all([
+    db.from('user_roles').select('user_id, role').in('user_id', ids),
+    db.from('user_sanctions').select('id, user_id, kind, reason, ends_at').in('user_id', ids).is('lifted_at', null).lte('starts_at', new Date().toISOString()).order('created_at', { ascending: false }),
+    db.from('comments').select('user_id').in('user_id', ids).limit(5000),
+    db.from('orders').select('buyer_id').in('buyer_id', ids).limit(5000),
+    Promise.all(ids.map(async id => { try { const { data: u } = await db.auth.admin.getUserById(id); return [id, u?.user?.last_sign_in_at ?? null] as const; } catch { return [id, null] as const; } })),
+  ]);
+  const tally = (rows: any[] | null, key: string) => { const m = new Map<string, number>(); for (const r of rows ?? []) m.set(r[key], (m.get(r[key]) ?? 0) + 1); return m; };
+  const cm = tally(comments.data, 'user_id'), om = tally(orders.data, 'buyer_id'), seen = new Map(auths);
+  const now = Date.now();
+  return profiles.map((p: any) => {
+    const s = (sanctions.data ?? []).find((x: any) => x.user_id === p.user_id && (!x.ends_at || new Date(x.ends_at).getTime() > now));
+    return { user_id: p.user_id, nickname: p.nickname, system_code: p.system_code, created_at: p.created_at, last_sign_in_at: seen.get(p.user_id) ?? null,
+      roles: (roles.data ?? []).filter((r: any) => r.user_id === p.user_id).map((r: any) => r.role), comments: cm.get(p.user_id) ?? 0, orders: om.get(p.user_id) ?? 0,
+      sanction: s ? { id: s.id, kind: s.kind, reason: s.reason, ends_at: s.ends_at } : null };
+  });
+}
+const searchTerm = (v?: string) => (v ?? '').trim().replace(/[%,()]/g, '');
+
 export const adminListMembers = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .inputValidator(d => z.object({ q: z.string().max(60).optional(), page: z.number().int().min(0).max(1000).optional() }).parse(d ?? {}))
   .handler(async ({ context, data }): Promise<{ rows: MemberRow[]; total: number; pageSize: number }> => {
     await requireAdmin(context.supabase, context.userId);
     const db = await adminDb(), size = 20, page = data.page ?? 0;
-    let q = db.from('profiles').select('user_id, nickname, system_code, created_at', { count: 'exact' }).order('created_at', { ascending: false });
-    const term = (data.q ?? '').trim().replace(/[%,()]/g, '');
+    const cutoff = new Date(Date.now() - NEW_MEMBER_HOURS * 3_600_000).toISOString();
+    let q = db.from('profiles').select('user_id, nickname, system_code, created_at', { count: 'exact' }).lt('created_at', cutoff).order('created_at', { ascending: false });
+    const term = searchTerm(data.q);
     if (term) q = q.or(`nickname.ilike.%${term}%,system_code.ilike.%${term}%`);
     const { data: profiles, count, error } = await q.range(page * size, page * size + size - 1);
     if (error) throw new Error('회원 목록을 불러오지 못했습니다.');
-    const ids: string[] = (profiles ?? []).map((p: any) => p.user_id);
-    if (!ids.length) return { rows: [], total: count ?? 0, pageSize: size };
-    const [roles, sanctions, comments, orders, auths] = await Promise.all([
-      db.from('user_roles').select('user_id, role').in('user_id', ids),
-      db.from('user_sanctions').select('id, user_id, kind, reason, ends_at').in('user_id', ids).is('lifted_at', null).lte('starts_at', new Date().toISOString()).order('created_at', { ascending: false }),
-      db.from('comments').select('user_id').in('user_id', ids).limit(5000),
-      db.from('orders').select('buyer_id').in('buyer_id', ids).limit(5000),
-      Promise.all(ids.map(async id => { try { const { data: u } = await db.auth.admin.getUserById(id); return [id, u?.user?.last_sign_in_at ?? null] as const; } catch { return [id, null] as const; } })),
-    ]);
-    const tally = (rows: any[] | null, key: string) => { const m = new Map<string, number>(); for (const r of rows ?? []) m.set(r[key], (m.get(r[key]) ?? 0) + 1); return m; };
-    const cm = tally(comments.data, 'user_id'), om = tally(orders.data, 'buyer_id'), seen = new Map(auths);
-    const now = Date.now();
-    const rows: MemberRow[] = (profiles ?? []).map((p: any) => {
-      const s = (sanctions.data ?? []).find((x: any) => x.user_id === p.user_id && (!x.ends_at || new Date(x.ends_at).getTime() > now));
-      return { user_id: p.user_id, nickname: p.nickname, system_code: p.system_code, created_at: p.created_at, last_sign_in_at: seen.get(p.user_id) ?? null,
-        roles: (roles.data ?? []).filter((r: any) => r.user_id === p.user_id).map((r: any) => r.role), comments: cm.get(p.user_id) ?? 0, orders: om.get(p.user_id) ?? 0,
-        sanction: s ? { id: s.id, kind: s.kind, reason: s.reason, ends_at: s.ends_at } : null };
-    });
-    return { rows, total: count ?? 0, pageSize: size };
+    return { rows: await buildMemberRows(db, profiles ?? []), total: count ?? 0, pageSize: size };
+  });
+
+/** Members who signed up within the last 48 hours (newest first). */
+export const adminListNewMembers = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(d => z.object({ q: z.string().max(60).optional() }).parse(d ?? {}))
+  .handler(async ({ context, data }): Promise<{ rows: MemberRow[]; hours: number }> => {
+    await requireAdmin(context.supabase, context.userId);
+    const db = await adminDb();
+    const cutoff = new Date(Date.now() - NEW_MEMBER_HOURS * 3_600_000).toISOString();
+    let q = db.from('profiles').select('user_id, nickname, system_code, created_at').gte('created_at', cutoff).order('created_at', { ascending: false });
+    const term = searchTerm(data.q);
+    if (term) q = q.or(`nickname.ilike.%${term}%,system_code.ilike.%${term}%`);
+    const { data: profiles, error } = await q.limit(200);
+    if (error) throw new Error('신규 가입자를 불러오지 못했습니다.');
+    return { rows: await buildMemberRows(db, profiles ?? []), hours: NEW_MEMBER_HOURS };
   });
 
 const DAYS = { '7d': 7, '15d': 15, '30d': 30 } as const;
@@ -98,6 +122,24 @@ export const adminDeletePost = createServerFn({ method: 'POST' })
     if (error) throw new Error('상품을 삭제하지 못했습니다.');
     const files = [...(post.media_urls ?? []), post.video_url, post.thumbnail_url, post.specs?.cardImage].filter((p: unknown): p is string => typeof p === 'string' && p.length > 0 && !p.startsWith('seed:') && !p.startsWith('http') && !p.includes('..'));
     if (files.length) await db.storage.from('market-media').remove(files);
+    return { ok: true };
+  });
+
+/** Permanently removes one transaction (order) and everything attached to it. The admin must re-enter their password. */
+export const adminDeleteOrder = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(d => z.object({ orderId: z.string().uuid(), password: z.string().min(1).max(72) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const auth = await import('./admin-auth.server');
+    await auth.checkAdminPassword(context.supabase, context.userId, data.password);
+    const db = await adminDb();
+    const { data: order } = await db.from('orders').select('id').eq('id', data.orderId).maybeSingle();
+    if (!order) throw new Error('이미 삭제되었거나 찾을 수 없는 거래입니다.');
+    const { data: qc } = await db.from('order_qc_media').select('path').eq('order_id', data.orderId);
+    const { error } = await db.rpc('admin_delete_order', { _order_id: data.orderId });
+    if (error) { console.error('admin_delete_order failed', error.message); throw new Error('거래를 삭제하지 못했습니다. DB 업데이트(0053) 적용 여부를 확인해 주세요.'); }
+    const files = (qc ?? []).map((r: any) => r.path).filter((p: unknown): p is string => typeof p === 'string' && p.length > 0 && !p.includes('..'));
+    if (files.length) await db.storage.from('qc-media').remove(files);
     return { ok: true };
   });
 
