@@ -70,6 +70,8 @@ export const signUpWithPhone = createServerFn({ method: 'POST' })
       else if (pErr.code === '23505' && pErr.message.includes('phone_hash')) break;
     }
     if (!saved) { await supabaseAdmin.auth.admin.deleteUser(created.user.id); throw new Error('An account already exists with this phone number.'); }
+    /* 관리자 회원 관리 표시용: 전체 번호는 별도 비공개 표(member_phones)에만 저장한다. 실패해도 가입은 막지 않는다. */
+    try { await (supabaseAdmin as unknown as { from: (t: string) => { upsert: (v: object) => Promise<unknown> } }).from('member_phones').upsert({ user_id: created.user.id, phone: normalizePhone(data.phone) }); } catch { /* ignore */ }
     /* 초대 연결: 계정이 만들어진 바로 이 자리에서 서버가 직접 연결한다. 실패해도 가입은 절대 막지 않고,
        초대 정보는 계정에도 남겨 두어 첫 로그인 때 한 번 더 시도한다. */
     const invite = data.invite || undefined, ref = data.ref || undefined;

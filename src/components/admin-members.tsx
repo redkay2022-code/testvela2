@@ -7,8 +7,9 @@ import { Button } from './ui/button';
 import { PasswordInput } from './password-input';
 import { BarsChart, Donut, countryName } from './mini-charts';
 import { supabase } from '@/integrations/supabase/client';
-import { adminDeleteMember, adminLiftSanction, adminListMembers, adminListNewMembers, adminSanctionMember, type MemberRow } from '@/lib/admin-members.functions';
+import { adminDeleteMember, adminLiftSanction, adminListMembers, adminListNewMembers, adminMemberCountries, adminSanctionMember, type MemberRow } from '@/lib/admin-members.functions';
 
+const flag = (iso: string) => String.fromCodePoint(...[...iso].map(c => 0x1f1a5 + c.charCodeAt(0)));
 const fmt = (v: string | null) => (v ? new Date(v).toLocaleDateString('ko-KR') : '—');
 const fmtTime = (v: string | null) => (v ? new Date(v).toLocaleString('ko-KR', { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const ACTIONS = [['7d', '7일 정지'], ['15d', '15일 정지'], ['30d', '30일 정지'], ['ban', '영구 추방']] as const;
@@ -17,13 +18,16 @@ type Action = (typeof ACTIONS)[number][0];
 /** Back-office: member list, suspension (7 / 15 / 30 days) and permanent ban. Every change re-checks the admin's password. */
 export function AdminMembers() {
   const qc = useQueryClient();
-  const list = useServerFn(adminListMembers), listNew = useServerFn(adminListNewMembers), sanction = useServerFn(adminSanctionMember), lift = useServerFn(adminLiftSanction), remove = useServerFn(adminDeleteMember);
-  const [q, setQ] = useState(''), [applied, setApplied] = useState(''), [page, setPage] = useState(0);
+  const list = useServerFn(adminListMembers), listNew = useServerFn(adminListNewMembers), readCountries = useServerFn(adminMemberCountries), sanction = useServerFn(adminSanctionMember), lift = useServerFn(adminLiftSanction), remove = useServerFn(adminDeleteMember);
+  const [country, setCountry] = useState(''), [q, setQ] = useState(''), [applied, setApplied] = useState(''), [page, setPage] = useState(0);
   const [target, setTarget] = useState<{ row: MemberRow; mode: 'sanction' | 'lift' | 'delete' } | null>(null);
   const [action, setAction] = useState<Action>('7d'), [reason, setReason] = useState(''), [password, setPassword] = useState('');
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [msg, setMsg] = useState('');
-  const data = useQuery({ queryKey: ['admin-members', applied, page], queryFn: () => list({ data: { q: applied, page } }), placeholderData: prev => prev, refetchInterval: 60_000 });
-  const newQ = useQuery({ queryKey: ['admin-members-new', applied], queryFn: () => listNew({ data: { q: applied } }), refetchInterval: 60_000 });
+  const data = useQuery({ queryKey: ['admin-members', applied, page, country], queryFn: () => list({ data: { q: applied, page, ...(country ? { country } : {}) } }), placeholderData: prev => prev, refetchInterval: 60_000 });
+  const newQ = useQuery({ queryKey: ['admin-members-new', applied, country], queryFn: () => listNew({ data: { q: applied, ...(country ? { country } : {}) } }), refetchInterval: 60_000 });
+  const countries = useQuery({ queryKey: ['admin-member-countries'], queryFn: () => readCountries(), refetchInterval: 60_000 });
+  const countryList = countries.data?.countries ?? [];
+  const countryLabel = (c: string) => c === 'ZZ' ? '🌐 국가 미확인' : `${flag(c)} ${countryName(c, 'ko')}`;
   const newRows = newQ.data?.rows ?? [];
   const rows = data.data?.rows ?? [], total = data.data?.total ?? 0, size = data.data?.pageSize ?? 20;
 
@@ -47,29 +51,35 @@ export function AdminMembers() {
   const hoursLeft = (v: string) => Math.max(1, Math.ceil((new Date(v).getTime() + 48 * 3_600_000 - Date.now()) / 3_600_000));
   const memberRow = (r: MemberRow, fresh = false) => <tr key={r.user_id}>
         <td><strong>{r.nickname}</strong>{r.roles.includes('admin') && <span className="catalog-pill ml-1">관리자</span>}{r.roles.includes('seller') && <span className="catalog-pill ml-1">셀러</span>}<br/><small className="text-muted-foreground">{r.system_code}</small></td>
+        <td>{r.phone ? <span className="break-all">{r.phone}</span> : <span className="text-muted-foreground">—</span>}{r.country && <small className="block text-muted-foreground">{countryLabel(r.country)}{r.countrySource === 'visit' && ' (접속 기준)'}</small>}</td>
         <td>{fmt(r.created_at)}{fresh && <small className="block text-muted-foreground">{hoursLeft(r.created_at)}시간 후 이동</small>}</td><td>{fmtTime(r.last_sign_in_at)}</td><td>{r.comments}</td><td>{r.orders}</td><td>{status(r)}</td>
         <td><div className="catalog-actions">{r.roles.includes('admin') ? <small className="text-muted-foreground">—</small> : r.sanction
           ? <Button size="sm" variant="goldOutline" onClick={() => open(r, 'lift')}><ShieldCheck/>해제</Button>
           : <Button size="sm" variant="ghost" onClick={() => open(r, 'sanction')}><Ban/>정지/추방</Button>}</div></td>
         <td>{r.roles.includes('admin') ? <small className="text-muted-foreground">—</small> : <Button size="sm" variant="ghost" className="text-destructive" onClick={() => open(r, 'delete')}><Trash2/>삭제</Button>}</td>
       </tr>;
-  const headRow = <thead><tr><th>회원</th><th>가입일</th><th>최근 접속</th><th>댓글</th><th>주문</th><th>상태</th><th>제재</th><th>삭제</th></tr></thead>;
+  const headRow = <thead><tr><th>회원</th><th>전화번호 · 국가</th><th>가입일</th><th>최근 접속</th><th>댓글</th><th>주문</th><th>상태</th><th>제재</th><th>삭제</th></tr></thead>;
   return <div className="catalog mt-4" lang="ko" data-no-translate>
     <TrafficSummary/>
     <div className="section-heading mt-6"><h2>신규 가입자 <small className="text-muted-foreground">(48시간)</small></h2><span>{newRows.length}명</span></div>
     {newQ.isError ? <p role="alert" className="mt-3 text-sm">신규 가입자를 불러오지 못했습니다.</p> : <div className="catalog-scroll"><table className="catalog-table">{headRow}<tbody>
       {newRows.map(r => memberRow(r, true))}
-      {!newRows.length && !newQ.isLoading && <tr><td colSpan={8} className="text-center text-muted-foreground">최근 48시간 안에 가입한 회원이 없습니다. 48시간이 지나면 아래 회원 관리로 자동 이동합니다.</td></tr>}
+      {!newRows.length && !newQ.isLoading && <tr><td colSpan={9} className="text-center text-muted-foreground">최근 48시간 안에 가입한 회원이 없습니다. 48시간이 지나면 아래 회원 관리로 자동 이동합니다.</td></tr>}
     </tbody></table></div>}
     <div className="section-heading mt-6"><h2>회원 관리</h2><span>{total}명</span></div>
     <form className="catalog-toolbar" onSubmit={e => { e.preventDefault(); setPage(0); setApplied(q.trim()); }}>
       <input aria-label="회원 검색" placeholder="닉네임 또는 시스템 ID" value={q} onChange={e => setQ(e.target.value)} maxLength={60}/>
       <Button type="submit" variant="goldOutline">검색</Button>
+      <select aria-label="국가별 보기" className="form-input" value={country} onChange={e => { setCountry(e.target.value); setPage(0); }}>
+        <option value="">전체 국가 ({countries.data?.total ?? total}명)</option>
+        {countryList.map(c => <option key={c.country} value={c.country}>{countryLabel(c.country)} ({c.n}명)</option>)}
+      </select>
+      <strong className="self-center whitespace-nowrap text-sm text-primary">{country ? `${countryLabel(country)} ${countryList.find(c => c.country === country)?.n ?? 0}명` : `전체 ${countries.data?.total ?? total}명`}</strong>
     </form>
     {msg && <p role="status" className="dashboard-message">{msg}</p>}
-    {data.isError ? <p role="alert" className="mt-3 text-sm">회원 목록을 불러오지 못했습니다.</p> : <div className="catalog-scroll"><table className="catalog-table"><thead><tr><th>회원</th><th>가입일</th><th>최근 접속</th><th>댓글</th><th>주문</th><th>상태</th><th>제재</th><th>삭제</th></tr></thead><tbody>
+    {data.isError ? <p role="alert" className="mt-3 text-sm">회원 목록을 불러오지 못했습니다.</p> : <div className="catalog-scroll"><table className="catalog-table"><thead><tr><th>회원</th><th>전화번호 · 국가</th><th>가입일</th><th>최근 접속</th><th>댓글</th><th>주문</th><th>상태</th><th>제재</th><th>삭제</th></tr></thead><tbody>
       {rows.map(r => memberRow(r))}
-      {!rows.length && !data.isLoading && <tr><td colSpan={8} className="text-center text-muted-foreground">회원이 없습니다.</td></tr>}
+      {!rows.length && !data.isLoading && <tr><td colSpan={9} className="text-center text-muted-foreground">회원이 없습니다.</td></tr>}
     </tbody></table></div>}
     <div className="mt-3 flex items-center justify-between text-sm"><Button size="sm" variant="ghost" disabled={page === 0} onClick={() => setPage(p => Math.max(0, p - 1))}>이전</Button><span>{page + 1} / {Math.max(1, Math.ceil(total / size))}</span><Button size="sm" variant="ghost" disabled={(page + 1) * size >= total} onClick={() => setPage(p => p + 1)}>다음</Button></div>
 

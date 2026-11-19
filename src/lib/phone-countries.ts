@@ -50,3 +50,14 @@ export function toE164(iso: string, local: string) {
   const c = PHONE_COUNTRIES.find(x => x.iso === iso) ?? PHONE_COUNTRIES[0]!;
   return `+${c.dial}${local.replace(/\D/g, '').replace(/^0+/, '')}`;
 }
+
+const DIAL_PREFER: Record<string, string> = { '1': 'US', '7': 'RU', '44': 'GB', '39': 'IT', '47': 'NO', '61': 'AU', '212': 'MA', '358': 'FI', '590': 'GP', '262': 'RE', '599': 'CW' };
+let dialMap: Map<string, string> | null = null;
+/** Country (ISO) from an E.164 number such as +8613800000000, by the longest matching calling code. Shared codes (+1, +7 …) map to the main country. */
+export function countryOfPhone(e164: string | null | undefined): string | null {
+  const d = (e164 ?? '').replace(/\D/g, '');
+  if (!d) return null;
+  if (!dialMap) { dialMap = new Map(); for (const [iso, dial] of RAW) if (!dialMap.has(dial)) dialMap.set(dial, iso); for (const [dial, iso] of Object.entries(DIAL_PREFER)) dialMap.set(dial, iso); }
+  for (let n = 4; n >= 1; n--) { const iso = dialMap.get(d.slice(0, n)); if (iso) return iso; }
+  return null;
+}

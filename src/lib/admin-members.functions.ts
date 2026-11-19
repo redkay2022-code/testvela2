@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start';
 import { z } from 'zod';
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware';
+import { countryOfPhone } from './phone-countries';
 
 /** The generated DB types do not know the new tables yet, so the admin client is used untyped here. */
 async function adminDb() {
@@ -14,7 +15,7 @@ async function requireAdmin(supabase: any, userId: string) {
 
 export type MemberRow = {
   user_id: string; nickname: string; system_code: string; created_at: string; last_sign_in_at: string | null;
-  roles: string[]; comments: number; orders: number;
+  roles: string[]; comments: number; orders: number; phone: string | null; country: string | null; countrySource: 'phone' | 'visit' | null;
   sanction: { id: string; kind: 'suspend' | 'ban'; reason: string; ends_at: string | null } | null;
 };
 
@@ -24,12 +25,13 @@ const NEW_MEMBER_HOURS = 48;
 async function buildMemberRows(db: any, profiles: any[]): Promise<MemberRow[]> {
   const ids: string[] = profiles.map((p: any) => p.user_id);
   if (!ids.length) return [];
-  const [roles, sanctions, comments, orders, auths] = await Promise.all([
+  const [roles, sanctions, comments, orders, auths, geo] = await Promise.all([
     db.from('user_roles').select('user_id, role').in('user_id', ids),
     db.from('user_sanctions').select('id, user_id, kind, reason, ends_at').in('user_id', ids).is('lifted_at', null).lte('starts_at', new Date().toISOString()).order('created_at', { ascending: false }),
     db.from('comments').select('user_id').in('user_id', ids).limit(5000),
     db.from('orders').select('buyer_id').in('buyer_id', ids).limit(5000),
     Promise.all(ids.map(async id => { try { const { data: u } = await db.auth.admin.getUserById(id); return [id, u?.user?.last_sign_in_at ?? null] as const; } catch { return [id, null] as const; } })),
+    memberGeo(db, ids),
   ]);
   const tally = (rows: any[] | null, key: string) => { const m = new Map<string, number>(); for (const r of rows ?? []) m.set(r[key], (m.get(r[key]) ?? 0) + 1); return m; };
   const cm = tally(comments.data, 'user_id'), om = tally(orders.data, 'buyer_id'), seen = new Map(auths);
@@ -37,15 +39,60 @@ async function buildMemberRows(db: any, profiles: any[]): Promise<MemberRow[]> {
   return profiles.map((p: any) => {
     const s = (sanctions.data ?? []).find((x: any) => x.user_id === p.user_id && (!x.ends_at || new Date(x.ends_at).getTime() > now));
     return { user_id: p.user_id, nickname: p.nickname, system_code: p.system_code, created_at: p.created_at, last_sign_in_at: seen.get(p.user_id) ?? null,
-      roles: (roles.data ?? []).filter((r: any) => r.user_id === p.user_id).map((r: any) => r.role), comments: cm.get(p.user_id) ?? 0, orders: om.get(p.user_id) ?? 0,
+      roles: (roles.data ?? []).filter((r: any) => r.user_id === p.user_id).map((r: any) => r.role), comments: cm.get(p.user_id) ?? 0, orders: om.get(p.user_id) ?? 0, ...(geo.get(p.user_id) ?? { phone: null, country: null, countrySource: null }),
       sanction: s ? { id: s.id, kind: s.kind, reason: s.reason, ends_at: s.ends_at } : null };
   });
+}
+
+type Geo = { phone: string | null; country: string | null; countrySource: 'phone' | 'visit' | null };
+/** Phone (saved for members who signed up after 190차) and country: by calling code first, otherwise by the country of their latest logged-in visit. */
+async function memberGeo(db: any, ids?: string[]): Promise<Map<string, Geo>> {
+  const out = new Map<string, Geo>();
+  const phones = new Map<string, string>();
+  for (let from = 0; from < 20000; from += 1000) {
+    let q = db.from('member_phones').select('user_id, phone');
+    if (ids) q = q.in('user_id', ids);
+    const { data, error } = await q.order('user_id').range(from, from + 999);
+    if (error) break;
+    for (const r of data ?? []) phones.set(r.user_id, r.phone);
+    if (!data || data.length < 1000) break;
+  }
+  const visit = new Map<string, string>();
+  try {
+    const { data } = await db.rpc('admin_member_visit_countries');
+    for (const r of data ?? []) if (r.user_id && r.country && /^[A-Z]{2}$/.test(r.country)) visit.set(r.user_id, r.country);
+  } catch { /* 접속 국가가 없어도 목록은 표시 */ }
+  const keys = new Set<string>([...phones.keys(), ...visit.keys(), ...(ids ?? [])]);
+  for (const id of keys) {
+    const phone = phones.get(id) ?? null, byPhone = countryOfPhone(phone), byVisit = visit.get(id) ?? null;
+    out.set(id, { phone, country: byPhone ?? byVisit, countrySource: byPhone ? 'phone' : byVisit ? 'visit' : null });
+  }
+  return out;
+}
+
+/** Country dropdown data: how many members per country (all members, new and regular). */
+export const adminMemberCountries = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ countries: { country: string; n: number }[]; total: number }> => {
+    await requireAdmin(context.supabase, context.userId);
+    const db = await adminDb();
+    const profiles = await selectAll(db, 'profiles', 'user_id', undefined, 'user_id');
+    const geo = await memberGeo(db);
+    const tally = new Map<string, number>();
+    for (const p of profiles) { const c = geo.get(p.user_id)?.country ?? 'ZZ'; tally.set(c, (tally.get(c) ?? 0) + 1); }
+    return { countries: [...tally].map(([country, n]) => ({ country, n })).sort((a, b) => b.n - a.n), total: profiles.length };
+  });
+
+async function idsInCountry(db: any, country: string): Promise<string[]> {
+  const profiles = await selectAll(db, 'profiles', 'user_id', undefined, 'user_id');
+  const geo = await memberGeo(db);
+  return profiles.map((p: any) => p.user_id as string).filter((id: string) => (geo.get(id)?.country ?? 'ZZ') === country);
 }
 const searchTerm = (v?: string) => (v ?? '').trim().replace(/[%,()]/g, '');
 
 export const adminListMembers = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
-  .inputValidator(d => z.object({ q: z.string().max(60).optional(), page: z.number().int().min(0).max(1000).optional() }).parse(d ?? {}))
+  .inputValidator(d => z.object({ q: z.string().max(60).optional(), page: z.number().int().min(0).max(1000).optional(), country: z.string().regex(/^[A-Z]{2}$/).optional() }).parse(d ?? {}))
   .handler(async ({ context, data }): Promise<{ rows: MemberRow[]; total: number; pageSize: number }> => {
     await requireAdmin(context.supabase, context.userId);
     const db = await adminDb(), size = 20, page = data.page ?? 0;
@@ -53,6 +100,7 @@ export const adminListMembers = createServerFn({ method: 'GET' })
     let q = db.from('profiles').select('user_id, nickname, system_code, created_at', { count: 'exact' }).lt('created_at', cutoff).order('created_at', { ascending: false });
     const term = searchTerm(data.q);
     if (term) q = q.or(`nickname.ilike.%${term}%,system_code.ilike.%${term}%`);
+    if (data.country) { const ids = await idsInCountry(db, data.country); if (!ids.length) return { rows: [], total: 0, pageSize: size }; q = q.in('user_id', ids.slice(0, 400)); }
     const { data: profiles, count, error } = await q.range(page * size, page * size + size - 1);
     if (error) throw new Error('회원 목록을 불러오지 못했습니다.');
     return { rows: await buildMemberRows(db, profiles ?? []), total: count ?? 0, pageSize: size };
@@ -61,7 +109,7 @@ export const adminListMembers = createServerFn({ method: 'GET' })
 /** Members who signed up within the last 48 hours (newest first). */
 export const adminListNewMembers = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
-  .inputValidator(d => z.object({ q: z.string().max(60).optional() }).parse(d ?? {}))
+  .inputValidator(d => z.object({ q: z.string().max(60).optional(), country: z.string().regex(/^[A-Z]{2}$/).optional() }).parse(d ?? {}))
   .handler(async ({ context, data }): Promise<{ rows: MemberRow[]; hours: number }> => {
     await requireAdmin(context.supabase, context.userId);
     const db = await adminDb();
@@ -69,6 +117,7 @@ export const adminListNewMembers = createServerFn({ method: 'GET' })
     let q = db.from('profiles').select('user_id, nickname, system_code, created_at').gte('created_at', cutoff).order('created_at', { ascending: false });
     const term = searchTerm(data.q);
     if (term) q = q.or(`nickname.ilike.%${term}%,system_code.ilike.%${term}%`);
+    if (data.country) { const ids = await idsInCountry(db, data.country); if (!ids.length) return { rows: [], hours: NEW_MEMBER_HOURS }; q = q.in('user_id', ids.slice(0, 400)); }
     const { data: profiles, error } = await q.limit(200);
     if (error) throw new Error('신규 가입자를 불러오지 못했습니다.');
     return { rows: await buildMemberRows(db, profiles ?? []), hours: NEW_MEMBER_HOURS };
